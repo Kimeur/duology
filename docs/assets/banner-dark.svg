@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 420" width="1280" height="420" role="img" aria-label="Duology: Claude Code skills for iPhone Duo apps">
+  <rect width="1280" height="420" fill="#0e131c"/>
+  <g stroke="#1f2838" stroke-width="1">
+    <path d="M0 60H1280M0 120H1280M0 180H1280M0 240H1280M0 300H1280M0 360H1280"/>
+    <path d="M80 0V420M160 0V420M240 0V420M320 0V420M400 0V420M480 0V420M560 0V420M640 0V420M720 0V420M800 0V420M880 0V420M960 0V420M1040 0V420M1120 0V420M1200 0V420"/>
+  </g>
+  <!-- closed phone -->
+  <rect x="760" y="110" width="140" height="200" rx="26" fill="#151c28" stroke="#e8ecf3" stroke-width="3"/>
+  <rect x="884" y="150" width="6" height="120" rx="3" fill="#7d9cff"/>
+  <text x="830" y="335" fill="#9aa4b5" font-family="Menlo, Consolas, monospace" font-size="15" text-anchor="middle">closed · 5.4″</text>
+  <!-- open phone -->
+  <rect x="940" y="110" width="280" height="200" rx="26" fill="#151c28" stroke="#e8ecf3" stroke-width="3"/>
+  <rect x="958" y="128" width="112" height="164" rx="10" fill="#1f2a3d"/>
+  <rect x="1090" y="128" width="112" height="70" rx="10" fill="#2b55c7"/>
+  <rect x="1090" y="208" width="112" height="84" rx="10" fill="#1f2a3d"/>
+  <path d="M1080 118V302" stroke="#7d9cff" stroke-width="2" stroke-dasharray="6 6"/>
+  <text x="1080" y="335" fill="#9aa4b5" font-family="Menlo, Consolas, monospace" font-size="15" text-anchor="middle">open · 7.6″ · fold kept clear</text>
+  <!-- wordmark -->
+  <text x="80" y="190" fill="#e8ecf3" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="92" font-weight="800" letter-spacing="-3">Duology</text>
+  <text x="82" y="240" fill="#c9d1de" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="27">Design, build, test and ship apps for iPhone Duo</text>
+  <text x="82" y="276" fill="#c9d1de" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="27">with Claude Code.</text>
+  <text x="82" y="334" fill="#7d9cff" font-family="Menlo, Consolas, monospace" font-size="17">36 skills · 8 app recipes · fold linter · pose checks</text>
+</svg>

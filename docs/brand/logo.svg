@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Duology">
+  <rect width="512" height="512" rx="112" fill="#0e131c"/>
+  <path d="M130 136 L249 154 V358 L130 376 Q92 376 92 338 V174 Q92 136 130 136Z" fill="#e8ecf3"/>
+  <path d="M382 136 L263 154 V358 L382 376 Q420 376 420 338 V174 Q420 136 382 136Z" fill="#4f7cff"/>
+</svg>

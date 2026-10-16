@@ -13,8 +13,12 @@
   <rect x="1090" y="208" width="112" height="84" rx="10" fill="#e9edf4"/>
   <path d="M1080 118V302" stroke="#2b55c7" stroke-width="2" stroke-dasharray="6 6"/>
   <text x="1080" y="335" fill="#5b6475" font-family="Menlo, Consolas, monospace" font-size="15" text-anchor="middle">open · 7.6″ · fold kept clear</text>
-  <text x="80" y="190" fill="#141a26" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="92" font-weight="800" letter-spacing="-3">Duology</text>
-  <text x="82" y="240" fill="#3a4250" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="27">Design, build, test and ship apps for iPhone Duo</text>
-  <text x="82" y="276" fill="#3a4250" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="27">with Claude Code.</text>
-  <text x="82" y="334" fill="#2b55c7" font-family="Menlo, Consolas, monospace" font-size="17">36 skills · 8 app recipes · fold linter · pose checks</text>
+    <g transform="translate(80 112) scale(0.40) translate(-92 -136)">
+    <path d="M130 136 L249 154 V358 L130 376 Q92 376 92 338 V174 Q92 136 130 136Z" fill="#141a26"/>
+    <path d="M382 136 L263 154 V358 L382 376 Q420 376 420 338 V174 Q420 136 382 136Z" fill="#2b55c7"/>
+  </g>
+  <text x="240" y="190" fill="#141a26" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="92" font-weight="800" letter-spacing="-3">Duology</text>
+  <text x="82" y="252" fill="#3a4250" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="27">Design, build, test and ship apps for iPhone Duo</text>
+  <text x="82" y="288" fill="#3a4250" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="27">with Claude Code.</text>
+  <text x="82" y="344" fill="#2b55c7" font-family="Menlo, Consolas, monospace" font-size="17">skills · app recipes · fold linter · pose checks</text>
 </svg>

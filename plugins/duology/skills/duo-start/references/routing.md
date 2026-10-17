@@ -81,22 +81,35 @@ Say "coming" when one of these fits, and work from the Apple source in the last 
 Xcode ships its own agent skills. Duology links to them and never copies them.
 
 - **App Resizability** (`app-resizability`). The generic resizing work: main-screen reads, orientation and idiom checks, safe-area assumptions and moving UIKit apps to the scene life cycle. It was called the app modernization skill in Xcode 27 ([WWDC26 session 278](https://developer.apple.com/videos/play/wwdc2026/278/)); Xcode 27.1 renamed it and added SwiftUI and iPhone Duo support ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)). Apple says it finds most issues, not all ([prepare page](https://developer.apple.com/iphone-duo/prepare/)).
-- The other skills in the Xcode 27.1 app bundle (16 Oct 2026), by the `name:` in each skill's header: `swiftui-specialist`, `swiftui-whats-new-27`, `app-intents-specialist`, `app-intents-whats-new-27`, `building-document-based-swiftui-applications`, `audit-xcode-security-settings`, `adopt-c-bounds-safety`. We read their names and App Resizability's description, nothing more.
+- The rest of the export. On our Mac (16 Oct 2026) the export wrote 10 skills, each in a folder named after the skill, each with a `SKILL.md`. We read each header and skimmed `device-interaction`; we didn't run them.
 
-How to get them into Claude Code or another agent:
+| Skill | What it is for |
+|---|---|
+| `app-resizability` | The generic resizing pass above. |
+| `device-interaction` | Checking an app on a simulator or device through Xcode: screenshots, the UI tree, taps. It runs as a subagent and needs Xcode's agent connection (`duo-setup`). Useful in the first pass after each pose change. |
+| `modernize-tests` | Moving tests to Swift Testing. |
+| `swiftui-specialist`, `swiftui-whats-new-27` | SwiftUI practice, and what changed in SwiftUI for iOS 27. |
+| `app-intents-specialist`, `app-intents-whats-new-27` | App Intents, and what changed in iOS 26 and iOS 27. |
+| `building-document-based-swiftui-applications` | Document-based SwiftUI apps. |
+| `audit-xcode-security-settings` | Turning on security-related build settings and checks. |
+| `adopt-c-bounds-safety` | The C `-fbounds-safety` extension. |
+
+How to get them into Claude Code or another agent. Use the same folder as `duo-setup`:
 
 ```bash
 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer \
-  xcrun agent skills export --output-dir ~/.claude/skills
+  xcrun agent skills export --output-dir ~/xcode-skills
 ```
 
 - `--output-dir` and `--replace-existing` are the two options in the command's help (Xcode 27.1). Without `--output-dir`, the help says it writes to `./xcode-skills`.
-- The export writes every Xcode skill, not only App Resizability.
-- It changes the user's own setup, so ask before running it, or let the user run it.
-- *Unverified:* on our Mac, the command launched Xcode and had not finished after two minutes. We didn't find the cause. The folder names after export are also unverified; we expect them to match the names above.
+- *Measured:* the command opened Xcode, took about two minutes (17:20 to 17:22 on 16 Oct 2026) and printed one line per exported skill. If it seems stuck, wait for Xcode to finish launching.
+- It changes the user's own setup, so ask before running it, or let the user run it. Export outside any repo and never commit Apple's skill text.
+- Don't export into `~/.claude/skills`. That loads all 10 skills in every Claude Code session. `app-resizability` also triggers on the same request as `duo-start` and runs every task on its list at once, which skips duo-start's report-first rule.
+- To use only `app-resizability` in Claude Code, copy that one folder, with the user's consent: `cp -R ~/xcode-skills/app-resizability ~/.claude/skills/`. For another agent, point it at `~/xcode-skills/app-resizability/SKILL.md`, or copy the folder into that agent's own skills folder.
+- If `duo-start` and `app-resizability` both load for one request, `duo-start` goes first. Run `app-resizability` at duo-start's Step 4, after the first-pass report.
 - Inside Xcode, no export is needed: ask Xcode's coding assistant to "get my app ready for iPhone Duo" ([prepare page](https://developer.apple.com/iphone-duo/prepare/)).
 
-Order of work when both are available: App Resizability first for the generic fixes, then `duo-lint` to catch what it missed, then the Duology skill for each Duo-specific problem.
+Order of fixes after the first-pass report: App Resizability first for the generic fixes, then `duo-lint` to catch what it missed, then the Duology skill for each Duo-specific problem.
 
 ## Outside Duology
 

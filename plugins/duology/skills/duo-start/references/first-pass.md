@@ -2,15 +2,14 @@
 
 The first pass tells you how far the app is from working on iPhone Duo. It changes nothing in the app, except an optional debug logger that you remove at the end. Budget about five minutes after the build finishes. Don't fix anything during the pass.
 
-Every command below uses Xcode 27.1 through `DEVELOPER_DIR`. Agent shells often drop `export` and shell variables between calls, so run each code block as one command, or put the variable in front of each `xcodebuild` and `xcrun` call.
-
-```bash
-export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
-```
+Every block that calls `xcodebuild` or `xcrun` starts with `export DEVELOPER_DIR=...` for Xcode 27.1. Run each block as one command and keep that first line. Agent shells often drop `export` and shell variables between calls, and without it a plain `xcodebuild` or `xcrun` uses the Mac's default Xcode, which may be an older one.
 
 ## 1. Build with Xcode 27.1
 
+Run this from the folder that holds the project ([detect.md](detect.md) prints it).
+
 ```bash
+export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
 xcodebuild -scheme <Scheme> \
   -destination 'platform=iOS Simulator,name=iPhone Duo,OS=27.1' \
   -derivedDataPath "$TMPDIR/duo-first-pass" build 2>&1 \
@@ -146,6 +145,7 @@ Both follow Apple's [prepare page](https://developer.apple.com/iphone-duo/prepar
 ## 3. Install, launch and log
 
 ```bash
+export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
 APP="$TMPDIR/duo-first-pass/Build/Products/Debug-iphonesimulator/<App>.app"
 BUNDLE=$(plutil -extract CFBundleIdentifier raw "$APP/Info.plist")
 xcrun simctl boot "iPhone Duo" 2>/dev/null     # "Unable to boot device in current state: Booted" is fine
@@ -329,6 +329,7 @@ The root view gets 867 × 635 pt inside the safe area. The safe area is 0 pt on 
 Screenshot both displays after each pose change:
 
 ```bash
+export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
 xcrun simctl io booted screenshot --display=primary   "$TMPDIR/duo-outer.png"   # outer display
 xcrun simctl io booted screenshot --display=primary-1 "$TMPDIR/duo-inner.png"   # inner display
 ```
@@ -337,6 +338,7 @@ xcrun simctl io booted screenshot --display=primary-1 "$TMPDIR/duo-inner.png"   
 - *Measured:* screenshots follow the current orientation, so the sizes can swap (2853 × 2007 instead of 2007 × 2853).
 - `simctl` can't change the pose (*measured*). Ask the user to click the buttons under the bezel in Device Hub: **Closed**, **Partially Open**, **Open**. Option-drag the slider below the bezel for any angle ([Device Hub article](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)).
 - Device Hub can't send two-finger touches (Xcode 27 known issue). Leave pinch and rotate gestures for a real device.
+- When Xcode's agent connection is set up (`duo-setup`), Apple's `device-interaction` skill can read the UI tree, take screenshots and tap through Xcode after each pose change ([routing.md](routing.md#apples-skills-in-xcode-271)). We haven't run it in a first pass (unverified). It doesn't change the pose; the user still clicks in Device Hub.
 
 The order that fits five minutes:
 
@@ -381,5 +383,5 @@ Apple's App Resizability skill: offered | used | not available
 
 - Delete the debug logger and its call sites.
 - Leave the simulator booted; other work may be using it.
-- Remove the test install if the user wants a clean simulator: `xcrun simctl uninstall booted "$BUNDLE"`.
+- Remove the test install if the user wants a clean simulator: `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcrun simctl uninstall booted <bundle id>`. Use the bundle ID from section 3; `$BUNDLE` is gone if the shell changed.
 - The build output in `$TMPDIR/duo-first-pass` can stay; it isn't in the repo.

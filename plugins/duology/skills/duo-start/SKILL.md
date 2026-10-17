@@ -23,20 +23,27 @@ Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1) on 16 
 
 ## Step 1: Answer three questions
 
-Run the detection script in [references/detect.md](references/detect.md) from the app's root folder. It is read-only. The short version:
+Run the detection script in [references/detect.md](references/detect.md) from the repo's root folder. It is read-only. The short version:
 
 ```bash
-ls -d *.xcworkspace *.xcodeproj Package.swift 2>/dev/null       # existing app?
+# Existing app? Look three levels down: many repos keep it in ios/, App/ or apps/ios/.
+find . -maxdepth 3 \( -name .git -o -name Pods -o -name .build -o -name node_modules \) -prune \
+  -o \( -name '*.xcworkspace' -o -name '*.xcodeproj' \) -print -prune -o -name Package.swift -print
 grep -rlE --include='*.swift' ':[[:space:]]*App[[:space:]]*\{' .  # SwiftUI App entry point
 grep -rlE --include='*.swift' 'UIApplicationDelegate|UIWindowSceneDelegate' .
 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer \
-  xcodebuild -scheme <Scheme> -destination 'generic/platform=iOS Simulator' -showBuildSettings \
+  xcodebuild -project <path/App.xcodeproj> -scheme <Scheme> \
+  -destination 'generic/platform=iOS Simulator' -showBuildSettings \
   | grep -E '^ *(SDK_VERSION|IPHONEOS_DEPLOYMENT_TARGET|SWIFT_VERSION|SUPPORTS_MACCATALYST) = '
 ```
 
+Use `-workspace <path/App.xcworkspace>` instead when `find` prints a workspace next to the project (CocoaPods).
+
 ### 1. New or existing?
 
-- No `.xcodeproj`, `.xcworkspace` or `Package.swift`: a new app. Go to [New app](#new-app).
+- An `.xcodeproj` or `.xcworkspace` here or up to three levels down: an existing app. Note its folder. Run the first pass from there, or pass its path with `-project` or `-workspace`.
+- Swift or Objective-C files but no project: still existing. Ask the user how they build it (a Swift package, XcodeGen or Tuist). Never treat it as new.
+- No project and no source files: a new app. Go to [New app](#new-app).
 - A project with only template code ("Hello, world!") counts as new too.
 - Flutter (`pubspec.yaml`), React Native (`"react-native"` in `package.json`) or Capacitor (`capacitor.config.*`): Duology covers native SwiftUI and UIKit only. Point the user to [mirzaaghazadeh/iphone-duo-skills](https://github.com/mirzaaghazadeh/iphone-duo-skills), which covers those stacks.
 
@@ -79,22 +86,28 @@ Also note:
 import SwiftUI
 
 // Gate every iOS 27.1 API when the deployment target is lower.
-struct LibraryScreen: View {
+// The navigation container wraps the gate, so both branches keep their bar.
+struct PlayerScreen: View {
     var body: some View {
-        if #available(iOS 27.1, *) {
-            ArrangementView {
-                ListPane()
-            } secondary: {
-                DetailPane()
+        NavigationStack {
+            Group {
+                if #available(iOS 27.1, *) {
+                    ArrangementView {
+                        PlayerView()
+                    } secondary: {
+                        UpNextView()
+                    }
+                } else {
+                    PlayerView()   // what the app ships today
+                }
             }
-        } else {
-            NavigationStack { ListPane() }   // what the app ships today
+            .navigationTitle("Now Playing")
         }
     }
 }
 ```
 
-This shows the gate, not a layout choice. Read `duo-layout` before you pick `ArrangementView`.
+This is a supporting pane: main content plus a narrower pane, as in `duo-layout`'s `NowPlayingScreen`. Keep `NavigationStack`, `NavigationSplitView` and `TabView` outside the arrangement, never inside it. For list-detail, use `NavigationSplitView`, not `ArrangementView` (`duo-patterns`). With the phone closed and held sideways, `ArrangementView` shows only the primary view (*measured* in `duo-layout`), so the pane needs another way in. Read `duo-patterns` and `duo-layout` before you pick a layout.
 
 ## Step 2: Route to the right skill
 
@@ -126,7 +139,7 @@ If a skill isn't installed, tell the user the plugin to add, for example `/plugi
 
 ## Step 3: The five-minute first pass (existing app)
 
-Goal: a short report, not fixes. Details, logger code and the report template: [references/first-pass.md](references/first-pass.md). Run each code block below as one command: agent shells often drop `export` and variables between calls.
+Goal: a short report, not fixes. Details, logger code and the report template: [references/first-pass.md](references/first-pass.md). Run each code block below as one command, and keep its first line: agent shells often drop `export` and variables between calls, and a plain `xcrun` or `xcodebuild` would use the Mac's default Xcode.
 
 1. **Build with Xcode 27.1.** Use the iPhone Duo simulator as the destination (*measured*: it appears as `name:iPhone Duo, OS:27.1`).
 
@@ -137,13 +150,14 @@ Goal: a short report, not fixes. Details, logger code and the report template: [
      -derivedDataPath "$TMPDIR/duo-first-pass" build 2>&1 | grep -E 'error:|BUILD (SUCCEEDED|FAILED)'
    ```
 
-   Use `-workspace <Name>.xcworkspace` when the app has one. Count the errors; don't fix them yet. If Xcode 27.1 or the simulator is missing, stop and load `duo-setup` (or run `/duo-doctor`).
+   Run it from the folder that holds the project (Step 1 prints it). Use `-workspace <Name>.xcworkspace` when the app has one. Count the errors; don't fix them yet. If Xcode 27.1 or the simulator is missing, stop and load `duo-setup` (or run `/duo-doctor`).
 
 2. **Run duo-lint.** Load the `duo-lint` skill and run it on the app's sources. If it isn't installed, run the rough grep in [references/first-pass.md](references/first-pass.md#no-duo-lint-yet). Keep the top findings.
 
 3. **Run it on the Duo simulator.**
 
    ```bash
+   export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
    APP="$TMPDIR/duo-first-pass/Build/Products/Debug-iphonesimulator/<App>.app"
    BUNDLE=$(plutil -extract CFBundleIdentifier raw "$APP/Info.plist")
    xcrun simctl boot "iPhone Duo" 2>/dev/null    # fine if it is already booted
@@ -156,6 +170,7 @@ Goal: a short report, not fixes. Details, logger code and the report template: [
 4. **Check open, then closed.** Screenshot both displays. The display that is off comes out solid black (*measured* with the phone open; the closed case is unverified).
 
    ```bash
+   export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
    xcrun simctl io booted screenshot --display=primary   "$TMPDIR/duo-outer.png"   # outer display
    xcrun simctl io booted screenshot --display=primary-1 "$TMPDIR/duo-inner.png"   # inner display
    ```
@@ -169,14 +184,16 @@ Goal: a short report, not fixes. Details, logger code and the report template: [
 Xcode 27.1 ships a skill called App Resizability (it was the app modernization skill in Xcode 27). It covers SwiftUI and iPhone Duo ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)) and fixes the generic patterns: main-screen reads, orientation and idiom checks, safe-area assumptions and the move to the UIKit scene life cycle ([WWDC26 session 278](https://developer.apple.com/videos/play/wwdc2026/278/), [prepare page](https://developer.apple.com/iphone-duo/prepare/)).
 
 - **Inside Xcode:** ask Xcode's coding assistant to "get my app ready for iPhone Duo".
-- **In Claude Code or another agent:** have the user export Apple's skills, then load `app-resizability`:
+- **In Claude Code or another agent:** ask the user before you export; it changes their setup. Export to `~/xcode-skills`, the same folder `duo-setup` uses, outside any repo:
 
   ```bash
   DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer \
-    xcrun agent skills export --output-dir ~/.claude/skills
+    xcrun agent skills export --output-dir ~/xcode-skills
   ```
 
-  Add `--replace-existing` to overwrite an older export. Export outside the app's repo, and don't commit Apple's skill text. *Unverified:* on our Mac the command opened Xcode and had not finished after two minutes; we didn't find out why. If it stalls, the user can run it in Terminal and watch Xcode, or use the skill inside Xcode.
+  *Measured:* it opened Xcode, took about two minutes and wrote 10 skills, one folder per skill name ([references/routing.md](references/routing.md#apples-skills-in-xcode-271)). Add `--replace-existing` to overwrite an older export. Don't export into `~/.claude/skills`: that loads all 10 in every Claude Code session. To load only App Resizability in Claude Code, copy its folder once the user agrees: `cp -R ~/xcode-skills/app-resizability ~/.claude/skills/`. For another agent, point it at `~/xcode-skills/app-resizability/SKILL.md`. Never copy Apple's skill text into the app's repo.
+
+- **Order.** App Resizability triggers on the same request as this skill (getting an app ready for iPhone Duo), and its instructions treat that request as a call to run every task on its list. If both load, this skill goes first: finish Steps 1 to 3 and report. Run App Resizability here, at Step 4, after the user has seen the report.
 
 Apple says the skill finds most issues, not all. Run `duo-lint` after it to catch the rest.
 

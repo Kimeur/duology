@@ -4,11 +4,11 @@ Run this before routing. It is read-only: it lists files, greps and asks `xcodeb
 
 ## The script
 
-Save it outside the app's repo (for example in `$TMPDIR`) and run it from the app's root folder. The first run lists the schemes. Run it again with `SCHEME=` to add the build settings.
+Save it outside the app's repo (for example in `$TMPDIR`) and run it from the repo's root folder. It looks for the Xcode project up to three levels down, so an app in `ios/`, `App/` or `apps/ios/` is found. The first run lists the schemes. Run it again with `SCHEME=` to add the build settings.
 
 ```bash
 #!/bin/bash
-# duo-start detection. Read-only. Run it from the app's root folder:
+# duo-start detection. Read-only. Run it from the repo's root folder:
 #   bash duo-detect.sh                 # first run lists the schemes
 #   SCHEME=MyApp bash duo-detect.sh    # second run adds build settings
 DEV=${DUO_XCODE:-/Applications/Xcode-27.1.app/Contents/Developer}
@@ -22,16 +22,31 @@ count() { local pattern=$1; shift; files "$@" | xargs -0 grep -lE "$pattern" 2>/
 SRC=(-name '*.swift' -o -name '*.m' -o -name '*.mm')
 
 echo "== Project"
-WS=$(ls -d *.xcworkspace 2>/dev/null | head -1)
-PROJ=$(ls -d *.xcodeproj 2>/dev/null | head -1)
-found=$(ls -d *.xcworkspace *.xcodeproj Package.swift project.yml Project.swift 2>/dev/null)
-echo "${found:-no Xcode project here: treat as a NEW app}"
-echo "swift files: $(files -name '*.swift' | tr -cd '\0' | wc -c | tr -d ' ')"
-
-echo "== Other stacks (Duology covers native SwiftUI and UIKit only)"
-ls pubspec.yaml capacitor.config.* 2>/dev/null
-grep -l '"react-native"' package.json 2>/dev/null
-ls -d ProjectSettings/ProjectVersion.txt 2>/dev/null
+# Look up to three levels down: many repos keep the app in ios/, App/ or apps/ios/.
+FOUND=$(find . -maxdepth 3 \( -name .git -o -name Pods -o -name Carthage -o -name .build -o -name build \
+    -o -name DerivedData -o -name node_modules -o -name SourcePackages \) -prune \
+  -o \( -name '*.xcworkspace' -o -name '*.xcodeproj' \) -print -prune \
+  -o -type f \( -name Package.swift -o -name project.yml -o -name Project.swift \) -print)
+# The app's container: the shallowest one; a workspace wins over a project at the same depth.
+CONTAINER_PATH=$(printf '%s\n' "$FOUND" | grep -E '\.(xcworkspace|xcodeproj)$' \
+  | awk -F/ '{ print NF, (/\.xcworkspace$/ ? 0 : 1), $0 }' | sort -n -k1,1 -k2,2 | head -1 | cut -d' ' -f3-)
+OTHER=$(ls -d pubspec.yaml capacitor.config.* ProjectSettings/ProjectVersion.txt 2>/dev/null; grep -l '"react-native"' package.json 2>/dev/null)
+SOURCES=$(files "${SRC[@]}" | tr -cd '\0' | wc -c | tr -d ' ')
+[ -n "$FOUND" ] && printf '%s\n' "$FOUND" | head -10
+echo "source files (Swift, Objective-C): $SOURCES"
+if [ -n "$OTHER" ]; then
+  echo "NOT NATIVE: $(echo $OTHER) (Duology covers native SwiftUI and UIKit only)"
+elif [ -n "$CONTAINER_PATH" ]; then
+  echo "EXISTING app: $CONTAINER_PATH"
+  DIR=$(dirname "$CONTAINER_PATH")
+  [ "$DIR" != . ] && echo "run the first pass from $DIR (cd there), or pass the path with -workspace or -project"
+elif [ -n "$FOUND" ]; then
+  echo "EXISTING code, no .xcodeproj or .xcworkspace: a Swift package or a generated project. Ask how the app is built."
+elif [ "$SOURCES" -gt 0 ]; then
+  echo "EXISTING code, no Xcode project within three levels: ask the user where the project is"
+else
+  echo "no Xcode project and no source files: treat as a NEW app"
+fi
 
 echo "== UI framework"
 echo "files importing SwiftUI:   $(count '^[[:space:]]*import SwiftUI' -name '*.swift')"
@@ -55,7 +70,10 @@ grep -rnE 'xcode-version|DEVELOPER_DIR|xcode-select|xcodes |xcversion|Xcode[_-][
 
 echo "== Build settings (Xcode 27.1)"
 CONTAINER=()
-if [ -n "$WS" ]; then CONTAINER=(-workspace "$WS"); elif [ -n "$PROJ" ]; then CONTAINER=(-project "$PROJ"); fi
+case $CONTAINER_PATH in
+  *.xcworkspace) CONTAINER=(-workspace "$CONTAINER_PATH") ;;
+  *.xcodeproj) CONTAINER=(-project "$CONTAINER_PATH") ;;
+esac
 if [ ${#CONTAINER[@]} -eq 0 ]; then echo "skipped: no project"
 elif [ -z "$SCHEME" ]; then
   echo "rerun with SCHEME=<name>. Schemes:"
@@ -71,7 +89,7 @@ files -name 'Info.plist' | xargs -0 grep -l 'UIRequiresFullScreen' 2>/dev/null
 exit 0
 ```
 
-We ran it on 16 Oct 2026 against two scratch projects: a SwiftUI app (iOS 17.0 target, Swift 6, MainActor default isolation) and a UIKit app with an app delegate, no scene delegate, a storyboard, `UIRequiresFullScreen` and a CI file that pins Xcode 26.4. It reported both correctly. If the workspace is a CocoaPods workspace, the script picks it over the project, which is what you want.
+We ran it on 16 Oct 2026 against two scratch projects: a SwiftUI app (iOS 17.0 target, Swift 6, MainActor default isolation) and a UIKit app with an app delegate, no scene delegate, a storyboard, `UIRequiresFullScreen` and a CI file that pins Xcode 26.4. It reported both correctly. On 17 Oct 2026 we ran it again from the folder above each project: it still found the project and the stack. The CI and `.xcode-version` checks only read the folder you run it in, which is one more reason to start at the repo root. We also ran it on empty, Swift-only, Swift package, Flutter, CocoaPods (`ios/` with `Pods/`), nested-example and three-levels-deep layouts. It picks the shallowest container, and a workspace over a project at the same depth. So a CocoaPods workspace wins over its project, and an example app deeper down doesn't win over the main one.
 
 ## Read the output
 
@@ -79,11 +97,15 @@ We ran it on 16 Oct 2026 against two scratch projects: a SwiftUI app (iOS 17.0 t
 
 | Output | Meaning |
 |---|---|
-| `no Xcode project here` | New app. Go to the New app section of `SKILL.md`. |
-| A project, and `swift files` is small with only template views | Treat it as new. Confirm with the user. |
+| `EXISTING app: <path>` | Existing app. Use that container for every build. |
+| `run the first pass from <folder>` | The project sits below the repo root. `cd` to that folder before the first pass, or pass the path with `-workspace` or `-project`. |
+| `EXISTING code, no .xcodeproj or .xcworkspace` | A Swift package, or a project that XcodeGen or Tuist generates. Ask the user how they build the app. |
+| `EXISTING code, no Xcode project within three levels` | Source files but no project nearby. Ask the user where it is. Don't treat it as new. |
+| `treat as a NEW app` | No project and no source files. Go to the New app section of `SKILL.md`. |
+| `EXISTING app`, but the source count is small and the views are template code | Treat it as new. Confirm with the user. |
 | `project.yml` or `Project.swift` | The project is generated (XcodeGen or Tuist). Change settings in that file, not in the `.xcodeproj`. |
-| `pubspec.yaml`, `"react-native"`, `capacitor.config.*` | Not native. Point to [mirzaaghazadeh/iphone-duo-skills](https://github.com/mirzaaghazadeh/iphone-duo-skills). |
-| `ProjectSettings/ProjectVersion.txt` | A Unity project. Duology's `duo-games` is coming (v0.3). Until then, use the layout rules in `duo-layout` for the native shell, if any. |
+| `NOT NATIVE: pubspec.yaml`, `package.json` (React Native), `capacitor.config.*` | Not native, even though `ios/` holds an Xcode project. Point to [mirzaaghazadeh/iphone-duo-skills](https://github.com/mirzaaghazadeh/iphone-duo-skills). |
+| `NOT NATIVE: ProjectSettings/ProjectVersion.txt` | A Unity project. Duology's `duo-games` is coming (v0.3). Until then, use the layout rules in `duo-layout` for the native shell, if any. |
 
 ### SwiftUI, UIKit or mixed
 

@@ -12,6 +12,7 @@ Run `duo-lint --help` for options and `duo-lint --list-rules` for the rules.
 """
 
 import argparse
+import bisect
 import fnmatch
 import json
 import os
@@ -397,29 +398,68 @@ class Finding(object):
 _RE_MAIN_SCREEN = re.compile(
     r"\bUIScreen\s*\.\s*(main|mainScreen|screens)\b(?:\s*\.\s*(\w+))?"
     r"|\[\s*UIScreen\s+(mainScreen|screens)\s*\](?:\s*\.\s*(\w+))?")
+# `.main` where Swift infers UIScreen: a UIScreen declaration or default value, a body
+# that returns it, `screen ?? .main`, and an argument labelled `screen:`.
+_RE_IMPLICIT_MAIN_SCREEN = re.compile(
+    r"\bUIScreen\s*[?!]?\s*=\s*\.\s*main\b"
+    r"|\bUIScreen\s*[?!]?\s*\{\s*(?:return\s+)?\.\s*main\b"
+    r"|\b\w*[sS]creen\s*[?!]?\s*\)?\s*\?\?\s*\.\s*main\b"
+    r"|\b\w*[sS]creen\s*:\s*\.\s*main\b")
+_RE_RETURNS_UISCREEN = re.compile(r"\bUIScreen\s*[?!]?\s*\{\s*$")
+_RE_LONE_MAIN = re.compile(r"^\s*(?:return\s+)?\.\s*main\b(?!\s*[.(])")
 _RE_DEVICE_ORIENTATION = re.compile(
     r"\bUIDevice\s*\.\s*current(?:Device)?\s*\.\s*orientation\b"
     r"|\[\s*\[\s*UIDevice\s+currentDevice\s*\]\s+orientation\s*\]"
     r"|\bUIDevice\s*\.\s*orientationDidChangeNotification\b"
     r"|\bUIDeviceOrientationDidChangeNotification\b"
     r"|\bbeginGeneratingDeviceOrientationNotifications\b")
+
+# DUO003 and DUO002: interfaceOrientation, and what it is read from. duo-lint reads text,
+# not types, so it reports DUO003 only when the code shows a deprecated receiver.
 _RE_STATUS_BAR_ORIENTATION = re.compile(r"\bstatusBarOrientation\b")
 _RE_MEMBER_INTERFACE_ORIENTATION = re.compile(r"\.\s*interfaceOrientation\b")
-_RE_BARE_INTERFACE_ORIENTATION = re.compile(r"(?<![\w.$])interfaceOrientation\b(?!\s*:)")
-_RE_OBJC_INTERFACE_ORIENTATION = re.compile(r"\[\s*\w+\s+interfaceOrientation\s*\]")
+_RE_BARE_INTERFACE_ORIENTATION = re.compile(r"(?<![\w.$])interfaceOrientation\b")
+_RE_OBJC_INTERFACE_ORIENTATION = re.compile(
+    r"\[\s*(?:([\w.]+)|\[[^\[\]]*?\s(\w+)\s*\])\s+interfaceOrientation\s*\]")
 _RE_DECLARES_INTERFACE_ORIENTATION = re.compile(
-    r"\b(?:let|var)\s+interfaceOrientation\b|\binterfaceOrientation\s*:\s*UIInterfaceOrientation\b")
-_RE_GEOMETRY_IDENT = re.compile(r"(?i)(?:geometry|^geo|^geom)$")
-_RE_TRAILING_IDENT = re.compile(r"(\w+)\s*[?!]?\s*\)?\s*$")
+    r"\b(?:let|var)\s+interfaceOrientation\b"
+    r"|\binterfaceOrientation\s*:\s*UIInterfaceOrientation\b"
+    r"|\b\w+\s+interfaceOrientation\s*:"
+    r"|\binterfaceOrientation\s+in\b")
+SCENE, GEOMETRY, CONTROLLER, SELF = "scene", "geometry", "controller", "self"
+_TYPE = (r"(UIWindowScene\s*\.\s*Geometry\b|UIWindowSceneGeometry\b|UIWindowScene\b(?!\s*\.)"
+         r"|\w*Controller\b)")
+_RE_CAST_END = re.compile(r"\bas\s*[?!]?\s*" + _TYPE + r"\s*[?!]?\s*$")
+_RE_BIND_TYPED = re.compile(r"\b([A-Za-z_]\w*)\s*:\s*" + _TYPE)
+_RE_BIND_OBJC = re.compile(
+    r"\b(UIWindowSceneGeometry|UIWindowScene|\w*Controller)\s*\*\s*\)?\s*"
+    r"(?:(?:_Nullable|_Nonnull|const)\s+)*([A-Za-z_]\w*)")
+_RE_BIND_ASSIGN = re.compile(
+    r"\b(?:let|var)\s+([A-Za-z_]\w*)\s*(:\s*[\w.<>\[\]]+\s*[?!]?\s*)?=(?!=)\s*([^\n,{}]+)")
+_RE_TRAIL_IDENT = re.compile(r"([A-Za-z_]\w*)\s*$")
+_RE_VC_CONTEXT = re.compile(
+    r"\bclass\s+\w+(?:\s*<[^>{]*>)?\s*:\s*[^{]*?\b\w*ViewController\b"
+    r"|\bextension\s+\w*ViewController\b"
+    r"|@interface\s+\w+\s*:\s*\w*ViewController\b"
+    r"|@(?:implementation|interface)\s+\w*ViewController\b")
+_KEYWORDS_BEFORE_PAREN = {"if", "guard", "while", "return", "switch", "case", "where", "in",
+                          "try", "await", "else", "repeat"}
 
-_RE_IDIOM = re.compile(r"\buserInterfaceIdiom\b|\bUI_USER_INTERFACE_IDIOM\b")
-_RE_IDIOM_PHONE_PAD = re.compile(r"\.\s*(?:pad|phone)\b|\bUIUserInterfaceIdiom(?:Pad|Phone)\b")
-_RE_IDIOM_COMPARE = re.compile(
-    r"(userInterfaceIdiom|UI_USER_INTERFACE_IDIOM)\s*(?:\(\s*\))?\s*[\])]*\s*(==|!=)\s*"
-    r"(\.\s*\w+|UIUserInterfaceIdiom\w+)")
-_RE_IDIOM_OTHER = re.compile(
-    r"\.\s*(?:mac|vision|tv|carPlay|unspecified)\b"
-    r"|\bUIUserInterfaceIdiom(?:Mac|Vision|TV|CarPlay|Unspecified)\b")
+# DUO004: the idiom compared with .pad or .phone.
+_RE_IDIOM_TOKEN = re.compile(r"\buserInterfaceIdiom\b|\bUI_USER_INTERFACE_IDIOM\b")
+_PAD_PHONE = r"(\.\s*(?:pad|phone)\b|\bUIUserInterfaceIdiom(?:Pad|Phone)\b)"
+_RE_PAD_PHONE = re.compile(_PAD_PHONE)
+_RE_IDIOM_TYPED = re.compile(r"\b([A-Za-z_]\w*)\s*:\s*UIUserInterfaceIdiom\b(?!\s*\.)")
+_RE_IDIOM_OBJC_VAR = re.compile(r"\bUIUserInterfaceIdiom\s+([A-Za-z_]\w*)\s*[=;]")
+_RE_IDIOM_ASSIGN = re.compile(
+    r"\b(?:let|var)\s+([A-Za-z_]\w*)\s*(?::\s*UIUserInterfaceIdiom\s*[?!]?\s*)?=(?!=)\s*([^\n,{}]+)")
+_RE_ORIENTATION_MASK_DECL = re.compile(
+    r"\b(?:var|func)\s+supportedInterfaceOrientations\b"
+    r"|\bfunc\s+application\s*\([^{]*?\bsupportedInterfaceOrientationsFor\b"
+    r"|^[ \t]*[-+]\s*\([^)]*\)\s*supportedInterfaceOrientations\b"
+    r"|^[ \t]*[-+]\s*\([^)]*\)\s*application\s*:[^{]*?\bsupportedInterfaceOrientationsForWindow\b",
+    re.M)
+_CHAIN = r"[\w.\s\[\]()?!]*?"
 
 _RE_SIZE_CLASS_ENV = re.compile(
     r"@Environment\s*\(\s*\\\s*\.\s*horizontalSizeClass\s*\)\s*"
@@ -443,7 +483,7 @@ _RE_STRONG_CONTEXT = re.compile(
     r"(?i)bounds|screen|window|scene|safearea|display|device|geometry|proxy|container"
     r"|\bgeo\b|\bview\b|frame\s*\.\s*(?:width|height|size)")
 _RE_WEAK_CONTEXT = re.compile(r"(?i)width|height|size|frame|\b[wh]\b")
-_RE_PIXEL_CONTEXT = re.compile(r"(?i)nativeBounds|nativeScale|pixel")
+_RE_PIXEL_CONTEXT = re.compile(r"\bnative(?:Bounds|Scale)\b")
 _RE_SWITCH = re.compile(r"\bswitch\b")
 _RE_CASE = re.compile(r"^\s*case\b")
 _RE_NUMBER = re.compile(r"(?<![\w.])(\d+(?:\.\d+)?)(?![\w])")
@@ -583,6 +623,153 @@ def _line_col(text, offset):
     return line, offset - start + 1
 
 
+def _brace_body(code, start):
+    """Return (open, close) offsets of the first {...} block at or after start, or None."""
+    first = code.find("{", start)
+    if first == -1:
+        return None
+    depth = 0
+    for j in range(first, len(code)):
+        if code[j] == "{":
+            depth += 1
+        elif code[j] == "}":
+            depth -= 1
+            if depth == 0:
+                return first, j
+    return first, len(code)
+
+
+def orientation_mask_lines(code):
+    """Return the line numbers inside supportedInterfaceOrientations bodies.
+
+    Idiom checks there pick the orientations the app supports, not a layout.
+    """
+    lines = set()
+    for m in _RE_ORIENTATION_MASK_DECL.finditer(code):
+        brace = code.find("{", m.end())
+        if brace == -1:
+            continue
+        between = code[m.end():brace].replace("->", "")
+        if "=" in between or ";" in between:
+            continue  # a declaration without a body
+        body = _brace_body(code, brace)
+        first = code.count("\n", 0, m.start()) + 1
+        last = code.count("\n", 0, body[1]) + 1
+        lines.update(range(first, last + 1))
+    return lines
+
+
+def _type_kind(name):
+    name = re.sub(r"\s+", "", name)
+    if name in ("UIWindowScene.Geometry", "UIWindowSceneGeometry"):
+        return GEOMETRY
+    if name == "UIWindowScene":
+        return SCENE
+    if name.endswith("Controller"):
+        return CONTROLLER
+    return None
+
+
+def _member_kind(member):
+    """What a property returns, when its name says so for certain in UIKit."""
+    if member == "windowScene":
+        return SCENE
+    if member == "effectiveGeometry":
+        return GEOMETRY
+    if member.endswith("ViewController"):
+        return CONTROLLER
+    return None
+
+
+def _trailing_name(text, end):
+    """Return (start, name) of the identifier that ends at text[end], or (end, "")."""
+    i = end
+    while i > 0 and (text[i - 1].isalnum() or text[i - 1] == "_"):
+        i -= 1
+    name = text[i:end]
+    if not name or name[0].isdigit():
+        return end, ""
+    return i, name
+
+
+def _receiver(text, end, lookup, base=0, depth=0):
+    """Classify the expression that ends just before text[end].
+
+    Returns (kind, label). kind is SCENE, GEOMETRY, CONTROLLER, SELF, or None when the
+    code doesn't show the type. label is the last name in the expression. base is the
+    offset of text[0] in the file, for lookup.
+    """
+    head = text[:end]
+    cast = _RE_CAST_END.search(head)
+    if cast:
+        return _type_kind(cast.group(1)), re.sub(r"\s+", "", cast.group(1))
+    j = len(head.rstrip(" \t\n?!"))
+    if j and head[j - 1] == ")":
+        k, d = j - 1, 0
+        while k >= 0:
+            if head[k] == ")":
+                d += 1
+            elif head[k] == "(":
+                d -= 1
+                if d == 0:
+                    break
+            k -= 1
+        if k < 0 or depth > 3:
+            return None, ""
+        before = head[:k].rstrip()
+        word = _trailing_name(before, len(before))[1]
+        if before and (before[-1] in "?!)]>" or (word and word not in _KEYWORDS_BEFORE_PAREN)):
+            return None, ""  # a call, such as make(x).interfaceOrientation
+        return _receiver(head, j - 1, lookup, base, depth + 1)
+    i, name = _trailing_name(head, j)
+    if not name:
+        return None, ""
+    if head[:i].rstrip().endswith("."):
+        return _member_kind(name), name
+    if name in ("self", "super"):
+        return SELF, name
+    return lookup(name, base + i), name
+
+
+def _orientation_lookup(code, swift):
+    """Return lookup(name, offset): the kind of the nearest binding of name, or None.
+
+    It knows names typed as UIWindowScene, UIWindowScene.Geometry or a view controller,
+    casts to those types, and names assigned from .windowScene or .effectiveGeometry.
+    """
+    bindings = []  # (offset, name, kind), sorted by offset
+    if swift:
+        for m in _RE_BIND_TYPED.finditer(code):
+            bindings.append((m.start(1), m.group(1), _type_kind(m.group(2))))
+    else:
+        for m in _RE_BIND_OBJC.finditer(code):
+            bindings.append((m.start(2), m.group(2), _type_kind(m.group(1))))
+    bindings.sort(key=lambda b: b[0])
+
+    def lookup(name, offset):
+        found, kind = False, None
+        for off, nm, k in bindings:
+            if nm != name:
+                continue
+            if off < offset:
+                found, kind = True, k
+            elif not found:
+                return k
+            else:
+                break
+        return kind
+
+    if swift:
+        for m in _RE_BIND_ASSIGN.finditer(code):
+            if m.group(2):
+                continue  # `let name: Type = ...`: the type annotation already counts
+            rhs = re.sub(r"\s+else\s*$", "", m.group(3).rstrip())
+            kind = _receiver(rhs, len(rhs), lookup, m.start(3))[0]
+            at = bisect.bisect_right([b[0] for b in bindings], m.start(1))
+            bindings.insert(at, (m.start(1), m.group(1), kind))
+    return lookup
+
+
 def lint_source(text, path="<memory>", lang="swift", rules=None):
     """Lint Swift or Objective-C source text. Returns a list of Finding."""
     code, comments = split_code_and_comments(text, lang)
@@ -611,9 +798,101 @@ def lint_source(text, path="<memory>", lang="swift", rules=None):
     size_class_names = {m.group(1) for m in _RE_SIZE_CLASS_ENV.finditer(code)}
     size_class_rx = re.compile(r"\bhorizontalSizeClass\b" + "".join(
         r"|\b%s\b" % re.escape(nm) for nm in sorted(size_class_names)))
-    declares_orientation = bool(_RE_DECLARES_INTERFACE_ORIENTATION.search(code))
     skip = non_ios_lines(code_lines)
     previews = preview_lines(code)
+    line_starts = [0]
+    for line in code_lines[:-1]:
+        line_starts.append(line_starts[-1] + len(line) + 1)
+
+    def line_col(offset):
+        idx = bisect.bisect_right(line_starts, offset) - 1
+        return idx + 1, offset - line_starts[idx] + 1
+
+    # DUO003 and DUO002: interfaceOrientation. DUO003 (error) only when the code shows
+    # the receiver is one of the deprecated properties; DUO002 (warning) otherwise.
+    if "interfaceOrientation" in code:
+        lookup = _orientation_lookup(code, swift)
+        vc_context = bool(_RE_VC_CONTEXT.search(code))
+        declared = bool(_RE_DECLARES_INTERFACE_ORIENTATION.search(code))
+
+        def orientation_rule(kind):
+            if kind in (SCENE, CONTROLLER):
+                return "DUO003"
+            if kind == SELF and vc_context and not declared:
+                return "DUO003"
+            return "DUO002"
+
+        for m in _RE_MEMBER_INTERFACE_ORIENTATION.finditer(code):
+            line, col = line_col(m.start())
+            if line in skip:
+                continue
+            lo = max(0, m.start() - 300)
+            kind, label = _receiver(code[lo:m.start()], m.start() - lo, lookup, lo)
+            add(orientation_rule(kind), line, col,
+                (label + "." if label else ".") + "interfaceOrientation")
+        if swift and not declared:
+            for m in _RE_BARE_INTERFACE_ORIENTATION.finditer(code):
+                rest = code[m.end():m.end() + 80]
+                if re.match(r"\s*:|\s+[A-Za-z_]\w*\s*:|\s+in\b", rest):
+                    continue  # an argument label, a parameter label or a closure parameter
+                if re.search(r"\b(?:let|var|case|func)\s+$", code[max(0, m.start() - 40):m.start()]):
+                    continue
+                line, col = line_col(m.start())
+                if line not in skip:
+                    add(orientation_rule(SELF), line, col, "interfaceOrientation")
+        if not swift:
+            for m in _RE_OBJC_INTERFACE_ORIENTATION.finditer(code):
+                line, col = line_col(m.start())
+                if line in skip:
+                    continue
+                if m.group(1):
+                    kind, label = _receiver(m.group(1), len(m.group(1)), lookup, m.start(1))
+                else:
+                    label = m.group(2)
+                    kind = _member_kind(label)
+                add(orientation_rule(kind), line, col, "[%s interfaceOrientation]" % label)
+
+    # DUO004: the idiom compared with .pad or .phone, directly or through a variable.
+    idiom_rx = None
+    if _RE_IDIOM_TOKEN.search(code) or "UIUserInterfaceIdiom" in code:
+        aliases = {m.group(1) for m in _RE_IDIOM_TYPED.finditer(code)}
+        aliases.update(m.group(1) for m in _RE_IDIOM_OBJC_VAR.finditer(code))
+        for m in _RE_IDIOM_ASSIGN.finditer(code):
+            if _RE_IDIOM_TOKEN.search(m.group(2)) and not re.search(r"==|!=|\?\s|:", m.group(2)):
+                aliases.add(m.group(1))
+        aliases -= {"userInterfaceIdiom", "UI_USER_INTERFACE_IDIOM"}
+        subj = (r"(\buserInterfaceIdiom\b|\bUI_USER_INTERFACE_IDIOM\s*\(\s*\)"
+                + "".join(r"|\b%s\b" % re.escape(a) for a in sorted(aliases)) + ")")
+        idiom_rx = (
+            re.compile(subj + r"\s*[\])]*\s*(==|!=)\s*" + _PAD_PHONE),
+            re.compile(_PAD_PHONE + r"\s*(==|!=)\s*" + _CHAIN + subj),
+            re.compile(r"\bcase\s+" + _PAD_PHONE + r"\s*=\s*" + _CHAIN + subj),
+            re.compile(r"(\[[^\[\]\n]*\])\s*\.\s*contains\s*\(\s*" + _CHAIN + subj),
+            re.compile(r"\bswitch\b\s*\(?\s*" + _CHAIN + subj),
+        )
+        mask_lines = orientation_mask_lines(code)
+
+    def idiom_finding(c, start):
+        """Return (column, snippet) for an idiom comparison on line c, or None."""
+        left, right, case, contains, switch = idiom_rx
+        m = left.search(c)
+        if m:
+            return m.start() + 1, "%s %s %s" % (_tidy(m.group(1)), m.group(2), _tidy(m.group(3)))
+        m = right.search(c)
+        if m:
+            return m.start() + 1, "%s %s %s" % (_tidy(m.group(1)), m.group(2), _tidy(m.group(3)))
+        m = case.search(c)
+        if m:
+            return m.start() + 1, "case %s = %s" % (_tidy(m.group(1)), _tidy(m.group(2)))
+        m = contains.search(c)
+        if m and _RE_PAD_PHONE.search(m.group(1)):
+            return m.start() + 1, "%s.contains(%s)" % (_tidy(m.group(1)), _tidy(m.group(2)))
+        m = switch.search(c)
+        if m:
+            body = _brace_body(code, start + m.end())
+            if body and re.search(r"\bcase\b[^:\n]*" + _PAD_PHONE, code[body[0]:body[1]]):
+                return m.start() + 1, "switch %s" % _tidy(m.group(1))
+        return None
 
     last_switch = None       # (line index, strong, weak, pixel, proxy)
     last_size_switch = None  # line index of a switch on the horizontal size class
@@ -636,46 +915,31 @@ def lint_source(text, path="<memory>", lang="swift", rules=None):
             elif member in ("scale", "nativeScale"):
                 fix = FIX_DUO001_SCALE
             add("DUO001", lineno, m.start() + 1, _tidy(m.group(0)), fix)
+        if swift:
+            m = _RE_IMPLICIT_MAIN_SCREEN.search(c)
+            if m:
+                add("DUO001", lineno, m.start() + 1, re.sub(r"\s+", " ", m.group(0)))
+            elif _RE_LONE_MAIN.match(c):
+                prev = next((p for p in reversed(code_lines[max(0, idx - 3):idx]) if p.strip()), "")
+                if _RE_RETURNS_UISCREEN.search(prev):
+                    add("DUO001", lineno, len(c) - len(c.lstrip()) + 1,
+                        re.sub(r"\s+", " ", c.strip()) + " (UIScreen)")
 
-        # DUO002: device orientation, and orientation read from scene geometry.
+        # DUO002: device orientation.
         m = _RE_DEVICE_ORIENTATION.search(c)
         if m:
             add("DUO002", lineno, m.start() + 1, _tidy(m.group(0)))
 
-        # DUO003: deprecated interface orientation (and DUO002 for effectiveGeometry).
+        # DUO003: statusBarOrientation exists only on UIApplication.
         m = _RE_STATUS_BAR_ORIENTATION.search(c)
         if m:
             add("DUO003", lineno, m.start() + 1, "statusBarOrientation")
-        for m in _RE_MEMBER_INTERFACE_ORIENTATION.finditer(c):
-            before = _RE_TRAILING_IDENT.search(c[:m.start()])
-            owner = before.group(1) if before else ""
-            if _RE_GEOMETRY_IDENT.search(owner):
-                add("DUO002", lineno, m.start() + 1, owner + ".interfaceOrientation")
-            else:
-                add("DUO003", lineno, m.start() + 1,
-                    (owner + "." if owner else ".") + "interfaceOrientation")
-        if swift and not declares_orientation:
-            m = _RE_BARE_INTERFACE_ORIENTATION.search(c)
-            if m and not re.search(r"\b(?:let|var|case|func)\s+$", c[:m.start()]):
-                add("DUO003", lineno, m.start() + 1, "interfaceOrientation")
-        if not swift:
-            m = _RE_OBJC_INTERFACE_ORIENTATION.search(c)
-            if m:
-                add("DUO003", lineno, m.start() + 1, "interfaceOrientation")
 
         # DUO004: idiom used to pick a layout.
-        m = _RE_IDIOM.search(c)
-        orientation_mask = "supportedInterfaceOrientations" in "\n".join(
-            code_lines[max(0, idx - 3):idx + 1])
-        if m and not orientation_mask and (
-                _RE_IDIOM_PHONE_PAD.search(c) or not _RE_IDIOM_OTHER.search(c)):
-            cm = _RE_IDIOM_COMPARE.search(c)
-            if cm:
-                name = cm.group(1) + ("()" if cm.group(1).startswith("UI_") else "")
-                snippet = "%s %s %s" % (name, cm.group(2), _tidy(cm.group(3)))
-            else:
-                snippet = m.group(0)
-            add("DUO004", lineno, m.start() + 1, snippet)
+        if idiom_rx and lineno not in mask_lines:
+            hit = idiom_finding(c, line_starts[idx])
+            if hit:
+                add("DUO004", lineno, hit[0], hit[1])
 
         # DUO005: size class treated as a device type.
         sm = size_class_rx.search(c)

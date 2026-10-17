@@ -7,10 +7,10 @@
   <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
     <!-- header and legend -->
     <text x="30" y="36" font-size="15" font-weight="700" fill="#141a26">How it works in v0.1</text>
-    <rect x="869" y="23" width="26" height="16" rx="5" fill="#ffffff" stroke="#c9d0dc" stroke-width="2"/>
-    <text x="903" y="36" font-size="13" fill="#5b6475">in v0.1</text>
-    <rect x="966" y="23" width="26" height="16" rx="5" fill="#ffffff" stroke="#8a93a3" stroke-width="1.5" stroke-dasharray="4 3"/>
-    <text x="1000" y="36" font-size="13" fill="#5b6475">planned (tag = target release)</text>
+    <rect x="849" y="22" width="26" height="16" rx="5" fill="#ffffff" stroke="#c9d0dc" stroke-width="2"/>
+    <text x="883" y="36" font-size="14" fill="#5b6475">in v0.1</text>
+    <rect x="949" y="22" width="26" height="16" rx="5" fill="#ffffff" stroke="#8a93a3" stroke-width="1.5" stroke-dasharray="4 3"/>
+    <text x="983" y="36" font-size="14" fill="#5b6475">planned (tag = target release)</text>
   </g>
   <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif" text-anchor="middle">
     <!-- you ask -->
@@ -21,10 +21,10 @@
 
     <!-- claude code + duology skills -->
     <rect x="220" y="58" width="220" height="164" rx="12" fill="#2b55c7"/>
-    <text x="330" y="106" font-size="20" font-weight="700" fill="#ffffff">Claude Code</text>
-    <text x="330" y="134" font-size="15" fill="#dbe4ff">+ Duology skills</text>
-    <text x="330" y="160" font-size="15" fill="#dbe4ff">patterns · layout</text>
-    <text x="330" y="182" font-size="15" fill="#dbe4ff">continuity · recipes</text>
+    <text x="330" y="108" font-size="20" font-weight="700" fill="#ffffff">Claude Code</text>
+    <text x="330" y="136" font-size="15" fill="#dbe4ff">+ Duology skills</text>
+    <text x="330" y="158" font-size="15" fill="#dbe4ff">patterns · layout</text>
+    <text x="330" y="180" font-size="15" fill="#dbe4ff">continuity · recipes</text>
 
     <!-- xcode -->
     <rect x="480" y="58" width="190" height="164" rx="12" fill="#ffffff" stroke="#c9d0dc" stroke-width="2"/>
@@ -37,20 +37,20 @@
     <text x="820" y="94" font-size="20" font-weight="700" fill="#141a26">Checks</text>
     <text x="820" y="120" font-family="Menlo, Consolas, monospace" font-size="14" fill="#5b6475">duo-lint</text>
     <text x="820" y="142" font-size="15" fill="#5b6475">15-point design review</text>
-    <rect x="722" y="166" width="196" height="34" rx="8" fill="#f7f8fa" stroke="#8a93a3" stroke-width="1.5" stroke-dasharray="5 4"/>
-    <text x="820" y="188" font-size="13" fill="#5b6475">screenshot every pose</text>
-    <rect x="868" y="157" width="38" height="18" rx="9" fill="#5b6475"/>
-    <text x="887" y="170" font-size="11" font-weight="700" fill="#ffffff">v0.2</text>
+    <rect x="722" y="166" width="196" height="36" rx="8" fill="#f7f8fa" stroke="#8a93a3" stroke-width="1.5" stroke-dasharray="5 4"/>
+    <text x="820" y="190" font-size="14" fill="#5b6475">screenshot every pose</text>
+    <rect x="864" y="155" width="42" height="20" rx="10" fill="#5b6475"/>
+    <text x="885" y="169" font-size="12" font-weight="700" fill="#ffffff">v0.2</text>
 
     <!-- ship -->
     <rect x="970" y="58" width="200" height="164" rx="12" fill="#ffffff" stroke="#c9d0dc" stroke-width="2"/>
     <text x="1070" y="94" font-size="20" font-weight="700" fill="#141a26">Ship</text>
     <text x="1070" y="120" font-size="15" fill="#5b6475">you archive and</text>
     <text x="1070" y="142" font-size="15" fill="#5b6475">submit in Xcode</text>
-    <rect x="982" y="166" width="176" height="34" rx="8" fill="#f7f8fa" stroke="#8a93a3" stroke-width="1.5" stroke-dasharray="5 4"/>
-    <text x="1070" y="188" font-size="13" fill="#5b6475">App Store checklist</text>
-    <rect x="1108" y="157" width="38" height="18" rx="9" fill="#5b6475"/>
-    <text x="1127" y="170" font-size="11" font-weight="700" fill="#ffffff">v1.0</text>
+    <rect x="982" y="166" width="176" height="36" rx="8" fill="#f7f8fa" stroke="#8a93a3" stroke-width="1.5" stroke-dasharray="5 4"/>
+    <text x="1070" y="190" font-size="14" fill="#5b6475">App Store checklist</text>
+    <rect x="1104" y="155" width="42" height="20" rx="10" fill="#5b6475"/>
+    <text x="1125" y="169" font-size="12" font-weight="700" fill="#ffffff">v1.0</text>
   </g>
   <g stroke="#5b6475" stroke-width="2" fill="none" marker-end="url(#a)">
     <path d="M182 140H214"/><path d="M442 140H474"/><path d="M672 140H704"/><path d="M932 140H964"/>

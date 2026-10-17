@@ -20,7 +20,7 @@ struct DuelScreen: View {
                 half(.two, sideBySide: sideBySide)
             }
             // Seats are places at the table: player 1 keeps the top or left half in every
-            // language. Each half still lays out in the reader's direction (see half(_:)).
+            // language. Each half's content still lays out in the reader's direction.
             .environment(\.layoutDirection, .leftToRight)
         }
         .background(Color.secondary.ignoresSafeArea())    // shows through the 2 pt gap as a divider
@@ -41,10 +41,10 @@ struct DuelScreen: View {
         PlayerHalf(
             player: player,
             model: model,
+            direction: direction,
             quarterTurns: player.quarterTurns(faceToFace: model.faceToFace, sideBySide: sideBySide),
             onLeave: player == .two ? { confirmsLeave = true } : nil
         )
-        .environment(\.layoutDirection, direction)
     }
 }
 

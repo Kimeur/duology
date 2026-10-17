@@ -21,7 +21,7 @@ Delete the lines that don't apply.
       `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcrun -sdk iphonesimulator swiftc -typecheck -target arm64-apple-ios27.1-simulator <file>`
 - [ ] Each `SKILL.md` I touched has an up-to-date `metadata.verified` line, for example `"Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"`.
 - [ ] A new skill comes with at least one test task in `evals/tasks/`.
-- [ ] `python3 scripts/validate-skills.py` passes (front matter, 300-line limit, links).
+- [ ] `python3 scripts/validate-skills.py` passes (front matter, 300-line limit, links). Links to `reference/` or to another plugin use the GitHub URL, because `/plugin install` copies only the plugin folder.
 - [ ] `python3 scripts/check-manifests.py` passes.
 - [ ] `python3 -m unittest discover plugins/duology-ship/skills/duo-lint/tests` passes, if I changed duo-lint.
 - [ ] `python3 -m unittest discover -s scripts/tests` passes, if I changed `scripts/`.

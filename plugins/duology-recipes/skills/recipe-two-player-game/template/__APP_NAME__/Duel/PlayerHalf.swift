@@ -5,6 +5,9 @@ import SwiftUI
 struct PlayerHalf: View {
     let player: Player
     let model: DuelModel
+    /// The reader's layout direction. The split pins left-to-right so player 1 keeps the
+    /// left half; the content gets the real direction back here.
+    let direction: LayoutDirection
     /// Clockwise quarter turns, from `Player.quarterTurns(faceToFace:sideBySide:)`.
     var quarterTurns = 0
     var onLeave: (() -> Void)?
@@ -14,6 +17,9 @@ struct PlayerHalf: View {
             PlayField(player: player, model: model)
             ScoreBar(player: player, model: model, onLeave: onLeave)
         }
+        // Inside the turn: in a right-to-left language the content mirrors, and a turn
+        // applied inside that mirror would point the half's top edge away from the seam.
+        .environment(\.layoutDirection, direction)
         // Touches: this half only takes touches inside its own rectangle, even when a
         // panel grows past its edge at a large text size. No gesture here: with a tap
         // gesture on the same view, the target's accessibility frame grew to the whole field.
@@ -61,6 +67,8 @@ struct PlayField: View {
     let model: DuelModel
     /// The part of this field where targets may sit: clear of the fold and the cameras.
     @State private var area = GameRect.zero
+    /// The reader's direction, for the text panels. The field itself never mirrors.
+    @Environment(\.layoutDirection) private var direction
 
     private var space: NamedCoordinateSpace { .named("\(player.id).field") }
 
@@ -96,6 +104,10 @@ struct PlayField: View {
         }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("\(player.id).field")
+        // A field is a place, not a line of text, so it stays left-to-right. Mirrored in
+        // a right-to-left language, a tap on the drawn target counted as a miss (measured).
+        // The text panels get the reader's direction back below.
+        .environment(\.layoutDirection, .leftToRight)
     }
 
     @ViewBuilder
@@ -104,6 +116,7 @@ struct PlayField: View {
         switch duel.phase {
         case .waiting:
             ReadyPanel(player: player, model: model)
+                .environment(\.layoutDirection, direction)
         case .countdown:
             let seconds = duel.countdownRemaining(now: model.now) ?? 0
             Text("\(seconds)")
@@ -132,9 +145,11 @@ struct PlayField: View {
                     .padding(.top, 12)
                     .accessibilityIdentifier("\(player.id).locked")
                     .allowsHitTesting(false)
+                    .environment(\.layoutDirection, direction)
             }
         case .finished(let outcome):
             ResultPanel(player: player, outcome: outcome, model: model)
+                .environment(\.layoutDirection, direction)
         }
     }
 }

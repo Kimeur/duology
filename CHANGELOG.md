@@ -8,9 +8,9 @@ Each release says which Xcode and iOS versions it was checked on.
 
 ### Added
 
-- `scripts/validate-skills.py`: checks every `SKILL.md` for valid front matter, a `name` that matches its folder, a description of 1 to 1024 characters, a `metadata.verified` line, 300 lines or fewer, and relative links that resolve. It also checks the front matter of commands and agents. Standard library only.
+- `scripts/validate-skills.py`: checks every `SKILL.md` for valid front matter, a `name` that matches its folder, a description of 1 to 1024 characters, a `metadata.verified` line, 300 lines or fewer, and relative links that resolve and stay inside their plugin folder, since `/plugin install` copies only that folder. It also checks the front matter of commands and agents. Standard library only.
 - `scripts/check-manifests.py`: checks that every JSON file parses and that the marketplace, plugin manifests and hooks point at files that exist.
-- `scripts/check-sources.py`: checks that the web pages Duology cites still answer. Links into this repo are checked against the local checkout, so they also work offline.
+- `scripts/check-sources.py`: checks that the web pages Duology cites still answer. A redirect up to a parent page or an index counts as broken, because that is how Apple answers an unknown WWDC or Tech Talk ID. Links into this repo are checked against the local checkout, so they also work offline.
 - Unit tests for the three scripts in `scripts/tests/`.
 - GitHub Actions workflow `.github/workflows/validate.yml`: skills, manifests, duo-lint tests, duo-lint on Duology's own Swift, and the script tests on every push to `main` and every pull request. A weekly job checks the web links.
 - Issue forms for bugs, API corrections, new layout patterns and showcases, and a pull request template.

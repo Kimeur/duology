@@ -8,7 +8,7 @@ Every *measured* line in `duo-testing` comes from the runs on this page. Re-run 
 - Simulator: a private iPhone Duo created for these runs (`simctl create`, iOS 27.1 runtime 24A94425), deleted afterwards. We did not use the shared "iPhone Duo" simulator, because other work was running on it.
 - Pose: the new simulator booted **closed** and stayed closed. The app ran on the outer display, in portrait. `onHingeChange` reported `closed`. No API changes the pose, so nothing here was run open or partly open.
 - Control: an iPhone 17 Pro simulator on iOS 27.0 (24A434), created and deleted the same way.
-- Date: 16 October 2026.
+- Date: 16 October 2026. Rows marked 17 October come from reruns after review (logic tests) or from the independent review runs on the same Mac, Xcode and runtime. Their logs are not in the repo.
 
 ## 1. Logic tests on the Mac
 
@@ -90,6 +90,7 @@ The sample app and `BoardUITests` built with Swift 6, a deployment target of iOS
 | Forced failure: attachments | `display-0` 1398 × 2034 px, `display-1` 2006 × 2852 px, plus a screen recording and a "Synthesized Event" attachment |
 | `simctl io <UDID> screenshot --display=primary-1` on the same simulator, after the run | 2007 × 2853 px (outer, `--display=primary`: 1398 × 2034 px) |
 | Runner script on pass / fail | exit 0 / exit 65 with the `FAIL` line and message |
+| 17 October, independent review: the sample rebuilt from the `ui-tests.md` and `SKILL.md` listings alone, with `RootView` opening `BoardView()` | 5 of 5 passed (the 4 tests and the pose probe), `** TEST EXECUTE SUCCEEDED **`, exit 0. With the old `Text("Board")` placeholder, `testDragPieceIntoSlot` failed at `waitForExistence`, exit 65; `SKILL.md` now routes to `BoardView()` |
 
 ## 6. xcodebuild timing and errors
 
@@ -102,6 +103,8 @@ The sample app and `BoardUITests` built with Swift 6, a deployment target of iOS
 | 1 failing test, `-collect-test-diagnostics never` | failed and exited at 21:22:18; bundle 1.1 MB |
 | `simctl create` iPhone 17, 17e, 17 Pro, Air, 18 Pro or 18 Pro Max on iOS 27.1 | "Incompatible device" each time |
 | `build-for-testing` with `-destination "platform=iOS Simulator,name=iPhone Duo"` | built |
+| A failing `test-without-building` run (review run, 17 October) | last line `** TEST EXECUTE FAILED **`, not `** TEST FAILED **` |
+| Parallel testing on (a scheme Xcode generated for another Duology probe, `duo-shared-screen`'s review) | tests ran on "Clone 1 of iPhone Duo - ...-Runner" and logged `Test case '...' passed on 'Clone 1 of ...'`. Our own schemes don't turn on parallel testing, so our runs stayed on the named simulator. `-parallel-testing-enabled NO` in every command keeps it that way for any scheme (`man xcodebuild`: it overrides the scheme's per-target setting) |
 
 ## The pose probe: settle the open case
 

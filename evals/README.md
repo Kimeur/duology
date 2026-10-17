@@ -14,7 +14,7 @@ Does Duology make Claude Code better at iPhone Duo work? These evals answer that
 
 For each task, each *arm* (`with`, `without`) and each trial:
 
-1. **Fresh copy.** `run.sh` makes a new throwaway folder under `$TMPDIR/evals-work/`, outside the repo. It copies the task's fixture into `work/` and commits it to a new git repo, so the agent's changes show up as a diff. The `with` arm also gets a copy of the plugins in `plugins/`. The agent works in that copy and is never told where the Duology repo is.
+1. **Fresh copy.** `run.sh` makes a new throwaway folder, `$TMPDIR/evals-work/<run-id>/t-<random>/`, outside the repo. It copies the task's fixture into `work/` and commits it to a new git repo, so the agent's changes show up as a diff. The `with` arm also gets a copy of the plugins in `plugins/`. The agent works in that copy and is never told where the Duology repo is. Claude Code puts the current folder in the model's system prompt, so the folder name is random: it never names the task, the skill under test or the arm. Each trial's `meta.json` maps the folder back (`work_dir`, `trial_root`).
 2. **Empty environment.** The agent starts under `env -i`. It gets `HOME` set to a new empty `home/` inside the trial folder, `PATH=/usr/bin:/bin:/usr/sbin:/sbin`, `DEVELOPER_DIR` for Xcode 27.1, `TMPDIR` inside the trial folder, `SHELL=/bin/bash`, and one sign-in variable. Nothing else of yours reaches it: not your shell variables, not your `~/.claude` settings or plugins, not your git config.
 3. **Same agent call.** Both arms run this command (paths shortened):
 
@@ -43,7 +43,7 @@ The prompt never mentions Duology or its skills. With the plugins loaded, Claude
 | What | How |
 |---|---|
 | Shell | No blanket `Bash`. The base list is `xcodebuild`, `xcrun simctl`, `git diff`, `git status`, `ls`, `head`, `tail` and `cd`, plus `DEVELOPER_DIR=<Xcode 27.1> xcodebuild` and `xcrun simctl`, the form skills write. A task can add rules in its `tools:` line. |
-| Rule gate | `run.sh` refuses to start if any rule is too broad: blanket `Bash`, `Bash(*)`, an interpreter with a wildcard (`python3 *`), `sudo`, `rm`, `curl`, `env`, `xcrun` with anything but `simctl`, `swiftc` or its `--find`/`--show-sdk` options, `git` with anything that writes or talks to a remote, `xcode-select` with anything but printing, and more. See `rule_problem()` in [`lib/evalkit.py`](lib/evalkit.py). |
+| Rule gate | `run.sh` refuses to start if any rule is too broad: blanket `Bash`, `Bash(*)`, an interpreter with a wildcard (`python3 *`), a wildcard path that doesn't start with a project folder (`Tools/*` is fine; `/bin/*`, `../*` and `./*` are not), `sudo`, `rm`, `curl`, `env`, commands that run another command (`find`, `nice`, `time`, `timeout`, `source`, `awk` and others), `xcrun` with anything but `simctl`, `swiftc` or its `--find`/`--show-sdk` options, `git` with anything but `diff`, `status`, `log` or `show` right after it, `xcode-select` with anything but printing, and more. See `rule_problem()` in [`lib/evalkit.py`](lib/evalkit.py). |
 | Other tools | Read, Edit, Write, Glob, Grep and Skill. The Agent tool and the web tools are denied, so neither arm can start subagents or fetch Duology from GitHub. |
 | Prompts | `--permission-mode manual` with `--permission-prompts none`. Per `claude --help` (2.1.301), anything that would prompt is denied automatically. Nothing is ever auto-approved, and `run.sh` never passes `bypassPermissions` or `--dangerously-skip-permissions`. |
 | Settings | `HOME` is empty, so no user settings, plugins or MCP servers load. `--strict-mcp-config` with no config starts no MCP servers. Deny rules keep the agent from writing `.claude/` settings mid-run. |
@@ -129,7 +129,8 @@ Everything goes to `evals/results/runs/<run-id>/`, which git ignores. The defaul
 
 ```text
 evals/results/runs/2026-10-30_101500/
-  run.json                 Claude Code, model, Xcode, simulator, Duology commit, isolation settings, tasks
+  run.json                 Claude Code, model, Xcode, xcode-select's default, simulator, Duology commit,
+                           isolation settings, tasks
   summary.json             per task and arm: trials, passes, pending, failures, cost, refused calls
   summary.md               the same as a table, in the README's format
   duo-layout/existing-list-app/
@@ -147,7 +148,7 @@ evals/results/runs/2026-10-30_101500/
     without/trial-1/ ...
 ```
 
-`summary.json` has one entry per task, with `arms.with` and `arms.without`. Each gives `trials`, `counts` (`pass`, `pending-review`, `fail`, `error`, `contaminated`, `unscored`), `automatic_passed`, `cost_usd` and `permission_denials`, plus run-wide `totals`. A `contaminated` trial is one where the run without Duology touched Duology anyway; rerun it. Each `result.json` adds the agent's turns, time, cost, the skills it loaded, refused tool calls and any contamination.
+The summary counts only folders shaped `<skill>/<task>/<arm>/trial-N` and never looks inside one, so a `meta.json` the agent left in its work folder (and so in `final-tree/`) can't add a trial. `summary.json` has one entry per task, with `arms.with` and `arms.without`. Each gives `trials`, `counts` (`pass`, `pending-review`, `fail`, `error`, `contaminated`, `unscored`), `automatic_passed`, `cost_usd` and `permission_denials`, plus run-wide `totals`. A `contaminated` trial is one where the run without Duology touched Duology anyway; rerun it. Each `result.json` adds the agent's turns, time, cost, the skills it loaded, refused tool calls and any contamination.
 
 The throwaway folders stay in `$TMPDIR/evals-work/` so you can open the app in Xcode. Pass `--clean-work` to delete them after scoring.
 

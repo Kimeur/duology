@@ -1,6 +1,6 @@
 ---
 name: duo-lint
-description: "The fold linter for iPhone Duo, Apple's foldable with an outer display and an inner display. Run it to find code Apple says to remove before an app runs on the foldable, then fix each finding. Catches UIScreen.main and UIScreen.screens, UIDevice.current.orientation, statusBarOrientation, interfaceOrientation and effectiveGeometry.interfaceOrientation, userInterfaceIdiom == .pad, horizontalSizeClass == .regular treated as iPad, hard-coded screen sizes (bounds.height == 844), GeometryReader sizes matched to devices, .frame(width: 390) and fixed width constraints, and UIRequiresFullScreen. Use it for an iPhone Duo audit, before a review or release, in CI (GitHub annotations), after editing SwiftUI or UIKit layout code, or when a screen breaks when the phone folds, unfolds or resizes."
+description: "The fold linter for iPhone Duo, Apple's foldable with an outer display and an inner display. Run it to find code Apple says to remove before an app runs on the foldable; it reports each finding with the fix for its rule. Catches UIScreen.main and UIScreen.screens, UIDevice.current.orientation, statusBarOrientation, the deprecated interfaceOrientation properties and effectiveGeometry.interfaceOrientation, userInterfaceIdiom == .pad, horizontalSizeClass == .regular treated as iPad, hard-coded screen sizes (bounds.height == 844), GeometryReader sizes matched to devices, .frame(width: 390) and fixed width constraints, and UIRequiresFullScreen. Use it before a review or release, in CI (GitHub annotations), after editing SwiftUI or UIKit layout code, or when a screen breaks when the phone folds, unfolds or resizes. It reads code only; for a full iPhone Duo audit that also checks screenshots, use /duo-audit or the duo-design-review checklist."
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
   sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
@@ -14,24 +14,35 @@ It is one Python 3 file with no dependencies. It runs locally and sends nothing 
 
 Most rules come from Step 2 of Apple's [Three steps to make your app shine on iPhone Duo](https://developer.apple.com/iphone-duo/prepare/). Xcode 27.1 also ships an App Resizability agent skill that looks for the same patterns ([prepare page](https://developer.apple.com/iphone-duo/prepare/)). duo-lint doesn't replace it. Use duo-lint where you need a repeatable check: CI, the lint hook, or another coding agent.
 
+duo-lint reads code. It can't see the screen. For a full iPhone Duo audit, run `/duo-audit` (in the `duology-ship` plugin): it runs duo-lint, then the 15-point `duo-design-review` checklist on screenshots from the Duo simulator, and ranks everything in one list. Without Claude Code, run duo-lint, then follow the `duo-design-review` skill.
+
 Related skills: `duo-layout` (size classes, reserved regions, arrangements), `duo-continuity` (state through a fold), `duo-testing` (tests on the Duo simulator).
 
 ## Run it
 
-The script is in this skill's folder: `scripts/duo-lint` (or `scripts/duo-lint.py`). Claude Code prints the skill's folder when it loads the skill. In the Duology plugin it is `skills/duo-lint/scripts/` under the `duology-ship` plugin folder.
+The command depends on how you installed this skill:
+
+| Installed with | Run |
+|---|---|
+| The `duology-ship` plugin in Claude Code | `duo-lint`. The plugin puts its `bin/` folder on the Bash tool's PATH. |
+| `npx skills add`, or copied by hand | `<skill-folder>/scripts/duo-lint`. `<skill-folder>` is the folder that holds this `SKILL.md`. |
+
+In Claude Code, `<skill-folder>` is `${CLAUDE_SKILL_DIR}`. If `scripts/duo-lint` can't be executed, run `python3 <skill-folder>/scripts/duo-lint.py` instead. The examples below say `duo-lint`; use the script path when the plugin isn't installed.
 
 ```bash
-# Whole project (skips build/, DerivedData/, Pods/, Carthage/, .build/, SourcePackages/)
-python3 <skill-folder>/scripts/duo-lint.py .
+# Whole project
+duo-lint .
 
 # One folder or file
-python3 <skill-folder>/scripts/duo-lint.py Sources/Feed/FeedView.swift
+duo-lint Sources/Feed/FeedView.swift
 
 # With the fix and the Apple link under each finding
-python3 <skill-folder>/scripts/duo-lint.py -v Sources/
+duo-lint -v Sources/
 ```
 
-`duo-lint` is executable, so `<skill-folder>/scripts/duo-lint Sources/` works too. It needs Python 3.9 or later. On a Mac with Xcode 27.1, `/usr/bin/python3` is Xcode's Python 3.9, which is enough.
+In folders it skips `build/`, `DerivedData/`, `Pods/`, `Carthage/`, `.build/`, `SourcePackages/`, `.claude/`, `.agents/` and its own `tests/fixtures/`, wherever this skill is installed. Name a skipped folder on the command line to check it anyway.
+
+It needs Python 3.9 or later. On a Mac with Xcode 27.1, `/usr/bin/python3` is Xcode's Python 3.9, which is enough.
 
 | Option | What it does |
 |---|---|
@@ -50,14 +61,14 @@ Exit codes: `0` no errors, `1` errors (or any finding with `--strict`), `2` a ba
 
 ## Read the output
 
-Real output from a small sample app:
+Real output on the four-file sample in [tests/fixtures/sample](tests/fixtures/sample), run from that folder:
 
 ```text
 $ duo-lint Sources/
-Sources/App/RootView.swift:6           DUO004  warning  userInterfaceIdiom == .pad  layout picked by device type; pick it by size class or space
+Sources/App/RootView.swift:7           DUO004  warning  userInterfaceIdiom == .pad  layout picked by device type; pick it by size class or space
 Sources/Feed/FeedView.swift:8          DUO001  error    UIScreen.main.bounds        your window is not the screen on a two-display phone; size from the view or window
 Sources/Player/Controls.swift:9        DUO007  warning  frame(width: 390)           fixed width of 320 pt or more; let the container size it
-Sources/Settings/SettingsView.swift:8  DUO009  warning  <= 667                      GeometryReader size compared to a device size; use size class or ViewThatFits
+Sources/Settings/SettingsView.swift:6  DUO009  warning  <= 667                      GeometryReader size compared to a device size; use size class or ViewThatFits
 4 findings · 1 error · 3 warnings (4 files checked)
 ```
 
@@ -72,10 +83,10 @@ Each line is `path:line  RULE  severity  code  message`. The last line counts fi
 
 | Rule | Severity | Catches | Fix |
 |---|---|---|---|
-| DUO001 | error | `UIScreen.main`, `UIScreen.screens` | `view.bounds`, `GeometryReader`, `onGeometryChange`; `traitCollection.displayScale`; `UIWindow(windowScene:)` |
-| DUO002 | warning | `UIDevice.current.orientation`, its notification, `effectiveGeometry.interfaceOrientation` | Compare width with height. Camera: `AVCaptureDevice.RotationCoordinator`. |
-| DUO003 | error | `statusBarOrientation`, deprecated `interfaceOrientation` | Compare width with height. |
-| DUO004 | warning | `userInterfaceIdiom == .pad` / `.phone` | Size class, `NavigationSplitView`, `ViewThatFits`. |
+| DUO001 | error | `UIScreen.main`, `UIScreen.screens`, `.main` where Swift infers `UIScreen` | `view.bounds`, `GeometryReader`, `onGeometryChange`; `traitCollection.displayScale`; `UIWindow(windowScene:)` |
+| DUO002 | warning | `UIDevice.current.orientation`, its notification, `effectiveGeometry.interfaceOrientation`, an `interfaceOrientation` whose owner it can't see | Compare width with height. Camera: `AVCaptureDevice.RotationCoordinator`. |
+| DUO003 | error | `statusBarOrientation`, `interfaceOrientation` on a `UIWindowScene` or view controller | Compare width with height. |
+| DUO004 | warning | `userInterfaceIdiom` compared with `.pad` or `.phone` | Size class, `NavigationSplitView`, `ViewThatFits`. |
 | DUO005 | warning | `horizontalSizeClass == .regular` next to "iPad" | Treat regular as "wide", not as iPad. |
 | DUO006 | warning | `bounds.height == 844`, lists of device sizes | Size class, `ViewThatFits`, width vs height. |
 | DUO007 | warning | `.frame(width: 390)`, width constraints of 320 pt or more | `.frame(maxWidth:)`, `containerRelativeFrame`, readable content guide. |
@@ -127,7 +138,7 @@ struct PromoBanner: View {
 
 ## Workflow
 
-1. Run `duo-lint -v .` from the project root. Add `--objc` for mixed projects.
+1. Run `duo-lint -v .` from the project root (or the script path, see [Run it](#run-it)). Add `--objc` for mixed projects.
 2. Fix every **error** first. They are deprecated APIs.
 3. Fix the warnings, one rule at a time. Read the rule in [references/rules.md](references/rules.md) before changing code you don't own.
 4. Re-run until the summary shows `0 errors`. Aim for `0 findings`.
@@ -182,9 +193,9 @@ When the hook reports a finding, fix it in your next edit, or silence it with a 
 
 ## What it doesn't catch
 
-duo-lint finds patterns in code. It can't see controls sitting in the fold, state lost on a fold, a `UIScreen` kept in a property, sizes read once at launch, or window bounds used as the screen size. The full list is at the end of [references/rules.md](references/rules.md).
+duo-lint finds patterns in code. It can't see controls sitting in the fold, state lost on a fold, a `UIScreen` kept in a property, sizes read once at launch, or window bounds used as the screen size. The full list is at the end of [references/rules.md](references/rules.md). For what only a screenshot shows, run `/duo-audit` or the `duo-design-review` checklist.
 
-DUO005 and DUO006 are heuristics. They can flag code that is fine, and miss code that hides a device size behind a name. Read each one before you change it.
+duo-lint reads text, not types. So the split between DUO003 and DUO002, and DUO004, DUO005 and DUO006, are heuristics. They can flag code that is fine, and miss code that hides a device size or type behind a name. [references/rules.md](references/rules.md) says how each one decides. Read each finding before you change it.
 
 ## Checklist
 

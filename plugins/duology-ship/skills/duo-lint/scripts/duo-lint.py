@@ -921,7 +921,8 @@ def lint_source(text, path="<memory>", lang="swift", rules=None):
         if swift:
             m = _RE_IMPLICIT_MAIN_SCREEN.search(c)
             if m:
-                add("DUO001", lineno, m.start() + 1, re.sub(r"\s+", " ", m.group(0)))
+                snippet = re.sub(r"\s+", " ", m.group(0))
+                add("DUO001", lineno, m.start() + 1, snippet + (" }" if "{" in snippet else ""))
             elif _RE_LONE_MAIN.match(c):
                 prev = next((p for p in reversed(code_lines[max(0, idx - 3):idx]) if p.strip()), "")
                 if _RE_RETURNS_UISCREEN.search(prev):

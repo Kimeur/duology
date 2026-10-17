@@ -6,10 +6,10 @@ Most rules come from one Apple page: [Three steps to make your app shine on iPho
 
 | Rule | Name | Severity | Flags |
 |---|---|---|---|
-| [DUO001](#duo001-main-screen) | `main-screen` | error | `UIScreen.main`, `UIScreen.screens` |
-| [DUO002](#duo002-device-orientation) | `device-orientation` | warning | `UIDevice.current.orientation`, its notification, `effectiveGeometry.interfaceOrientation` |
-| [DUO003](#duo003-deprecated-interface-orientation) | `deprecated-interface-orientation` | error | `statusBarOrientation`, the deprecated `interfaceOrientation` properties |
-| [DUO004](#duo004-idiom-layout) | `idiom-layout` | warning | `userInterfaceIdiom == .pad` or `.phone` |
+| [DUO001](#duo001-main-screen) | `main-screen` | error | `UIScreen.main`, `UIScreen.screens`, `.main` where Swift infers `UIScreen` |
+| [DUO002](#duo002-device-orientation) | `device-orientation` | warning | `UIDevice.current.orientation`, its notification, `effectiveGeometry.interfaceOrientation`, any `interfaceOrientation` read DUO003 doesn't claim |
+| [DUO003](#duo003-deprecated-interface-orientation) | `deprecated-interface-orientation` | error | `statusBarOrientation`, `interfaceOrientation` on a `UIWindowScene` or view controller the code shows |
+| [DUO004](#duo004-idiom-layout) | `idiom-layout` | warning | `userInterfaceIdiom` compared with `.pad` or `.phone` |
 | [DUO005](#duo005-regular-width-is-ipad) | `regular-width-is-ipad` | warning | `horizontalSizeClass == .regular` next to "iPad" |
 | [DUO006](#duo006-device-size-literal) | `device-size-literal` | warning | `bounds.height == 844` and lists of device sizes |
 | [DUO007](#duo007-fixed-width) | `fixed-width` | warning | `.frame(width: 390)`, width constraints of 320 pt or more |
@@ -20,13 +20,24 @@ Most rules come from one Apple page: [Three steps to make your app shine on iPho
 
 The linter reads code, not comments or string literals. Swift string interpolation (`"\(UIScreen.main.scale)"`) counts as code. Code inside `#if os(macOS)`, `os(watchOS)`, `os(tvOS)`, `os(visionOS)`, `targetEnvironment(macCatalyst)` or `canImport(AppKit)`, and in the `#else` of `#if os(iOS)`, is skipped, because it never runs on iPhone Duo.
 
+duo-lint reads text, not types. Where a rule depends on a type, such as DUO003, it says below how it decides.
+
+In folders it skips build output and dependencies (`build/`, `DerivedData/`, `.build/`, `Pods/`, `Carthage/`, `SourcePackages/`, `node_modules/`), the agent folders `.claude/` and `.agents/`, and its own `tests/fixtures/` wherever the skill is installed. Those fixtures are bad code on purpose. A folder you name on the command line is always checked.
+
 ---
 
 ## DUO001 main-screen
 
 **Severity:** error.
 
-**Flags:** `UIScreen.main`, `UIScreen.screens`, and in Objective-C `[UIScreen mainScreen]`, `UIScreen.mainScreen` and `[UIScreen screens]`.
+**Flags:** `UIScreen.main`, `UIScreen.screens`, and in Objective-C `[UIScreen mainScreen]`, `UIScreen.mainScreen` and `[UIScreen screens]`. In Swift it also flags `.main` where Swift infers `UIScreen`:
+
+- a `UIScreen` declaration or default value: `let screen: UIScreen = .main`, `func f(screen: UIScreen = .main)`;
+- a `UIScreen` getter or function that returns `.main`: `var screen: UIScreen { .main }`;
+- `?? .main` after a name that ends in `screen`: `scene?.screen ?? .main`;
+- an argument labelled `screen:` with `.main`: `Observer(screen: .main)`.
+
+Other `.main` values, such as `DispatchQueue.main`, `RunLoop.main` or `queue ?? .main`, are fine. A `.main` with no `UIScreen` or `screen` on the line or in the getter above it is missed.
 
 **Why:** your app's window changes size every time the phone folds or unfolds, and it is often not the size of the screen. iPhone Duo also has two displays, so "the main screen" doesn't say which one you mean. Apple's [prepare page](https://developer.apple.com/iphone-duo/prepare/) says to search for `UIScreen.main` and replace every use. The iOS 27.1 SDK marks `UIScreen.main` deprecated since iOS 26.0 and `UIScreen.screens` since iOS 16.0 ([UIScreen.main](https://developer.apple.com/documentation/uikit/uiscreen/main)). `UIWindow(frame:)` is deprecated in the iOS 27.1 SDK too; its message points to `init(windowScene:)`.
 
@@ -122,7 +133,7 @@ If you need the screen itself, read `view.window?.windowScene?.screen` at the mo
 
 **Severity:** warning.
 
-**Flags:** `UIDevice.current.orientation`, `UIDevice.orientationDidChangeNotification`, `beginGeneratingDeviceOrientationNotifications()`, their Objective-C forms, and `interfaceOrientation` read from a scene geometry (`effectiveGeometry.interfaceOrientation`, or any name that ends in `geometry`).
+**Flags:** `UIDevice.current.orientation`, `UIDevice.orientationDidChangeNotification`, `beginGeneratingDeviceOrientationNotifications()`, their Objective-C forms, and every `interfaceOrientation` read that [DUO003](#duo003-deprecated-interface-orientation) doesn't claim. That covers a scene geometry read through any name (`scene.effectiveGeometry.interfaceOrientation`, `let g = scene.effectiveGeometry` then `g.interfaceOrientation`, a `UIWindowScene.Geometry` parameter) and a read whose owner the code doesn't show (`scenes.first?.interfaceOrientation`).
 
 **Why:** on iPhone Duo, the way the phone is held doesn't tell you the shape of your window. Apple's [prepare page](https://developer.apple.com/iphone-duo/prepare/) lists these properties, including `windowScene.effectiveGeometry.interfaceOrientation`, and says to remove layout logic that depends on them. The inner display also ignores the orientations your app supports ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)). This is a warning, not an error, because none of these is deprecated and a few uses are not layout.
 
@@ -205,7 +216,17 @@ final class PreviewRotation {
 
 **Severity:** error.
 
-**Flags:** `statusBarOrientation`; `.interfaceOrientation` on anything that is not a scene geometry (for example `windowScene.interfaceOrientation`); a bare `interfaceOrientation` inside a view controller in Swift; `[self interfaceOrientation]` in Objective-C.
+**Flags:** `statusBarOrientation`, and `interfaceOrientation` read from a `UIWindowScene` or a view controller.
+
+**How it decides:** duo-lint reads text, not types. It reports DUO003 only when the same file shows that the owner is a `UIWindowScene` or a view controller:
+
+- a name declared with the type: `windowScene: UIWindowScene`, `vc: UIViewController`, or any type whose name ends in `Controller` (in Objective-C, `UIWindowScene *scene`);
+- a cast: `(scene as? UIWindowScene)?.interfaceOrientation`, `guard let ws = scene as? UIWindowScene`;
+- a name assigned from one of those, or from `.windowScene`: `let ws = view.window?.windowScene`;
+- a chain that ends in `.windowScene`, or in a property whose name ends in `ViewController`;
+- `self.interfaceOrientation` or a bare `interfaceOrientation` in a Swift file that subclasses or extends a `…ViewController`, and `[self interfaceOrientation]` in an Objective-C `@implementation` of one. If the file declares its own `interfaceOrientation`, those reads are DUO002.
+
+For a name, it uses the nearest declaration above the read in the same file, or the first one below it (a property declared after the method that uses it). It doesn't follow scopes, closures or other files. Every other read is DUO002, so a deprecated read it can't place shows up as a warning, not an error. A custom type whose name ends in `Controller` and that has its own `interfaceOrientation` property gets DUO003 by mistake; silence it with a reason.
 
 **Why:** the same reason as DUO002, and these APIs are deprecated in the iOS 27.1 SDK: `UIApplication.statusBarOrientation` since iOS 13.0, `UIWindowScene.interfaceOrientation` since iOS 26.0, and `UIViewController.interfaceOrientation` since iOS 8.0. See the [prepare page](https://developer.apple.com/iphone-duo/prepare/) and [statusBarOrientation](https://developer.apple.com/documentation/uikit/uiapplication/statusbarorientation).
 
@@ -220,7 +241,8 @@ final class ReaderViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         let pages = UIApplication.shared.statusBarOrientation.isLandscape ? 2 : 1
-        print(pages)
+        let wide = view.window?.windowScene?.interfaceOrientation.isLandscape ?? false
+        print(pages, wide)
     }
 }
 ```
@@ -250,7 +272,16 @@ final class ReaderViewController: UIViewController {
 
 **Severity:** warning.
 
-**Flags:** `userInterfaceIdiom` (on `UIDevice` or a trait collection) and `UI_USER_INTERFACE_IDIOM()` compared with `.pad` or `.phone`, or read without naming a non-layout idiom such as `.mac`, `.vision`, `.tv` or `.carPlay`. It skips idiom checks inside `supportedInterfaceOrientations`, which pick orientations, not a layout.
+**Flags:** `userInterfaceIdiom` (on `UIDevice` or a trait collection) or `UI_USER_INTERFACE_IDIOM()` compared with `.pad` or `.phone` (also written `UIUserInterfaceIdiom.pad`, or `UIUserInterfaceIdiomPad` in Objective-C):
+
+- `==` or `!=`, with the idiom on either side;
+- `if case .pad = …`, also after `guard` or `while`;
+- `[.pad, .mac].contains(…)`;
+- a `switch` on the idiom that has a `case .pad` or `case .phone`.
+
+It follows a variable that holds the idiom, such as `let idiom = UIDevice.current.userInterfaceIdiom`, and any name typed `UIUserInterfaceIdiom`.
+
+It doesn't flag reading or passing the idiom (`print(idiom)`, `UITraitCollection(userInterfaceIdiom: .pad)`, `traitOverrides.userInterfaceIdiom = .pad`), declarations, comparisons with other idioms (`.mac`, `.vision`, `.tv`, `.carPlay`), or anything inside `supportedInterfaceOrientations` and `application(_:supportedInterfaceOrientationsFor:)`. Those pick the orientations the app supports, not a layout.
 
 **Why:** Apple's [Duo overview](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo) says not to use `userInterfaceIdiom` for layout decisions, and the [prepare page](https://developer.apple.com/iphone-duo/prepare/) says to search for `userInterfaceIdiom == .phone` and `== .pad`. *Measured:* a process run inside the iPhone Duo simulator (iOS 27.1) reports the `.phone` idiom, and the simulator's device profile lists only the iPhone product family. So an iPad layout behind `== .pad` never shows on the 7.6 in inner display, and a phone layout behind `== .phone` gets stretched across it.
 
@@ -372,7 +403,7 @@ struct SettingsScreen: View {
 - a list of two or more device dimensions, such as `[568, 667, 736].contains(height)`;
 - `case 568, 667:` in a `switch` on a size;
 - `CGSize` or `CGRect` (and `CGSizeMake`, `CGRectMake`) with a device width and a device height;
-- native pixel sizes, such as `nativeBounds.height == 2436`, on lines that read `nativeBounds` or `nativeScale`.
+- native pixel sizes, such as `nativeBounds.height == 2436`, on lines that read `nativeBounds` or `nativeScale`. A line that only mentions pixels, such as `imagePixelWidth == 1920`, doesn't count.
 
 The device dimensions are the point widths and heights of iPhone and iPad models, plus iPhone Duo window sizes: 466 × 678 (outer display, derived) and 951 × 669 (inner display fully open, measured). See [device-facts.md](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md). `320`, `768` and `1024` are also common image sizes and breakpoints, so they count only when the line names the screen, window, view, bounds, scene, safe area, geometry or proxy. The full lists are at the top of `scripts/duo-lint.py`. Previews (`#Preview`, `PreviewProvider`) are skipped.
 
@@ -514,6 +545,11 @@ final class FormViewController: UIViewController {
 
 **Flags:** `UIRequiresFullScreen` set to `true` (also `UIRequiresFullScreen~ipad`) in an `Info.plist`, XML or binary, and `INFOPLIST_KEY_UIRequiresFullScreen = YES` in `.xcconfig` files and `project.pbxproj`. In folders it reads files named `Info.plist` or ending in `Info.plist`; pass other plists by name. It stays quiet when the same plist also has `UIRequiresFullScreenIgnoredStartingWithVersion`, which is Apple's migration path.
 
+**Build setting plus Info.plist:** with `GENERATE_INFOPLIST_FILE`, Xcode merges `INFOPLIST_KEY_UIRequiresFullScreen` into the Info.plist file that `INFOPLIST_FILE` names. Xcode 27.1 has no build setting for the ignore key, so that key can only go in the file. duo-lint stays quiet about the build setting when the merged file has the ignore key:
+
+- In `project.pbxproj`, it reads `INFOPLIST_FILE` from the same build configuration. `$(SRCROOT)`, `$(PROJECT_DIR)` and `$(SOURCE_ROOT)` stand for the folder that holds the `.xcodeproj`.
+- When it can't resolve that path (an `.xcconfig` without `INFOPLIST_FILE`, other variables, a missing file), it accepts any Info.plist with the ignore key inside the same project folder, as long as the same run checks it. So `duo-lint .` from the project root sees both; `duo-lint Config/Base.xcconfig` alone still warns.
+
 **Why:** [TN3192](https://developer.apple.com/documentation/technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key) says the key is deprecated since iPadOS 26. From iOS 27, when you build with the iOS 27 SDK, it no longer stops your app from resizing; the system resizes the scene in discrete steps instead. Apple's Duo talk adds that an app with the key still resizes when the phone opens or closes ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)). Keeping the key only hides the work you still need to do.
 
 **Fix:** delete the key from `Info.plist` and the "Requires Full Screen" build setting, then fix the layout with the other rules. If an older iOS version still needs the key, keep it and add `UIRequiresFullScreenIgnoredStartingWithVersion` (a string, available from iOS 26.2) with the first version that should ignore it ([doc](https://developer.apple.com/documentation/bundleresources/information-property-list/uirequiresfullscreenignoredstartingwithversion)).
@@ -618,6 +654,7 @@ duo-lint reads code. It can't run your app. A clean report means none of these p
 - state lost when the phone folds or unfolds (see `duo-continuity`);
 - a `UIScreen` kept in a property, or a size read once at launch and never again;
 - device sizes behind names it can't see, such as `if h < 667` where nothing on the line says width, height, size or bounds;
+- a deprecated `interfaceOrientation` read whose owner the file doesn't show: it reports DUO002 (warning) instead of DUO003;
 - `UIApplication.shared.windows` or `keyWindow` bounds used as the screen size;
 - full-bleed media with `.scaleAspectFill` or `.aspectRatio(contentMode: .fill)` that loses content on wider windows (the prepare page asks you to check these by hand);
 - Swift regex literals that contain a quote (rare): they can confuse the comment and string scanner.

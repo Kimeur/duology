@@ -232,18 +232,20 @@ Voir [Recettes](#recettes).
 <details>
 <summary><strong>duo-lint</strong> · exemple de rapport</summary>
 
-Sortie réelle sur [`evals/fixtures/Places`](../../evals/fixtures/Places), une app d'exemple où des erreurs ont été placées exprès pour les évaluations. Quatre de ses huit résultats :
+Sortie réelle sur un exemple de quatre fichiers, [`tests/fixtures/sample`](../../plugins/duology-ship/skills/duo-lint/tests/fixtures/sample) dans le skill, lancé depuis ce dossier :
 
 ```text
-$ duo-lint Places
-Places/App/RootView.swift:17          DUO004  warning  userInterfaceIdiom == .pad    layout picked by device type; pick it by size class or space
-Places/List/PlaceRow.swift:9          DUO001  error    UIScreen.main.bounds          your window is not the screen on a two-display phone; size from the view or window
-Places/List/PlacesScreen.swift:8      DUO005  warning  regular width as iPad         size class treated as a device; iPhone Duo gets regular and compact widths
-Places/List/PlacesScreen.swift:97     DUO007  warning  frame(width: 390)             fixed width of 320 pt or more; let the container size it
-8 findings · 3 errors · 5 warnings (10 files checked)
+$ duo-lint Sources/
+Sources/App/RootView.swift:7           DUO004  warning  userInterfaceIdiom == .pad  layout picked by device type; pick it by size class or space
+Sources/Feed/FeedView.swift:8          DUO001  error    UIScreen.main.bounds        your window is not the screen on a two-display phone; size from the view or window
+Sources/Player/Controls.swift:9        DUO007  warning  frame(width: 390)           fixed width of 320 pt or more; let the container size it
+Sources/Settings/SettingsView.swift:6  DUO009  warning  <= 667                      GeometryReader size compared to a device size; use size class or ViewThatFits
+4 findings · 1 error · 3 warnings (4 files checked)
 ```
 
-Il a neuf règles (`DUO001` à `DUO009`) et produit du texte, du JSON ou des annotations GitHub. Ses messages sont en anglais. Activez le hook facultatif (`export DUOLOGY_LINT_HOOK=1` avant de lancer Claude Code) et Claude voit ces résultats juste après avoir modifié un fichier Swift. Le hook ne bloque jamais une modification.
+Chaque ligne donne l'emplacement, la règle, la gravité, le code et le problème. Une `error` est une API que le SDK marque déjà comme obsolète ; un `warning` est un usage presque toujours faux sur iPhone Duo. Ajoutez `-v` pour afficher la correction et la source Apple sous chaque résultat. Il a neuf règles (`DUO001` à `DUO009`) et produit du texte, du JSON ou des annotations GitHub. Ses messages sont en anglais.
+
+Avec `duology-ship` installé, Claude Code le lance avec la commande `duo-lint`. Si vous avez installé le skill seul, lancez `scripts/duo-lint` depuis le dossier du skill. Activez le hook facultatif (`export DUOLOGY_LINT_HOOK=1` avant de lancer Claude Code) et Claude voit ces résultats juste après avoir modifié un fichier Swift. Le hook ne bloque jamais une modification.
 
 </details>
 

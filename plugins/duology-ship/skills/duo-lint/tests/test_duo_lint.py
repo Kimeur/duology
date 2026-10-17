@@ -842,7 +842,7 @@ class HookTests(unittest.TestCase):
             run = subprocess.run(argv, cwd=FIXTURES, env=env, stdout=subprocess.PIPE,
                                  universal_newlines=True)
             self.assertEqual(run.returncode, 1)
-            self.assertIn("bad.swift:11  DUO001  error", run.stdout)
+            self.assertRegex(run.stdout, r"(?m)^bad\.swift:11 +DUO001  error")
         finally:
             shutil.rmtree(tmp)
 

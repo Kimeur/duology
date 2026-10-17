@@ -400,15 +400,27 @@ class Finding(object):
 _RE_MAIN_SCREEN = re.compile(
     r"\bUIScreen\s*\.\s*(main|mainScreen|screens)\b(?:\s*\.\s*(\w+))?"
     r"|\[\s*UIScreen\s+(mainScreen|screens)\s*\](?:\s*\.\s*(\w+))?")
-# `.main` where Swift infers UIScreen: a UIScreen declaration or default value, a body
-# that returns it, `screen ?? .main`, and an argument labelled `screen:`.
+# `.main` where Swift infers UIScreen. Always UIScreen: a UIScreen declaration or default
+# value, a [UIScreen] array literal, and a UIScreen getter or function body.
 _RE_IMPLICIT_MAIN_SCREEN = re.compile(
     r"\bUIScreen\s*[?!]?\s*=\s*\.\s*main\b"
-    r"|\bUIScreen\s*[?!]?\s*\{\s*(?:return\s+)?\.\s*main\b"
-    r"|\b\w*[sS]creen\s*[?!]?\s*\)?\s*\?\?\s*\.\s*main\b"
-    r"|\b\w*[sS]creen\s*:\s*\.\s*main\b")
+    r"|\bUIScreen\s*[?!]?\s*\{\s*(?:return\s+)?\.\s*main\b")
+_RE_MAIN_IN_SCREEN_ARRAY = re.compile(
+    r"\[\s*UIScreen\s*\]\s*[?!]?\s*=\s*\[(?:[^\[\]\n]*?[,\s])?\.\s*main\b")
 _RE_RETURNS_UISCREEN = re.compile(r"\bUIScreen\s*[?!]?\s*\{\s*$")
 _RE_LONE_MAIN = re.compile(r"^\s*(?:return\s+)?\.\s*main\b(?!\s*[.(])")
+# UIScreen only when the file shows it, because an app's own type can have a `main` too
+# (`enum Screen { case main }`): `x ?? .main`, `x == .main` and `x != .main` where x is a
+# `.screen` member or a name typed UIScreen, and `label: .main` for a label typed UIScreen.
+_RE_MAIN_AFTER_OP = re.compile(r"(\?\?|[!=]=)\s*\.\s*main\b(?!\s*[.(])")
+_RE_MAIN_ARGUMENT = re.compile(r"(?<![\w.$])([A-Za-z_]\w*)\s*:\s*\.\s*main\b(?!\s*[.(])")
+_RE_OPERAND_END = re.compile(r"(\.\s*)?([A-Za-z_]\w*)[\s?!)]*$")
+_RE_SCREEN_OWNER = re.compile(r"([A-Za-z_]\w*)\s*[?!]?\s*\)?\s*\.\s*screen[\s?!)]*$")
+_RE_TYPED_NAME = re.compile(
+    r"\b(?:([A-Za-z_]\w*)\s+)?([A-Za-z_]\w*)\s*:\s*(\[\s*)?([A-Z]\w*)\b(?!\s*[.(])")
+_DECL_WORDS = {"let", "var", "case", "func", "init", "static", "class", "private", "public",
+               "internal", "fileprivate", "open", "final", "override", "lazy", "weak",
+               "unowned", "inout", "some", "any", "_"}
 _RE_DEVICE_ORIENTATION = re.compile(
     r"\bUIDevice\s*\.\s*current(?:Device)?\s*\.\s*orientation\b"
     r"|\[\s*\[\s*UIDevice\s+currentDevice\s*\]\s+orientation\s*\]"
@@ -773,6 +785,47 @@ def _orientation_lookup(code, swift):
     return lookup
 
 
+def _typed_names(code):
+    """Return (screens, others, windows): the names and argument labels the file types as
+    UIScreen, as any other type, and as UIWindowScene or UIWindow."""
+    screens, others, windows = set(), set(), set()
+    for m in _RE_TYPED_NAME.finditer(code):
+        names = {m.group(1), m.group(2)} - _DECL_WORDS - {None}
+        if m.group(3):
+            others |= names  # an array, such as [UIScreen]
+        elif m.group(4) == "UIScreen":
+            screens |= names
+        else:
+            others |= names
+            if m.group(4) in ("UIWindowScene", "UIWindow"):
+                windows |= names
+    return screens, others, windows
+
+
+def _main_operand(head, typed):
+    """Return (offset, name) when the operand that ends head is a UIScreen, or None.
+
+    head is the code before `?? .main`, `== .main` or `!= .main`. The operand counts when
+    the file types its name as UIScreen and as nothing else, or when it is a `.screen`
+    member (UIWindowScene and UIWindow both have one). A `.screen` member doesn't count
+    when the file also types `screen` as something else, unless it is read from a window
+    scene or a window.
+    """
+    screens, others, windows = typed
+    m = _RE_OPERAND_END.search(head)
+    if not m:
+        return None
+    member, name = bool(m.group(1)), m.group(2)
+    if name in screens and name not in others:
+        return m.start(2), name
+    if member and name == "screen":
+        owner = _RE_SCREEN_OWNER.search(head)
+        owner = owner.group(1) if owner else ""
+        if owner in ("windowScene", "window") or owner in windows or "screen" not in others:
+            return m.start(2), name
+    return None
+
+
 def lint_source(text, path="<memory>", lang="swift", rules=None):
     """Lint Swift or Objective-C source text. Returns a list of Finding."""
     code, comments = split_code_and_comments(text, lang)
@@ -897,6 +950,7 @@ def lint_source(text, path="<memory>", lang="swift", rules=None):
                 return m.start() + 1, "switch %s" % _tidy(m.group(1))
         return None
 
+    typed = None             # DUO001: _typed_names(code), built on first use
     last_switch = None       # (line index, strong, weak, pixel, proxy)
     last_size_switch = None  # line index of a switch on the horizontal size class
 
@@ -918,16 +972,33 @@ def lint_source(text, path="<memory>", lang="swift", rules=None):
             elif member in ("scale", "nativeScale"):
                 fix = FIX_DUO001_SCALE
             add("DUO001", lineno, m.start() + 1, _tidy(m.group(0)), fix)
-        if swift:
+        if swift and "main" in c:
             m = _RE_IMPLICIT_MAIN_SCREEN.search(c)
             if m:
                 snippet = re.sub(r"\s+", " ", m.group(0))
                 add("DUO001", lineno, m.start() + 1, snippet + (" }" if "{" in snippet else ""))
-            elif _RE_LONE_MAIN.match(c):
+            m = _RE_MAIN_IN_SCREEN_ARRAY.search(c)
+            if m:
+                add("DUO001", lineno, m.start() + 1, "[UIScreen] = [.main]")
+            if _RE_LONE_MAIN.match(c):
                 prev = next((p for p in reversed(code_lines[max(0, idx - 3):idx]) if p.strip()), "")
                 if _RE_RETURNS_UISCREEN.search(prev):
                     add("DUO001", lineno, len(c) - len(c.lstrip()) + 1,
                         re.sub(r"\s+", " ", c.strip()) + " (UIScreen)")
+            # Forms where only the file can say the type is UIScreen.
+            ops = list(_RE_MAIN_AFTER_OP.finditer(c))
+            args = list(_RE_MAIN_ARGUMENT.finditer(c))
+            if (ops or args) and typed is None:
+                typed = _typed_names(code)
+            for m in ops:
+                operand = _main_operand(c[:m.start()], typed)
+                if operand:
+                    add("DUO001", lineno, operand[0] + 1,
+                        "%s %s .main" % (operand[1], m.group(1)))
+            for m in args:
+                label = m.group(1)
+                if label in typed[0] and label not in typed[1]:
+                    add("DUO001", lineno, m.start(1) + 1, "%s: .main" % label)
 
         # DUO002: device orientation.
         m = _RE_DEVICE_ORIENTATION.search(c)
@@ -1549,6 +1620,10 @@ def main(argv=None):
         sys.stderr.write("duo-lint: no such file or folder: %s\n" % exc.args[0])
         return 2
 
+    if not files:
+        sys.stderr.write("duo-lint: no Swift, Info.plist or build settings files found in: %s\n"
+                         "Run it from your app's folder, or pass that folder.\n"
+                         % " ".join(paths))
     findings.sort(key=lambda f: (display_path(f.path), f.line, f.column, f.rule.id))
     if fmt == "json":
         print(format_json(findings, files))

@@ -5,8 +5,8 @@ import SwiftUI
 /// Closed, the split view collapses to one stack: the list, then the message.
 /// Open and held wide, list and message sit side by side. Partly folded like a
 /// book, the system evens the columns out to one per side of the fold. Held
-/// tall (tabletop), the list starts over the detail column when nothing is
-/// selected. No Duo-only API is needed.
+/// tall (tabletop), the message fills the window, or the list sits over the
+/// placeholder when nothing is selected. No Duo-only API is needed.
 ///
 /// Pattern guide: `duo-patterns/references/list-detail.md`.
 struct ListDetailView: View {
@@ -15,13 +15,10 @@ struct ListDetailView: View {
     @SceneStorage("inbox.selection") private var selection: Int?
     // Which column a collapsed split view (the outer display) shows on top.
     @State private var compactColumn = NavigationSplitViewColumn.sidebar
-    // Both columns when the split view expands with nothing to show. Without
-    // this, the open phone held tall (tabletop) hides the list and shows only
-    // the placeholder. Held tall, the list then sits over the detail column.
-    // Launched with a message (`-select`), the system chooses: held tall, the
-    // message alone; held wide, list and message side by side.
-    @State private var columnVisibility: NavigationSplitViewVisibility =
-        LaunchOptions.selection == nil ? .all : .automatic
+    // Set by `updateColumns()`. Left to the system, the open phone shows the
+    // message alone once one is selected, so its lines run across the fold.
+    @State private var columnVisibility = NavigationSplitViewVisibility.all
+    @State private var isWide = true
     @State private var messages = MailMessage.samples
     @State private var showsUnreadOnly = false
 
@@ -56,17 +53,37 @@ struct ListDetailView: View {
                 NoMessageSelected()
             }
         }
+        .onGeometryChange(for: Bool.self) { proxy in
+            proxy.size.width > proxy.size.height
+        } action: { wide in
+            isWide = wide
+            updateColumns()
+        }
         .onChange(of: selection) { _, newValue in
             // Opening a message marks it read, in every layout.
             if let index = messages.firstIndex(where: { $0.id == newValue }) {
                 messages[index].isUnread = false
             }
+            updateColumns()
         }
         .task {
             if selection == nil, let preset = LaunchOptions.selection {
                 selection = preset
             }
+            // A selection restored from scene storage doesn't trigger onChange.
+            if let index = messages.firstIndex(where: { $0.id == selection }) {
+                messages[index].isUnread = false
+            }
+            updateColumns()
         }
+    }
+
+    /// Held wide (open, or folded like a book): list and message side by side,
+    /// one per side of the fold. Held tall (tabletop): the message alone once
+    /// there is one, else the list over the placeholder. Closed, the split view
+    /// collapses and ignores this.
+    private func updateColumns() {
+        columnVisibility = isWide || selection == nil ? .all : .detailOnly
     }
 }
 

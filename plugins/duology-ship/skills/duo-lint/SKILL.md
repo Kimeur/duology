@@ -27,7 +27,7 @@ The command depends on how you installed this skill:
 | The `duology-ship` plugin in Claude Code | `duo-lint`. The plugin puts its `bin/` folder on the Bash tool's PATH. |
 | `npx skills add`, or copied by hand | `<skill-folder>/scripts/duo-lint`. `<skill-folder>` is the folder that holds this `SKILL.md`. |
 
-In Claude Code, `<skill-folder>` is `${CLAUDE_SKILL_DIR}`. If `scripts/duo-lint` can't be executed, run `python3 <skill-folder>/scripts/duo-lint.py` instead. The examples below say `duo-lint`; use the script path when the plugin isn't installed.
+In Claude Code, `<skill-folder>` is `${CLAUDE_SKILL_DIR}`. If `duo-lint` is not found or not allowed, run `${CLAUDE_SKILL_DIR}/scripts/duo-lint` instead. If `scripts/duo-lint` can't be executed, run `python3 <skill-folder>/scripts/duo-lint.py`. The examples below say `duo-lint`; use the script path when the plugin isn't installed.
 
 ```bash
 # Whole project
@@ -83,7 +83,7 @@ Each line is `path:line  RULE  severity  code  message`. The last line counts fi
 
 | Rule | Severity | Catches | Fix |
 |---|---|---|---|
-| DUO001 | error | `UIScreen.main`, `UIScreen.screens`, `.main` where Swift infers `UIScreen` | `view.bounds`, `GeometryReader`, `onGeometryChange`; `traitCollection.displayScale`; `UIWindow(windowScene:)` |
+| DUO001 | error | `UIScreen.main`, `UIScreen.screens`, `.main` where the file shows Swift infers `UIScreen` | `view.bounds`, `GeometryReader`, `onGeometryChange`; `traitCollection.displayScale`; `UIWindow(windowScene:)` |
 | DUO002 | warning | `UIDevice.current.orientation`, its notification, `effectiveGeometry.interfaceOrientation`, an `interfaceOrientation` whose owner it can't see | Compare width with height. Camera: `AVCaptureDevice.RotationCoordinator`. |
 | DUO003 | error | `statusBarOrientation`, `interfaceOrientation` on a `UIWindowScene` or view controller | Compare width with height. |
 | DUO004 | warning | `userInterfaceIdiom` compared with `.pad` or `.phone` | Size class, `NavigationSplitView`, `ViewThatFits`. |
@@ -139,7 +139,7 @@ struct PromoBanner: View {
 ## Workflow
 
 1. Run `duo-lint -v .` from the project root (or the script path, see [Run it](#run-it)). Add `--objc` for mixed projects.
-2. Fix every **error** first. They are deprecated APIs.
+2. Fix every **error** first. They are deprecated APIs. If one is a bare `.main` on your own type, not `UIScreen`, silence it with a reason.
 3. Fix the warnings, one rule at a time. Read the rule in [references/rules.md](references/rules.md) before changing code you don't own.
 4. Re-run until the summary shows `0 errors`. Aim for `0 findings`.
 5. Silence only code that is not layout, with a reason (see below). Never silence a finding just to get a clean run.
@@ -195,7 +195,7 @@ When the hook reports a finding, fix it in your next edit, or silence it with a 
 
 duo-lint finds patterns in code. It can't see controls sitting in the fold, state lost on a fold, a `UIScreen` kept in a property, sizes read once at launch, or window bounds used as the screen size. The full list is at the end of [references/rules.md](references/rules.md). For what only a screenshot shows, run `/duo-audit` or the `duo-design-review` checklist.
 
-duo-lint reads text, not types. So the split between DUO003 and DUO002, and DUO004, DUO005 and DUO006, are heuristics. They can flag code that is fine, and miss code that hides a device size or type behind a name. [references/rules.md](references/rules.md) says how each one decides. Read each finding before you change it.
+duo-lint reads text, not types. So these are heuristics: DUO001 on a bare `.main` (it looks for `UIScreen` in the file), the split between DUO003 and DUO002, and DUO004, DUO005 and DUO006. They can flag code that is fine, and miss code that hides a device size or type behind a name. [references/rules.md](references/rules.md) says how each one decides. Read each finding before you change it.
 
 ## Checklist
 

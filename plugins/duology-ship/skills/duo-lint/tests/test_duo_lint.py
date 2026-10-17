@@ -347,8 +347,50 @@ class RuleTests(unittest.TestCase):
                 "}\n"
                 "func i() -> UIScreen {\n"
                 "    return .main\n"
+                "}\n"
+                "init(screen: UIScreen) {}\n"
+                "if view.window?.windowScene?.screen == .main {}\n"
+                "if scene?.screen != .main {}\n"
+                "let j: [UIScreen] = [.main]\n"
+                "let k: [UIScreen]? = [scene!.screen, .main]\n"
+                "func l(on display: UIScreen?) { print(display ?? .main) }\n"
+                "let m = Observer(on: .main)\n")
+        self.assertEqual(lint_text(text), [(n, "DUO001") for n in (
+            1, 2, 3, 4, 5, 6, 7, 9, 12, 15, 16, 17, 18, 19, 20)])
+
+    def test_app_type_with_a_main_case_is_fine(self):
+        # An app's own `enum Screen { case main }` is not UIScreen.
+        text = ("enum Screen: Hashable { case main, settings }\n"
+                "struct AppState { var screen: Screen? }\n"
+                "struct Router {\n"
+                "    var selectedScreen: Screen? = nil\n"
+                "    var state = AppState()\n"
+                "    func body() {\n"
+                "        let current = selectedScreen ?? .main\n"
+                "        let saved = state.screen ?? .main\n"
+                "        go(screen: .main)\n"
+                "        if selectedScreen == .main { go(screen: .settings) }\n"
+                "        let list: [Screen] = [.main]\n"
+                "        print(current, saved, list)\n"
+                "    }\n"
+                "    func go(screen: Screen) {}\n"
                 "}\n")
-        self.assertEqual(lint_text(text), [(n, "DUO001") for n in (1, 2, 3, 4, 5, 6, 7, 9, 12)])
+        self.assertEqual(lint_text(text), [])
+
+    def test_implicit_main_needs_the_file_to_show_uiscreen(self):
+        # No declaration in the file: the label could be any type.
+        self.assertEqual(lint_text("let f = Observer(screen: .main)\n"), [])
+        self.assertEqual(lint_text("let c = current ?? .main\n"), [])
+        # `screen` typed two ways: the label is ambiguous, but a window scene's screen is not.
+        text = ("init(screen: UIScreen) {}\n"
+                "func go(screen: Screen) {}\n"
+                "func f(scene: UIWindowScene?) {\n"
+                "    let o = Observer(screen: .main)\n"
+                "    let s = scene?.screen ?? .main\n"
+                "    let t = view.window?.windowScene?.screen ?? .main\n"
+                "    let u = state.screen ?? .main\n"
+                "}\n")
+        self.assertEqual(lint_text(text), [(5, "DUO001"), (6, "DUO001")])
 
     def test_other_main_singletons_are_fine(self):
         text = ("let q = queue ?? .main\n"
@@ -632,6 +674,16 @@ class CliTests(unittest.TestCase):
             self.assertGreater(data["summary"]["findings"], 0)
         finally:
             shutil.rmtree(tmp)
+
+    def test_says_so_when_no_file_was_checked(self):
+        # Run from the skill's own folder, it checks nothing: say so instead of a quiet pass.
+        r = subprocess.run([LAUNCHER], cwd=SKILL, stdout=subprocess.PIPE,
+                           stderr=subprocess.PIPE, universal_newlines=True)
+        self.assertEqual(r.returncode, 0)
+        self.assertIn("(0 files checked)", r.stdout)
+        self.assertIn("Run it from your app's folder", r.stderr)
+        r = run_cli("good.swift")
+        self.assertEqual(r.stderr, "")
 
     def test_plugin_bin_wrapper_on_path(self):
         # Claude Code puts each enabled plugin's bin/ folder on the Bash tool's PATH.

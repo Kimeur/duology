@@ -6,7 +6,7 @@ Most rules come from one Apple page: [Three steps to make your app shine on iPho
 
 | Rule | Name | Severity | Flags |
 |---|---|---|---|
-| [DUO001](#duo001-main-screen) | `main-screen` | error | `UIScreen.main`, `UIScreen.screens`, `.main` where Swift infers `UIScreen` |
+| [DUO001](#duo001-main-screen) | `main-screen` | error | `UIScreen.main`, `UIScreen.screens`, `.main` where the file shows Swift infers `UIScreen` |
 | [DUO002](#duo002-device-orientation) | `device-orientation` | warning | `UIDevice.current.orientation`, its notification, `effectiveGeometry.interfaceOrientation`, any `interfaceOrientation` read DUO003 doesn't claim |
 | [DUO003](#duo003-deprecated-interface-orientation) | `deprecated-interface-orientation` | error | `statusBarOrientation`, `interfaceOrientation` on a `UIWindowScene` or view controller the code shows |
 | [DUO004](#duo004-idiom-layout) | `idiom-layout` | warning | `userInterfaceIdiom` compared with `.pad` or `.phone` |
@@ -20,7 +20,7 @@ Most rules come from one Apple page: [Three steps to make your app shine on iPho
 
 The linter reads code, not comments or string literals. Swift string interpolation (`"\(UIScreen.main.scale)"`) counts as code. Code inside `#if os(macOS)`, `os(watchOS)`, `os(tvOS)`, `os(visionOS)`, `targetEnvironment(macCatalyst)` or `canImport(AppKit)`, and in the `#else` of `#if os(iOS)`, is skipped, because it never runs on iPhone Duo.
 
-duo-lint reads text, not types. Where a rule depends on a type, such as DUO003, it says below how it decides.
+duo-lint reads text, not types. Where a rule depends on a type, such as DUO003 or a bare `.main` in DUO001, it says below how it decides.
 
 In folders it skips build output and dependencies (`build/`, `DerivedData/`, `.build/`, `Pods/`, `Carthage/`, `SourcePackages/`, `node_modules/`), the agent folders `.claude/` and `.agents/`, and its own `tests/fixtures/` wherever the skill is installed. Those fixtures are bad code on purpose. A folder you name on the command line is always checked.
 
@@ -32,12 +32,15 @@ In folders it skips build output and dependencies (`build/`, `DerivedData/`, `.b
 
 **Flags:** `UIScreen.main`, `UIScreen.screens`, and in Objective-C `[UIScreen mainScreen]`, `UIScreen.mainScreen` and `[UIScreen screens]`. In Swift it also flags `.main` where Swift infers `UIScreen`:
 
-- a `UIScreen` declaration or default value: `let screen: UIScreen = .main`, `func f(screen: UIScreen = .main)`;
+- a `UIScreen` declaration or default value: `let screen: UIScreen = .main`, `func f(screen: UIScreen = .main)`, `let screens: [UIScreen] = [.main]`;
 - a `UIScreen` getter or function that returns `.main`: `var screen: UIScreen { .main }`;
-- `?? .main` after a name that ends in `screen`: `scene?.screen ?? .main`;
-- an argument labelled `screen:` with `.main`: `Observer(screen: .main)`.
+- `?? .main`, `== .main` or `!= .main` after a `.screen` member, such as `scene?.screen ?? .main` (a window scene and a window both have a `screen`);
+- the same after a name the file types as `UIScreen`: `func f(display: UIScreen?)`, then `display ?? .main`;
+- an argument with `.main` whose label the file types as `UIScreen`: `init(screen: UIScreen)`, then `Observer(screen: .main)`.
 
-Other `.main` values, such as `DispatchQueue.main`, `RunLoop.main` or `queue ?? .main`, are fine. A `.main` with no `UIScreen` or `screen` on the line or in the getter above it is missed.
+**How it decides:** an app's own type can have a `main` too, such as `enum Screen { case main }`. duo-lint reads text, not types, so it reports the last three forms only when the file shows `UIScreen`. A name or label that the file also types as something else is left alone: with `func go(screen: Screen)` in the file, `go(screen: .main)` is fine. A `.screen` member is left alone when the file also declares a `screen` of another type, unless it is read from a `windowScene`, a `window`, or a name typed `UIWindowScene` or `UIWindow`. A `.screen` member of your own type declared in another file still gets flagged; silence it with a reason.
+
+Other `.main` values, such as `DispatchQueue.main`, `RunLoop.main`, `queue ?? .main` or `selectedScreen == .main` on your own type, are fine. It misses `.main == screen`, a `.main` argument whose parameter is declared in another file, `?? .main` at the start of a new line, and a `.main` with no `UIScreen` on the line or in the getter above it.
 
 **Why:** your app's window changes size every time the phone folds or unfolds, and it is often not the size of the screen. iPhone Duo also has two displays, so "the main screen" doesn't say which one you mean. Apple's [prepare page](https://developer.apple.com/iphone-duo/prepare/) says to search for `UIScreen.main` and replace every use. The iOS 27.1 SDK marks `UIScreen.main` deprecated since iOS 26.0 and `UIScreen.screens` since iOS 16.0 ([UIScreen.main](https://developer.apple.com/documentation/uikit/uiscreen/main)). `UIWindow(frame:)` is deprecated in the iOS 27.1 SDK too; its message points to `init(windowScene:)`.
 

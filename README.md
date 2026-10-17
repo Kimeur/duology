@@ -249,7 +249,7 @@ Sources/Settings/SettingsView.swift:6  DUO009  warning  <= 667                  
 
 Each line gives the place, the rule, the severity, the code and what's wrong. An `error` is an API the SDK already deprecates; a `warning` is a pattern that is almost always wrong on iPhone Duo. Add `-v` to print the fix and the Apple source under each finding. It has nine rules (`DUO001` to `DUO009`) and prints text, JSON or GitHub annotations.
 
-With `duology-ship` installed, Claude Code runs it as `duo-lint`. If you installed the skill on its own, run `scripts/duo-lint` from the skill's folder. Turn on the optional hook (`export DUOLOGY_LINT_HOOK=1` before you start Claude Code) and Claude sees these findings right after it edits a Swift file. The hook never blocks an edit.
+With `duology-ship` installed, Claude Code runs it as `duo-lint`. If you installed the skill on its own, run `<skill-folder>/scripts/duo-lint .` from your app's folder. `<skill-folder>` is the folder that holds the skill's `SKILL.md`. Turn on the optional hook (`export DUOLOGY_LINT_HOOK=1` before you start Claude Code) and Claude sees these findings right after it edits a Swift file. The hook never blocks an edit.
 
 </details>
 

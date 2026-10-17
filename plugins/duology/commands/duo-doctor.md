@@ -76,3 +76,4 @@ Plugin-specific notes:
 
 - The doctor looks for an MCP server named `xcode`. If the user registered Xcode's bridge under another name, the optional line fails; say so and move on.
 - "Connected" for the `xcode` server only means the bridge answered. The bridge answers even while Xcode is closed. Xcode's tools work once the user opens the project in Xcode 27.1 with the Intelligence setting on.
+- "connected, but its tools didn't load" means the bridge started but Claude Code stopped waiting for its tool list, often on a cold start. The registration is fine. Don't offer to remove and re-add the server. Run the doctor again; if it fails every time, ask the user to open the project in Xcode 27.1 with the Intelligence setting on.

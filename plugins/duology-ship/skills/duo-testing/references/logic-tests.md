@@ -28,23 +28,70 @@ The Xcode 27.1 app template sets `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` on 
 ```swift
 import Foundation
 
-/// Picks a column count for a grid. When more than one column fits, the count is even,
-/// so a grid that spans the inner display puts a gap, not a column, on the fold.
+/// Picks a column count for a grid from its width. When a top-to-bottom fold crosses
+/// the grid, active or not, the count is even, so the fold lands in a gap, not on a column.
+/// With no fold (closed, or a window the fold doesn't cross), every column that fits.
 nonisolated struct GridPlan: Equatable, Sendable {
     var columns: Int
     var columnWidth: Double
 
-    static func make(width: Double, minColumnWidth: Double, spacing: Double = 8) -> GridPlan {
+    static func make(width: Double, minColumnWidth: Double, foldCrossesGrid: Bool, spacing: Double = 8) -> GridPlan {
         guard width > 0, minColumnWidth > 0 else { return GridPlan(columns: 1, columnWidth: max(width, 0)) }
         var count = max(1, Int((width + spacing) / (minColumnWidth + spacing)))
-        if count > 1, count.isMultiple(of: 2) == false { count -= 1 }
+        if foldCrossesGrid, count > 1, count.isMultiple(of: 2) == false { count -= 1 }
         let columnWidth = (width - spacing * Double(count - 1)) / Double(count)
         return GridPlan(columns: count, columnWidth: columnWidth)
     }
 }
 ```
 
-*Measured:* this file typechecks for the iOS 27.1 simulator with `-default-isolation MainActor` (what the app target uses) and without it, and compiles for macOS in Swift 6 mode. The even column count follows the HIG advice to use an even number of grid columns on iPhone Duo ([Designing for iPhone Duo](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo)). Feed it a width you read from the view, never a device size.
+*Measured:* this file typechecks for the iOS 27.1 simulator with `-default-isolation MainActor` (what the app target uses) and without it, and compiles for macOS in Swift 6 mode.
+
+For grid layouts on iPhone Duo, the HIG suggests an even number of columns so content divides cleanly ([Designing for iPhone Duo](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo)). Like `duo-layout` and `duo-patterns`, `GridPlan` applies that only when a fold crosses the grid. The closed outer display has no fold, so it keeps every column that fits: 3 at 466 pt with a 150 pt minimum, not 2. The fold is an input, never a guess from the width.
+
+### Feed it from the view
+
+The view knows the two inputs; the logic doesn't. Read them from the grid's own geometry. `reservedRegions(kind:options:)` on `GeometryProxy` is iOS 27.1 API ([Apple](https://developer.apple.com/documentation/swiftui/geometryproxy/reservedregions(kind:options:layoutdirectionbehavior:))). Pass `.includeInactive` so a flat, open phone still counts its fold and the grid doesn't jump from 5 to 4 columns as someone folds it.
+
+```swift
+import SwiftUI
+
+/// The two inputs GridPlan needs, read from the grid's own geometry.
+nonisolated struct GridInput: Equatable, Sendable {
+    var width: Double = 0
+    var foldCrossesGrid = false
+
+    init() {}
+
+    @available(iOS 27.1, *)
+    init(_ proxy: GeometryProxy) {
+        width = proxy.size.width
+        foldCrossesGrid = proxy.reservedRegions(kind: .division, options: .includeInactive).contains { region in
+            // A top-to-bottom fold that lies inside the grid, not at its edge.
+            region.frame.height > region.frame.width && region.frame.minX > 0 && region.frame.maxX < proxy.size.width
+        }
+    }
+}
+
+@available(iOS 27.1, *)
+struct Gallery: View {
+    let items: [Int]
+    @State private var input = GridInput()
+
+    var body: some View {
+        let plan = GridPlan.make(width: input.width, minColumnWidth: 150, foldCrossesGrid: input.foldCrossesGrid)
+        ScrollView {
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(plan.columnWidth), spacing: 8), count: plan.columns),
+                      spacing: 8) {
+                ForEach(items, id: \.self) { item in Text("\(item)").frame(height: 80) }
+            }
+            .onGeometryChange(for: GridInput.self) { GridInput($0) } action: { input = $0 }
+        }
+    }
+}
+```
+
+*Measured:* this typechecks with `GridPlan` for the iOS 27.1 simulator, with and without `-default-isolation MainActor`. It is a sketch of the wiring: `duo-patterns`' feed-reflow recipe also splits the columns around an active fold. On the simulator, Duology has not checked what `.includeInactive` returns in each pose; the test below covers the maths only.
 
 ## Option A: a `swiftc` script
 
@@ -77,25 +124,25 @@ var failures = 0
     }
 }
 
-// Wide window (inner display, open): even column count.
-let wide = GridPlan.make(width: 951, minColumnWidth: 150)
-check(wide.columns.isMultiple(of: 2), "wide window gets an even column count (\(wide.columns))")
-check(wide.columnWidth >= 150, "columns stay at least the minimum width")
+// A fold crosses the grid: an odd count rounds down to even.
+let folded = GridPlan.make(width: 800, minColumnWidth: 150, foldCrossesGrid: true)
+check(folded.columns == 4, "a fold across the grid turns 5 columns into 4 (\(folded.columns))")
+check(folded.columnWidth >= 150, "columns stay at least the minimum width")
 
-// Narrow window (outer display): one or two columns.
-let narrow = GridPlan.make(width: 466, minColumnWidth: 200)
-check(narrow.columns == 2, "outer-display width fits two columns")
+// No fold: every column that fits, odd or even.
+let flat = GridPlan.make(width: 466, minColumnWidth: 150, foldCrossesGrid: false)
+check(flat.columns == 3, "without a fold, 3 columns fit and all 3 stay (\(flat.columns))")
 
 // Edge cases.
-check(GridPlan.make(width: 0, minColumnWidth: 150).columns == 1, "zero width falls back to one column")
-check(GridPlan.make(width: 120, minColumnWidth: 150).columns == 1, "too narrow for the minimum still shows one column")
+check(GridPlan.make(width: 0, minColumnWidth: 150, foldCrossesGrid: true).columns == 1, "zero width falls back to one column")
+check(GridPlan.make(width: 120, minColumnWidth: 150, foldCrossesGrid: true).columns == 1, "too narrow for the minimum still shows one column")
 
 print(failures == 0 ? "All checks passed." : "\(failures) check(s) failed.")
 exit(failures == 0 ? 0 : 1)
 ```
 
 - In Swift 6 mode, top-level variables in `main.swift` belong to the main actor. Without `@MainActor` on `check`, the compiler rejects `failures += 1` (*measured*: "main actor-isolated var 'failures' can not be mutated from a nonisolated context").
-- The widths 951 and 466 are example inputs, the window widths we saw open and closed on the simulator. They are test data, not constants for the app.
+- The widths are test data, not constants for the app. Each check passes the fold explicitly, so no width stands in for a pose or a device.
 
 `Tools/run-logic-tests.sh`:
 
@@ -110,7 +157,7 @@ xcrun swiftc -swift-version 6 -o "$OUT" App/Logic/*.swift Tools/LogicTests/main.
 "$OUT"
 ```
 
-*Measured:* the script prints one `ok` line per check and exits 0. With one check broken on purpose it printed `FAIL outer-display width fits two columns (main.swift:23)` and exited 1, so CI can use the exit code. Compile and run took a few seconds.
+*Measured* (17 October 2026): the script prints one `ok` line per check and exits 0. With one check broken on purpose it printed `FAIL without a fold, 3 columns fit and all 3 stay (3) (main.swift:23)` and exited 1, so CI can use the exit code. Compile and run took a few seconds.
 
 `xcrun swiftc` without `-sdk` builds for macOS, which is what you want here.
 
@@ -150,19 +197,20 @@ import Testing
 
 @Suite("Grid plan")
 struct GridPlanTests {
-    @Test("Wide windows get an even column count", arguments: [700.0, 951, 1100, 1300])
-    func evenWhenWide(width: Double) {
-        let plan = GridPlan.make(width: width, minColumnWidth: 150)
+    @Test("A fold across the grid gives an even count", arguments: [466.0, 800, 951, 1100])
+    func evenWithFold(width: Double) {
+        let plan = GridPlan.make(width: width, minColumnWidth: 150, foldCrossesGrid: true)
         #expect(plan.columns.isMultiple(of: 2))
         #expect(plan.columnWidth >= 150)
     }
 
-    @Test func `outer display fits two columns`() {
-        #expect(GridPlan.make(width: 466, minColumnWidth: 200).columns == 2)
+    @Test func `without a fold, every column that fits`() {
+        #expect(GridPlan.make(width: 466, minColumnWidth: 150, foldCrossesGrid: false).columns == 3)
+        #expect(GridPlan.make(width: 800, minColumnWidth: 150, foldCrossesGrid: false).columns == 5)
     }
 
     @Test func zeroWidthFallsBackToOneColumn() throws {
-        let plan = GridPlan.make(width: 0, minColumnWidth: 150)
+        let plan = GridPlan.make(width: 0, minColumnWidth: 150, foldCrossesGrid: false)
         try #require(plan.columns == 1)
         #expect(plan.columnWidth == 0)
     }
@@ -176,12 +224,12 @@ cd AppCore
 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcrun swift test
 ```
 
-*Measured:* `swift test` built the package and ran 3 tests (one with 4 argument cases) in one suite, all passing, in about 14 seconds from a clean build. It also prints an empty XCTest run ("Executed 0 tests") before the Swift Testing output; that line is normal.
+*Measured* (17 October 2026): `swift test` built the package and ran 3 tests (one with 4 argument cases) in one suite, all passing, in about 10 seconds from a clean build. It also prints an empty XCTest run ("Executed 0 tests") before the Swift Testing output; that line is normal.
 
 Notes:
 
 - In the package, `GridPlan` and its members are `public` so the app can use them. A package target has no default main-actor isolation, so `nonisolated` is not needed there.
-- Backticked names such as `` `outer display fits two columns` `` are raw identifiers. Apple's WWDC26 talk uses them for readable test names ([Migrate to Swift Testing](https://developer.apple.com/videos/play/wwdc2026/267/)).
+- Backticked names such as `` `without a fold, every column that fits` `` are raw identifiers. Apple's WWDC26 talk uses them for readable test names ([Migrate to Swift Testing](https://developer.apple.com/videos/play/wwdc2026/267/)).
 - `#require` stops the test when it fails, like `continueAfterFailure = false` in XCTest ([Migrating a test from XCTest](https://developer.apple.com/documentation/testing/migratingfromxctest)).
 - Arguments run as separate, parallel test cases. A failure names the argument that failed.
 - Add the package to the app project as a local package and `import AppCore` in the app.

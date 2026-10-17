@@ -4,7 +4,8 @@ import Foundation
 // on the Mac without a simulator (Tools/run-engine-tests.sh) and can run off the
 // main actor. The views never decide who scored: they pass touches in here.
 
-/// The two people sharing the phone. Player one owns the first half (top or left).
+/// The two people sharing the phone. Player one owns the first half: the top one when
+/// stacked, the left one side by side, in every language.
 nonisolated enum Player: Int, CaseIterable, Hashable, Sendable {
     case one = 1
     case two = 2
@@ -13,6 +14,19 @@ nonisolated enum Player: Int, CaseIterable, Hashable, Sendable {
     /// Short id for accessibility identifiers and coordinate space names: "p1", "p2".
     var id: String { "p\(rawValue)" }
     var name: String { "Player \(rawValue)" }
+
+    /// Clockwise quarter turns for this player's half. Face to face, the phone lies flat
+    /// with one player at each far edge, so each half turns until its top edge sits on
+    /// the seam between the halves. Same numbers as duo-shared-screen's Facing.
+    func quarterTurns(faceToFace: Bool, sideBySide: Bool) -> Int {
+        guard faceToFace else { return 0 }
+        switch (self, sideBySide) {
+        case (.one, false): return 2    // top half: upside down
+        case (.two, false): return 0    // bottom half: as is
+        case (.one, true): return 1     // left half: top edge to the right
+        case (.two, true): return 3     // right half: top edge to the left
+        }
+    }
 }
 
 /// The settings of one duel. Plain values, so tests and launch options can change them.

@@ -14,11 +14,12 @@ Every *measured* line in `duo-testing` comes from the runs on this page. Re-run 
 
 | Run | Result |
 |---|---|
-| `Tools/run-logic-tests.sh` (swiftc, Swift 6, macOS) | 5 `ok` lines, "All checks passed.", exit 0 |
-| Same, with one expectation broken | `FAIL outer-display width fits two columns (main.swift:23)`, exit 1 |
+| `Tools/run-logic-tests.sh` (swiftc, Swift 6, macOS), `GridPlan` with the `foldCrossesGrid` input, rerun 17 October 2026 | 5 `ok` lines, "All checks passed.", exit 0 |
+| Same, with one expectation broken | `FAIL without a fold, 3 columns fit and all 3 stay (3) (main.swift:23)`, exit 1 |
 | `main.swift` without `@MainActor` on `check` | compile error: main actor-isolated var 'failures' can not be mutated from a nonisolated context |
 | `GridPlan.swift`, `swiftc -typecheck -default-isolation MainActor` for the iOS 27.1 simulator | no errors |
-| `xcrun swift test` in the `AppCore` package | 3 tests in 1 suite passed (one test with 4 argument cases), about 14 s from clean |
+| `xcrun swift test` in the `AppCore` package, rerun 17 October 2026 | 3 tests in 1 suite passed (one test with 4 argument cases), about 10 s from clean |
+| `GridInput` view sketch in `logic-tests.md` with `GridPlan`, typecheck for the iOS 27.1 simulator, with and without `-default-isolation MainActor` | no errors |
 
 ## 2. Probe app: which touches reach SwiftUI
 

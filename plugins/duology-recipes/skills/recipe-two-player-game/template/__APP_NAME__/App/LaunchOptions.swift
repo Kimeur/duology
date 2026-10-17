@@ -6,7 +6,7 @@ import SwiftUI
 ///   -uiTesting      animations off
 ///   -openDuel       skip the home screen
 ///   -autoReady      with -openDuel: both players ready, so the round starts at once
-///   -faceToFace     turn player 1's half around, for a phone lying flat between two people
+///   -faceToFace     turn each half to face its player, for a phone lying flat between two people
 ///   -goal N         hits to win
 ///   -countdown N    countdown seconds (0 starts at once)
 ///   -lockout N      seconds a miss locks that player out

@@ -73,13 +73,13 @@ DEVELOPER_DIR=<DEV> xcodebuild -quiet -project <app-folder>/<App>.xcodeproj -sch
 When `bootstatus` has finished, install, launch and capture both displays:
 
 ```bash
-DEVELOPER_DIR=<DEV> xcrun simctl install <UDID> <OUT>/DerivedData/Build/Products/Debug-iphonesimulator/<Product>.app
+DEVELOPER_DIR=<DEV> xcrun simctl install <UDID> <OUT>/DerivedData/Build/Products/Debug-iphonesimulator/<FULL_PRODUCT_NAME>
 DEVELOPER_DIR=<DEV> xcrun simctl launch --terminate-running-process <UDID> <bundle-id>
 DEVELOPER_DIR=<DEV> xcrun simctl io <UDID> screenshot --display=primary   <OUT>/outer.png
 DEVELOPER_DIR=<DEV> xcrun simctl io <UDID> screenshot --display=primary-1 <OUT>/inner.png
 ```
 
-- Read the product name and bundle ID from `xcodebuild -showBuildSettings` (`FULL_PRODUCT_NAME`, `PRODUCT_BUNDLE_IDENTIFIER`) with the same project, scheme and destination.
+- Read `FULL_PRODUCT_NAME` (for example `Places.app`; it already ends in `.app`) and `PRODUCT_BUNDLE_IDENTIFIER` (the `<bundle-id>`) from `xcodebuild -showBuildSettings` with the same project, scheme and destination.
 - The display that is off comes out black. Keep the one that shows the app.
 - If code signing stops a simulator build, add `CODE_SIGNING_ALLOWED=NO` to the build command.
 - If the build still fails, don't fix the app. Report the first build error as a Blocker, then go on with duo-lint findings only.

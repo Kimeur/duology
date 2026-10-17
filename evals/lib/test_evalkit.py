@@ -35,6 +35,17 @@ class RuleGate(unittest.TestCase):
         "Bash(xcode-select -s:*)", "Bash(xcode-select:*)", "Bash(defaults write:*)",
         "Bash(FOO=1 xcodebuild:*)", "Bash(*/Tools/run.sh)", "Bash(*xcodebuild*)",
         "Read(./**)", "Edit(/etc/**)", "Bash(a,b)",
+        # Wildcards outside a project folder: these cover /bin/rm, /usr/bin/curl and so on.
+        "Bash(/bin/*)", "Bash(/usr/bin/*)", "Bash(../*)", "Bash(./*)", "Bash(Tools/../*)",
+        "Bash(./:*)", "Bash(/:*)", "Bash(Tools/../../bin/rm:*)", "Bash(bash ../*)",
+        "Bash(python3 /tmp/*)", "Bash(bash Tools/../x.sh)",
+        # Commands that run other commands.
+        "Bash(arch:*)", "Bash(caffeinate:*)", "Bash(source:*)", "Bash(.:*)", "Bash(find:*)",
+        "Bash(time:*)", "Bash(nice:*)", "Bash(timeout:*)", "Bash(command:*)", "Bash(awk:*)",
+        "Bash(/usr/bin/find:*)",
+        # git that writes, or hides the subcommand behind an option.
+        "Bash(git commit:*)", "Bash(git reset:*)", "Bash(git clean:*)", "Bash(git checkout:*)",
+        "Bash(git -C . push:*)", "Bash(git -c x=y diff:*)", "Bash(git branch:*)",
     ]
     SCOPED = [
         "Read", "Edit", "Write", "Glob", "Grep", "Skill",
@@ -45,6 +56,9 @@ class RuleGate(unittest.TestCase):
         "Bash(xcode-select -p)", "Bash(swift test:*)", "Bash(defaults read *)",
         "Bash(python3 /tmp/x/plugins/duology-ship/skills/duo-lint/scripts/duo-lint.py:*)",
         'Bash("/tmp/x/plugins/duology-ship/skills/duo-lint/scripts/duo-lint" *)',
+        "Bash(/tmp/x/plugins/duology/bin/duo-doctor:*)", "Bash(duo-doctor:*)",
+        "Bash(git log:*)", "Bash(git show:*)", "Bash(Tools/run-logic-tests.sh:*)",
+        "Bash(./Tools/run-logic-tests.sh:*)", "Bash(mdfind:*)", "Bash(chmod +x *)",
     ]
 
     def test_broad_rules_are_refused(self):
@@ -179,6 +193,55 @@ class Verdicts(unittest.TestCase):
                 {"type": "tool_use", "id": "a", "name": "Skill", "input": {"skill": "duo-layout"}}]}},
             {"type": "result", "result": "done"}])
         self.assertEqual(evalkit.trial_result(self.dir)["status"], "contaminated")
+
+
+class Summary(unittest.TestCase):
+    def setUp(self):
+        self.dir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.dir)
+
+    def put(self, rel, data):
+        path = os.path.join(self.dir, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            f.write(data if isinstance(data, str) else json.dumps(data))
+        return path
+
+    def test_only_trial_folders_count(self):
+        trial = "duo-lint/lint-and-fix/with/trial-1"
+        self.put("run.json", {"run_id": "x"})
+        self.put(trial + "/meta.json", {"task": "duo-lint/lint-and-fix", "arm": "with", "trial": 1,
+                                        "agent_exit": 0, "scored": True, "check_ids": ["c"]})
+        self.put(trial + "/checks/c.exit", "1\n")
+        fake = {"task": "duo-lint/lint-and-fix", "arm": "with", "trial": 2, "score_only": True,
+                "scored": True}
+        # A meta.json the agent wrote in its work folder, saved in final-tree/.
+        self.put(trial + "/final-tree/Notes/meta.json", fake)
+        self.put(trial + "/final-tree/a/b/with/trial-2/meta.json", fake)
+        self.put(trial + "/checks/meta.json", fake)
+        # Folders that don't have the trial shape.
+        self.put("duo-lint/meta.json", fake)
+        self.put("duo-lint/lint-and-fix/other/trial-1/meta.json", fake)
+        summary = evalkit.summarize(self.dir)
+        arms = summary["tasks"][0]["arms"]
+        self.assertEqual(len(summary["tasks"]), 1)
+        self.assertEqual(list(arms), ["with"])
+        self.assertEqual(arms["with"]["trials"], 1)
+        self.assertEqual(arms["with"]["counts"]["fail"], 1)
+        self.assertEqual(arms["with"]["results"], [trial + "/result.json"])
+        self.assertFalse(os.path.exists(os.path.join(self.dir, trial, "final-tree", "Notes", "result.json")))
+        with open(os.path.join(self.dir, "summary.md")) as f:
+            self.assertIn("0/1 pass", f.read())
+
+    def test_folder_decides_task_and_arm(self):
+        self.put("duo-setup/mac-check/without/trial-1/meta.json", {
+            "task": "duo-lint/lint-and-fix", "arm": "with", "trial": 1, "agent_exit": 0,
+            "scored": True, "check_ids": []})
+        summary = evalkit.summarize(self.dir)
+        self.assertEqual(summary["tasks"][0]["id"], "duo-setup/mac-check")
+        self.assertEqual(list(summary["tasks"][0]["arms"]), ["without"])
 
 
 if __name__ == "__main__":

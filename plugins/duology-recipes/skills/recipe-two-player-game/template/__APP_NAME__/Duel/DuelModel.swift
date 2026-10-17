@@ -9,13 +9,16 @@ final class DuelModel {
     /// The time the views draw with. Updated by the clock and by every touch.
     private(set) var now = Date()
     let faceToFace: Bool
-    /// Bumped on every hit and every miss, to trigger each half's own haptics.
+    let hapticsOn: Bool
+    /// Bumped on every hit and every miss, so each event plays one haptic. The whole
+    /// phone vibrates, so both players feel every one.
     private(set) var hitCount: [Player: Int] = [:]
     private(set) var missCount: [Player: Int] = [:]
 
     init(setup: DuelSetup) {
         duel = Duel(rules: setup.rules, seed: setup.seed ?? UInt64.random(in: 0...UInt64.max))
         faceToFace = setup.faceToFace
+        hapticsOn = setup.hapticsOn
     }
 
     func toggleReady(_ player: Player) {

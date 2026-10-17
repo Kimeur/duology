@@ -1,6 +1,6 @@
 ---
 name: duo-testing
-description: Writes and runs tests for iPhone Duo apps, Apple's foldable with an outer display and an inner display, on the Mac and on the iPhone Duo simulator in Xcode 27.1. Use when adding logic tests (swiftc script or Swift Testing with @Test and #expect), UI tests with XCTest and XCUIAutomation, launch arguments such as -uiTesting, -resetState and jump-to-screen switches with a TestSupport type, test markers with accessibilityIdentifier and accessibilityValue, when a tap or drag in a UI test doesn't reach a SwiftUI gesture (coordinate(withNormalizedOffset:), press(forDuration:thenDragTo:)), when XCUIDevice rotation or a fold can't be scripted, or when running xcodebuild test with -destination "platform=iOS Simulator,name=iPhone Duo", -only-testing, -resultBundlePath, -collect-test-diagnostics and xcresulttool.
+description: "Writes and runs tests for iPhone Duo apps, Apple's foldable with an outer display and an inner display, on the Mac and on the iPhone Duo simulator in Xcode 27.1. Use when adding logic tests (swiftc script, or Swift Testing with @Test and #expect), UI tests with XCTest and XCUIAutomation, launch arguments such as -uiTesting, -resetState and jump-to-screen switches with a TestSupport type, test markers with accessibilityIdentifier and accessibilityValue, when a tap or drag in a UI test doesn't reach a SwiftUI gesture (coordinate(withNormalizedOffset:), press(forDuration:thenDragTo:)), when XCUIDevice rotation or a fold can't be scripted, or when running xcodebuild test on a private simulator with -destination id=<UDID>, -parallel-testing-enabled NO, -only-testing, -resultBundlePath, -collect-test-diagnostics and xcresulttool."
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
   sources: "reference/sources.md"
@@ -36,15 +36,16 @@ Keep the logic in its own folder of the app target, Foundation only. Mark each t
 ```swift
 import Foundation
 
-/// Even column counts put a gap, not a column, on the fold of the inner display.
+/// When a top-to-bottom fold crosses the grid, active or not, the count is even,
+/// so the fold lands in a gap, not on a column. With no fold, every column that fits.
 nonisolated struct GridPlan: Equatable, Sendable {
     var columns: Int
     var columnWidth: Double
 
-    static func make(width: Double, minColumnWidth: Double, spacing: Double = 8) -> GridPlan {
+    static func make(width: Double, minColumnWidth: Double, foldCrossesGrid: Bool, spacing: Double = 8) -> GridPlan {
         guard width > 0, minColumnWidth > 0 else { return GridPlan(columns: 1, columnWidth: max(width, 0)) }
         var count = max(1, Int((width + spacing) / (minColumnWidth + spacing)))
-        if count > 1, count.isMultiple(of: 2) == false { count -= 1 }
+        if foldCrossesGrid, count > 1, count.isMultiple(of: 2) == false { count -= 1 }
         return GridPlan(columns: count, columnWidth: (width - spacing * Double(count - 1)) / Double(count))
     }
 }
@@ -59,13 +60,17 @@ Then pick one runner. Both ran on the Mac in seconds (*measured*); full files in
 import Testing
 @testable import AppCore
 
-@Test("Wide windows get an even column count", arguments: [700.0, 951, 1100, 1300])
-func evenWhenWide(width: Double) {
-    #expect(GridPlan.make(width: width, minColumnWidth: 150).columns.isMultiple(of: 2))
+@Test("A fold across the grid gives an even count", arguments: [466.0, 800, 951, 1100])
+func evenWithFold(width: Double) {
+    #expect(GridPlan.make(width: width, minColumnWidth: 150, foldCrossesGrid: true).columns.isMultiple(of: 2))
+}
+
+@Test func `without a fold, every column that fits`() {
+    #expect(GridPlan.make(width: 466, minColumnWidth: 150, foldCrossesGrid: false).columns == 3)
 }
 ```
 
-Feed the logic widths you read from the view in the app. In tests, any width is fine; 951 and 466 are just the open and closed window widths we saw.
+In the app, read both inputs from the grid's own geometry: its width, and whether `reservedRegions(kind: .division, options: .includeInactive)` (iOS 27.1) finds a top-to-bottom fold across it, even while the phone is flat. View code: [references/logic-tests.md](references/logic-tests.md#feed-it-from-the-view). `duo-layout` and `duo-patterns` (feed reflow) use the same rule. In tests, pass any width and both fold values; never let a width stand in for a device.
 
 ## 2. Launch switches and a TestSupport type
 
@@ -131,7 +136,7 @@ struct RootView: View {
             List { NavigationLink("Play", value: Screen.board).testID("home.play") }
                 .navigationDestination(for: Screen.self) { screen in
                     switch screen {
-                    case .board: Text("Board")   // your screen
+                    case .board: BoardView()   // your screen; the sample's is in references/ui-tests.md
                     }
                 }
         }
@@ -144,6 +149,7 @@ struct RootView: View {
 - `UIView.setAnimationsEnabled(false)` stops UIKit animations ([Apple](https://developer.apple.com/documentation/uikit/uiview/setanimationsenabled(_:))). Apple's page says nothing about SwiftUI animations, so shorten those yourself when `TestSupport.isUITesting` is true.
 - Try a switch by hand: `xcrun simctl launch <UDID> com.example.App -uiTesting -openScreen board`. *Measured:* the sample opened straight on the board.
 - With `NavigationSplitView`, set the selection from `startScreen` instead of a path.
+- Keep one switch type per app. Other Duology pages show their own (`TestSwitches` in `duo-shared-screen`, `ContinuityTesting` in `duo-continuity`, `LaunchOptions` in the two-player recipe). Fold them into `TestSupport`: `TestSupport.value(after: "-seating")`, `TestSupport.has("-continuityTesting")` (launch with `-uiTesting` too), and expose their state with `testMarker` values, not hidden labels.
 
 ## 3. Test markers: identifiers and state, only in tests
 
@@ -240,7 +246,7 @@ XCUIAutomation types are main-actor types. Mark each test method `@MainActor`, a
 ### Rotation, folds and the two displays
 
 - *Measured:* on the closed Duo simulator, `XCUIDevice.shared.orientation = .landscapeLeft` changed the reported device orientation, but the app stayed 466 × 678 pt and screenshots stayed portrait. The same test rotated the app to 874 × 402 pt on an iPhone 17 Pro simulator (iOS 27.0). Rotate a Duo with Device Hub's rotate button. Open pose not measured.
-- `XCUIDevice` has no hinge or pose property, and `simctl` has no pose command (checked in Xcode 27.1). For a fold inside a test, use the manual pattern in `duo-continuity`'s `references/testing.md`: the test waits while a person presses Closed and Open.
+- `XCUIDevice` has no hinge or pose property, and `simctl` has no pose command (checked in Xcode 27.1). For a fold inside a test, use the manual pattern in `duo-continuity`'s `references/testing.md`: the test waits while a person presses Closed and Open and clicks rotate in Device Hub. Run it with `-parallel-testing-enabled NO`, so it waits on the simulator the person is looking at, not on a clone.
 - `XCUIScreen.screens` listed two screens. Closed, `screens[0]` shot 466 × 678 pt and `screens[1]` about 669 × 951 pt (*measured*). Attach a screenshot of each display when a test fails ([`screens`](https://developer.apple.com/documentation/xcuiautomation/xcuiscreen/screens)). Don't use them for the App Store: the inner one came out 2006 × 2852 px, while `simctl io ... screenshot --display=primary-1` gave the required 2007 × 2853 px (*measured*).
 - Device Hub can't send two-finger touches (Xcode 27 known issue), but `pinch(withScale:velocity:)` from a UI test reached a `MagnifyGesture` (*measured*, closed).
 
@@ -248,34 +254,39 @@ XCUIAutomation types are main-actor types. Mark each test method `@MainActor`, a
 
 ```bash
 export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
-xcrun simctl bootstatus "iPhone Duo" -b          # boot first; xcodebuild waits only 60 s
+UDID=$(xcrun simctl create "Tests Duo" com.apple.CoreSimulator.SimDeviceType.iPhone-Duo \
+  com.apple.CoreSimulator.SimRuntime.iOS-27-1)  # your own simulator, or reuse one only you use
+xcrun simctl bootstatus "$UDID" -b               # boot first; xcodebuild waits only 60 s
 rm -rf build/UITests.xcresult                    # xcodebuild refuses an existing path
 xcodebuild test \
   -project App.xcodeproj -scheme App \
-  -destination "platform=iOS Simulator,name=iPhone Duo" \
+  -destination "id=$UDID" \
+  -parallel-testing-enabled NO \
   -derivedDataPath build/DerivedData \
   -resultBundlePath build/UITests.xcresult \
   -collect-test-diagnostics never
 xcrun xcresulttool get test-results summary --path build/UITests.xcresult
+xcrun simctl shutdown "$UDID" && xcrun simctl delete "$UDID"   # when you are done with it
 ```
 
 - Exit code 0 means every test passed; 65 means a test failed or the run couldn't start (*measured*).
+- **`-parallel-testing-enabled NO` keeps the tests on the simulator you named.** When the scheme runs tests in parallel, xcodebuild runs them on a clone instead. `duo-shared-screen` measured its tests running on "Clone 1 of iPhone Duo", which started closed. A clone starts in its own pose, not the one you set in Device Hub. It boots fresh, which can take minutes. It also logs `Test case ... passed on 'Clone 1 of ...'`, which the `Test Case` grep in commands.md misses.
 - **xcodebuild can sit after the last test.** *Measured:* after one failed test it waited 600 s "collecting diagnostics from simulator", then timed out; the result bundle grew to 50 MB. With `-collect-test-diagnostics never` it exited the same second. Each `Test Case ... passed` or `failed` line reaches the log before that wait, so an agent can read results early.
 - A freshly created Duo simulator failed with "Timed out trying to boot simulator after waiting 60.00s" (*measured*). `simctl bootstatus -b` first took about a minute, then tests ran.
 - One test: `-only-testing:AppUITests/BoardUITests/testDragPieceIntoSlot`. Build once, run many: `build-for-testing`, then `test-without-building`.
-- Several simulators named "iPhone Duo", or one shared with someone else: use `-destination "id=<UDID>"`.
+- A UI test brings the app to the front and ends any running copy, so never point it at the shared "iPhone Duo" while someone else uses it. `-destination "platform=iOS Simulator,name=iPhone Duo"` resolves and builds (*measured*); use a name only for a simulator that is yours alone.
 - The iOS 27.1 simulator runtime refused every other iPhone we tried (iPhone 17, 17e, 17 Pro, Air, 18 Pro, 18 Pro Max) with "Incompatible device" (*measured*). To run the same tests on another iPhone, use the iOS 27.0 runtime and a deployment target of 27.0 or lower.
 
 Scripts, flags, `xcresulttool` recipes and a troubleshooting table: [references/commands.md](references/commands.md).
 
 ## Checklist
 
-- [ ] Rules and maths live in Foundation-only files, as `nonisolated` `Sendable` types, with Mac tests that pass.
+- [ ] Rules and maths live in Foundation-only files, as `nonisolated` `Sendable` types, with Mac tests that pass. Fold-dependent maths takes the fold as an input, not a width.
 - [ ] `TestSupport` reads `-uiTesting`, `-resetState` and `-openScreen`, inside `#if DEBUG`; release builds ignore them.
 - [ ] Slow or random behaviour has a switch (timer length, seed, skip intro).
 - [ ] Views that tests touch or read have `testID` or `testMarker`; state is exposed as `key=value|key=value`.
 - [ ] No test computes points from `app.frame`; taps and drags use element coordinates and `press(forDuration:thenDragTo:)`.
 - [ ] Tests wait with `waitForExistence`, `wait(for:toEqual:timeout:)` or predicates, not fixed sleeps.
 - [ ] Rotation and pose checks are listed for Device Hub, not left to `XCUIDevice`.
-- [ ] The run boots the simulator first, uses `DEVELOPER_DIR`, a fresh `-resultBundlePath` and `-collect-test-diagnostics never`.
+- [ ] The run uses a private simulator by UDID, boots it first, and passes `DEVELOPER_DIR`, `-parallel-testing-enabled NO`, a fresh `-resultBundlePath` and `-collect-test-diagnostics never`.
 - [ ] Results are read with `xcresulttool get test-results summary`, and failures attach a screenshot of each display.

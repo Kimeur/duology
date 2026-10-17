@@ -16,7 +16,7 @@ xcrun simctl bootstatus <UDID or name> -b
 ```
 
 - *Measured:* a newly created iPhone Duo simulator made `xcodebuild test` fail with "Timed out trying to boot simulator after waiting 60.00s" and exit 65. `bootstatus -b` then booted it in about a minute, and the same tests ran. Boot first, in the background if you can't wait.
-- Use `-destination "id=<UDID>"` when two simulators share a name, when other people or agents use the shared "iPhone Duo", or in CI. *Measured:* `-destination "platform=iOS Simulator,name=iPhone Duo"` resolved and built.
+- Address the simulator with `-destination "id=<UDID>"`. A name is fine only for a simulator that is yours alone: two simulators can share a name, and other people or agents may be using the shared "iPhone Duo". *Measured:* `-destination "platform=iOS Simulator,name=iPhone Duo"` resolved and built.
 - A UI test brings the app to the front of that simulator, and each `launch()` ends any running copy first (XCUIAutomation header). Don't do that on a simulator someone else is watching or scripting. Create your own and delete it after:
 
 ```bash
@@ -35,7 +35,8 @@ xcrun simctl shutdown "$UDID" && xcrun simctl delete "$UDID"
 rm -rf build/UITests.xcresult
 xcodebuild test \
   -project App.xcodeproj -scheme App \
-  -destination "platform=iOS Simulator,name=iPhone Duo" \
+  -destination "id=$UDID" \
+  -parallel-testing-enabled NO \
   -derivedDataPath build/DerivedData \
   -resultBundlePath build/UITests.xcresult \
   -collect-test-diagnostics never
@@ -43,13 +44,13 @@ xcodebuild test \
 
 | Flag | Why |
 |---|---|
-| `-destination` | `platform=iOS Simulator,name=iPhone Duo`, or `id=<UDID>`. Add `,OS=27.1` to pin the runtime. |
+| `-destination` | `id=<UDID>` of your own simulator. `platform=iOS Simulator,name=iPhone Duo,OS=27.1` also works, but only for a simulator nobody else uses. |
+| `-parallel-testing-enabled NO` | Overrides the scheme's parallel setting (`man xcodebuild`). With parallel testing on, xcodebuild runs the tests on a clone of the simulator, not the one you named. `duo-shared-screen` measured this: "Clone 1 of iPhone Duo", which started closed. A clone starts in its own pose, not the one you set in Device Hub. It boots fresh, which the two-player recipe's runner says can take minutes. And a manual fold test then waits on a device nobody is looking at. Its log lines also change to `Test case '...' passed on 'Clone 1 of ...'`, which the greps on this page don't match. Always pass `NO` for Duo runs. |
 | `-derivedDataPath build/DerivedData` | Keeps build products next to the project, so later commands can find the `.xctestrun` file. |
 | `-resultBundlePath` | Writes an `.xcresult` bundle. The man page says xcodebuild exits with an error if the path already exists, so delete it first. |
 | `-collect-test-diagnostics never` | Skips sysdiagnoses and log archives on failure. See "Sitting after the last test". |
 | `-only-testing:Target/Class/method` | Runs one target, class or method. Repeat it for several. `-skip-testing:` does the reverse. |
 | `-test-iterations N` with `-retry-tests-on-failure` or `-run-tests-until-failure` | Hunts flaky tests. |
-| `-parallel-testing-enabled NO` | Overrides the scheme's parallel setting, so tests run one at a time. |
 | `-enumerate-tests` | Lists the tests a run would execute, without running them. |
 
 Test identifiers follow `TestTarget/TestClass/testMethod` ([Running tests and interpreting results](https://developer.apple.com/documentation/xcode/running-tests-and-interpreting-results)). *Measured:* `-only-testing:DuoSampleUITests/BoardUITests/testTapInsideAShape` worked without parentheses; the result bundle then names the test `BoardUITests/testTapInsideAShape()`, with them.
@@ -60,21 +61,21 @@ Exit codes, *measured*: 0 when all tests pass; 65 when a test fails, and also wh
 
 ```bash
 xcodebuild build-for-testing -project App.xcodeproj -scheme App \
-  -destination "platform=iOS Simulator,name=iPhone Duo" -derivedDataPath build/DerivedData
+  -destination "id=$UDID" -derivedDataPath build/DerivedData
 
 # Same scheme, no rebuild:
 xcodebuild test-without-building -project App.xcodeproj -scheme App \
-  -destination "id=<UDID>" -derivedDataPath build/DerivedData \
+  -destination "id=$UDID" -parallel-testing-enabled NO -derivedDataPath build/DerivedData \
   -resultBundlePath build/Run2.xcresult -collect-test-diagnostics never
 
 # Or point at the .xctestrun file that build-for-testing wrote (no -project then):
 xcodebuild test-without-building \
   -xctestrun build/DerivedData/Build/Products/App_iphonesimulator27.1-arm64.xctestrun \
-  -destination "id=<UDID>" -resultBundlePath build/Run3.xcresult \
-  -only-testing:AppUITests/BoardUITests/testDragPieceIntoSlot
+  -destination "id=$UDID" -parallel-testing-enabled NO -resultBundlePath build/Run3.xcresult \
+  -collect-test-diagnostics never -only-testing:AppUITests/BoardUITests/testDragPieceIntoSlot
 ```
 
-*Measured:* all three forms ran. The `.xctestrun` file name carries the SDK and the architectures built; list `build/DerivedData/Build/Products/` to find it. Building for `-destination "generic/platform=iOS Simulator"` named it `App_iphonesimulator27.1-arm64-x86_64.xctestrun`.
+*Measured:* all three forms ran (on 16 October, without `-parallel-testing-enabled NO`; the sample's scheme doesn't turn on parallel testing, so it made no difference there). The `.xctestrun` file name carries the SDK and the architectures built; list `build/DerivedData/Build/Products/` to find it. Building for `-destination "generic/platform=iOS Simulator"` named it `App_iphonesimulator27.1-arm64-x86_64.xctestrun`.
 
 ## Sitting after the last test
 
@@ -86,7 +87,7 @@ A shipped Duo app's notes said xcodebuild could sit for minutes after the last t
 | 1 failing test, default flags | 21:10:57 | 21:20:57, right after the log line "Failure collecting diagnostics from simulator: Timed out after 600.0 seconds" | 50 MB |
 | 1 failing test, `-collect-test-diagnostics never` | 21:22:18 | 21:22:18 | 1.1 MB |
 
-So pass `-collect-test-diagnostics never` for agent and CI runs. Turn it back on (`on-failure`) only when you need a sysdiagnose to debug a crash. Each `Test Case ... passed` or `failed` line reaches the log before that wait (only `** TEST FAILED **` comes after it), so a script can read results without waiting for the process.
+So pass `-collect-test-diagnostics never` for agent and CI runs. Turn it back on (`on-failure`) only when you need a sysdiagnose to debug a crash. Each `Test Case ... passed` or `failed` line reaches the log before that wait (only the `** TEST FAILED **` or `** TEST EXECUTE FAILED **` line comes after it), so a script can read results without waiting for the process.
 
 ## Run in the background and poll
 
@@ -98,7 +99,7 @@ UI test runs take minutes. An agent should start the run in the background, writ
 grep -E "^Test Case .*(passed|failed)|\*\* TEST|^EXIT" build/ui-tests.log
 ```
 
-- `** TEST SUCCEEDED **` (or `** TEST EXECUTE SUCCEEDED **` for `test-without-building`) and `** TEST FAILED **` mark the end.
+- The last line marks the end: `** TEST SUCCEEDED **` or `** TEST FAILED **` for `test`, and `** TEST EXECUTE SUCCEEDED **` or `** TEST EXECUTE FAILED **` for `test-without-building` (*measured*). Match `\*\* TEST`, as the grep above does; a literal `TEST FAILED` misses the `EXECUTE` form.
 - Each test prints `Test Case '-[Target.Class testName]' passed (N seconds)` or `failed`.
 - A failed assertion prints `path/File.swift:LINE: error: -[Target.Class testName] : message`.
 
@@ -119,39 +120,48 @@ xcrun xcresulttool export attachments --path build/UITests.xcresult --output-pat
 
 ## A runner script
 
-`Tools/run-ui-tests.sh`. *Measured:* on the iPhone Duo simulator it printed each test line, then `Passed | passed 2 | failed 0 | skipped 0` and exited 0; with a broken assertion it printed the `FAIL` line with the message and exited 65.
+`Tools/run-ui-tests.sh`. *Measured* (16 October): on a private iPhone Duo simulator it printed each test line, then `Passed | passed 2 | failed 0 | skipped 0` and exited 0; with a broken assertion it printed the `FAIL` line with the message and exited 65. On 17 October it gained the private-simulator default and `-parallel-testing-enabled NO`; that version was syntax-checked and its find-or-create step was run, but the full UI run was not repeated (the Mac was out of disk space).
 
 ```bash
 #!/bin/zsh
-# Runs the UI tests on an iPhone Duo simulator, then prints the result summary.
+# Runs the UI tests on your own iPhone Duo simulator, then prints the result summary.
 #   Tools/run-ui-tests.sh                                   all UI tests
 #   Tools/run-ui-tests.sh -only-testing:AppUITests/BoardUITests
-# Settings: PROJECT, SCHEME, DEVICE_ID (a UDID; default: the first "iPhone Duo" on iOS 27.1).
+# Settings: PROJECT, SCHEME, DEVICE_ID (a UDID). Without DEVICE_ID it uses the iOS 27.1
+# simulator named $DEVICE_NAME (default "Tests Duo") and creates it if it doesn't exist.
+# It never picks the shared "iPhone Duo": a UI test takes over the simulator it runs on.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode-27.1.app/Contents/Developer}"
 PROJECT="${PROJECT:-App.xcodeproj}"
 SCHEME="${SCHEME:-App}"
+DEVICE_NAME="${DEVICE_NAME:-Tests Duo}"
 RESULT="build/UITests.xcresult"
 LOG="build/ui-tests.log"
 
 if [[ -z "${DEVICE_ID:-}" ]]; then
-  DEVICE_ID=$(xcrun simctl list --json devices available | python3 -I -c '
-import json, sys
+  DEVICE_ID=$(xcrun simctl list --json devices available | DEVICE_NAME="$DEVICE_NAME" python3 -I -c '
+import json, os, sys
 devices = json.load(sys.stdin)["devices"]
 print(next((d["udid"] for runtime, list in devices.items() if runtime.endswith("iOS-27-1")
-            for d in list if d["name"] == "iPhone Duo"), ""))')
+            for d in list if d["name"] == os.environ["DEVICE_NAME"]), ""))')
+  if [[ -z "$DEVICE_ID" ]]; then
+    DEVICE_ID=$(xcrun simctl create "$DEVICE_NAME" com.apple.CoreSimulator.SimDeviceType.iPhone-Duo \
+      com.apple.CoreSimulator.SimRuntime.iOS-27-1) || { echo "Could not create an iPhone Duo simulator. See duo-setup."; exit 1; }
+  fi
 fi
-[[ -n "$DEVICE_ID" ]] || { echo "No iPhone Duo simulator on iOS 27.1. See duo-setup."; exit 1; }
 
 mkdir -p build
 xcrun simctl bootstatus "$DEVICE_ID" -b > /dev/null   # xcodebuild gives a new simulator only 60 s to boot
 rm -rf "$RESULT"                                       # xcodebuild refuses an existing result path
 
+# -parallel-testing-enabled NO: otherwise xcodebuild may run the tests on a clone of the
+# simulator, which boots fresh and ignores the pose you set in Device Hub.
 set +e
 xcodebuild test \
   -project "$PROJECT" -scheme "$SCHEME" \
   -destination "id=$DEVICE_ID" \
+  -parallel-testing-enabled NO \
   -derivedDataPath build/DerivedData \
   -resultBundlePath "$RESULT" \
   -collect-test-diagnostics never \

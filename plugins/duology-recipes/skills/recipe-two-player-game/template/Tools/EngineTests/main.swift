@@ -166,6 +166,20 @@ for (name, rect) in [("side by side", left), ("stacked", top)] {
           "\(name): a hit is judged in the half's own coordinates")
 }
 
+// MARK: Seating
+
+for player in Player.allCases {
+    check(player.quarterTurns(faceToFace: false, sideBySide: false) == 0
+          && player.quarterTurns(faceToFace: false, sideBySide: true) == 0,
+          "\(player.name): sitting the same way turns nothing")
+}
+check(Player.one.quarterTurns(faceToFace: true, sideBySide: false) == 2
+      && Player.two.quarterTurns(faceToFace: true, sideBySide: false) == 0,
+      "face to face, stacked: only the top half turns, upside down")
+check(Player.one.quarterTurns(faceToFace: true, sideBySide: true) == 1
+      && Player.two.quarterTurns(faceToFace: true, sideBySide: true) == 3,
+      "face to face, side by side: each half turns a quarter toward the seam")
+
 // MARK: Play area
 
 let half = GameRect(x: 0, y: 0, width: 475, height: 613)
@@ -184,22 +198,29 @@ check(PlayArea.fit(half, avoiding: [half], margin: 12) == .zero, "a region cover
 
 // MARK: Off the main actor
 
-// The build uses -default-isolation MainActor, like the app. If an engine type lost its
-// `nonisolated`, this detached task would stop compiling.
-let fromBackground = await Task.detached { () -> Int in
+// The build uses -default-isolation MainActor, like the app. This detached task uses
+// every engine type in a way that needs it to be `nonisolated`: drop one and the
+// build fails. Add a line here for each new engine type.
+let fromBackground = await Task.detached { () -> Bool in
     var quick = DuelRules()
+    quick.goal = 1
     quick.countdown = 0
     quick.timeLimit = nil
     var background = Duel(rules: quick, seed: 9)
     let now = Date()
+    let player = Player.one.other                                    // Player
     background.toggleReady(.one, now: now)
-    background.toggleReady(.two, now: now)
-    let rect = GameRect(x: 0, y: 0, width: 300, height: 300)
-    guard let target = background.target(for: .two, in: rect) else { return -1 }
-    background.tap(.two, at: target.center, in: rect, now: now)
-    return background[.two].hits
+    background.toggleReady(player, now: now)
+    let rect = PlayArea.fit(GameRect(x: 0, y: 0, width: 324, height: 324),
+                            avoiding: [], margin: 12)                // PlayArea, GameRect
+    guard let target = background.target(for: player, in: rect) else { return false }
+    let result = background.tap(player, at: target.center, in: rect, now: now)
+    return result == TapResult.won                                   // TapResult
+        && background[player] == PlayerState(hits: 1)                // PlayerState
+        && background.outcome == .won(player)                        // Outcome, Duel
+        && background.phase == .finished(.won(player))               // Phase
 }.value
-check(fromBackground == 1, "the engine runs off the main actor")
+check(fromBackground, "the engine runs off the main actor")
 
 print("\(passes) passed, \(failures) failed")
 exit(failures == 0 ? 0 : 1)

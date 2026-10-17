@@ -90,17 +90,31 @@ NEVER_COMMANDS = {
     "eval", "exec", "xargs", "env", "nohup", "kill", "killall", "pkill", "diskutil", "crontab",
     "networksetup", "systemsetup", "spctl", "csrutil", "tccutil", "pmset", "softwareupdate",
     "installer", "brew", "npm", "npx", "pip", "pip3", "gem", "claude",
+    # Commands that run another command given to them, so a prefix rule on them
+    # allows anything: `nice rm -rf ~`, `find . -exec ...`, `awk 'BEGIN{system(...)}'`.
+    "arch", "caffeinate", "nice", "time", "timeout", "gtimeout", "command", "builtin", "source",
+    ".", "find", "awk", "gawk", "nawk", "script", "sandbox-exec", "chroot", "watch", "at",
+    "batch", "screen", "tmux", "expect", "lldb", "gdb",
 }
 INTERPRETERS = {"sh", "bash", "zsh", "dash", "ksh", "fish", "python", "python3", "perl", "ruby",
                 "node", "swift", "php", "lua", "tclsh"}
-GIT_NEVER = {"push", "remote", "config", "clone", "fetch", "pull", "submodule", "credential",
-             "send-email", "daemon", "filter-branch"}
+# git is an allow list: only subcommands that read.
+GIT_OK = {"diff", "status", "log", "show"}
 XCRUN_OK = {"simctl", "swiftc", "--find", "-f", "--show-sdk-version", "--show-sdk-path",
             "--show-sdk-platform-path"}
 XCODE_SELECT_OK = {"xcode-select -p", "xcode-select --print-path", "xcode-select -v",
                    "xcode-select --version"}
 ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
-DIR_PREFIX = re.compile(r"^\.?/?[A-Za-z0-9_.-]+/")
+# A wildcard path must start with a folder inside the project: Tools/* or ./Tools/*,
+# never /bin/*, ../* or ./* (any program in the current folder).
+DIR_PREFIX = re.compile(r"^(\./)?[A-Za-z0-9_][A-Za-z0-9_.-]*/")
+
+
+def _wild_path_problem(path):
+    """Why a path with a * in it is too broad, or None."""
+    if not DIR_PREFIX.match(path) or ".." in path.split("/"):
+        return "a wildcard path needs a project folder before it, like Tools/*, not / or .."
+    return None
 
 
 def _word(w):
@@ -141,14 +155,19 @@ def rule_problem(rule):
     first = _word(words[0])
     if not first or first[0] in "*:-":
         return "too broad: %s" % rule
-    if "*" in first and not DIR_PREFIX.match(first):
-        return "a wildcard in the command needs a folder before it, like Tools/*: %s" % rule
+    if "*" in first and _wild_path_problem(first):
+        return "%s: %s" % (_wild_path_problem(first), rule)
+    if ".." in first.split("/"):
+        return "a command path can't climb out with ..: %s" % rule
     name = os.path.basename(first)
+    if not name:
+        return "a rule must name a command, not a folder: %s" % rule
     rest = [_word(w) for w in words[1:]]
     if name in NEVER_COMMANDS:
         return "command never allowed in an eval run: %s" % rule
-    if name == "git" and (not rest or rest[0] in GIT_NEVER or "*" in rest[0]):
-        return "git rules must name a read-only subcommand, like git diff: %s" % rule
+    if name == "git" and (not rest or rest[0] not in GIT_OK):
+        return "git rules must name a read-only subcommand (%s) right after git: %s" % (
+            ", ".join(sorted(GIT_OK)), rule)
     if name == "defaults" and (not rest or rest[0] != "read"):
         return "defaults may only read: %s" % rule
     if name == "xcode-select" and " ".join([name] + rest) not in XCODE_SELECT_OK:
@@ -167,8 +186,10 @@ def rule_problem(rule):
         script = rest[0]
         if not script or script[0] in "*:-":
             return "an interpreter rule must name the script it runs: %s" % rule
-        if "*" in script and not DIR_PREFIX.match(script):
-            return "a wildcard in the script needs a folder before it, like Tools/*: %s" % rule
+        if "*" in script and _wild_path_problem(script):
+            return "%s: %s" % (_wild_path_problem(script), rule)
+        if ".." in script.split("/"):
+            return "a script path can't climb out with ..: %s" % rule
     return None
 
 
@@ -607,19 +628,42 @@ def trial_result(trial_dir):
 
 # ------------------------------------------------------------------- summary
 
+ARMS = ("with", "without", "fixture", "score")
+TRIAL_DIR = re.compile(r"^trial-[0-9]+$")
+
+
+def trial_dirs(run_dir):
+    """The trial folders of a run, as (path, task, arm).
+
+    A trial folder is <skill>/<task>/<arm>/trial-N with a meta.json in it. Nothing
+    inside a trial folder is searched, so a meta.json that the agent left in its
+    work folder (copied to final-tree/) never counts as a trial.
+    """
+    found = []
+    for root, dirs, files in os.walk(run_dir):
+        dirs.sort()
+        parts = os.path.relpath(root, run_dir).split(os.sep)
+        if len(parts) == 4 and parts[2] in ARMS and TRIAL_DIR.match(parts[3]):
+            dirs[:] = []
+            if "meta.json" in files:
+                found.append((root, "/".join(parts[:2]), parts[2]))
+        elif len(parts) >= 4:
+            dirs[:] = []  # deeper than any trial folder
+    return found
+
+
 def summarize(run_dir):
     run_meta = load_json(os.path.join(run_dir, "run.json"), {})
     tasks = {}
-    for root, dirs, files in os.walk(run_dir):
-        if "meta.json" not in files:
-            continue
+    for root, path_task, path_arm in trial_dirs(run_dir):
         res = trial_result(root)
+        # The folder decides where a trial counts, not what its meta.json says.
+        res["task"], res["arm"] = path_task, path_arm
         with open(os.path.join(root, "result.json"), "w", encoding="utf-8") as f:
             json.dump(res, f, indent=2)
             f.write("\n")
-        task = res.get("task") or "?"
-        arm = res.get("arm") or "?"
-        tasks.setdefault(task, {}).setdefault(arm, []).append(res)
+        res["_dir"] = root
+        tasks.setdefault(path_task, {}).setdefault(path_arm, []).append(res)
     task_meta = run_meta.get("tasks", {})
     out_tasks = []
     totals = {}
@@ -638,8 +682,8 @@ def summarize(run_dir):
                 "automatic_passed": sum(1 for r in trials if r["automatic_passed"]),
                 "cost_usd": round(cost, 4),
                 "permission_denials": denials,
-                "results": [os.path.relpath(os.path.join(run_dir, task, arm, "trial-%s" % r.get("trial"),
-                                                         "result.json"), run_dir) for r in trials],
+                "results": [os.path.relpath(os.path.join(r["_dir"], "result.json"), run_dir)
+                            for r in trials],
             }
             t = totals.setdefault(arm, {"trials": 0, "pass": 0, "pending-review": 0, "fail": 0,
                                         "error": 0, "contaminated": 0, "dry-run": 0, "unscored": 0,

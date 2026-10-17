@@ -1,10 +1,12 @@
 import SwiftUI
 
-/// One player's half: the play field and a score bar, turned around in face-to-face mode.
+/// One player's half: the play field and a score bar, turned to face its player in
+/// face-to-face mode.
 struct PlayerHalf: View {
     let player: Player
     let model: DuelModel
-    var isTurned = false
+    /// Clockwise quarter turns, from `Player.quarterTurns(faceToFace:sideBySide:)`.
+    var quarterTurns = 0
     var onLeave: (() -> Void)?
 
     var body: some View {
@@ -12,11 +14,16 @@ struct PlayerHalf: View {
             PlayField(player: player, model: model)
             ScoreBar(player: player, model: model, onLeave: onLeave)
         }
-        // Clip first, so nothing in this half can draw over or take touches from the other.
+        // Touches: this half only takes touches inside its own rectangle, even when a
+        // panel grows past its edge at a large text size. No gesture here: with a tap
+        // gesture on the same view, the target's accessibility frame grew to the whole field.
+        .contentShape(.interaction, Rectangle())
+        // Drawing: nothing that grows past the edge shows over the other half.
+        // Clipping does not limit touches; the content shape above does.
         .clipped()
-        // Turning the whole half keeps its coordinate space: touches still arrive in
-        // the half's own coordinates, so the engine never knows the half is upside down.
-        .rotationEffect(isTurned ? .degrees(180) : .zero)
+        // Turning the whole half keeps its coordinate space: touches still arrive in the
+        // half's own coordinates, so the engine never knows the half is turned.
+        .turned(quarterTurns)
         // The colour runs to the screen edges; the content stays inside the safe area.
         .background {
             ZStack {
@@ -28,6 +35,22 @@ struct PlayerHalf: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel(player.name)
         .accessibilityIdentifier("\(player.id).half")
+    }
+}
+
+extension View {
+    /// Turns this view clockwise by quarter turns inside the space it gets. A sideways
+    /// turn lays the view out with width and height swapped first, so it reads right
+    /// for the person at that edge. Same helper as duo-shared-screen's `turned(_:)`.
+    func turned(_ quarterTurns: Int) -> some View {
+        GeometryReader { proxy in
+            let sideways = quarterTurns % 2 != 0
+            self
+                .frame(width: sideways ? proxy.size.height : proxy.size.width,
+                       height: sideways ? proxy.size.width : proxy.size.height)
+                .rotationEffect(.degrees(Double(quarterTurns) * 90))
+                .frame(width: proxy.size.width, height: proxy.size.height)
+        }
     }
 }
 
@@ -44,8 +67,8 @@ struct PlayField: View {
     var body: some View {
         ZStack {
             // The touch surface: a clear layer under everything, so the whole field takes
-            // taps. It sits beside the content, not around it: a .contentShape on the
-            // container gives every element inside it the container's accessibility frame.
+            // taps. It sits beside the content, not around it: with a .contentShape and this
+            // gesture on the container, the target took the container's accessibility frame.
             Color.clear
                 .contentShape(Rectangle())
                 .gesture(
@@ -63,8 +86,14 @@ struct PlayField: View {
         } action: { newArea in
             area = newArea
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: model.hitCount[player, default: 0])
-        .sensoryFeedback(.error, trigger: model.missCount[player, default: 0])
+        // One haptic per hit or miss. The whole phone vibrates, so both players feel it;
+        // the Haptics switch on the home screen turns them off.
+        .sensoryFeedback(.impact(weight: .light), trigger: model.hitCount[player, default: 0]) { _, _ in
+            model.hapticsOn
+        }
+        .sensoryFeedback(.error, trigger: model.missCount[player, default: 0]) { _, _ in
+            model.hapticsOn
+        }
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("\(player.id).field")
     }

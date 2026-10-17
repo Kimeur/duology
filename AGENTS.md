@@ -80,7 +80,8 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 4. **Write skills for agents.** `SKILL.md` is imperative and concrete, with code. Keep it to 300 lines and move depth into `references/`. Use short sentences, plain words and active voice. No emoji.
 5. **Keep `metadata.verified` honest**, for example `"Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"`. Change `device` to `yes` only after testing on a real iPhone Duo.
 6. **Quote YAML values that contain `: ` or ` #`.** Unquoted, the first breaks the front matter and the second cuts the description short.
-7. **Add a test task** in `evals/` for a new skill.
+7. **Keep relative links inside the plugin folder.** `/plugin install` copies only `plugins/<plugin>/`, so a relative link to `reference/` or to another plugin breaks for users. Use the GitHub URL instead, for example `https://github.com/Kimeur/duology/blob/main/reference/api-index.md`. `validate-skills.py` fails on these links and prints the URL to use.
+8. **Add a test task** in `evals/` for a new skill.
 
 ### Before you finish
 

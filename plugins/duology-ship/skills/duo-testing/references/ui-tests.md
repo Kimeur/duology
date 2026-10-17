@@ -1,13 +1,13 @@
 # UI tests on the iPhone Duo simulator
 
-A complete, small sample: an app with launch switches and test markers, and a UI test class that drags, taps and reads state. The code below is the code we ran. It builds with Xcode 27.1 at a deployment target of iOS 26.0, Swift 6, with `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and `SWIFT_APPROACHABLE_CONCURRENCY = YES` on the app target, with no warnings. Its 4 UI tests passed on the iPhone Duo simulator (iOS 27.1, closed) on 16 October 2026.
+A complete, small sample: an app with launch switches and test markers, and a UI test class that drags, taps and reads state. Build it from the four files below, exactly as listed. It builds with Xcode 27.1 at a deployment target of iOS 26.0, Swift 6, with `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` and `SWIFT_APPROACHABLE_CONCURRENCY = YES` on the app target, with no warnings. Its 4 UI tests passed on the iPhone Duo simulator (iOS 27.1, closed) on 16 October 2026, and again on 17 October when a reviewer rebuilt the app from these listings alone (5 of 5 with the pose probe in [evidence.md](evidence.md)).
 
 Files:
 
 ```
 App/
   TestSupport.swift      launch switches + test markers (SKILL.md, sections 2 and 3)
-  SampleApp.swift        App and RootView (SKILL.md, section 2)
+  SampleApp.swift        App and RootView, as in SKILL.md section 2 (RootView opens BoardView)
   BoardView.swift        the screen under test (below)
 AppUITests/
   BoardUITests.swift     the tests (below)

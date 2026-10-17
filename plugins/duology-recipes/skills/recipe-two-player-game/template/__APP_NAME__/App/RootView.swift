@@ -3,8 +3,10 @@ import SwiftUI
 /// What the home screen sets up before a duel.
 struct DuelSetup: Equatable {
     var rules = DuelRules()
-    /// Turns player 1's half around, for a phone lying flat between two people.
+    /// Turns each half to face its player, for a phone lying flat between two people.
     var faceToFace = false
+    /// Haptics on hits and misses. The whole phone vibrates, so both players feel each one.
+    var hapticsOn = true
     /// A fixed seed replays the same targets. `nil` picks new ones every game.
     var seed: UInt64?
 }

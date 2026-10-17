@@ -35,12 +35,23 @@ struct HomeView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Face to face")
                                 .font(.headline)
-                            Text("Turns player 1's half around, for a phone lying flat between you.")
+                            Text("Turns each half to face its player, for a phone lying flat between you.")
                                 .font(.subheadline)
                                 .foregroundStyle(.secondary)
                         }
                     }
                     .accessibilityIdentifier("home.faceToFace")
+
+                    Toggle(isOn: $setup.hapticsOn) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Haptics")
+                                .font(.headline)
+                            Text("A short buzz on every hit and miss. The whole phone vibrates, so you both feel it.")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .accessibilityIdentifier("home.haptics")
                 }
 
                 Button(action: onStart) {

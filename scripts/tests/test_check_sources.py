@@ -59,6 +59,23 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._reply(302, "/forums/verify-human/verify.html?next=/x")
         elif path.startswith("/forums/verify-human/"):
             self._reply(200)
+        elif path == "/videos/play/x/1/":
+            self._reply(200)
+        elif path == "/videos/play/x/999999/":
+            # How developer.apple.com answers an unknown video ID.
+            self._reply(302, "/videos/x")
+        elif path == "/videos/x":
+            self._reply(301, "/videos/x/")
+        elif path == "/videos/x/":
+            self._reply(200)
+        elif path == "/docs/a/gone":
+            self._reply(302, "/docs/a/")
+        elif path == "/docs/a/":
+            self._reply(200)
+        elif path == "/docs/old/page":
+            self._reply(301, "/docs/new/page")
+        elif path == "/docs/new/page":
+            self._reply(200)
         else:
             self._reply(404)
 
@@ -106,6 +123,36 @@ class ServerTests(unittest.TestCase):
         result = self.check("/human")
         self.assertEqual(result.kind, "blocked")
         self.assertIn("human check", result.describe())
+
+    def test_unknown_video_id_redirected_to_index_is_broken(self):
+        self.assertEqual(self.check("/videos/play/x/1/").kind, "ok")
+        for method in ("head", "get"):
+            with self.subTest(method=method):
+                result = self.check("/videos/play/x/999999/", method=method)
+                self.assertEqual((result.kind, result.status), ("broken", 200))
+                self.assertTrue(result.final_url.endswith("/videos/x/"))
+                self.assertIn("page is gone", result.describe())
+
+    def test_redirect_up_to_parent_is_broken(self):
+        self.assertEqual(self.check("/docs/a/gone").kind, "broken")
+        self.assertEqual(self.check("/docs/old/page").kind, "ok")
+
+    def test_redirected_away(self):
+        away = cs.redirected_away
+        apple = "https://developer.apple.com"
+        self.assertTrue(away(apple + "/videos/play/tech-talks/999999/", apple + "/videos/tech-talks/"))
+        self.assertTrue(away(apple + "/videos/play/wwdc2026/99999/", apple + "/videos/wwdc2026/"))
+        self.assertTrue(away(apple + "/documentation/swiftui/gone", apple + "/"))
+        self.assertFalse(away(apple + "/videos/play/tech-talks/111461/?time=166",
+                              apple + "/videos/play/tech-talks/111461/?time=166"))
+        self.assertFalse(away(apple + "/videos/wwdc2025", apple + "/videos/wwdc2025/"))
+        self.assertFalse(away("http://apple.com/iphone-duo/specs", "https://www.apple.com/iphone-duo/specs/"))
+        self.assertFalse(away(apple + "/design/human-interface-guidelines/foundations/layout",
+                              apple + "/design/human-interface-guidelines/layout"))
+        self.assertFalse(away("https://learn.microsoft.com/dual-screen/intro",
+                              "https://learn.microsoft.com/en-us/dual-screen/intro"))
+        self.assertFalse(away("https://apple.co/x", "https://www.apple.com/"))
+        self.assertFalse(away(apple + "/x/y", None))
 
     def test_login_only_github_pages_are_blocked(self):
         fetcher = cs.Fetcher(timeout=5, retries=0, per_host=1)

@@ -12,6 +12,10 @@ For each folder under plugins/<plugin>/skills/<skill>/ this script checks that:
 - SKILL.md is 300 lines or fewer (change it with --max-lines);
 - relative links in SKILL.md and in references/*.md point at files that exist,
   with the same letter case (Linux and GitHub are case-sensitive);
+- relative links stay inside their plugin folder. /plugin install copies only
+  plugins/<plugin>/ (code.claude.com/docs/en/plugins/loading), so a link to
+  reference/ or to another plugin breaks for users. Link to the file on GitHub
+  instead (https://github.com/Kimeur/duology/blob/main/...);
 - paths named in inline code, such as `references/rules.md`, exist (warning).
 
 It also checks that the front matter of plugins/*/commands/*.md and
@@ -22,12 +26,13 @@ parser for the YAML subset that skills use, so results don't depend on whether
 PyYAML is installed. It rejects the mistakes that real YAML parsers reject,
 such as an unquoted value that contains ": ", and refuses YAML features that
 front matter doesn't need (anchors, tags, {...} mappings) instead of guessing.
+A value may start on the line after its key, as in YAML.
 
 Usage:
   python3 scripts/validate-skills.py                  # every skill in the repo
   python3 scripts/validate-skills.py plugins/duology  # one plugin
   python3 scripts/validate-skills.py --format github  # GitHub Actions annotations
-  python3 scripts/validate-skills.py --portable       # also flag links that leave the skill folder
+  python3 scripts/validate-skills.py --portable       # also flag links that leave the skill, not the plugin
 
 Exit codes: 0 no errors, 1 errors found (or warnings with --strict), 2 bad arguments.
 """
@@ -59,6 +64,8 @@ CLAUDE_CODE_KEYS = {
 }
 
 SKILL_SUBDIRS_FOR_LINKS = ("references",)
+REPO_URL = "https://github.com/Kimeur/duology"  # links out of a plugin should point here
+REPO_BRANCH = "main"
 MENTION_RE = re.compile(r"^(?:\./)?(?:references|scripts|assets|templates?|tests|examples)/[\w.\-/]+$")
 
 
@@ -124,8 +131,9 @@ _ESCAPES = {
 
 class MiniYaml:
     """Parse block mappings, block sequences, plain, quoted and block scalars,
-    and one-line [a, b] lists. Anchors, aliases, tags and {...} mappings are
-    refused with a clear message instead of being guessed at."""
+    and one-line [a, b] lists. A value can start on the line after its key or
+    '-'. Anchors, aliases, tags and {...} mappings are refused with a clear
+    message instead of being guessed at."""
 
     def __init__(self, lines, first_line):
         self.lines = list(lines)
@@ -200,6 +208,18 @@ class MiniYaml:
             return self._sequence(idx, indent, path)
         return self._mapping(idx, indent, path)
 
+    def _node_below(self, idx, parent_indent, path):
+        """Parse a value that starts on its own line, below its key or '-'.
+
+        It is a list or a mapping when the line starts with '- ' or 'key:'.
+        Otherwise it is a scalar (plain, quoted, | or > block) or a [...] list,
+        and a plain scalar continues on lines indented more than the parent."""
+        indent = self._indent(idx)
+        content = self.lines[idx][indent:]
+        if self._is_item(content) or self._match_key(content) is not None:
+            return self._block(idx, indent, path)
+        return self._value(idx, parent_indent, content, path)
+
     def _mapping(self, idx, indent, path):
         result = {}
         while True:
@@ -245,7 +265,7 @@ class MiniYaml:
             if after == "" or after.startswith("#"):
                 nxt = self._skip(idx + 1)
                 if nxt < len(self.lines) and self._indent(nxt) > ind:
-                    value, idx = self._block(nxt, self._indent(nxt), child)
+                    value, idx = self._node_below(nxt, ind, child)
                 else:
                     value, idx = None, idx + 1
             elif self._is_item(after) or self._match_key(after) is not None:
@@ -264,8 +284,10 @@ class MiniYaml:
             if nxt < len(self.lines):
                 nind = self._indent(nxt)
                 ncontent = self.lines[nxt][nind:]
-                if nind > ind or (nind == ind and self._is_item(ncontent)):
-                    return self._block(nxt, nind, path)
+                if nind == ind and self._is_item(ncontent):
+                    return self._sequence(nxt, nind, path)
+                if nind > ind:
+                    return self._node_below(nxt, ind, path)
             return None, idx + 1
         first = stripped[0]
         if first in "|>":
@@ -280,7 +302,7 @@ class MiniYaml:
             self._fail("{...} mappings aren't supported in front matter; use indented 'key: value' lines", idx)
         if first in "&*!":
             self._fail("anchors (&), aliases (*) and tags (!) aren't supported in front matter", idx)
-        if first in "@`%":
+        if first in "@`%,]}":
             self._fail("an unquoted value can't start with '%s'; put the value in quotes" % first, idx)
         if self._is_item(stripped):
             self._fail("a list can't start on the same line as its key; put each '- item' on its own line", idx)
@@ -743,6 +765,14 @@ def is_inside(path, folder):
     return path == folder or path.startswith(folder + os.sep)
 
 
+def plugin_folder(skill_dir):
+    """plugins/<plugin>/ for a skill at plugins/<plugin>/skills/<skill>/, else None."""
+    skills = os.path.dirname(os.path.normpath(skill_dir))
+    if os.path.basename(skills) != "skills":
+        return None
+    return os.path.dirname(skills)
+
+
 # --------------------------------------------------------------------------
 # Checks
 # --------------------------------------------------------------------------
@@ -1107,12 +1137,22 @@ class Checker:
                      "link '%s' only matches a file with different letter case; "
                      "it breaks on Linux and GitHub" % target)
             return
-        if not is_inside(resolved, skill_dir):
+        plugin_dir = plugin_folder(skill_dir)
+        if plugin_dir and not is_inside(resolved, plugin_dir):
+            url = "%s/%s/%s/%s" % (REPO_URL, "tree" if os.path.isdir(resolved) else "blob", REPO_BRANCH,
+                                   self.rel(resolved).replace(os.sep, "/"))
+            if fragment:
+                url += "#" + fragment
+            self.add("error", path, line,
+                     "link '%s' leaves the plugin folder %s/. /plugin install copies only that folder, "
+                     "so the link breaks for users. Link to %s instead, or copy what the reader needs "
+                     "into this skill's references/" % (target, self.rel(plugin_dir), url))
+        elif not is_inside(resolved, skill_dir):
             self.outside_links += 1
             if self.portable:
                 self.add("warning", path, line,
-                         "link '%s' leaves the skill folder; it breaks when the skill is installed on its own"
-                         % target)
+                         "link '%s' leaves the skill folder; it works after /plugin install but breaks "
+                         "when this skill is installed on its own" % target)
         if fragment and resolved.lower().endswith(".md") and os.path.isfile(resolved):
             frag = urllib.parse.unquote(fragment).lower()
             if frag not in anchors_in(resolved):
@@ -1165,7 +1205,8 @@ def main(argv=None):
     parser.add_argument("--format", choices=("text", "github"), default="text", help="output format")
     parser.add_argument("--strict", action="store_true", help="exit 1 on warnings too")
     parser.add_argument("--portable", action="store_true",
-                        help="warn about each link that leaves its skill folder")
+                        help="warn about each link that leaves its skill folder but stays in its plugin "
+                             "(links that leave the plugin folder are always errors)")
     parser.add_argument("-q", "--quiet", action="store_true", help="print only problems and the summary")
     parser.add_argument("--version", action="version", version="%(prog)s " + VERSION)
     args = parser.parse_args(argv)
@@ -1196,9 +1237,15 @@ def main(argv=None):
         print(f.github() if args.format == "github" else f.text())
 
     if not args.quiet and checker.outside_links and not args.portable:
-        print("note: %d link%s leave their skill folder (fine in this repo, broken when a skill is "
-              "installed alone); run with --portable to list them"
-              % (checker.outside_links, "" if checker.outside_links == 1 else "s"))
+        one = checker.outside_links == 1
+        print("note: %d %s skill folder but %s plugin. %s after /plugin install and %s when one skill "
+              "is installed alone (npx skills add --skill, or a copied folder); run with --portable to list %s"
+              % (checker.outside_links,
+                 "link leaves its" if one else "links leave their",
+                 "stays in its" if one else "stay in their",
+                 "It works" if one else "They work",
+                 "breaks" if one else "break",
+                 "it" if one else "them"))
     print("%d skill%s checked · %d error%s · %d warning%s" % (
         checker.skills_checked, "" if checker.skills_checked == 1 else "s",
         len(errors), "" if len(errors) == 1 else "s",

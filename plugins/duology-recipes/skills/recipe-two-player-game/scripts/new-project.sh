@@ -4,7 +4,8 @@
 #   new-project.sh <AppName> <bundle-id> <dest-dir>
 #
 #   AppName    letters and digits, starting with a letter. It becomes the Xcode
-#              target, the scheme and a Swift type name (<AppName>App).
+#              target, the scheme and a Swift type name (<AppName>App). Not Tools,
+#              and not the name of an Apple module such as SwiftUI or Foundation.
 #   bundle-id  reverse-DNS, for example com.example.dueltap
 #   dest-dir   the new project folder. It must not exist yet, or be empty.
 #
@@ -26,6 +27,15 @@ if [[ ! "$NAME" =~ ^[A-Za-z][A-Za-z0-9]{0,39}$ ]]; then
   echo "error: AppName must start with a letter and use only letters and digits (max 40): '$NAME'" >&2
   exit 65
 fi
+# The app folder can't share a name with the template's Tools/ folder, and the app module
+# can't share one with a module it imports. Compare in lower case: macOS folders usually
+# ignore case. Checked before anything is created, so a refusal leaves nothing behind.
+case "$(printf '%s' "$NAME" | tr '[:upper:]' '[:lower:]')" in
+  tools|swift|swiftui|foundation|uikit|xctest|xcuiautomation|observation|combine|coregraphics|darwin|dispatch|os)
+    echo "error: AppName '$NAME' clashes with the template's Tools folder or an Apple module. Pick another name." >&2
+    exit 65
+    ;;
+esac
 if [[ ! "$BUNDLE" =~ ^[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+$ ]]; then
   echo "error: bundle id must look like com.example.app (letters, digits, hyphens, dots): '$BUNDLE'" >&2
   exit 65

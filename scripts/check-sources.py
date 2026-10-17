@@ -13,7 +13,9 @@ Each URL ends up in one of three groups:
   redirect to a human-verification page). Reported as a warning, because a
   person can still open the page;
 - broken: 404, 410, another 4xx or 5xx, a timeout, or a DNS or TLS failure.
-  Reported as an error.
+  Also a redirect up to a parent page, or out of Apple's /videos/play/ pages:
+  that is how a site answers a page that doesn't exist (an unknown WWDC or
+  Tech Talk ID lands on the event index with HTTP 200). Reported as an error.
 
 Placeholder URLs (example.com, localhost, anything with <...> or {...}) are skipped.
 Links into this repo on GitHub (github.com/Kimeur/duology/blob/main/...) are
@@ -56,6 +58,12 @@ HUMAN_CHECK = re.compile(r"verify-human|captcha|/cdn-cgi/challenge|/challenge-pl
 # Pages that answer 404 to anyone who isn't logged in (checked 16 Oct 2026 on
 # several public repos). Treated as blocked, not broken.
 LOGIN_ONLY = re.compile(r"^https://github\.com/[^/]+/[^/]+/(?:stargazers|watchers)/?$", re.I)
+
+# Detail pages whose missing IDs redirect to an index instead of answering 404.
+# developer.apple.com/videos/play/tech-talks/999999/ ends at /videos/tech-talks/
+# with HTTP 200 (checked 17 Oct 2026). Matched on the path, so tests can use a
+# local server.
+DETAIL_PREFIXES = ("/videos/play/",)
 
 PLACEHOLDER_HOSTS = re.compile(
     r"(^|\.)(example\.(com|org|net)|localhost|invalid|test|local)$|^127\.0\.0\.1$|^0\.0\.0\.0$|^\[::1\]$", re.I)
@@ -204,7 +212,7 @@ class Result:
         self.status = status
         self.final_url = final_url or url
         self.error = error
-        self.kind = classify(status, self.final_url, error)
+        self.kind = classify(status, self.final_url, error, url)
 
     def describe(self):
         if self.error:
@@ -212,6 +220,8 @@ class Result:
         text = "HTTP %d" % self.status
         if self.kind == "blocked" and HUMAN_CHECK.search(self.final_url or ""):
             text += ", human check at " + self.final_url
+        elif self.kind == "broken" and self.status < 400:
+            text += ", but the site redirected it to %s, so the page is gone or the link is wrong" % self.final_url
         elif self.final_url and self.final_url.rstrip("/") != self.url.rstrip("/"):
             text += ", now at " + self.final_url
         return text
@@ -266,13 +276,44 @@ def check_local(url, target, root):
     return Result(url, status=200, final_url=url)
 
 
-def classify(status, final_url, error):
+def _host_and_segments(url):
+    parts = urllib.parse.urlsplit(url)
+    host = (parts.hostname or "").lower()
+    if host.startswith("www."):
+        host = host[4:]
+    path = urllib.parse.unquote(parts.path)
+    return host, path, [s for s in path.lower().split("/") if s]
+
+
+def redirected_away(url, final_url):
+    """True when a redirect left the cited page for a page above it.
+
+    Two shapes count: the final path is a parent of the original on the same
+    host (/a/b/c -> /a/b/ or /), and a detail page such as /videos/play/<event>/<id>/
+    that ends outside /videos/play/. Moves to a sibling or a new path, a
+    trailing slash, and http -> https don't count."""
+    if not url or not final_url or final_url == url:
+        return False
+    try:
+        host, path, segments = _host_and_segments(url)
+        final_host, final_path, final_segments = _host_and_segments(final_url)
+    except ValueError:
+        return False
+    if host != final_host:
+        return False
+    for prefix in DETAIL_PREFIXES:
+        if path.startswith(prefix) and not final_path.startswith(prefix):
+            return True
+    return len(final_segments) < len(segments) and segments[:len(final_segments)] == final_segments
+
+
+def classify(status, final_url, error, url=None):
     if error is not None or status is None:
         return "broken"
     if status in BLOCKED_STATUSES or HUMAN_CHECK.search(final_url or ""):
         return "blocked"
     if status < 400:
-        return "ok"
+        return "broken" if redirected_away(url, final_url) else "ok"
     return "broken"
 
 

@@ -25,7 +25,8 @@
 #   --model NAME         passed to claude --model (default: Claude Code's default)
 #   --budget USD         claude --max-budget-usd per run (default 5)
 #   --timeout SEC        wall-clock limit per run (default: the task's timeout, else 1800)
-#   --run-id ID          results folder name (default: YYYY-MM-DD_HHMMSS)
+#   --run-id ID          results folder name (default: YYYY-MM-DD_HHMMSS). The agent's
+#                        current folder includes it, so don't put a task or arm name in it
 #   --plugins DIR        folder that holds the Duology plugins (default: <repo>/plugins)
 #   --lint-hook          turn on the duology-ship lint hook in the run with Duology
 #   --bare               add --bare to both arms (signs in with ANTHROPIC_API_KEY only;
@@ -89,7 +90,7 @@ die() { echo "run.sh: $*" >&2; exit 2; }
 note() { echo "==> $*"; }
 warn() { echo "warning: $*" >&2; }
 
-usage() { sed -n '2,52p' "$0" | sed 's/^# \{0,1\}//'; }
+usage() { sed -n '2,53p' "$0" | sed 's/^# \{0,1\}//'; }
 
 while [ $# -gt 0 ]; do
   case "$1" in
@@ -293,13 +294,16 @@ if [ -n "$CLAUDE_ABS" ] && [ "$CLAUDE_ABS" != "claude" ]; then
   CLAUDE_VERSION="$("$CLAUDE_ABS" --version 2>/dev/null | head -1 || true)"
 fi
 XCODE_VERSION="$(xcodebuild -version 2>/dev/null | tr '\n' ' ' | sed 's/ *$//' || true)"
+# The Mac-wide default Xcode, read only. Tasks that start without DEVELOPER_DIR
+# (duo-setup/mac-check) behave differently when it is not Xcode 27.1.
+XCODE_SELECT="$(env -u DEVELOPER_DIR xcode-select -p 2>/dev/null || true)"
 DUOLOGY_COMMIT="$(git -C "$REPO" rev-parse --short HEAD 2>/dev/null || echo unknown)"
 if [ -n "$(git -C "$REPO" status --porcelain -- plugins 2>/dev/null)" ]; then
   DUOLOGY_COMMIT="$DUOLOGY_COMMIT+dirty"
 fi
 
 RUN_ID="$RUN_ID" MODE="$MODE" CLAUDE_VERSION="$CLAUDE_VERSION" XCODE_VERSION="$XCODE_VERSION" \
-DUOLOGY_COMMIT="$DUOLOGY_COMMIT" MODEL="$MODEL" SIM_UDID="$SIM_UDID" ARMS="$ARMS" TRIALS="$TRIALS" \
+XCODE_SELECT="$XCODE_SELECT" DUOLOGY_COMMIT="$DUOLOGY_COMMIT" MODEL="$MODEL" SIM_UDID="$SIM_UDID" ARMS="$ARMS" TRIALS="$TRIALS" \
 BUDGET="$BUDGET" TASKS="$TASKS" KIT="$KIT" RUN_JSON="$RUN_DIR/run.json" AUTH_VAR="$AUTH_VAR" \
 AGENT_PATH="$AGENT_PATH" BARE="$BARE" LINT_HOOK="$LINT_HOOK" python3 - <<'PY'
 import datetime, json, os, subprocess, sys
@@ -319,6 +323,7 @@ meta = {
     "claude_version": os.environ["CLAUDE_VERSION"],
     "model": os.environ["MODEL"] or None,
     "xcode": os.environ["XCODE_VERSION"],
+    "xcode_select": os.environ["XCODE_SELECT"] or None,
     "simulator": os.environ["SIM_UDID"],
     "duology_commit": os.environ["DUOLOGY_COMMIT"],
     "arms": os.environ["ARMS"].split(","),
@@ -395,6 +400,18 @@ copy_tree() {  # src dest
 clean_env() {  # HOME TMPDIR
   CLEAN_ENV=(/usr/bin/env -i "HOME=$1" "PATH=$MIN_PATH" "DEVELOPER_DIR=$DEVELOPER_DIR"
     "TMPDIR=$2/" "SHELL=/bin/bash")
+}
+
+# A new, unused trial folder path with an opaque name: $WORK_ROOT/$RUN_ID/t-<random>.
+# The agent's current folder, HOME and TMPDIR sit inside it, and Claude Code shows
+# the current folder to the model. So the name must not say which task, skill or
+# arm this is. meta.json (work_dir, trial_root) maps it back.
+new_trial_root() {
+  local r
+  while :; do
+    r="$WORK_ROOT/$RUN_ID/t-$(od -An -N4 -tx1 /dev/urandom | tr -d ' \n')"
+    [ -e "$r" ] || { echo "$r"; return 0; }
+  done
 }
 
 # One throwaway folder per trial, outside the repo:
@@ -608,8 +625,6 @@ write_command() {  # trial work
   } > "$1/command.txt"
 }
 
-slug() { echo "$1" | tr '/' '_'; }
-
 # ------------------------------------------------------------------ selftest
 
 if [ "$MODE" = "selftest" ]; then
@@ -619,7 +634,7 @@ if [ "$MODE" = "selftest" ]; then
     id="$(task_field "$task" id)"
     fixture="$(task_field "$task" fixture)"
     trial="$RUN_DIR/$id/fixture/trial-1"
-    root="$WORK_ROOT/$RUN_ID/$(slug "$id")"
+    root="$(new_trial_root)"
     mkdir -p "$trial"
     prepare_trial "$fixture" "$root" fixture || die "could not copy fixture $fixture"
     write_meta "$trial/meta.json" "task=$id" "arm=fixture" "trial=1" "score_only=true" "work_dir=$root/work"
@@ -669,7 +684,7 @@ if [ "$MODE" = "score-dir" ]; then
   task="$1"
   id="$(task_field "$task" id)"
   trial="$RUN_DIR/$id/score/trial-1"
-  root="$WORK_ROOT/$RUN_ID/$(slug "$id")"
+  root="$(new_trial_root)"
   mkdir -p "$trial"
   safe_rm "$root"
   mkdir -p "$root/work" "$root/score-home" "$root/score-tmp" || die "cannot create $root"
@@ -719,7 +734,7 @@ for task in $TASKS; do
     n=1
     while [ "$n" -le "$TRIALS" ]; do
       trial="$RUN_DIR/$id/$arm/trial-$n"
-      root="$WORK_ROOT/$RUN_ID/$(slug "$id")-$arm-$n"
+      root="$(new_trial_root)"
       work="$root/work"
       plugin_root=""
       [ "$arm" = "with" ] && plugin_root="$root/plugins"

@@ -97,6 +97,46 @@ class MiniYamlTests(unittest.TestCase):
         self.assertEqual(data["description"], "first line second line\nafter a blank line")
         self.assertEqual(data["name"], "x")
 
+    def test_value_on_the_line_after_its_key(self):
+        data, notes = parse("""
+            description:
+              Demo skill. Use it
+              for a test.
+            quoted:
+              "it: works"
+            flow:
+              [Read, Grep]
+            block:
+              >-
+                folded
+                text
+            number:
+              42
+            items:
+              -
+                plain item
+              - b
+            name: x
+        """)
+        self.assertEqual(data["description"], "Demo skill. Use it for a test.")
+        self.assertEqual(data["quoted"], "it: works")
+        self.assertEqual(data["flow"], ["Read", "Grep"])
+        self.assertEqual(data["block"], "folded text")
+        self.assertEqual(data["number"], 42)
+        self.assertEqual(data["items"], ["plain item", "b"])
+        self.assertEqual(data["name"], "x")
+        self.assertEqual(notes, [])
+
+    def test_value_on_the_next_line_keeps_the_strict_checks(self):
+        for label, text in {
+            "colon space": "description:\n  Catches .frame(width: 390)\n  and more\n",
+            "anchor": "description:\n  &x text\n",
+            "text after a comment cut": "description:\n  one #two\n  three\n",
+        }.items():
+            with self.subTest(label):
+                with self.assertRaises(vs.FrontMatterError):
+                    parse(text)
+
     def test_block_scalars(self):
         data, _ = parse("""
             folded: >
@@ -179,6 +219,8 @@ class MiniYamlTests(unittest.TestCase):
             "item on key line": "a: - b\n",
             "bad indent": "a: 1\n  b: 2\n",
             "backtick": "a: `code`\n",
+            "leading comma": "a: , b\n",
+            "leading bracket": "a: ] b\n",
         }
         for label, text in cases.items():
             with self.subTest(label):
@@ -201,6 +243,13 @@ class MiniYamlTests(unittest.TestCase):
             "d: plain\n  continued here\n  and here\n",
             "m:\n  - k: v\n    k2: v2\n  - k: w\n",
             "n: 42\nf: 2.5\nb: false\nz: ~\n",
+            "description:\n  Demo skill. Use it for a test.\nname: x\n",
+            "description:\n  first line\n second line\n\n  after a blank\nname: x\n",
+            "d:\n  \"quoted: text\"\nl:\n  [a, 'b c']\n",
+            "d:\n  |\n    literal\n      kept\ne:\n  >-\n    folded\n    text\n",
+            "l:\n  -\n    plain item\n    continued\n  - b\n",
+            "d:\n  42\ne:\n  null\n",
+            "d:\n  k: v\n",
         ]
         for doc in docs:
             with self.subTest(doc=doc):
@@ -366,14 +415,44 @@ class CheckerTests(RepoFixture):
 
     def test_absolute_and_outside_links(self):
         self.skill(text=GOOD_SKILL.format(name="duo-demo") + "\n[abs](/reference/sources.md)\n"
-                        "[up](../../../../../outside.md)\n[ok](../../../../reference/sources.md)\n")
+                        "[up](../../../../../outside.md)\n")
         code, out = self.run_main()
         self.assertEqual(code, 1)
         self.assertIn("starts with '/'", out)
         self.assertIn("points outside the repository", out)
-        self.assertIn("note: 1 link leave", out)
+
+    def test_link_that_leaves_the_plugin_is_an_error(self):
+        # /plugin install copies only plugins/<plugin>/, so these break for users.
+        self.skill(name="duo-other", plugin="duology-design", text=GOOD_SKILL.format(name="duo-other"))
+        self.skill(text=GOOD_SKILL.format(name="duo-demo") +
+                   "\n[api](../../../../reference/sources.md#sources)\n"
+                   "[other plugin](../../../duology-design/skills/duo-other/references/rules.md)\n"
+                   "[folder](../../../../reference/)\n"
+                   "[web](https://github.com/Kimeur/duology/blob/main/reference/sources.md)\n")
+        for args in ((), ("--portable",)):
+            with self.subTest(args=args):
+                code, out = self.run_main(*args)
+                self.assertEqual(code, 1, out)
+                self.assertIn("SKILL.md:13: error: link '../../../../reference/sources.md#sources' leaves the "
+                              "plugin folder plugins/duology/", out)
+                self.assertIn("https://github.com/Kimeur/duology/blob/main/reference/sources.md#sources", out)
+                self.assertIn("https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/"
+                              "duo-other/references/rules.md", out)
+                self.assertIn("https://github.com/Kimeur/duology/tree/main/reference instead", out)
+                self.assertEqual(out.count("leaves the plugin folder"), 3, out)
+                self.assertNotIn("note:", out)
+
+    def test_link_to_another_skill_in_the_same_plugin_is_a_note(self):
+        self.skill(name="duo-other", text=GOOD_SKILL.format(name="duo-other"))
+        self.skill(text=GOOD_SKILL.format(name="duo-demo") +
+                   "\n[sibling](../duo-other/references/rules.md)\n")
+        code, out = self.run_main()
+        self.assertEqual(code, 0, out)
+        self.assertIn("note: 1 link leaves its skill folder but stays in its plugin", out)
         code, out = self.run_main("--portable")
-        self.assertIn("leaves the skill folder", out)
+        self.assertEqual(code, 0, out)
+        self.assertIn("warning: link '../duo-other/references/rules.md' leaves the skill folder", out)
+        self.assertEqual(self.run_main("--portable", "--strict")[0], 1)
 
     def test_anchor_warnings(self):
         self.skill(text=GOOD_SKILL.format(name="duo-demo") +

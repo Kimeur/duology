@@ -45,7 +45,9 @@ jobs:
           python-version: "3.12"
 
       - name: Skill front matter, size and links
-        run: python3 scripts/validate-skills.py --format github
+        # --portable --strict: a link that leaves its skill folder fails, because
+        # `npx skills add --skill <name>` copies only that folder.
+        run: python3 scripts/validate-skills.py --portable --strict --format github
 
       - name: JSON files and plugin manifests
         run: python3 scripts/check-manifests.py --format github

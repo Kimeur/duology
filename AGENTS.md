@@ -80,7 +80,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 4. **Write skills for agents.** `SKILL.md` is imperative and concrete, with code. Keep it to 300 lines and move depth into `references/`. Use short sentences, plain words and active voice. No emoji.
 5. **Keep `metadata.verified` honest**, for example `"Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"`. Change `device` to `yes` only after testing on a real iPhone Duo.
 6. **Quote YAML values that contain `: ` or ` #`.** Unquoted, the first breaks the front matter and the second cuts the description short.
-7. **Keep relative links inside the plugin folder.** `/plugin install` copies only `plugins/<plugin>/`, so a relative link to `reference/` or to another plugin breaks for users. Use the GitHub URL instead, for example `https://github.com/Kimeur/duology/blob/main/reference/api-index.md`. `validate-skills.py` fails on these links and prints the URL to use.
+7. **Keep relative links inside the skill folder.** `npx skills add --skill <name>` copies only that skill's folder, and `/plugin install` copies only `plugins/<plugin>/`. So a relative link to `reference/`, to another skill or to another plugin breaks for users. Use the GitHub URL instead, for example `https://github.com/Kimeur/duology/blob/main/reference/api-index.md`. `validate-skills.py` fails on links that leave the plugin and prints the URL to use; `--portable --strict` (what CI runs) also fails on links that leave the skill.
 8. **Add a test task** in `evals/` for a new skill.
 
 ### Before you finish
@@ -88,7 +88,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 Run these. All but the last need only Python 3; the last one needs network.
 
 ```bash
-python3 scripts/validate-skills.py
+python3 scripts/validate-skills.py --portable --strict
 python3 scripts/check-manifests.py
 python3 -m unittest discover plugins/duology-ship/skills/duo-lint/tests
 python3 -m unittest discover -s scripts/tests

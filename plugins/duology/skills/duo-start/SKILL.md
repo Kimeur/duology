@@ -3,7 +3,7 @@ name: duo-start
 description: Entry point for iPhone Duo, Apple's foldable with an outer display, an inner display and a fold; use it first when someone asks to get an app ready for iPhone Duo, make it work on the foldable or survive fold and unfold, or doesn't know which Duology skill to load. It detects SwiftUI or UIKit, new or existing app, the Xcode and iOS SDK the app builds with (iOS 26, 27 or 27.1 behaviour on Duo), the deployment target and the UIKit scene life cycle, runs a five-minute first pass (Xcode 27.1 build, duo-lint, closed and open on the iPhone Duo simulator in Device Hub) and routes to duo-setup, duo-layout, duo-navigation, duo-continuity, duo-patterns, duo-testing, duo-lint and Apple's App Resizability skill (xcrun agent skills export).
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
-  sources: "reference/sources.md"
+  sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
 ---
 
 # duo-start

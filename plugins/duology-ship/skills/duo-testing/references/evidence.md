@@ -36,7 +36,7 @@ Geometry, closed, portrait:
 | `XCUIScreen.main` screenshot | 466 × 678 pt at scale 3 |
 | `screens[0]` / `screens[1]` screenshots | 466 × 678 pt / 668.67 × 950.67 pt |
 
-The 466 × 678 pt window confirms the closed window size that `reference/device-facts.md` lists as derived.
+The 466 × 678 pt window confirms the closed window size that [`reference/device-facts.md`](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md) lists as derived.
 
 Touches (all reached the gesture; counts read from `accessibilityValue`):
 

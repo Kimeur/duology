@@ -3,7 +3,7 @@ name: duo-patterns
 description: Picks and builds layout patterns for iPhone Duo, Apple's foldable iPhone, in SwiftUI - list-detail, supporting pane, two-page, dual view, extended canvas, feed reflow with even columns, tabs to sidebar, and displacement off the fold. Use it when you design or fix a screen for the outer display and the inner display, when content or buttons land in the fold, or when choosing between NavigationSplitView, inspector, ArrangementView (split and overlay styles), TabView with sidebarAdaptable and defaultTabBarPlacement, and reserved regions (division, occlusion, includeInactive).
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
-  sources: "reference/sources.md"
+  sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
 ---
 
 # Duo layout patterns
@@ -200,7 +200,7 @@ Measured on the simulator, open and flat:
 |---|---|
 | List-detail | `UISplitViewController` |
 | Supporting pane, dual view | `UIArrangementViewController`, `setViewController(_:for:)`, `updateArrangement(.split.axes(.horizontal))` |
-| Tabs to sidebar | `tabBarController.sidebar.preferredPlacement = .sidebar` (iOS 27.0) |
+| Tabs to sidebar | `tabBarController.mode = .tabSidebar` plus `tabBarController.sidebar.preferredPlacement = .sidebar` (iOS 27.0). *Measured:* `preferredPlacement` alone gave no sidebar. |
 | Two-page, extended canvas, feed reflow, displacement | `UIView.reservedRegions(kind:options:)` with `.division` and `.includeInactive` (iOS 27.1) |
 
 We found no change callback for reserved regions in the UIKit headers. Re-query them in `layoutSubviews` and check in Device Hub that a fold triggers it. (unverified)

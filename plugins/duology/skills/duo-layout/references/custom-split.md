@@ -17,7 +17,7 @@ Why not `ArrangementView` for the last two: closed and held sideways, the phone 
 
 ## EvenSplit
 
-This is the same type as the gallery app's `samples/DuologyGallery/DuologyGallery/Shared/EvenSplit.swift`.
+This is the same type as the gallery app's [`samples/DuologyGallery/DuologyGallery/Shared/EvenSplit.swift`](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Shared/EvenSplit.swift).
 
 ```swift
 import SwiftUI

@@ -3,7 +3,7 @@ name: duo-layout
 description: Core layout rules for iPhone Duo, Apple's foldable. Use when content lands in the fold, a screen breaks on the inner or outer display, or you write SwiftUI or UIKit layout for a foldable. Covers size classes instead of UIScreen.main, idiom or orientation, asymmetric safe areas and margins, reserved regions (ReservedRegion, reservedRegions(kind:options:), .division, .occlusion, .includeInactive), ArrangementView and UIArrangementViewController (split and overlay styles), an even custom split (EvenSplit) for two halves that must always show, even grid columns, and keeping controls off the fold.
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
-  sources: "reference/sources.md"
+  sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
 ---
 
 # duo-layout
@@ -208,7 +208,7 @@ Details, the behaviour table and the UIKit `UIArrangementViewController`: [refer
 
 ## 5. When both halves must always show: EvenSplit
 
-Two players, a game board and its tray, a teacher and a student: these need both halves in every pose, including closed and sideways. `ArrangementView` hides one there. Use an even split you control. The same type ships in the gallery app at `samples/DuologyGallery/DuologyGallery/Shared/EvenSplit.swift`.
+Two players, a game board and its tray, a teacher and a student: these need both halves in every pose, including closed and sideways. `ArrangementView` hides one there. Use an even split you control. The same type ships in the gallery app at [`samples/DuologyGallery/DuologyGallery/Shared/EvenSplit.swift`](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Shared/EvenSplit.swift).
 
 ```swift
 import SwiftUI

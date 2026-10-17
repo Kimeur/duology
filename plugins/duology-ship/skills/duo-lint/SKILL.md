@@ -1,9 +1,9 @@
 ---
 name: duo-lint
-description: The fold linter for iPhone Duo, Apple's foldable with an outer display and an inner display. Run it to find code Apple says to remove before an app runs on the foldable, then fix each finding. Catches UIScreen.main and UIScreen.screens, UIDevice.current.orientation, statusBarOrientation, interfaceOrientation and effectiveGeometry.interfaceOrientation, userInterfaceIdiom == .pad, horizontalSizeClass == .regular treated as iPad, hard-coded screen sizes (bounds.height == 844), GeometryReader sizes matched to devices, .frame(width: 390) and fixed width constraints, and UIRequiresFullScreen. Use it for an iPhone Duo audit, before a review or release, in CI (GitHub annotations), after editing SwiftUI or UIKit layout code, or when a screen breaks when the phone folds, unfolds or resizes.
+description: "The fold linter for iPhone Duo, Apple's foldable with an outer display and an inner display. Run it to find code Apple says to remove before an app runs on the foldable, then fix each finding. Catches UIScreen.main and UIScreen.screens, UIDevice.current.orientation, statusBarOrientation, interfaceOrientation and effectiveGeometry.interfaceOrientation, userInterfaceIdiom == .pad, horizontalSizeClass == .regular treated as iPad, hard-coded screen sizes (bounds.height == 844), GeometryReader sizes matched to devices, .frame(width: 390) and fixed width constraints, and UIRequiresFullScreen. Use it for an iPhone Duo audit, before a review or release, in CI (GitHub annotations), after editing SwiftUI or UIKit layout code, or when a screen breaks when the phone folds, unfolds or resizes."
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
-  sources: "reference/sources.md"
+  sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
 ---
 
 # duo-lint

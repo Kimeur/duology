@@ -19,7 +19,7 @@ You need Xcode 27.1 or later. The scripts use `/Applications/Xcode-27.1.app` unl
 | `__APP_NAME__/Engine/` | The rules: players, rounds, countdown, hits, misses, lockout, winner, rematch, where targets go. Foundation only. |
 | `__APP_NAME__/Duel/` | The game screen: the split, each player's half, the score bar, haptics. |
 | `__APP_NAME__/Shared/EvenSplit.swift` | Two equal halves in every pose: side by side when wide, stacked when tall. |
-| `__APP_NAME__/Home/` | The start screen. |
+| `__APP_NAME__/Home/` | The start screen: goal, face to face, haptics. |
 | `__APP_NAME__/App/` | The app entry, the root view and the launch switches for tests. |
 | `__APP_NAME__UITests/` | UI tests that drive the real app. |
 | `Tools/` | The engine test program and both test scripts. |
@@ -32,7 +32,7 @@ Debug builds only. Add them in the scheme (Product > Scheme > Edit Scheme > Argu
 |---|---|
 | `-openDuel` | Skip the home screen. |
 | `-autoReady` | With `-openDuel`: start the round at once. Handy for screenshots. |
-| `-faceToFace` | Turn player 1's half around. |
+| `-faceToFace` | Turn each half to face its player, for a phone lying flat between two people. |
 | `-goal N` | Hits to win. |
 | `-countdown N` | Countdown seconds. |
 | `-lockout N` | Seconds a miss locks that player out. |
@@ -44,3 +44,4 @@ Debug builds only. Add them in the scheme (Product > Scheme > Edit Scheme > Argu
 
 - Two people can't touch at once in the simulator. The UI tests take turns. Try real two-player play on a device.
 - Poses change only in Device Hub (Closed, Partially Open, Open). Check each pose by hand: both halves show, and no target sits on the fold.
+- Right to left: add `-AppleTextDirection YES -NSForceRightToLeftWritingDirection YES` to the scheme's arguments. Player 1 keeps the top or left half; the text reads right to left.

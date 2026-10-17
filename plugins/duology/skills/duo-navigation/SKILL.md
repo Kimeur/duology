@@ -3,7 +3,7 @@ name: duo-navigation
 description: Gets toolbars, navigation bars, tab bars, split views and sheets right on iPhone Duo, Apple's foldable, where bars move into one vertical bar on the side of the outer display and of the inner display in landscape. Use it when bars go vertical, items overflow or vanish, an app draws its own custom bottom bar (UIToolbar, or a SwiftUI row in safeAreaInset or an overlay), toolbar or Menu buttons are icon-only, tabs should become a sidebar on the inner display, a sheet should sit to one side or off the fold, or code touches toolbarVerticalBehavior, toolbarVerticalEdge, axisBehavior, visibilityPriority, topBarPinnedTrailing, ToolbarOverflowMenu, toolbarVerticalCompressionBehavior, defaultTabBarPlacement, presentationPlacement, NavigationSplitView, preferredVerticalBarBehavior, verticalBarEdge, pinnedTrailingGroup, additionalOverflowItems, UITabBarController.Sidebar.preferredPlacement or UISheetPresentationController.preferredPlacement.
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
-  sources: "reference/sources.md"
+  sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
 ---
 
 # duo-navigation
@@ -102,10 +102,9 @@ struct NoteEditor: View {
 
 - Back or Close goes first. A navigation stack adds Back for you. For your own Close use `.cancellationAction`, or `navigationItem.leadingItemGroups` in UIKit with `leftItemsSupplementBackButton` left at `false` ([hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo#Organize-items-in-your-bars)).
 - The prominent action (Done, Send) goes next with `.topBarPinnedTrailing` or `navigationItem.pinnedTrailingGroup`. A pinned SwiftUI item overflows only while search is active and space runs out ([doc](https://developer.apple.com/documentation/swiftui/toolbaritemplacement/topbarpinnedtrailing)).
-- Give every item a symbol and a title. The vertical bar shows the symbol; the overflow menu shows both. An item with only a title, or a custom view, stays horizontal.
+- Give every item a symbol and a title. The vertical bar shows the symbol; the overflow menu shows both. An item with only a title, or a custom view, stays horizontal. *Measured (UIKit):* so did a symbol item in the same group as a text-only item, so give text-only items their own group.
 - Turn text that only repeats the symbol into a badge: `.badge(7)` or `UIBarButtonItem.badge = .count(7)`. Keep text that carries facts, like a price, in the horizontal bar.
 - Keep your groups (`ToolbarItemGroup`, `UIBarButtonItemGroup`). Add no spacers, fixed or flexible: Apple asks apps not to add their own spacing on either axis. In the vertical bar fixed spacers keep their size and flexible ones shrink to zero ([Tech Talk 111462](https://developer.apple.com/videos/play/tech-talks/111462/)).
-- *Measured (UIKit):* a symbol item in the same group as a text-only item stayed horizontal with it. Give text-only items their own group.
 - Items overflow from the bottom of the bar upward. Raise frequent actions and badged items with `.high`; lower rare ones with `.low`. Rank whole groups first, then single items ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls)).
 - Move your own "More" menu into `ToolbarOverflowMenu` or `navigationItem.additionalOverflowItems`. Keep the ellipsis symbol for that menu only.
 
@@ -287,21 +286,15 @@ Full UIKit code: [references/uikit.md](references/uikit.md). More SwiftUI: [refe
 
 ## Check it
 
-Build with Xcode 27.1 and run on the iPhone Duo simulator. In Device Hub, try Closed, Open (held wide and held tall), Partially Open, and Split View on each side; `simctl` cannot change poses. Find the Duo's UDID with `xcrun simctl list devices booted` (more in `duo-setup`); `booted` is ambiguous when several simulators run. Screenshot the outer display with `xcrun simctl io <UDID> screenshot --display=primary outer.png` and the inner one with `xcrun simctl io <UDID> screenshot --display=primary-1 inner.png`.
+Build with Xcode 27.1 and run on the iPhone Duo simulator. In Device Hub, try Closed, Open (held wide and held tall), Partially Open, and Split View on each side; `simctl` cannot change poses. Find the Duo's UDID with `xcrun simctl list devices booted` (more in `duo-setup`); `booted` is ambiguous when several simulators run. Screenshot the outer display with `xcrun simctl io <UDID> screenshot --display=primary outer.png` and the inner one with `xcrun simctl io <UDID> screenshot --display=primary-1 inner.png`. Then tick:
 
-## Checklist
-
-- [ ] Built with the iOS 27.1 SDK; no hand-built `UIToolbar`, `UINavigationBar` or `UITabBar`, and no SwiftUI button rows in `safeAreaInset` or an edge overlay.
-- [ ] No icon-only `label: { Image(systemName:) }` in bars or `Menu` labels.
+- [ ] Built with the iOS 27.1 SDK; no hand-built `UIToolbar`, `UINavigationBar` or `UITabBar`, no SwiftUI button rows in `safeAreaInset` or an edge overlay, and no icon-only `label: { Image(systemName:) }` in bars or `Menu` labels.
 - [ ] Back or Close is first; the prominent action is pinned second.
-- [ ] Every non-text item has a symbol and a title; text-only items are few and grouped apart.
-- [ ] No spacers, fixed or flexible, between bar items.
-- [ ] Groups and items carry a visibility priority; frequent and badged items rank high.
-- [ ] Own "More" menus moved into the system overflow menu.
+- [ ] Every non-text item has a symbol and a title; text-only items are few and grouped apart; no spacers, fixed or flexible.
+- [ ] Groups and items carry a visibility priority (frequent and badged items rank high); own "More" menus moved into the system overflow menu.
 - [ ] Task screens set `.prefersToolbarItems` / `.prefersBarItems`.
 - [ ] Vertical bars disabled only on calculator-like, full-screen video or single-Close sheet screens, never toggled by state.
 - [ ] Custom floating UI reads `toolbarVerticalEdge` / `verticalBarEdge` and uses margins, not fixed insets.
 - [ ] Sidebar opt-in uses `.sidebarAdaptable` + `.defaultTabBarPlacement(.sidebar)`, or `mode = .tabSidebar` + `preferredPlacement = .sidebar`.
-- [ ] Split views are system split views; detail actions sit on the detail column.
-- [ ] Sheet placement is set only to keep content visible; no manual fold avoidance.
+- [ ] Split views are system split views with detail actions on the detail column; sheet placement only keeps content visible, with no manual fold avoidance.
 - [ ] Checked closed, open wide, open tall, partially open and Split View in Device Hub.

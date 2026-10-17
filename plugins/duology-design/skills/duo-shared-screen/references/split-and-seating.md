@@ -56,7 +56,7 @@ The halves themselves don't know the split axis. Read it once where you build th
 
 ## Let people choose the seating
 
-No API reports how people sit around the phone. The hinge reports status and angle only, and Apple tells you to use it for effects, not layout ([api-index](../../../../../reference/api-index.md#hinge)). Ask on the setup screen, upright, before play:
+No API reports how people sit around the phone. The hinge reports status and angle only, and Apple tells you to use it for effects, not layout ([api-index](https://github.com/Kimeur/duology/blob/main/reference/api-index.md#hinge)). Ask on the setup screen, upright, before play:
 
 ```swift
 import SwiftUI
@@ -103,7 +103,7 @@ Folded like a tent ("set the phone down like a tent", [talk 111461](https://deve
 
 ## Seam on the fold
 
-`SharedSplit` puts its seam in the middle of its own frame. Partly folded, that matches the fold only if the split is centred on the display. When it must match, use `FoldSplitLayout` from `duo-layout` ([custom-split.md](../../../../duology/skills/duo-layout/references/custom-split.md#put-the-seam-on-the-fold)) and turn each half yourself:
+`SharedSplit` puts its seam in the middle of its own frame. Partly folded, that matches the fold only if the split is centred on the display. When it must match, use `FoldSplitLayout` from `duo-layout` ([custom-split.md](https://github.com/Kimeur/duology/blob/main/plugins/duology/skills/duo-layout/references/custom-split.md#put-the-seam-on-the-fold)) and turn each half yourself:
 
 ```swift
 import SwiftUI

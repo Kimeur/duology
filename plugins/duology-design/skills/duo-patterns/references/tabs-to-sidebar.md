@@ -25,7 +25,7 @@ What we measured on the iOS 27.1 iPhone Duo simulator, open and flat, with the r
 
 | Need | SwiftUI | UIKit | Availability |
 |---|---|---|---|
-| Ask for a sidebar where the bar can't switch forms | [`defaultTabBarPlacement(_:)`](https://developer.apple.com/documentation/swiftui/view/defaulttabbarplacement(_:)) with `.sidebar` | [`UITabBarController.Sidebar.preferredPlacement`](https://developer.apple.com/documentation/uikit/uitabbarcontroller/sidebar-swift.class/preferredplacement) = `.sidebar` | iOS 27.0 |
+| Ask for a sidebar where the bar can't switch forms | [`defaultTabBarPlacement(_:)`](https://developer.apple.com/documentation/swiftui/view/defaulttabbarplacement(_:)) with `.sidebar` | `mode = .tabSidebar` plus [`UITabBarController.Sidebar.preferredPlacement`](https://developer.apple.com/documentation/uikit/uitabbarcontroller/sidebar-swift.class/preferredplacement) = `.sidebar` | iOS 27.0 |
 | The style it needs | [`.tabViewStyle(.sidebarAdaptable)`](https://developer.apple.com/documentation/swiftui/tabviewstyle/sidebaradaptable) | `UITabBarController` with a sidebar | iOS 18 |
 | Groups in the sidebar | [`TabSection`](https://developer.apple.com/documentation/swiftui/tabsection) | `UITabGroup` | iOS 18 |
 | Is a sidebar available here? | [`isTabViewSidebarAvailable`](https://developer.apple.com/documentation/swiftui/environmentvalues/istabviewsidebaravailable) | [`Sidebar.isAvailable`](https://developer.apple.com/documentation/uikit/uitabbarcontroller/sidebar-swift.class/isavailable) and the delegate's [`tabBarController(_:sidebarAvailabilityDidChange:)`](https://developer.apple.com/documentation/uikit/uitabbarcontroller/sidebar-swift.class/delegate-swift.protocol/tabbarcontroller(_:sidebaravailabilitydidchange:)) | iOS 27.0 |
@@ -130,7 +130,7 @@ struct LibraryShortcuts: View {
 }
 ```
 
-UIKit: set `tabBarController.sidebar.preferredPlacement = .sidebar` (iOS 27.0), group tabs with `UITabGroup`, and listen for `tabBarController(_:sidebarAvailabilityDidChange:)` instead of checking the device.
+UIKit: set `tabBarController.mode = .tabSidebar` and `tabBarController.sidebar.preferredPlacement = .sidebar` (iOS 27.0). *Measured* by `duo-navigation`'s probe on the open simulator: `preferredPlacement` alone gave no sidebar. Group tabs with `UITabGroup`, and listen for `tabBarController(_:sidebarAvailabilityDidChange:)` instead of checking the device.
 
 ## Pitfalls
 

@@ -3,7 +3,7 @@ name: duo-testing
 description: "Writes and runs tests for iPhone Duo apps, Apple's foldable with an outer display and an inner display, on the Mac and on the iPhone Duo simulator in Xcode 27.1. Use when adding logic tests (swiftc script, or Swift Testing with @Test and #expect), UI tests with XCTest and XCUIAutomation, launch arguments such as -uiTesting, -resetState and jump-to-screen switches with a TestSupport type, test markers with accessibilityIdentifier and accessibilityValue, when a tap or drag in a UI test doesn't reach a SwiftUI gesture (coordinate(withNormalizedOffset:), press(forDuration:thenDragTo:)), when XCUIDevice rotation or a fold can't be scripted, or when running xcodebuild test on a private simulator with -destination id=<UDID>, -parallel-testing-enabled NO, -only-testing, -resultBundlePath, -collect-test-diagnostics and xcresulttool."
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
-  sources: "reference/sources.md"
+  sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
 ---
 
 # duo-testing

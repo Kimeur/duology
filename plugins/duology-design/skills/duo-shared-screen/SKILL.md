@@ -3,7 +3,7 @@ name: duo-shared-screen
 description: Builds screens that two people use at the same time on one iPhone Duo, Apple's foldable iPhone - two-player games, teaching, showing a customer, kid and parent. Use when two people share the inner display or the outer display, sit side by side or face to face across a phone lying flat, or when you need one half per person (SharedSplit, an EvenSplit with seating, not ArrangementView), per-half named coordinate spaces and contentShape, DragGesture minimumDistance with onTapGesture, input gated per seat, one-sided destructive controls, sensoryFeedback per half, persistentSystemOverlays and defersSystemGestures during play, rotationEffect to turn a half for face-to-face use, accessibility per half, and XCUITest identifiers namespaced by seat.
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
-  sources: "reference/sources.md"
+  sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
 ---
 
 # duo-shared-screen
@@ -25,7 +25,7 @@ Don't use it for anything private: both people can read both halves. Do sign-in,
 
 ## Seating
 
-No API tells you how people sit. There is no posture API; the hinge reports only a status (closed, partly open, fully open) and an angle ([api-index](../../../../reference/api-index.md#hinge)). So let people choose, and remember the choice.
+No API tells you how people sit. There is no posture API; the hinge reports only a status (closed, partly open, fully open) and an angle ([api-index](https://github.com/Kimeur/duology/blob/main/reference/api-index.md#hinge)). So let people choose, and remember the choice.
 
 | Seating | How people sit | What the halves do |
 |---|---|---|
@@ -293,8 +293,7 @@ Same ideas, typechecked but not run: two half views turned with `transform`, `UI
 - [ ] Two halves show in every pose, closed and sideways included (`SharedSplit`, not `ArrangementView`).
 - [ ] Each half has its own named coordinate space and `.contentShape(Rectangle())`, with no gesture on the half itself; drags stay inside the half.
 - [ ] Every action goes through one gate per seat in the model; pieces that drag still take taps.
-- [ ] Leave, restart and reset live on one seat, confirm in place, and sit away from the seam.
-- [ ] No system alert, sheet or keyboard appears during play.
+- [ ] Leave, restart and reset live on one seat, confirm in place, and sit away from the seam; no system alert, sheet or keyboard appears during play.
 - [ ] Haptics fire per half, are few and can be turned off; overlays, edge gestures and idle timer change during play only.
 - [ ] Each half is one named accessibility container; drags have a tap path; VoiceOver switches to turns.
 - [ ] Identifiers start with the seat; UI tests cover both seats and both seatings.

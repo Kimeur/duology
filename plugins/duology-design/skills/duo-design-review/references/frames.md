@@ -19,7 +19,7 @@ Apple has no pose API and no pose names in code. The hinge reports only `closed`
 | Open, turned around | "flip the device" | Outer, with the rear camera facing the person | None |
 | Split View, left / right | "50/50 split" | Inner | As the pose |
 
-Sources: [HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Device-poses), [hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo), [talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=166), [talk 111465](https://developer.apple.com/videos/play/tech-talks/111465/?time=166), [talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=28). The full list of Apple's phrases is in [`reference/device-facts.md`](../../../../../reference/device-facts.md#poses).
+Sources: [HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Device-poses), [hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo), [talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=166), [talk 111465](https://developer.apple.com/videos/play/tech-talks/111465/?time=166), [talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=28). The full list of Apple's phrases is in [`reference/device-facts.md`](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md#poses).
 
 ## Sizes
 
@@ -30,7 +30,7 @@ Sources: [HIG](https://developer.apple.com/design/human-interface-guidelines/des
 | Open, held wide | 2853 × 2007 | 951 × 669 (*measured*) | regular, regular | Vertical, on the side |
 | Open, held tall | 2007 × 2853 | 669 × 951 (*derived*) | regular, regular | Horizontal |
 
-- Screenshot sizes match Apple's App Store sizes ([screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications)). Apple's specs page gives 1878 × 2670 for the inner panel; screenshots and the simulator still come out at 2007 × 2853. See [`device-facts.md`](../../../../../reference/device-facts.md#two-inner-display-resolutions).
+- Screenshot sizes match Apple's App Store sizes ([screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications)). Apple's specs page gives 1878 × 2670 for the inner panel; screenshots and the simulator still come out at 2007 × 2853. See [`device-facts.md`](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md#two-inner-display-resolutions).
 - Size classes per display: [talk 111461, 2:59](https://developer.apple.com/videos/play/tech-talks/111461/?time=179). Bars: [HIG, Vertical controls](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls).
 - Not measured yet: Split View halves, the space under a pinned PiP video, and any partly folded window. Don't quote a number for them.
 
@@ -52,7 +52,7 @@ The trailing 84 pt column holds the status bar and Dynamic Island at the top and
 
 ### Open, held wide, flat (inner display)
 
-*Measured* by `duo-layout`'s probe ([reserved regions](../../../../duology/skills/duo-layout/references/reserved-regions.md)), fully open at 180°:
+*Measured* by `duo-layout`'s probe ([reserved regions](https://github.com/Kimeur/duology/blob/main/plugins/duology/skills/duo-layout/references/reserved-regions.md)), fully open at 180°:
 
 | Item | Points | Pixels |
 |---|---|---|

@@ -2,7 +2,7 @@
 
 Code to quote in the **Fix** line of a finding. Every block typechecks against the iOS 27.1 simulator SDK in Xcode 27.1, in Swift 5 and Swift 6 mode, with deployment targets iOS 27.1 and iOS 26.0. Names such as `GameBoard`, `Artwork`, `ItemList` or `TransportControls` stand for the app's own views.
 
-APIs newer than the app's deployment target sit behind `@available` or `if #available`. Reserved regions and `ArrangementView` are iOS 27.1. `topBarPinnedTrailing` and `visibilityPriority(_:)` are iOS 27.0. Every API is listed with its doc link in [`reference/api-index.md`](../../../../../reference/api-index.md).
+APIs newer than the app's deployment target sit behind `@available` or `if #available`. Reserved regions and `ArrangementView` are iOS 27.1. `topBarPinnedTrailing` and `visibilityPriority(_:)` are iOS 27.0. Every API is listed with its doc link in [`reference/api-index.md`](https://github.com/Kimeur/duology/blob/main/reference/api-index.md).
 
 ## R1 No letterboxing
 
@@ -43,7 +43,7 @@ For hero images and backgrounds that should run under a vertical bar, use [`back
 
 ## R2 State survives fold and unfold
 
-Keep the same views alive when the layout changes, and keep state outside views that come and go. For a list and its detail, use one [`NavigationSplitView`](https://developer.apple.com/documentation/swiftui/navigationsplitview) for every size, with the selection stored above it. Don't build list-detail from stacks: closed, they pile the list on top of the detail. Full recipe: `duo-patterns`, [list-detail](../../duo-patterns/references/list-detail.md).
+Keep the same views alive when the layout changes, and keep state outside views that come and go. For a list and its detail, use one [`NavigationSplitView`](https://developer.apple.com/documentation/swiftui/navigationsplitview) for every size, with the selection stored above it. Don't build list-detail from stacks: closed, they pile the list on top of the detail. Full recipe: `duo-patterns`, [list-detail](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/list-detail.md).
 
 ```swift
 import SwiftUI
@@ -199,7 +199,7 @@ func columnCount(width: Double, minColumnWidth: Double, foldCrossesGrid: Bool) -
 }
 ```
 
-The full grid, with the fold as the middle gap and uneven margins handled: `duo-patterns`, [feed reflow](../../duo-patterns/references/feed-reflow.md).
+The full grid, with the fold as the middle gap and uneven margins handled: `duo-patterns`, [feed reflow](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/feed-reflow.md).
 
 ## R6 Side controls, symbols and titles
 
@@ -266,7 +266,7 @@ Keep navigation and scrolling containers in the right place:
 - Never put an `ArrangementView` inside a `List` or `ScrollView`. Part of it can end up out of reach ([hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo), [talk 111463, 16:26](https://developer.apple.com/videos/play/tech-talks/111463/?time=986)).
 - An arrangement inside a `NavigationSplitView` is unverified. Apple's sources disagree: the HIG says to put split views and tab views around an arrangement, and the hub says to avoid an arrangement inside a navigation split view. A `NavigationStack` or `TabView` around the arrangement fits both.
 
-Two pages in book pose: `duo-patterns`, [two-page](../../duo-patterns/references/two-page.md). UIKit: [`UIArrangementViewController`](https://developer.apple.com/documentation/uikit/uiarrangementviewcontroller).
+Two pages in book pose: `duo-patterns`, [two-page](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/two-page.md). UIKit: [`UIArrangementViewController`](https://developer.apple.com/documentation/uikit/uiarrangementviewcontroller).
 
 ## R8 Split View and PiP work
 

@@ -3,7 +3,7 @@ name: duo-continuity
 description: Keeps app state alive when iPhone Duo, Apple's foldable, folds, unfolds, rotates or resizes between the outer display and the inner display. Use when scroll position, video or audio playback, typed text, keyboard focus, selection, form input, the selected item, the navigation stack, an upload or sign-in resets or reloads on fold or unfold, and when writing or reviewing @Observable models, @SceneStorage, NavigationPath, NavigationSplitView, ScrollPosition, AnyLayout, .id, onAppear, .task, registerForTraitChanges or viewWillTransition(to:with:).
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
-  sources: "reference/sources.md"
+  sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
 ---
 
 # duo-continuity

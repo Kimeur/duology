@@ -62,7 +62,7 @@ Or, in Xcode, choose Manage Devices from the run destination menu, or Xcode > Op
 - **Any angle**: hold Option and drag the slider that appears below the bezel.
 - **Rotate**: the rotate button (Option-click rotates right), or Device > Orientation.
 
-Words like "book" or "tabletop" are not Apple names. Apple's controls say Closed, Partially Open and Open. In code, the hinge status is `closed`, `partiallyOpen` or `fullyOpen` (see `reference/device-facts.md` in the Duology repo).
+Words like "book" or "tabletop" are not Apple names. Apple's controls say Closed, Partially Open and Open. In code, the hinge status is `closed`, `partiallyOpen` or `fullyOpen` (see [`reference/device-facts.md`](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md)).
 
 `simctl io <device> screenConfig` can power a screen off or change its geometry. It is not a pose control, and we did not test it. Don't use it to fake a pose.
 
@@ -119,7 +119,7 @@ From the [Xcode 27.1 release notes](https://developer.apple.com/documentation/xc
 - Most app extensions can't run or be debugged in the iPhone Duo runtime.
 - An app using `CameraCaptureAccessory` can use both displays without a capture session. A real device needs one.
 - Device Hub can't send a two-finger touch. Trackpad pinch and rotate reach standard UIKit components as pointer events, which is not the same as two fingers on glass. Test multi-touch gestures on a device.
-- The simulator reports 60 frames per second at most. Test 120 Hz behaviour on a device (`reference/device-facts.md`).
+- The simulator reports 60 frames per second at most. Test 120 Hz behaviour on a device ([`reference/device-facts.md`](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md)).
 
 ## Other ways to test resizing
 

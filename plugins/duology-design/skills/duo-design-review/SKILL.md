@@ -3,7 +3,7 @@ name: duo-design-review
 description: Reviews screenshots, simulator captures and Figma frames for iPhone Duo, Apple's foldable, against a 15-point checklist (letterboxing, state lost on fold and unfold, sizing from UIScreen.main, text or buttons in the fold via reservedRegions .division and .occlusion, odd grid columns, vertical toolbars with symbols and titles, tabletop and book layouts with ArrangementView overlay, camera preview rotation, outer display feature parity, multiple windows with UIWindowScene.ActivationAction, transitions, 44 pt touch targets, hardware keyboard, drag and drop) and writes findings with severity, rule, where and fix. Use it when someone asks to critique, audit or review a design, mockup, concept or Dribbble shot for the foldable, the outer display or the inner display, or asks what breaks when the phone is closed, open, partly folded like a book, propped on a table, in Split View or under Picture in Picture.
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
-  sources: "reference/sources.md"
+  sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
 ---
 
 # Duo design review
@@ -31,7 +31,7 @@ A Duo app runs in many shapes. One frame per screen is not enough. Ask for these
 
 Camera apps also need: the capture screen closed, open, and open turned around (a rear camera faces the person).
 
-If a frame is missing, don't guess. Mark the rules it would prove as **Check** and list the frame in the report. "Book" and "tabletop" are Duology's shorthand. Apple only describes these ways of holding the phone, as "partially folded, like a book" or "seated on a table like a laptop" ([HIG, Device poses](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Device-poses), [talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=28)). The SDK has no posture API ([API index](../../../../reference/api-index.md#not-in-the-sdk)).
+If a frame is missing, don't guess. Mark the rules it would prove as **Check** and list the frame in the report. "Book" and "tabletop" are Duology's shorthand. Apple only describes these ways of holding the phone, as "partially folded, like a book" or "seated on a table like a laptop" ([HIG, Device poses](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Device-poses), [talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=28)). The SDK has no posture API ([API index](https://github.com/Kimeur/duology/blob/main/reference/api-index.md#not-in-the-sdk)).
 
 ### Tell the frames apart
 
@@ -116,7 +116,7 @@ Draw these on each frame before you judge it. Numbers are in points; multiply by
 | Frame | Fold | Cameras and status bar | Source |
 |---|---|---|---|
 | Outer, portrait | None | Camera x 400–437, y 29–66 (37 × 37 pt). Region 84 × 174 pt at the top of the trailing column, where the status bar sits (our reading). Safe area insets: trailing 84, bottom 34. | *Measured* on the simulator |
-| Inner, held wide, flat | Line at x 475.5. Inactive region x 455–495 (the line plus 20 pt each side). | Region x 867–951, y 0–124, at the status bar corner. Inactive region x 677–735, y 21–58, likely the inner camera (our reading of both). | *Measured*, see `duo-layout` [reserved regions](../../../duology/skills/duo-layout/references/reserved-regions.md) |
+| Inner, held wide, flat | Line at x 475.5. Inactive region x 455–495 (the line plus 20 pt each side). | Region x 867–951, y 0–124, at the status bar corner. Inactive region x 677–735, y 21–58, likely the inner camera (our reading of both). | *Measured*, see `duo-layout` [reserved regions](https://github.com/Kimeur/duology/blob/main/plugins/duology/skills/duo-layout/references/reserved-regions.md) |
 | Inner, partly folded | Same place; width not measured. Treat x 455–495 as the smallest no-go band for controls. | As above; the inner camera region is active only while the camera runs | *Unverified* width |
 | Inner, held tall | Runs side to side near y 475 | Not measured | *Derived* by symmetry |
 
@@ -184,7 +184,7 @@ Write **Where** as display, pose, screen, element and position in points. Write 
 - Don't ask a design to override the system's bar placement. Apple advises against it in general ([HIG, Vertical controls](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls)).
 - Never mark a rule Pass that you could not see. Mark it Check.
 - Fixes never contain device sizes, hinge angles, `UIScreen.main`, `userInterfaceIdiom` or orientation checks. They use size classes, the view's size, arrangements and reserved regions.
-- Use only real API names. Every one in this skill is in [`reference/api-index.md`](../../../../reference/api-index.md) or was typechecked against the iOS 27.1 SDK.
+- Use only real API names. Every one in this skill is in [`reference/api-index.md`](https://github.com/Kimeur/duology/blob/main/reference/api-index.md) or was typechecked against the iOS 27.1 SDK.
 - Mark what you could not confirm. Real-device behaviour (120 Hz, hinge feel, camera handover) is unverified on the simulator.
 
 ## Related skills
@@ -195,7 +195,7 @@ Write **Where** as display, pose, screen, element and position in points. Write 
 - `duo-patterns`: list-detail, two-page, feed reflow, displacement (R4, R5, R7, R10).
 - `duo-setup`: the Duo simulator, Device Hub and screenshots of each display.
 
-Every source with its check date: [`reference/sources.md`](../../../../reference/sources.md). Display sizes and poses: [`reference/device-facts.md`](../../../../reference/device-facts.md).
+Every source with its check date: [`reference/sources.md`](https://github.com/Kimeur/duology/blob/main/reference/sources.md). Display sizes and poses: [`reference/device-facts.md`](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md).
 
 ## Checklist
 

@@ -68,11 +68,17 @@ BASE_TOOLS = [
 # that exact prefix too, for the Xcode the run uses.
 DEVELOPER_DIR_TOOLS = ["Bash(DEVELOPER_DIR=%s xcodebuild:*)", "Bash(DEVELOPER_DIR=%s xcrun simctl:*)"]
 
+# simctl subcommands the agent never needs: delete and erase can wipe simulators
+# that aren't the eval's (`simctl delete all`), and spawn runs any program in a
+# simulator as your macOS user. Deny rules win over the `xcrun simctl` allow rules.
+SIMCTL_DENIED = ("delete", "erase", "spawn")
+
 DENIED_TOOLS = [
     "Agent", "WebFetch", "WebSearch",
     # Keep the agent from granting itself more through a settings file mid-run.
     "Edit(./.claude/**)", "Write(./.claude/**)", "Edit(~/.claude/**)", "Write(~/.claude/**)",
-]
+] + [r % sub for sub in SIMCTL_DENIED
+     for r in ("Bash(xcrun simctl %s:*)", "Bash(DEVELOPER_DIR=* xcrun simctl %s *)")]
 
 # Scripts inside the Duology plugins that its skills and commands tell the agent
 # to run, relative to the plugin folder. Only the run with Duology gets them.

@@ -129,7 +129,7 @@ final class SeatingUITests: XCTestCase {
 ## Where the tests run
 
 - *Measured:* `xcodebuild test` ran our UI tests on "Clone 1 of iPhone Duo", not on the booted simulator itself. The clone started closed, on the outer display. So a scripted run checks the closed phone unless you set things up otherwise.
-- `simctl` in Xcode 27.1 has no pose command (*measured* for `reference/device-facts.md`). Change poses by hand in Device Hub: Closed, Partially Open, Open ([doc](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)).
+- `simctl` in Xcode 27.1 has no pose command (*measured* for [`reference/device-facts.md`](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md)). Change poses by hand in Device Hub: Closed, Partially Open, Open ([doc](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)).
 - Device Hub can't send two touches at once ([Xcode 27 release notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27-release-notes)). Two people playing together is a device test.
 - Haptics don't play on the simulator. Device test.
 

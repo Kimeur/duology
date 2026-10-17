@@ -3,7 +3,7 @@ name: recipe-two-player-game
 description: Creates a complete two-player, one-phone SwiftUI game for iPhone Duo, Apple's foldable, where each player gets half the screen in every pose (closed on the outer display, open on the inner display, upright or sideways, partly folded). Use when someone wants to start a new two-player game or shared-screen app from scratch (a new Xcode project), or runs /duo-new recipe-two-player-game. For an existing app, use duo-shared-screen instead. Covers EvenSplit (GeometryReader plus AnyLayout), per-half coordinate spaces and content shapes, face-to-face seating turned by split axis, right-to-left seats, input gating, countdown, winner screen and rematch, keeping targets off the fold with reservedRegions(kind:) (.division, .occlusion), a Foundation-only game engine tested on the Mac, and UI tests that work on the iPhone Duo simulator.
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
-  sources: "reference/sources.md"
+  sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
 ---
 
 # recipe-two-player-game

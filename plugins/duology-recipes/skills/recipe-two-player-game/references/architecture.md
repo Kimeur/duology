@@ -7,13 +7,13 @@ How the generated project fits together, why each piece is where it is, and what
 ```text
 RootView                         owns DuelSetup and the DuelModel (survives every layout change)
  └─ DuelScreen                   overlays hidden, edge gestures deferred, idle timer off, clock task
-     └─ EvenSplit                side by side when wide, stacked when tall (AnyLayout)
-         ├─ PlayerHalf(.one)     turned 180° in face-to-face mode
-         │   ├─ PlayField        coordinate space "p1.field"
+     └─ EvenSplit                side by side when wide, stacked when tall (AnyLayout), pinned left-to-right
+         ├─ PlayerHalf(.one)     content shape, clip, turn; face to face: upside down, or a quarter turn
+         │   ├─ PlayField        coordinate space "p1.field", always left-to-right
          │   │   ├─ touch surface   Color.clear + contentShape + SpatialTapGesture
          │   │   └─ content         ReadyPanel | countdown | TargetView | ResultPanel
          │   └─ ScoreBar         score, misses, time left
-         └─ PlayerHalf(.two)     never turned; its ScoreBar holds the leave button
+         └─ PlayerHalf(.two)     face to face: a quarter turn when side by side; its ScoreBar holds the leave button
 ```
 
 The engine (`<App>/Engine/`) sits under all of it and imports only Foundation.
@@ -25,7 +25,7 @@ The engine (`<App>/Engine/`) sits under all of it and imports only Foundation.
 3. `DuelModel.tap` stamps the time and calls `Duel.tap(_:at:in:now:)`.
 4. `Duel.tap` first runs `tick(now:)`, so a round whose time ran out ends before the touch counts. Then `canTap` gates it: wrong phase, or locked out after a miss, returns `.ignored`.
 5. The engine maps the player's current `Spot` (fractions 0...1) into `area`, tests the distance with `hitSlop`, and returns `.hit`, `.miss` or `.won`. A miss sets `lockedUntil`.
-6. `DuelModel` bumps `hitCount[.two]` or `missCount[.two]`. Player 2's `.sensoryFeedback` fires on that counter only.
+6. `DuelModel` bumps `hitCount[.two]` or `missCount[.two]`. Player 2's `.sensoryFeedback` fires once for that event, unless the Haptics switch is off. The whole phone vibrates, so both players feel it.
 7. Views read `model.duel` and redraw: the target moves, the score changes, or the result panels appear.
 
 The views never decide who scored. That keeps the rules testable without a simulator.
@@ -66,9 +66,29 @@ Apple's sources: [ReservedRegion](https://developer.apple.com/documentation/swif
 | `countdownRemaining(now:)`, `timeRemaining(now:)` | For the countdown and the clock. |
 | `outcome`, `reset()` | Who won; back to the start. |
 | `PlayArea.fit(_:avoiding:margin:)` | The area math above. |
+| `Player.quarterTurns(faceToFace:sideBySide:)` | Clockwise quarter turns for a player's half (next section). |
 | `SeededGenerator` | SplitMix64, the same on every platform. |
 
-Every type is `nonisolated` and `Sendable`. The app target compiles with `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, so without `nonisolated` the engine would be main-actor code. The engine test build uses the same setting and runs one check in `Task.detached`; drop a `nonisolated` and it stops compiling.
+Every type is `nonisolated` and `Sendable`. The app target compiles with `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, so without `nonisolated` the engine would be main-actor code. The engine test build uses the same setting and runs one check in `Task.detached` that uses every engine type: a method, a property or an `==` that needs the type to be `nonisolated`. *Measured:* dropping `nonisolated` from any one of the 13 types stops the build. Before that check touched every type, `Player`, `PlayerState`, `TapResult` and `PlayArea` could lose it and still compile. Add a line there for each new engine type.
+
+## Seating and direction
+
+Face to face, the phone lies flat between the players, one at each far edge. Each half turns until its top edge sits on the seam, so each player reads their half the right way up from their own edge. The numbers match `duo-shared-screen`'s `Facing.quarterTurns(for:sideBySide:)`.
+
+| Split | Player 1 | Player 2 |
+|---|---|---|
+| Stacked | 2 quarter turns (upside down) | 0 |
+| Side by side | 1 (top edge to the right) | 3 (top edge to the left) |
+
+`DuelScreen` reads the split axis with the same rule as `EvenSplit` (wider than tall means side by side) and passes the turns down. `turned(_:)` in `PlayerHalf.swift` lays a sideways half out with width and height swapped, then rotates it, so the content fits its owner's view.
+
+Three layout directions, from the outside in:
+
+1. The split is pinned left-to-right, so player 1 keeps the top or left half in every language.
+2. Each half's content gets the reader's direction back, *inside* the turn. *Measured:* with the turn inside the mirrored content, each side-by-side half's top edge pointed away from the seam.
+3. `PlayField` is left-to-right again, and only its text panels get the reader's direction. *Measured:* in a mirrored field, a tap on the drawn target counted as a miss in both halves, same way and face to face. The reserved-region query mirrors by default ([`layoutDirectionBehavior`](https://developer.apple.com/documentation/swiftui/geometryproxy/reservedregions(kind:options:layoutdirectionbehavior:))), so it stays in step with whichever direction the field uses.
+
+Check right to left with the launch arguments `-AppleTextDirection YES -NSForceRightToLeftWritingDirection YES`.
 
 ## Accessibility and identifiers
 
@@ -77,6 +97,8 @@ Every type is `nonisolated` and `Sendable`. The app target compiles with `SWIFT_
 - Score: `p1.score`, label "Player 1, 2 of 10 hits". Others: `p1.misses`, `p1.clock`, `p1.locked`, `p1.countdown`, `p1.ready`, `p1.prompt`, `p1.result`, `p1.rematch`, `duel.leave`, `home.start`, `home.goal`, `home.faceToFace`.
 
 *Measured* on the iPhone Duo simulator: with `.contentShape(Rectangle())` and the tap gesture on the field container, the target's accessibility frame was the whole field (382 × 261 pt) instead of the circle (56 × 56 pt). Removing `.contentShape` fixed the target but shrank the field's frame to its content. A clear touch layer beside the content, with `.allowsHitTesting(false)` on the target, gave both the right frames, and taps still scored. `.position` was not the cause: it works once the container has no content shape.
+
+Each half also has `.contentShape(.interaction, Rectangle())`, with no gesture on the half. *Measured:* we gave player 2's half a hit-testable 5000 × 5000 pt layer. Without the content shape, that layer took the tap on player 1's Ready button and `testBothPlayersMustBeReady` failed; with it, the test passed and the target's frame stayed 56 × 56 pt. `.clipped()` alone hid the layer but did not stop it taking taps. At the largest accessibility text size, a half's content ran about 3 pt past its edge, and both Ready buttons still worked.
 
 ## Launch switches
 
@@ -87,7 +109,7 @@ Debug builds only (`#if DEBUG`). The last copy of a switch wins, so a test can o
 | `-uiTesting` | Animations off. |
 | `-openDuel` | Skip the home screen. |
 | `-autoReady` | With `-openDuel`: both players ready, the round starts. |
-| `-faceToFace` | Turn player 1's half. |
+| `-faceToFace` | Turn each half to face its player (see Seating and direction). |
 | `-goal N`, `-countdown N`, `-lockout N`, `-timeLimit N` | Rules. `-timeLimit 0` means no limit. |
 | `-seed N` | Fixed targets. |
 
@@ -97,12 +119,12 @@ Debug builds only (`#if DEBUG`). The last copy of a switch wins, so a test can o
 |---|---|
 | `testHomeStartsADuel` | Start opens both halves. |
 | `testBothPlayersMustBeReady` | One ready is not enough; both start the countdown. |
-| `testTapsDuringTheCountdownDoNothing` | Countdown taps are not hits, misses or lockouts. |
+| `testTapsDuringTheCountdownDoNothing` | Taps in both halves during an 8 s countdown are not hits, misses or lockouts. It checks the countdown is still running after the second tap, so a slow run fails instead of passing by accident. |
 | `testHitsCountInEachHalf` | Hits count for the right player only. |
 | `testMissLocksOnlyThatPlayer` | A miss locks one player; the other still scores; the lock ends. |
 | `testFirstToTheGoalWinsThenRematch` | Winner and loser panels; rematch needs both; scores reset. |
 | `testTimeLimitCanEndInATie` | The clock shows; time up with equal hits is a tie. |
-| `testTurnedHalfStillScores` | Hits and misses in the turned half. |
+| `testTurnedHalfStillScores` | Face to face: each score bar sits at its player's edge, away from the seam; hits and misses count in both halves. Pose-agnostic, so it covers stacked and side by side. |
 | `testLeavingAsksFirst` | Leave asks, then goes home. |
 | `testBothHalvesShowInThisPose` | Split along the long side, equal fields, target frame is the circle; saves a screenshot. |
 
@@ -166,17 +188,23 @@ In `Duel.canTap(_:now:)`, add `turns.allows(player)` to the guard. Dim the half 
 
 | Check | Result |
 |---|---|
-| `Tools/run-engine-tests.sh` (Mac, Swift 6.4, `-default-isolation MainActor`) | 59 passed, 0 failed |
+| `Tools/run-engine-tests.sh` (Mac, Swift 6.4, `-default-isolation MainActor`) | 63 passed, 0 failed |
+| Each engine type in turn without `nonisolated`, same build | all 13 fail to compile |
 | `swiftc -typecheck` of the app sources, targets iOS 27.1 and iOS 26.0 simulator | no errors, no warnings |
 | `xcodebuild build-for-testing`, iPhone Duo simulator (iOS 27.1) | succeeded, no compiler warnings |
 | Launch and screenshots, closed (outer display), home, waiting, playing, face to face | looked at; both halves fill the display, content clear of the status bar column |
-| `Tools/run-ui-tests.sh`, iPhone Duo simulator, closed | 10 passed (128 s) |
+| The ten UI tests, iPhone Duo simulator, closed | 10 passed (128 s) |
+| `testTapsDuringTheCountdownDoNothing` alone, three runs | 3 passed; the second tap landed about 6 s before the countdown ended |
+| Touch isolation (an oversized layer in player 2's half), with and without the halves' content shape | passed with it; without it, player 1's Ready tap went to player 2's layer |
+| Largest accessibility text size, both Ready buttons | both worked |
+| Right to left, closed Duo, same way and face to face | player 1 on top, text right to left, hits counted in both halves |
 | A failing run with test diagnostics on, then off | 720 s and 138 s in total for about 120 s of tests, hence `-collect-test-diagnostics never` |
 | Same tests plus a rotation check, iPhone 17 simulator, iOS 26.2 | 11 passed; sideways the fields sat side by side (374 × 322 pt each) and the score survived the turn |
+| Face to face, sideways, iPhone 17 simulator, iOS 26.2, left-to-right and right-to-left | each half turned a quarter toward the seam (score bars at the outer edges), player 1 on the left, targets 58 × 58 pt, hits and misses counted in both halves |
 
 ## Not yet verified
 
-- The open pose (inner display), partly open, and Split View on the Duo simulator: poses change only in Device Hub, and these runs used a closed simulator.
-- An active fold region, so `PlayArea` avoiding a real fold (its math is tested on the Mac).
+- The open pose (inner display), partly open, and Split View on the Duo simulator: poses change only in Device Hub, and these runs used a closed simulator. Side-by-side face to face ran only on an iPhone 17 simulator.
+- An active fold region, so `PlayArea` avoiding a real fold (its math is tested on the Mac). Whether reserved-region frames follow a half's turn is not checked either.
 - Fold and unfold during a round.
 - Two people touching at once, and haptics, on a real iPhone Duo.

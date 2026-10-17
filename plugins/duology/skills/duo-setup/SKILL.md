@@ -3,7 +3,7 @@ name: duo-setup
 description: "Sets up a Mac to build, run and test apps for iPhone Duo, the foldable iPhone with an outer display and an inner display, covering Xcode 27.1 next to an older Xcode with DEVELOPER_DIR (no sudo xcode-select), xcodebuild -version, the iOS 27.1 SDK and runtime, the iPhone Duo simulator in Device Hub (xcrun simctl create/bootstatus, a screenshot of each display, the Closed / Partially Open / Open poses and the fold angle), Xcode's MCP server for Claude Code (xcrun mcpbridge, MCP_XCODE_PID, xcrun agent skills export) and project settings (IPHONEOS_DEPLOYMENT_TARGET, SWIFT_VERSION 6, SWIFT_DEFAULT_ACTOR_ISOLATION MainActor, SWIFT_APPROACHABLE_CONCURRENCY, synchronized folders). Use it when the Mac or project isn't ready for iPhone Duo work (duo-start or /duo-doctor sends you here), when /duo-doctor fails, when xcodebuild picks the wrong Xcode, when the Duo simulator, iOS 27.1 runtime or hinge pose is missing, or when Claude Code can't reach Xcode."
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
-  sources: "reference/sources.md"
+  sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
 ---
 
 # duo-setup
@@ -153,7 +153,7 @@ The check below is a whole app with its own `@main`. It shows and prints the win
 
 - **No project needed.** Compile it into a bare app with `swiftc`, as shown below. You can do this without the user.
 - **The user prefers Xcode.** They create an iOS App project (SwiftUI) in Xcode 27.1. Replace the template's `<Name>App.swift` with this file, or delete the template's `@main` struct. Two `@main` types fail to link with "duplicate symbol '_main'", and `-typecheck` doesn't catch it.
-- **An existing app.** Don't add this file. Use duo-start's debug logger instead ([duo-start/references/first-pass.md](../duo-start/references/first-pass.md)). It prints the same facts as `DUO size ...` and `DUO hinge ...` lines.
+- **An existing app.** Don't add this file. Use duo-start's debug logger instead ([duo-start/references/first-pass.md](https://github.com/Kimeur/duology/blob/main/plugins/duology/skills/duo-start/references/first-pass.md#optional-a-debug-logger)). It prints the same facts as `DUO size ...` and `DUO hinge ...` lines.
 
 ```swift
 import SwiftUI

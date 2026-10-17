@@ -81,6 +81,11 @@ class RuleGate(unittest.TestCase):
         for tool in ("Agent", "WebFetch", "WebSearch"):
             self.assertIn(tool, evalkit.DENIED_TOOLS)
 
+    def test_destructive_simctl_is_denied(self):
+        for sub in ("delete", "erase", "spawn"):
+            self.assertIn("Bash(xcrun simctl %s:*)" % sub, evalkit.DENIED_TOOLS)
+            self.assertIn("Bash(DEVELOPER_DIR=* xcrun simctl %s *)" % sub, evalkit.DENIED_TOOLS)
+
 
 class TaskFiles(unittest.TestCase):
     def test_there_are_tasks_for_every_v01_skill(self):

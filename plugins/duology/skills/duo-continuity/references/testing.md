@@ -2,15 +2,15 @@
 
 Three layers, from cheapest to closest to a real fold:
 
-1. a UI test that flips the size class from inside the app and rotates the simulator;
-2. a UI test that waits while you press Closed and Open in Device Hub;
+1. a UI test that flips the size class from inside the app;
+2. a UI test that waits while you press the pose buttons and rotate in Device Hub;
 3. a manual pass in Device Hub through the matrix below.
 
 ## What Xcode 27.1 can and can't do from code
 
 | Action | From code? | How |
 |---|---|---|
-| Rotate | From a UI test | `XCUIDevice.shared.orientation` ([orientation](https://developer.apple.com/documentation/xcuiautomation/xcuidevice/orientation)); not yet run on the Duo simulator. From inside the app, *measured:* `requestGeometryUpdate(_:errorHandler:)` on the open inner display failed with "The current windowing mode does not allow for programmatic changes to interface orientation." |
+| Rotate | No, on the Duo | Device Hub's rotate button. *Measured:* on the closed Duo simulator, setting [`XCUIDevice.shared.orientation`](https://developer.apple.com/documentation/xcuiautomation/xcuidevice/orientation) to landscape changed the device orientation but not the app's 466 × 678 pt window (this skill's run and `duo-testing`'s). Open: *unverified*. From inside the app, *measured:* `requestGeometryUpdate(_:errorHandler:)` on the open inner display failed with "The current windowing mode does not allow for programmatic changes to interface orientation." |
 | Close, open, partially open | No | Device Hub buttons only. `XCUIDevice` has no fold or hinge property, and `simctl` has no pose command (checked in Xcode 27.1). |
 | Any hinge angle | No | Hold Option and drag the slider under the bezel |
 | Split View | No | Drag the app by its home indicator to one side ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)) |
@@ -51,7 +51,7 @@ Android's large-screen quality tests call these state and combination checks ([a
 A launch switch, ignored in release builds, adds two things at the window root:
 
 - a button that overrides the horizontal size class, so your own size-class code and `NavigationSplitView` take the same path a fold takes;
-- hidden labels: a one-line summary of the state that must survive, the current size class, and the root view's size in points.
+- hidden labels: a one-line summary of the state that must survive, the current size class, and the window's size in points.
 
 ```swift
 import SwiftUI
@@ -74,7 +74,12 @@ struct ContinuityHarness: ViewModifier {
         if ContinuityTesting.isOn {
             content
                 .environment(\.horizontalSizeClass, override ?? real)
-                .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)   // fill the window, however small the content
+                .background {
+                    Color.clear                                     // measures the whole window, safe areas included
+                        .ignoresSafeArea()
+                        .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
+                }
                 .overlay(alignment: .bottomLeading) {
                     VStack(alignment: .leading) {
                         Button("Flip size class") {
@@ -140,7 +145,7 @@ struct ReaderRoot: View {
 
 ## The UI tests
 
-The first test runs anywhere. The second waits for you, so it is skipped unless you ask for it.
+The first test runs on its own. It doesn't rotate, because rotation from a UI test doesn't resize the app on the closed Duo (see the table above). The second test waits for you to fold and rotate in Device Hub, so it is skipped unless you ask for it.
 
 ```swift
 import XCTest
@@ -155,10 +160,15 @@ nonisolated final class ContinuityUITests: XCTestCase {
         return app
     }
 
-    /// Flip the size class, then rotate, and check the summary never changes.
     @MainActor
-    func testStateSurvivesSizeClassFlipAndRotation() throws {
-        XCUIDevice.shared.orientation = .portrait
+    private func waitForChange(of element: XCUIElement, from old: String, timeout: TimeInterval) -> Bool {
+        let changed = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label != %@", old), object: element)
+        return XCTWaiter().wait(for: [changed], timeout: timeout) == .completed
+    }
+
+    /// Flip the size class there and back, and check the summary never changes.
+    @MainActor
+    func testStateSurvivesSizeClassFlip() throws {
         let app = launch()
         let summary = app.staticTexts["continuity.summary"]
         let sizeClass = app.staticTexts["continuity.sizeClass"]
@@ -166,45 +176,47 @@ nonisolated final class ContinuityUITests: XCTestCase {
 
         // Build up state here: scroll, select, type, start playback.
         let before = summary.label
-        let startSize = sizeClass.label
+        let start = sizeClass.label
+        let flipped = start == "compact" ? "regular" : "compact"
 
         app.buttons["continuity.flip"].tap()
-        let flipped = startSize == "compact" ? "regular" : "compact"
         XCTAssertTrue(sizeClass.wait(for: \.label, toEqual: flipped, timeout: 5))
         XCTAssertEqual(summary.label, before, "state changed on a size-class flip")
 
         app.buttons["continuity.flip"].tap()
-        XCTAssertTrue(sizeClass.wait(for: \.label, toEqual: startSize, timeout: 5))
+        XCTAssertTrue(sizeClass.wait(for: \.label, toEqual: start, timeout: 5))
         XCTAssertEqual(summary.label, before, "state changed on the flip back")
-
-        let windowSize = app.staticTexts["continuity.windowSize"]
-        let sizeBefore = windowSize.label
-        XCUIDevice.shared.orientation = .landscapeLeft
-        let resized = XCTNSPredicateExpectation(predicate: NSPredicate(format: "label != %@", sizeBefore),
-                                                object: windowSize)
-        XCTAssertEqual(XCTWaiter().wait(for: [resized], timeout: 5), .completed, "rotation did not resize the app")
-        XCTAssertEqual(summary.label, before, "state changed on rotation")
-        XCUIDevice.shared.orientation = .portrait
     }
 
-    /// Real fold. Run with TEST_RUNNER_DUO_MANUAL_FOLD=1 and press the Device Hub buttons when asked.
+    /// Real fold and rotation. Run with TEST_RUNNER_DUO_MANUAL_FOLD=1 and use Device Hub when asked.
+    /// Works from either pose: it asks for the other pose first, then a rotation, then the first pose again.
     @MainActor
     func testStateSurvivesRealFold() throws {
         try XCTSkipUnless(ProcessInfo.processInfo.environment["DUO_MANUAL_FOLD"] == "1",
-                          "Manual test: needs someone to press Closed and Open in Device Hub.")
+                          "Manual test: needs someone to press the pose buttons in Device Hub.")
         let app = launch()
         let summary = app.staticTexts["continuity.summary"]
         let sizeClass = app.staticTexts["continuity.sizeClass"]
+        let windowSize = app.staticTexts["continuity.windowSize"]
         XCTAssertTrue(summary.waitForExistence(timeout: 10))
         let before = summary.label
+        let start = sizeClass.label                      // "compact" when closed, "regular" when open
+        let other = start == "compact" ? "regular" : "compact"
+        var size = windowSize.label
 
-        XCTContext.runActivity(named: "Press Closed in Device Hub") { _ in
-            XCTAssertTrue(sizeClass.wait(for: \.label, toEqual: "compact", timeout: 60))
-            XCTAssertEqual(summary.label, before, "state changed on close")
+        XCTContext.runActivity(named: start == "compact" ? "Press Open in Device Hub" : "Press Closed in Device Hub") { _ in
+            XCTAssertTrue(sizeClass.wait(for: \.label, toEqual: other, timeout: 60))
+            XCTAssertTrue(waitForChange(of: windowSize, from: size, timeout: 5), "the fold did not resize the window")
+            XCTAssertEqual(summary.label, before, "state changed on the first fold")
         }
-        XCTContext.runActivity(named: "Press Open in Device Hub") { _ in
-            XCTAssertTrue(sizeClass.wait(for: \.label, toEqual: "regular", timeout: 60))
-            XCTAssertEqual(summary.label, before, "state changed on open")
+        size = windowSize.label
+        XCTContext.runActivity(named: "Click the rotate button in Device Hub") { _ in
+            XCTAssertTrue(waitForChange(of: windowSize, from: size, timeout: 60), "rotation did not resize the window")
+            XCTAssertEqual(summary.label, before, "state changed on rotation")
+        }
+        XCTContext.runActivity(named: start == "compact" ? "Press Closed in Device Hub" : "Press Open in Device Hub") { _ in
+            XCTAssertTrue(sizeClass.wait(for: \.label, toEqual: start, timeout: 60))
+            XCTAssertEqual(summary.label, before, "state changed on the second fold")
         }
     }
 }
@@ -216,7 +228,7 @@ Run them:
 # Automatic test
 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcodebuild test \
   -scheme YourApp -destination 'platform=iOS Simulator,name=iPhone Duo,OS=27.1' \
-  -only-testing:YourAppUITests/ContinuityUITests/testStateSurvivesSizeClassFlipAndRotation
+  -only-testing:YourAppUITests/ContinuityUITests/testStateSurvivesSizeClassFlip
 
 # Manual fold test: keep Device Hub visible and press the buttons when the test waits
 TEST_RUNNER_DUO_MANUAL_FOLD=1 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcodebuild test \

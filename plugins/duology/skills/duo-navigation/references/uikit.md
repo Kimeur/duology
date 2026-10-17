@@ -56,7 +56,8 @@ final class NoteViewController: UIViewController {
         let delete = UIBarButtonItem(title: "Delete", image: UIImage(systemName: "trash"),
                                      primaryAction: UIAction { _ in })
         delete.visibilityPriority = .low
-        toolbarItems = [checklist, inbox, .flexibleSpace(), delete]
+        // No spacers: the system spaces items, horizontal or vertical.
+        toolbarItems = [checklist, inbox, delete]
 
         // Actions that always live in the system overflow menu.
         navigationItem.additionalOverflowItems = UIDeferredMenuElement.uncached { provide in
@@ -79,7 +80,7 @@ final class NoteViewController: UIViewController {
 
 - Use `UIBarButtonItem(title:image:primaryAction:menu:)` so every item has both a title and an image.
 - Keep text-only items, such as "Edit", in their own group. *Measured:* a symbol item in the same group as a text-only item stayed horizontal with it.
-- Don't add fixed spaces between items to fake groups ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls)).
+- Don't add `.fixedSpace()` or `.flexibleSpace()` items. Group related items instead ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls)); Apple asks apps not to add their own spacing on either axis ([Tech Talk 111462](https://developer.apple.com/videos/play/tech-talks/111462/)).
 
 ## Items with a special axis
 
@@ -89,36 +90,43 @@ import UIKit
 final class LibraryViewController: UIViewController {
     private var isSelecting = false
 
+    // A custom view that fits the bar's fixed width may go vertical.
+    private lazy var compassItem: UIBarButtonItem = {
+        let item = UIBarButtonItem(customView: UIImageView(image: UIImage(systemName: "location.north.circle")))
+        item.title = "Compass"
+        item.axisBehavior = .verticalPreferred
+        return item
+    }()
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         title = "Library"
-        updateSelectItem()
-
-        // A custom view that fits the bar's fixed width may go vertical.
-        let compass = UIImageView(image: UIImage(systemName: "location.north.circle"))
-        let compassItem = UIBarButtonItem(customView: compass)
-        compassItem.title = "Compass"
-        compassItem.axisBehavior = .verticalPreferred
-        navigationItem.leadingItemGroups = [UIBarButtonItemGroup(barButtonItems: [compassItem], representativeItem: nil)]
+        updateTrailingItems()
     }
 
-    private func updateSelectItem() {
+    /// Both items sit on the trailing side. Leading items would replace Back
+    /// (leftItemsSupplementBackButton is false by default) and take the top slot.
+    private func updateTrailingItems() {
         // Swaps between a symbol and text, so it stays horizontal.
-        let item: UIBarButtonItem
+        let select: UIBarButtonItem
         if isSelecting {
-            item = UIBarButtonItem(title: "Done", primaryAction: UIAction { [weak self] _ in self?.toggle() })
+            select = UIBarButtonItem(title: "Done", primaryAction: UIAction { [weak self] _ in self?.toggle() })
         } else {
-            item = UIBarButtonItem(title: "Select", image: UIImage(systemName: "checkmark.circle"),
-                                   primaryAction: UIAction { [weak self] _ in self?.toggle() })
+            select = UIBarButtonItem(title: "Select", image: UIImage(systemName: "checkmark.circle"),
+                                     primaryAction: UIAction { [weak self] _ in self?.toggle() })
         }
-        item.axisBehavior = .horizontalOnly
-        navigationItem.rightBarButtonItem = item
+        select.axisBehavior = .horizontalOnly
+        // trailingItemGroups replaces rightBarButtonItem(s), so set only this.
+        navigationItem.trailingItemGroups = [
+            UIBarButtonItemGroup(barButtonItems: [select], representativeItem: nil),
+            UIBarButtonItemGroup(barButtonItems: [compassItem], representativeItem: nil),
+        ]
     }
 
     private func toggle() {
         isSelecting.toggle()
-        updateSelectItem()
+        updateTrailingItems()
     }
 }
 ```

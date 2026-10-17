@@ -20,7 +20,8 @@ Duology's full list, with IDs and check dates: [reference/sources.md](https://gi
 
 | Context | Result | Source |
 |---|---|---|
-| Built with the iOS 26 SDK or the iOS 27 SDK | No vertical bars; Apple shows the app beside the status bar instead | Prepare, 111461 |
+| Built with the iOS 26 SDK or earlier | No vertical bars. Open: the app sits centred on the inner display at a familiar size, with empty space around it. Closed: it sits to the left of the status bar and camera | Prepare, 111461 |
+| Built with the iOS 27 SDK | No vertical bars. Open: the app fills most of the inner display but stays clear of the status bar. Closed: not described (*unverified*) | Prepare, 111461 |
 | Built with the iOS 27.1 SDK or later | Vertical bars where the pose calls for them | Prepare, 111461 |
 | Outer display, portrait or landscape | Vertical | HIG, 111462 |
 | Inner display, landscape | Vertical | HIG, 111462; *measured* (trailing edge) |
@@ -28,6 +29,7 @@ Duology's full list, with IDs and check dates: [reference/sources.md](https://gi
 | Split View multitasking | Each app's bar on its outer edge; the left app's bar on the left | HIG, 111466 |
 | Right-to-left languages | Same hardware edge; content flows around it | HIG, 111462 |
 | Bars from a hand-built `UIToolbar`, `UINavigationBar` or `UITabBar` | Ignored for vertical layout | Hub, 111462 |
+| A SwiftUI row of buttons in `safeAreaInset` or an overlay | Stays where you drew it; move the buttons into `.toolbar` | Our reading: it is your own content, not a system bar, so nothing moves it |
 | Keyboard accessory bars | Stay attached to the keyboard | 111462 |
 
 The vertical bar shares its strip with the Dynamic Island and the status bar. When space runs out, items move into the overflow menu (111466).
@@ -93,9 +95,10 @@ Talk 111462 calls the SwiftUI modifier "toolbarCompressionBehavior". The real na
 - Closed: columns collapse into one stack. Open: columns show tiled or as overlays (111461).
 - Partially folded: the system resizes columns into an even split around the fold (HIG, 111463).
 - Only the column on the display edge joins the vertical bar: the detail column. Sidebar and content columns keep horizontal bars. An expanded inspector gets no vertical bar of its own (Hub, 111462).
-- *Measured:* the detail column's toolbar went vertical on the trailing edge; the sidebar's toolbar stayed horizontal; the sidebar column reported a compact width class while the detail column reported regular.
+- *Measured (SwiftUI):* the detail column's toolbar went vertical on the trailing edge; the sidebar's toolbar stayed horizontal; the sidebar column reported a compact width class while the detail column reported regular.
 - Controls that act on the list belong on the list column; controls for the open item belong on the detail column (HIG, Mail example).
-- Arrangement views lay out content but don't navigate. Put them inside navigation containers. Don't put an arrangement inside a split view, list or scroll view (HIG, Hub, 111463).
+- Arrangement views lay out content but don't navigate. Never put a navigation container inside an arrangement (HIG, 111463). Never put an arrangement inside a list or scroll view (Hub, 111463).
+- Apple's pages disagree on split views. The Hub advises against an arrangement inside a navigation split view; the HIG names split views and tab views as containers to put around an arrangement. Duology's default: put an arrangement inside a `NavigationStack` or a `TabView` tab, not inside a split view column.
 
 ## Tabs and the sidebar
 
@@ -112,10 +115,10 @@ Talk 111462 calls the SwiftUI modifier "toolbarCompressionBehavior". The real na
 | Where | Default | With a placement | Source |
 |---|---|---|---|
 | Outer display | Toolbar vertical | Turn it off in the sheet for a single Close item; the sheet then stops short of the front camera and the status bar moves | Hub, 111466 |
-| Inner display | Centred, toolbar horizontal | `.leading`: horizontal. `.trailing`: vertical | Hub, 111462; *measured* |
+| Inner display | Centred, toolbar horizontal | `.leading`: horizontal. `.trailing`: vertical | Hub, 111462; *measured* in SwiftUI |
 | Partially folded | Slides off the fold | Not needed | 111466 |
 
-- *Measured:* a `.medium` sheet with `.trailing` placement sat on the right with a vertical bar (Close at the top). With `.automatic` or `.leading` it had a horizontal bar, and `toolbarVerticalEdge` read `nil` inside it. Each sheet reported a compact width class.
+- *Measured (SwiftUI):* a `.medium` sheet with `.trailing` placement sat on the right with a vertical bar (Close at the top). With `.automatic` or `.leading` it had a horizontal bar, and `toolbarVerticalEdge` read `nil` inside it. Each sheet reported a compact width class.
 - Talk 111462 describes the inner-display rule as left and right; the hub says leading and trailing. *Unverified:* which wins in right-to-left languages.
 - `UISheetPresentationController.preferredPlacement` is ignored when `sourceView` is set (UIKit header `UISheetPresentationController.h`).
 - Alerts, action sheets, menus and popovers reposition around the fold on their own. Partially folded and held like a book, alerts move to the trailing side, close to where they appear once the phone closes (111463).

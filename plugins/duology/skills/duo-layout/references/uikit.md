@@ -109,7 +109,7 @@ final class PosterView: UIView {
 }
 ```
 
-With Auto Layout, pin controls to `safeAreaLayoutGuide` or `layoutMarginsGuide`. Margins are asymmetric too: foreground content may sit closer to a vertical bar than to the opposite edge ([111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=366)).
+With Auto Layout, pin controls to `safeAreaLayoutGuide` or `layoutMarginsGuide`. Margins are asymmetric too: foreground content may sit closer to a vertical bar than to the opposite edge ([111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=453)).
 
 ## Reserved regions
 
@@ -120,6 +120,7 @@ With Auto Layout, pin controls to `safeAreaLayoutGuide` or `layoutMarginsGuide`.
 ```swift
 import UIKit
 
+@available(iOS 27.1, *)
 final class PlayerViewController: UIViewController {
     private let controls = UIStackView()
     private var lastStatus: UIHinge.Status?
@@ -175,6 +176,7 @@ Whether UIKit lays out again on its own when only the fold changes is unverified
 ```swift
 import UIKit
 
+@available(iOS 27.1, *)
 @MainActor
 func makeNowPlaying() -> UINavigationController {
     let arrangement = UIArrangementViewController()
@@ -192,13 +194,14 @@ func makeNowPlaying() -> UINavigationController {
 }
 ```
 
-`UISplitArrangement` and `UIOverlayArrangement` are value types: change a copy, then pass it to `updateArrangement(_:animated:)`. For the simple cases, `arrangement.updateArrangement(.split.axes(.horizontal))` and `arrangement.updateArrangement(.overlay)` work as written. `.fractional(0.6)` reads as a share of the container; Apple's page doesn't spell that out (unverified).
+`UISplitArrangement` and `UIOverlayArrangement` are value types: change a copy, then pass it to `updateArrangement(_:animated:)`. For the simple cases, `arrangement.updateArrangement(.split.axes(.horizontal))` and `arrangement.updateArrangement(.overlay)` work as written. `.fractional(0.6)` asks for 60 percent of the container (the doc comment in the SDK's `UISplitArrangement.h`).
 
 Overlay, with the primary moving to the trailing side when the overlay turns side by side:
 
 ```swift
 import UIKit
 
+@available(iOS 27.1, *)
 @MainActor
 func useOverlay(on arrangement: UIArrangementViewController) {
     var overlay = UIOverlayArrangement()
@@ -220,6 +223,7 @@ A child reads its placement through `arrangementViewController` and `state(for:)
 ```swift
 import UIKit
 
+@available(iOS 27.1, *)
 final class QueueViewController: UIViewController {
     private var isCollapsed = false
 
@@ -281,4 +285,4 @@ final class EvenSplitViewController: UIViewController {
 
 ## Availability
 
-Reserved regions, `UIArrangementViewController` and `UIHingeInteraction` need iOS 27.1. If you deploy lower, wrap them in `if #available(iOS 27.1, *)` and fall back to a plain `UIStackView` or `UISplitViewController`.
+Reserved regions, `UIArrangementViewController` and `UIHingeInteraction` need iOS 27.1. The snippets on this page that use them are marked `@available(iOS 27.1, *)`. If you deploy lower, create them inside `if #available(iOS 27.1, *)` and fall back to a plain `UIStackView` or `UISplitViewController`.

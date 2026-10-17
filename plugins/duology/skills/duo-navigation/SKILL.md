@@ -1,6 +1,6 @@
 ---
 name: duo-navigation
-description: Gets toolbars, navigation bars, tab bars, split views and sheets right on iPhone Duo, Apple's foldable, where bars move into one vertical bar on the side of the outer display and of the inner display in landscape. Use it when bars go vertical, items overflow or vanish, tabs should become a sidebar on the inner display, a sheet should sit to one side or off the fold, or code touches toolbarVerticalBehavior, toolbarVerticalEdge, axisBehavior, visibilityPriority, topBarPinnedTrailing, ToolbarOverflowMenu, toolbarVerticalCompressionBehavior, defaultTabBarPlacement, presentationPlacement, NavigationSplitView, preferredVerticalBarBehavior, verticalBarEdge, pinnedTrailingGroup, additionalOverflowItems, UITabBarController.Sidebar.preferredPlacement or UISheetPresentationController.preferredPlacement.
+description: Gets toolbars, navigation bars, tab bars, split views and sheets right on iPhone Duo, Apple's foldable, where bars move into one vertical bar on the side of the outer display and of the inner display in landscape. Use it when bars go vertical, items overflow or vanish, an app draws its own custom bottom bar (UIToolbar, or a SwiftUI row in safeAreaInset or an overlay), toolbar or Menu buttons are icon-only, tabs should become a sidebar on the inner display, a sheet should sit to one side or off the fold, or code touches toolbarVerticalBehavior, toolbarVerticalEdge, axisBehavior, visibilityPriority, topBarPinnedTrailing, ToolbarOverflowMenu, toolbarVerticalCompressionBehavior, defaultTabBarPlacement, presentationPlacement, NavigationSplitView, preferredVerticalBarBehavior, verticalBarEdge, pinnedTrailingGroup, additionalOverflowItems, UITabBarController.Sidebar.preferredPlacement or UISheetPresentationController.preferredPlacement.
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
   sources: "reference/sources.md"
@@ -22,11 +22,11 @@ Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1, inner 
 | Inner display, landscape (held wide) | One vertical bar on the side (*measured*: trailing edge) |
 | Inner display, portrait (held tall) | Normal top and bottom bars |
 | Split View multitasking on the inner display | Each app puts its bar on its own outer edge |
-| `NavigationSplitView` / `UISplitViewController` showing columns | Detail column vertical; sidebar and content columns horizontal (*measured*) |
+| `NavigationSplitView` / `UISplitViewController` showing columns | Detail column vertical; sidebar and content columns horizontal (*measured* in SwiftUI) |
 | Inspector | Horizontal |
 | Sheet on the outer display | Vertical |
-| Sheet on the inner display, centred (default) or leading | Horizontal (*measured*) |
-| Sheet on the inner display, trailing | Vertical (*measured*) |
+| Sheet on the inner display, centred (default) or leading | Horizontal (*measured* in SwiftUI) |
+| Sheet on the inner display, trailing | Vertical (*measured* in SwiftUI) |
 
 Sources: [HIG, Vertical controls](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls), [Optimize bars for vertical presentation](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo#Optimize-bars-for-vertical-presentation), [Tech Talk 111462](https://developer.apple.com/videos/play/tech-talks/111462/).
 
@@ -41,10 +41,17 @@ Details, container rules and probe results: [references/bar-rules.md](references
 
 - SwiftUI: attach `.toolbar` to content inside `NavigationStack`, `NavigationSplitView` or a `TabView` tab.
 - UIKit: set `navigationItem` and `toolbarItems` on a view controller inside `UINavigationController` or `UITabBarController`.
-- Content of a hand-built `UIToolbar`, `UINavigationBar` or `UITabBar` never joins the vertical bar. Find and replace it:
+- A hand-built bar never joins the vertical bar. In UIKit that is a `UIToolbar`, `UINavigationBar` or `UITabBar` you create yourself. In SwiftUI it is a row of buttons in `safeAreaInset(edge: .bottom)` (or `.top`) or in `.overlay(alignment: .bottom)`. That row is your own content, so the system never moves it.
+- Move each action of a SwiftUI row into `.toolbar`: a bottom row into `ToolbarItemGroup(placement: .bottomBar)`, a top row into `.primaryAction` items. Drop the `Spacer()`s. A lone floating button may stay; keep it away from the bar (see "Adapt custom views to the bar"). Recipe: [references/swiftui.md](references/swiftui.md#replace-a-hand-drawn-bar).
+- Give icon-only labels a title, `Menu` labels included. Replace `label: { Image(systemName: "…") }` with `Button("Sort", systemImage: "…")`, `Menu("Sort", systemImage: "…") { … }` or a `Label("Sort", systemImage: "…")` label.
+
+Run both searches from the project root and review every hit. Keep the `--include` pattern quoted: unquoted, zsh stops with "no matches found" and exits 1, the same code grep gives for "no hits". No output and no error means no hits.
 
 ```bash
-grep -rnE "UIToolbar\(|UINavigationBar\(|UITabBar\(" --include=*.swift .
+# Hand-built bars: UIKit bar views, SwiftUI rows pinned to the top or bottom edge.
+grep -rnE 'UIToolbar\(|UINavigationBar\(|UITabBar\(|safeAreaInset\(edge: *\.(top|bottom)|overlay\(alignment: *\.(top|bottom)' --include='*.swift' .
+# Icon-only labels: a bare Image on the `label: {` line or the line after it.
+grep -rnE -A1 'label: *\{' --include='*.swift' . | grep -E 'Image\(systemName'
 ```
 
 ## Order, label and rank items
@@ -97,7 +104,7 @@ struct NoteEditor: View {
 - The prominent action (Done, Send) goes next with `.topBarPinnedTrailing` or `navigationItem.pinnedTrailingGroup`. A pinned SwiftUI item overflows only while search is active and space runs out ([doc](https://developer.apple.com/documentation/swiftui/toolbaritemplacement/topbarpinnedtrailing)).
 - Give every item a symbol and a title. The vertical bar shows the symbol; the overflow menu shows both. An item with only a title, or a custom view, stays horizontal.
 - Turn text that only repeats the symbol into a badge: `.badge(7)` or `UIBarButtonItem.badge = .count(7)`. Keep text that carries facts, like a price, in the horizontal bar.
-- Keep your groups (`ToolbarItemGroup`, `UIBarButtonItemGroup`). Add no spacers: flexible spacers shrink to zero on the vertical axis.
+- Keep your groups (`ToolbarItemGroup`, `UIBarButtonItemGroup`). Add no spacers, fixed or flexible: Apple asks apps not to add their own spacing on either axis. In the vertical bar fixed spacers keep their size and flexible ones shrink to zero ([Tech Talk 111462](https://developer.apple.com/videos/play/tech-talks/111462/)).
 - *Measured (UIKit):* a symbol item in the same group as a text-only item stayed horizontal with it. Give text-only items their own group.
 - Items overflow from the bottom of the bar upward. Raise frequent actions and badged items with `.high`; lower rare ones with `.low`. Rank whole groups first, then single items ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls)).
 - Move your own "More" menu into `ToolbarOverflowMenu` or `navigationItem.additionalOverflowItems`. Keep the ellipsis symbol for that menu only.
@@ -241,7 +248,8 @@ struct SummaryScreen: View {
 
 - Use `NavigationSplitView` or `UISplitViewController`. Closed, they collapse to one stack. Open, they show columns. Partially folded, they even out the columns around the fold ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/), [Tech Talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/)).
 - Put actions for the open item on the detail column; they join the vertical bar. Keep actions for the list on the list column, where they stay horizontal above it ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls)).
-- Put an `ArrangementView` inside a navigation container, never a navigation container inside an arrangement ([HIG, Arrangement views](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Arrangement-views)).
+- Put an `ArrangementView` inside a `NavigationStack` or a `TabView` tab. Never put a navigation container inside an arrangement, and never put an arrangement inside a `List` or `ScrollView` ([Tech Talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/)).
+- Keep arrangements out of `NavigationSplitView` columns too. Apple's pages disagree here: the [hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo#Arrange-views-in-different-poses) advises against it, while the [HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Arrangement-views) shows split views around arrangements. The stricter rule is the safe default.
 
 ## Sheets and other presentations
 
@@ -279,14 +287,15 @@ Full UIKit code: [references/uikit.md](references/uikit.md). More SwiftUI: [refe
 
 ## Check it
 
-Build with Xcode 27.1 and run on the iPhone Duo simulator. In Device Hub, try Closed, Open (held wide and held tall), Partially Open, and Split View on each side; `simctl` cannot change poses. Screenshot the outer display with `xcrun simctl io booted screenshot --display=primary outer.png` and the inner one with `--display=primary-1 inner.png`.
+Build with Xcode 27.1 and run on the iPhone Duo simulator. In Device Hub, try Closed, Open (held wide and held tall), Partially Open, and Split View on each side; `simctl` cannot change poses. Find the Duo's UDID with `xcrun simctl list devices booted` (more in `duo-setup`); `booted` is ambiguous when several simulators run. Screenshot the outer display with `xcrun simctl io <UDID> screenshot --display=primary outer.png` and the inner one with `xcrun simctl io <UDID> screenshot --display=primary-1 inner.png`.
 
 ## Checklist
 
-- [ ] Built with the iOS 27.1 SDK; no hand-built `UIToolbar`, `UINavigationBar` or `UITabBar`.
+- [ ] Built with the iOS 27.1 SDK; no hand-built `UIToolbar`, `UINavigationBar` or `UITabBar`, and no SwiftUI button rows in `safeAreaInset` or an edge overlay.
+- [ ] No icon-only `label: { Image(systemName:) }` in bars or `Menu` labels.
 - [ ] Back or Close is first; the prominent action is pinned second.
 - [ ] Every non-text item has a symbol and a title; text-only items are few and grouped apart.
-- [ ] No manual spacers between bar items.
+- [ ] No spacers, fixed or flexible, between bar items.
 - [ ] Groups and items carry a visibility priority; frequent and badged items rank high.
 - [ ] Own "More" menus moved into the system overflow menu.
 - [ ] Task screens set `.prefersToolbarItems` / `.prefersBarItems`.

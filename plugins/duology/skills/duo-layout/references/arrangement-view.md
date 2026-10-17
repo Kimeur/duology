@@ -33,16 +33,18 @@ Probe on the iPhone Duo simulator, iOS 27.1, inner display fully open. We put an
 | 466 × 660 | compact / regular | `.automatic` | stacked, 466 × 330 each |
 | 466 × 660 | compact / regular | `.split.axes(.horizontal)` | primary only |
 | 466 × 660 | regular / regular | `.automatic` | stacked, 466 × 330 each |
-| 669 × 660 | regular / regular | `.automatic` | side by side, 334 each |
-| 951 × 669 | inherited (regular / regular) | `.automatic`, `.split` | side by side, 475 each |
+| 669 × 660 | regular / regular | `.automatic` | side by side, 334.5 each |
+| 951 × 669 | inherited (regular / regular) | `.automatic`, `.split` | side by side, 475.5 each |
 | 951 × 669 | inherited (regular / regular) | `.overlay` | both full size, primary on top |
+
+The first run logged whole points, rounded down. A rerun with half points printed 334.5 pt halves for the 669 pt frame; 475.5 is the same arithmetic for 951.
 
 Our reading of these cases (not a rule Apple documents): side by side needs a regular width class, stacked needs a regular height class, and when both are possible the aspect ratio decides. With compact width and compact height, split shows the primary view alone.
 
 What it means on the device:
 
 - **Closed, held sideways** (outer display, compact / compact): a split arrangement shows only the primary view. A two-player app tested on the iOS 27.1 simulator in that pose showed the same thing. Fine for a player plus "up next". Wrong when both halves must show: use [EvenSplit](custom-split.md).
-- **Closed, portrait** (compact / regular): the two views stack, roughly 466 × 339 pt each (*derived* from a 466 × 678 pt window).
+- **Closed, portrait** (compact / regular): the two views stack, roughly 382 × 322 pt each inside the safe area (*derived* from the 382 × 644 pt safe area that `duo-design-review` measured in the 466 × 678 pt window; 466 × 339 pt if the arrangement ignores the safe area).
 - **Open**: side by side when wide, stacked when tall.
 - **The hidden view still runs `onAppear`.** Don't use `onAppear` to learn whether the secondary is visible.
 - **Each half gets its own size classes.** Side by side on the inner display, a half read compact width and regular height. Stacked halves in a compact / regular frame read compact / compact. Overlay halves kept the parent's classes. Design each half for the class it actually gets.
@@ -56,6 +58,7 @@ Not measured: real folding (division active), and the outer display itself. The 
 ```swift
 import SwiftUI
 
+@available(iOS 27.1, *)
 struct PodcastScreen: View {
     var body: some View {
         NavigationStack {
@@ -70,6 +73,7 @@ struct PodcastScreen: View {
 }
 
 /// Collapses while it floats over the player; expands when the fold puts it beside the player.
+@available(iOS 27.1, *)
 struct UpNextPanel: View {
     @Environment(\.overlayArrangementZIndex) private var zIndex
 
@@ -84,12 +88,14 @@ The same pattern for the split axis. Inside a side-by-side half, stack the detai
 ```swift
 import SwiftUI
 
+@available(iOS 27.1, *)
 struct EpisodeDetailsHalf: View {
     var body: some View {
         ZStack { EpisodeDetails() }
     }
 }
 
+@available(iOS 27.1, *)
 struct EpisodeDetails: View {
     @Environment(\.splitArrangementAxis) private var axis
 
@@ -121,6 +127,7 @@ Apple's docs say the view with the higher `layoutPriority` is sized first. If th
 ```swift
 import SwiftUI
 
+@available(iOS 27.1, *)
 struct ChatWithPhotos: View {
     var body: some View {
         ArrangementView {
@@ -141,6 +148,7 @@ For overlay, `overlayArrangementEdge(_:)` picks the side a view moves to when th
 ```swift
 import SwiftUI
 
+@available(iOS 27.1, *)
 struct ReaderWithControls: View {
     var body: some View {
         ArrangementView {
@@ -156,15 +164,16 @@ struct ReaderWithControls: View {
 
 ## Rules
 
-- Navigation goes around it. Put `NavigationStack`, `NavigationSplitView` and `TabView` outside the arrangement. It lays out views; it doesn't navigate ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Arrangement-views), [111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=969)).
-- Don't place it inside a `List`, a `ScrollView` or a `NavigationSplitView`, or anything else that could make part of it unreachable ([overview](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo)).
+- Navigation goes around it. Put `NavigationStack` and `TabView` outside the arrangement. It lays out views; it doesn't navigate ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Arrangement-views), [111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=969)).
+- Never nest it with a `NavigationSplitView`, in either order. The talk says not to put a split view inside an arrangement. The overview says not to put an arrangement inside a split view, and that includes its detail column ([overview](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo)). The HIG's wording allows a split view around an arrangement; Duology follows the overview and the talk, as `duo-patterns` does. For list-detail, use `NavigationSplitView` on its own.
+- Don't place it inside a `List`, a `ScrollView`, or anything else that could make part of it unreachable ([overview](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo)).
 - Scrolling goes inside a half: a `List` or `ScrollView` as the primary or secondary is fine.
 - The primary must work alone. Split may show only the primary, and closed sideways it does.
 - Don't drive it from the hinge. It already reads the fold.
 
 ## Deploying below iOS 27.1
 
-`ArrangementView` and everything on this page need iOS 27.1. Gate it and fall back to an ordinary stack.
+`ArrangementView` and everything on this page need iOS 27.1. The snippets above are marked `@available(iOS 27.1, *)`, so they compile at any deployment target; call them inside `if #available(iOS 27.1, *)`. Gate it and fall back to an ordinary stack:
 
 ```swift
 import SwiftUI

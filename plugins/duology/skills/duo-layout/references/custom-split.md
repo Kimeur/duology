@@ -2,6 +2,8 @@
 
 When `ArrangementView` is the wrong tool, and how to fit content into a half.
 
+`EvenSplit`, `BoardPlan`, `ScorePanel` and `FoldSplitLayout` work on any iOS version that has `Layout` and `AnyLayout`. Only `DuelOnTheFold` reads reserved regions, so it is marked `@available(iOS 27.1, *)` ([SKILL.md](../SKILL.md#deploying-below-ios-271)).
+
 ## Pick the container
 
 | You need | Use |
@@ -109,7 +111,7 @@ More on shared-screen design: `duo-shared-screen`.
 
 ## Try both arrangements, keep the bigger
 
-A half changes shape a lot: tall and narrow, short and wide, about 466 × 339 pt when the phone is closed (*derived*). One fixed arrangement inside the half will waste space in some of those shapes. Instead, compute each candidate layout for the current size, score it by the size of its smallest important element, and keep the best.
+A half changes shape a lot: tall and narrow, short and wide, about 382 × 321 pt inside the safe area when the phone is closed and portrait (*measured* in `duo-shared-screen`). One fixed arrangement inside the half will waste space in some of those shapes. Instead, compute each candidate layout for the current size, score it by the size of its smallest important element, and keep the best.
 
 ```swift
 import SwiftUI
@@ -161,14 +163,38 @@ struct BoardHalf: View {
 
 ## Thresholds for small halves
 
-Pick thresholds from your content, not from a device. Measure the height your full layout needs and switch below it. In order:
+Pick thresholds from your content, not from a device. Measure the height your full layout needs and switch below it. For scale: closed and portrait, a stacked half is about 382 × 321 pt inside the safe area (*measured* in `duo-shared-screen`; 466 × 339 pt if the split ignores the safe area). In order:
 
 1. Drop decorative labels and captions.
 2. Tighten spacing.
 3. Switch text buttons to icon buttons, with accessibility labels.
 4. Never shrink touch targets below 44 pt, and never drop a feature.
 
-`ViewThatFits` handles the simple case (see [SKILL.md](../SKILL.md#5-when-both-halves-must-always-show-evensplit)). For finer control, read the size once and derive a flag:
+`ViewThatFits` handles the simple case. It picks the first variant that fits:
+
+```swift
+import SwiftUI
+
+struct HalfToolbar: View {
+    var body: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 16) {
+                Label("Undo", systemImage: "arrow.uturn.backward")
+                Label("Hint", systemImage: "lightbulb")
+                Label("Restart", systemImage: "arrow.clockwise")
+            }
+            HStack(spacing: 12) {
+                Image(systemName: "arrow.uturn.backward").accessibilityLabel("Undo")
+                Image(systemName: "lightbulb").accessibilityLabel("Hint")
+                Image(systemName: "arrow.clockwise").accessibilityLabel("Restart")
+            }
+        }
+        .font(.title3)
+    }
+}
+```
+
+For finer control, read the size once and derive a flag:
 
 ```swift
 import SwiftUI
@@ -252,6 +278,7 @@ struct FoldSplitLayout: Layout {
     }
 }
 
+@available(iOS 27.1, *)
 struct DuelOnTheFold: View {
     @State private var fold: CGRect?
 
@@ -271,7 +298,7 @@ struct DuelOnTheFold: View {
 
 - The fold frame comes from the same view that uses the layout, so its coordinates match `bounds`.
 - Right-to-left needs no extra code: a `Layout` flips the subviews it places, and SwiftUI mirrors region frames to match ([ReservedRegion](https://developer.apple.com/documentation/swiftui/reservedregion)).
-- *Measured:* in our probe, with no fold the halves came out 474 pt each with a 2 pt gap in a 951 pt view. With a fold frame passed in by hand (x 455, 40 pt wide), they came out 0–455 and 495–951. It has not yet run with a real active fold, on a device or a folded simulator. (unverified)
+- *Measured:* in our probe, with no fold the halves came out 474.5 pt each with a 2 pt gap in a 951 pt view. With a fold frame passed in by hand (x 455, 40 pt wide), they came out 0–455 and 495–951. It has not yet run with a real active fold, on a device or a folded simulator. (unverified)
 
 ## Test a split
 

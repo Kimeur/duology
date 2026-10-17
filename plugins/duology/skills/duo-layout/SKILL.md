@@ -21,11 +21,20 @@ Labels used below: *measured* means we ran it on the iPhone Duo simulator (iOS 2
 3. Treat every safe area inset and margin as independent. Left and right differ on Duo.
 4. Use system containers first (`NavigationSplitView`, `TabView`, sheets, alerts). They avoid the fold on their own.
 5. For your own controls, read reserved regions and move them off the fold. Scrolling content can cross it.
-6. Use `ArrangementView` for two views that sit side by side or overlap. Keep navigation containers outside it.
+6. Use `ArrangementView` for two views that sit side by side or overlap. Put `NavigationStack` or `TabView` around it. Never nest it with `NavigationSplitView`.
 7. When both halves must always be visible, use `EvenSplit`, not `ArrangementView`.
 8. Prefer an even number of grid columns.
+9. Gate the iOS 27.1 APIs when the app deploys lower. See the next section.
 
 Apple's sources for these rules: the [HIG page](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo), the [developer overview](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo), and Tech Talks [111461](https://developer.apple.com/videos/play/tech-talks/111461/), [111463](https://developer.apple.com/videos/play/tech-talks/111463/) and [111466](https://developer.apple.com/videos/play/tech-talks/111466/).
+
+## Deploying below iOS 27.1
+
+`ArrangementView` and its modifiers, reserved regions (`ReservedRegion`, `reservedRegions(kind:options:)`) and `ContentMarginGuide` with `contentMargins(for:edges:alignment:)` are new in iOS 27.1. Most apps deploy lower, and then these calls don't compile.
+
+- Mark each type that uses them `@available(iOS 27.1, *)`. The snippets in this skill already are.
+- Call those types inside `if #available(iOS 27.1, *)`. iPhone Duo ships with iOS 27.1, so the `else` branch only runs on other iPhones. Keep today's layout there: a stack or `EvenSplit` instead of an arrangement, plain padding instead of container margins, no fold handling.
+- Examples: the margins helper in section 2, and [references/arrangement-view.md](references/arrangement-view.md#deploying-below-ios-271). `duo-start` Step 1 shows how to read the deployment target.
 
 ## 1. Size classes, not devices
 
@@ -75,7 +84,7 @@ Bars sit on the side on Duo. The bar edge can be left or right, for example in S
 
 - Keep controls and text inside the safe area. SwiftUI does this by default.
 - Let backgrounds extend with `.ignoresSafeArea()`.
-- Use the system margins. On Duo, `ContentMarginGuide.container` can differ on each side next to a vertical bar ([doc](https://developer.apple.com/documentation/swiftui/contentmarginguide/container)).
+- Use the system margins. On Duo, `ContentMarginGuide.container` (iOS 27.1) can differ on each side next to a vertical bar ([doc](https://developer.apple.com/documentation/swiftui/contentmarginguide/container)).
 
 ```swift
 import SwiftUI
@@ -84,10 +93,23 @@ struct ArticleScreen: View {
     var body: some View {
         ScrollView {
             ArticleBody()
-                .contentMargins(for: .container, edges: .horizontal)
+                .duoContainerMargins()
         }
         .background {
             HeroImage().ignoresSafeArea()
+        }
+    }
+}
+
+extension View {
+    /// The system container margins, which can differ per side on iPhone Duo.
+    /// Plain horizontal padding before iOS 27.1.
+    @ViewBuilder
+    func duoContainerMargins() -> some View {
+        if #available(iOS 27.1, *) {
+            contentMargins(for: .container, edges: .horizontal)
+        } else {
+            padding(.horizontal)
         }
     }
 }
@@ -102,7 +124,7 @@ A reserved region is part of your view that hardware or system UI claims ([Reser
 | Kind | What it is | Active when |
 |---|---|---|
 | `.division` | The fold. It splits the inner display into two usable areas. | The phone is partly folded. Flat, it is inactive and zero width. |
-| `.occlusion` | Something covering content: a camera, or system UI such as the status bar area (*measured*). | Inner camera: while it runs. Outer camera: always. |
+| `.occlusion` | Something covering content: a camera, or other system UI (Apple lists the Dynamic Island and window controls). *Measured:* an active region also sits where the status bar is, on both displays (our reading; Apple doesn't label it). | Inner camera: while it runs. Outer camera: always. |
 
 Facts you need:
 
@@ -116,6 +138,7 @@ Move a control off the fold (Apple calls this displacement, [111463](https://dev
 ```swift
 import SwiftUI
 
+@available(iOS 27.1, *)
 struct FoldAvoidingControls<Controls: View>: View {
     @ViewBuilder var controls: Controls
 
@@ -142,9 +165,9 @@ struct FoldAvoidingControls<Controls: View>: View {
 }
 ```
 
-Grids: use an even number of columns when a division exists, so the fold falls between cells. Count with `.includeInactive`, so the column count doesn't jump when someone folds ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=470)). Code: [references/reserved-regions.md](references/reserved-regions.md#even-grid-columns).
+Grids: use an even number of columns when a division exists, so the fold falls between cells. Count with `.includeInactive`, so the column count doesn't jump when someone folds ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=456)). Code: [references/reserved-regions.md](references/reserved-regions.md#even-grid-columns).
 
-More (measured values, occlusions, a laptop-pose player, UIKit): [references/reserved-regions.md](references/reserved-regions.md).
+More (measured values, occlusions, a player for both fold directions, UIKit): [references/reserved-regions.md](references/reserved-regions.md).
 
 ## 4. ArrangementView
 
@@ -157,6 +180,7 @@ A layout container for a primary and a secondary view. It adapts to size, size c
 ```swift
 import SwiftUI
 
+@available(iOS 27.1, *)
 struct NowPlayingScreen: View {
     var body: some View {
         NavigationStack {
@@ -174,8 +198,9 @@ struct NowPlayingScreen: View {
 
 Rules:
 
-- Put `NavigationStack`, `NavigationSplitView` and `TabView` around the arrangement, never inside ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Arrangement-views), [111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=969)).
-- Don't put an arrangement inside a `List`, `ScrollView` or `NavigationSplitView` ([overview](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo)).
+- Put `NavigationStack` and `TabView` around the arrangement, never inside it ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Arrangement-views), [111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=969)).
+- Keep `NavigationSplitView` and arrangements apart. No split view inside an arrangement (the talk), and no arrangement inside a split view or one of its columns ([overview](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo)). The HIG's wording allows a split view around an arrangement; Duology follows the overview and the talk, as `duo-patterns` does.
+- Don't put an arrangement inside a `List` or `ScrollView` ([overview](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo)).
 - *Measured:* with compact width and compact height (the closed phone held sideways), `.automatic` and `.split` show only the primary view. The secondary is never drawn, though its `onAppear` still runs. With compact width and regular height (closed, portrait) they stack the two views.
 - *Measured:* read `splitArrangementAxis`, `overlayArrangementZIndex` and size classes in a view nested inside the half (for example inside a `ZStack`). The view you pass directly read the default values in our probe.
 
@@ -232,29 +257,7 @@ struct DuelScreen: View {
 Fit content to its half, not to the device:
 
 - **Try both arrangements, keep the bigger.** Inside a half, compute the layout two ways (tray below, tray beside) and keep the one whose smallest important element is larger. Code: [references/custom-split.md](references/custom-split.md#try-both-arrangements-keep-the-bigger).
-- **Thresholds for small halves.** A closed phone gives each half about 466 × 339 pt (*derived*: a 466 × 678 pt window split in two). Drop labels, then shrink spacing, before you shrink touch targets. `ViewThatFits` picks the first variant that fits:
-
-```swift
-import SwiftUI
-
-struct HalfToolbar: View {
-    var body: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 16) {
-                Label("Undo", systemImage: "arrow.uturn.backward")
-                Label("Hint", systemImage: "lightbulb")
-                Label("Restart", systemImage: "arrow.clockwise")
-            }
-            HStack(spacing: 12) {
-                Image(systemName: "arrow.uturn.backward").accessibilityLabel("Undo")
-                Image(systemName: "lightbulb").accessibilityLabel("Hint")
-                Image(systemName: "arrow.clockwise").accessibilityLabel("Restart")
-            }
-        }
-        .font(.title3)
-    }
-}
-```
+- **Thresholds for small halves.** Closed and portrait, each stacked half gets about 382 × 321 pt inside the safe area (*measured* in `duo-shared-screen` and `duo-design-review`: the safe area is 382 × 644 pt of a 466 × 678 pt window, with 84 pt trailing and 34 pt at the bottom). A split that ignores the safe area gets 466 × 339 pt halves. Held sideways, plan for two halves of at most about 339 × 466 pt side by side (*derived*, not measured). Drop labels, then shrink spacing, before you shrink touch targets. `ViewThatFits` code: [references/custom-split.md](references/custom-split.md#thresholds-for-small-halves).
 
 `EvenSplit` always puts its seam at the middle of its own frame. If a vertical bar narrows the view, that middle is not the fold. To put the seam on an active fold, use `FoldSplitLayout` in [references/custom-split.md](references/custom-split.md#put-the-seam-on-the-fold).
 
@@ -276,7 +279,7 @@ Same rules: `traitCollection` size classes, `safeAreaInsets` per side, `view.res
 
 1. Run on the iPhone Duo simulator in Xcode 27.1. In Device Hub, use Closed, Partially Open and Open under the bezel, and rotate in each pose. Option-drag the slider for other angles ([Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)).
 2. Test Split View: on the inner display, drag your app by the home indicator to one side, then the other. Bars then sit on your app's outer edge.
-3. Screenshots: `xcrun simctl io booted screenshot --display=primary` (outer) and `--display=primary-1` (inner).
+3. Screenshots: `xcrun simctl io booted screenshot --display=primary outer.png` (outer) and `xcrun simctl io booted screenshot --display=primary-1 inner.png` (inner).
 4. In the scheme, set App Language to Right-to-Left Pseudolanguage and check anything you placed by hand.
 5. `simctl` cannot change the pose (*measured*). Pose changes happen in Device Hub only.
 
@@ -288,7 +291,8 @@ Same rules: `traitCollection` size classes, `safeAreaInsets` per side, `view.res
 - [ ] Custom controls near the centre read `.division` regions and move when the fold is active.
 - [ ] Region code filters on `isActive` and handles an empty first pass.
 - [ ] Grids use an even column count when a division exists, active or not.
-- [ ] Any `ArrangementView` has navigation containers outside it and no `List` or `ScrollView` around it.
+- [ ] Any `ArrangementView` sits inside `NavigationStack` or `TabView` only: no `NavigationSplitView` inside or around it, and no `List` or `ScrollView` around it.
+- [ ] Below an iOS 27.1 deployment target, arrangements, regions and container margins are behind `@available` and `if #available`.
 - [ ] Arrangement values are read in a nested view, not in the view passed in.
 - [ ] Two halves that must always show use `EvenSplit` (or `FoldSplitLayout`), checked closed and sideways.
 - [ ] Small halves drop labels before they shrink touch targets.

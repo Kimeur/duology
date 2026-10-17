@@ -2,6 +2,71 @@
 
 More code for [`../SKILL.md`](../SKILL.md). Every block typechecks on its own against the iOS 27.1 simulator SDK. Rules and sources: [`bar-rules.md`](bar-rules.md).
 
+## Replace a hand-drawn bar
+
+A row of buttons in `safeAreaInset(edge: .bottom)` or `.overlay(alignment: .bottom)` is your own content. It never joins the vertical bar, so on the closed phone it stays at the bottom while the system bars move to the side. Icon-only labels give the overflow menu no title to show. The old code looked like this:
+
+```text
+.safeAreaInset(edge: .bottom) {
+    HStack {
+        Button { share() } label: { Image(systemName: "square.and.arrow.up") }
+        Spacer()
+        Button("Start Timer") { startTimer() }
+        Spacer()
+        Button { save() } label: { Image(systemName: "bookmark") }
+    }
+    .padding()
+    .background(.bar)
+}
+```
+
+Move every action into `.toolbar`, give each one a symbol and a title, and drop the spacers:
+
+```swift
+import SwiftUI
+
+struct RecipeScreen: View {
+    @State private var isSaved = false
+    @State private var units = "Metric"
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                Text("Ingredients and steps")
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentMargins(for: .container, edges: .horizontal)
+            }
+            .navigationTitle("Recipe")
+            .toolbar {
+                // Was a Menu with an Image-only label.
+                ToolbarItem(placement: .primaryAction) {
+                    Menu("Units", systemImage: "ruler") {
+                        Picker("Units", selection: $units) {
+                            Text("Metric").tag("Metric")
+                            Text("Imperial").tag("Imperial")
+                        }
+                    }
+                }
+                // Was the hand-drawn bottom row. Now it joins the vertical bar.
+                ToolbarItemGroup(placement: .bottomBar) {
+                    ShareLink(item: "Pancakes")
+                    Button("Start Timer", systemImage: "timer") {}
+                    Button(isSaved ? "Unsave" : "Save",
+                           systemImage: isSaved ? "bookmark.fill" : "bookmark") {
+                        isSaved.toggle()
+                    }
+                }
+                .visibilityPriority(.high)
+            }
+        }
+    }
+}
+```
+
+- `ShareLink` already carries a symbol and a title.
+- A text-only button such as "Start Timer" stays horizontal. Give it a symbol so it can move.
+- A lone floating button, such as an Add button, may stay in an overlay. Read `toolbarVerticalEdge` and keep it on the side away from the bar.
+
 ## Split view: list actions on the list, item actions on the detail
 
 The detail column joins the vertical bar. The sidebar keeps a horizontal bar, so its actions stay above the list they act on ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls)).

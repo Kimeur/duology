@@ -16,9 +16,11 @@ So `DEVELOPER_DIR` wins for one command or one shell, and touches nothing else (
 ```bash
 DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer xcode-select -p
 # /Applications/Xcode.app/Contents/Developer
-xcode-select -p
-# the Mac-wide default
+env -u DEVELOPER_DIR xcode-select -p
+# the Mac-wide default, even when your shell exports DEVELOPER_DIR
 ```
+
+So plain `xcode-select -p` can't tell you the Mac-wide default while the variable is set. Use the `env -u DEVELOPER_DIR` form for that.
 
 ## Three ways to use Xcode 27.1
 
@@ -38,7 +40,7 @@ xcrun --show-sdk-version --sdk iphonesimulator
 
 Agent shells often reset between calls. In that case, prefix every call. Don't rely on an `export` from an earlier call.
 
-A build or test script. Put this guard at the top. It keeps a `DEVELOPER_DIR` the caller already set, and stops if the Xcode is older than 27.1:
+A build or test script. Put this guard at the top. It keeps a `DEVELOPER_DIR` the caller already set, falls back to the 27.1 path, and stops unless it finds a working Xcode 27.1 or later:
 
 ```sh
 #!/bin/sh
@@ -47,10 +49,18 @@ set -eu
 : "${DEVELOPER_DIR:=/Applications/Xcode-27.1.app/Contents/Developer}"
 export DEVELOPER_DIR
 
-version=$(xcodebuild -version | awk 'NR == 1 { print $2 }')
-major=${version%%.*}
+# Fail closed: a wrong path or the Command Line Tools give no version.
+if ! out=$(xcodebuild -version 2>/dev/null); then
+  echo "No usable Xcode at $DEVELOPER_DIR" >&2
+  exit 1
+fi
+version=$(echo "$out" | awk 'NR == 1 { print $2 }')
+case $version in
+  [0-9]*.[0-9]*) ;;
+  *) echo "Can't read the Xcode version at $DEVELOPER_DIR" >&2; exit 1 ;;
+esac
+major=$(echo "$version" | cut -d. -f1)
 minor=$(echo "$version" | cut -d. -f2)
-minor=${minor:-0}
 
 if [ "$major" -lt 27 ] || { [ "$major" -eq 27 ] && [ "$minor" -lt 1 ]; }; then
   echo "Need Xcode 27.1 or later; $DEVELOPER_DIR is Xcode $version." >&2
@@ -59,7 +69,7 @@ fi
 echo "Using Xcode $version at $DEVELOPER_DIR"
 ```
 
-We ran it three ways: with no variable (the Mac default was 27.1, so it passed), with `DEVELOPER_DIR` set to Xcode 26.5 (it stopped with exit 1), and set to 27.1 (it passed).
+We ran it with `sh`, `bash`, `zsh` and `dash`, five ways each. With no variable it passed, because the script's own default is the 27.1 path; the Mac default is never read. Set to Xcode 27.1, it passed. Set to Xcode 26.5, to a mistyped path, or to `/Library/Developer/CommandLineTools`, it stopped with exit 1. A wrong path is the usual CI mistake, for example a runner that installs Xcode at `/Applications/Xcode_27.1.app`.
 
 In CI, set `DEVELOPER_DIR` in the job's environment to the path where the runner installs Xcode 27.1.
 
@@ -111,4 +121,4 @@ We confirmed the option in `xcodebuild -help` but did not run it, because it dow
 | `xcrun simctl list runtimes` | `iOS 27.1 (27.1 - 24A94425)` |
 | macOS needed | Tahoe 26.6 or later ([release notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27_1-release-notes)) |
 
-Apple's [Software Releases](https://developer.apple.com/news/releases/) page lists Xcode 27.1 (27A9275) on 15 October 2026. Apple's iPhone Duo developer page still called it a Release Candidate on 16 October; the build number is the one to trust.
+Apple's [Software Releases](https://developer.apple.com/news/releases/) page lists Xcode 27.1 (27A9275) on 15 October 2026. Check the build number, not a page's wording.

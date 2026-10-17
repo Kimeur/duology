@@ -10,7 +10,7 @@ metadata:
 
 Use this skill before any other Duology skill. It answers three questions about the app, runs a short first pass, and tells you which skill to load next. Don't fix anything until the first pass is reported.
 
-Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1) on 16 Oct 2026. *Unverified* means we could not confirm it. Everything else comes from Apple's pages, linked inline. Full list: [reference/sources.md](https://github.com/Kimeur/duology/blob/main/reference/sources.md).
+Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1) on 16 or 17 Oct 2026. *Unverified* means we could not confirm it. Everything else comes from Apple's pages, linked inline. Full list: [reference/sources.md](https://github.com/Kimeur/duology/blob/main/reference/sources.md).
 
 ## Rules
 
@@ -107,7 +107,7 @@ struct PlayerScreen: View {
 }
 ```
 
-This is a supporting pane: main content plus a narrower pane, as in `duo-layout`'s `NowPlayingScreen`. Keep `NavigationStack`, `NavigationSplitView` and `TabView` outside the arrangement, never inside it. For list-detail, use `NavigationSplitView`, not `ArrangementView` (`duo-patterns`). With the phone closed and held sideways, `ArrangementView` shows only the primary view (*measured* in `duo-layout`), so the pane needs another way in. Read `duo-patterns` and `duo-layout` before you pick a layout.
+This is the supporting-pane pattern from `duo-patterns`, shaped like `duo-layout`'s `NowPlayingScreen`. Keep navigation containers outside the arrangement, never inside it (`duo-layout`). For list-detail, use `NavigationSplitView`, not `ArrangementView` (`duo-patterns`). With the phone closed and held sideways, `ArrangementView` shows only the primary view (*measured* in `duo-layout`), so the pane needs another way in. Read `duo-patterns` and `duo-layout` before you pick a layout.
 
 ## Step 2: Route to the right skill
 
@@ -162,10 +162,10 @@ Goal: a short report, not fixes. Details, logger code and the report template: [
    BUNDLE=$(plutil -extract CFBundleIdentifier raw "$APP/Info.plist")
    xcrun simctl boot "iPhone Duo" 2>/dev/null    # fine if it is already booted
    xcrun simctl install booted "$APP"
-   xcrun simctl launch --terminate-running-process --stderr="$TMPDIR/duo-first-pass.log" booted "$BUNDLE"
+   xcrun simctl launch --terminate-running-process --stderr="$HOME/Library/Caches/duo-first-pass.log" booted "$BUNDLE"
    ```
 
-   The first simulator launch with Xcode 27.1 can take several minutes (a known issue in the release notes).
+   Keep the log in the home folder. *Measured:* `--stderr` into `$TMPDIR` or `/tmp` wrote nothing. The first simulator launch with Xcode 27.1 can take several minutes (a known issue in the release notes).
 
 4. **Check open, then closed.** Screenshot both displays. The display that is off comes out solid black (*measured* with the phone open; the closed case is unverified).
 

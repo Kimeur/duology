@@ -18,7 +18,7 @@ xcodebuild -scheme <Scheme> \
 
 - Add `-workspace <Name>.xcworkspace` (CocoaPods, several projects) or `-project <Name>.xcodeproj` when the folder holds more than one.
 - `-derivedDataPath` keeps the build out of the repo and makes the app easy to find.
-- *Measured:* `xcodebuild -scheme <Scheme> -showdestinations` lists the simulator with `platform:iOS Simulator`, `OS:27.1` and `name:iPhone Duo`. If it is missing, load `duo-setup`.
+- *Measured:* with Xcode 27.1, `xcodebuild -scheme <Scheme> -showdestinations` lists the simulator with `platform:iOS Simulator`, `OS:27.1` and `name:iPhone Duo`. If it is missing, load `duo-setup`.
 - Xcode 27.1 brings the iOS 27.1 SDK and Swift 6.4. Some new errors come from the [`@State` and `ContentBuilder` source changes](https://developer.apple.com/documentation/technotes/tn3211-resolving-swiftui-source-incompatibilities-for-state-and-contentbuilder) Apple describes in TN3211. Count the errors and list the first three. `duo-swiftui-27` is coming; until then, TN3211 is the reference.
 
 ## 2. Run duo-lint
@@ -151,10 +151,11 @@ BUNDLE=$(plutil -extract CFBundleIdentifier raw "$APP/Info.plist")
 xcrun simctl boot "iPhone Duo" 2>/dev/null     # "Unable to boot device in current state: Booted" is fine
 xcrun simctl install booted "$APP"
 xcrun simctl launch --terminate-running-process \
-  --stderr="$TMPDIR/duo-first-pass.log" booted "$BUNDLE"
+  --stderr="$HOME/Library/Caches/duo-first-pass.log" booted "$BUNDLE"
 ```
 
 - `--stderr=` writes the app's standard error to a file and returns at once, so you can read the log while the user changes poses.
+- Keep that file in the home folder. *Measured:* with `--stderr` pointing into `$TMPDIR` or `/tmp`, no file appeared; `~/Library/Caches` and a folder under `~/Documents` worked. We didn't find out why.
 - Ask the user to open Device Hub if it isn't on screen. It ships inside Xcode 27.1 at `/Applications/Xcode-27.1.app/Contents/Applications/DeviceHub.app`.
 - The first simulator launch with Xcode 27.1 can take several minutes, and most app extensions can't run in the Duo simulator ([Xcode 27.1 release notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27_1-release-notes)).
 
@@ -315,7 +316,7 @@ final class RootViewController: UIViewController {
 }
 ```
 
-Read the log with `grep '^DUO' "$TMPDIR/duo-first-pass.log"`. *Measured* with the SwiftUI logger, phone fully open, held wide:
+Read the log with `grep '^DUO' "$HOME/Library/Caches/duo-first-pass.log"`. *Measured* with the SwiftUI logger, phone fully open, held wide:
 
 ```text
 DUO size 867x635 pt, safe leading 0 trailing 84, width regular, height regular
@@ -338,7 +339,7 @@ xcrun simctl io booted screenshot --display=primary-1 "$TMPDIR/duo-inner.png"   
 - *Measured:* screenshots follow the current orientation, so the sizes can swap (2853 × 2007 instead of 2007 × 2853).
 - `simctl` can't change the pose (*measured*). Ask the user to click the buttons under the bezel in Device Hub: **Closed**, **Partially Open**, **Open**. Option-drag the slider below the bezel for any angle ([Device Hub article](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)).
 - Device Hub can't send two-finger touches (Xcode 27 known issue). Leave pinch and rotate gestures for a real device.
-- When Xcode's agent connection is set up (`duo-setup`), Apple's `device-interaction` skill can read the UI tree, take screenshots and tap through Xcode after each pose change ([routing.md](routing.md#apples-skills-in-xcode-271)). We haven't run it in a first pass (unverified). It doesn't change the pose; the user still clicks in Device Hub.
+- When Xcode's agent connection is set up (`duo-setup`), Apple's `device-interaction` skill can read the UI tree, take screenshots and tap through Xcode after each pose change ([routing.md](routing.md#apples-skills-in-xcode-271)). We haven't run it in a first pass (unverified). Its text says nothing about poses, so the user still clicks in Device Hub.
 
 The order that fits five minutes:
 
@@ -384,4 +385,4 @@ Apple's App Resizability skill: offered | used | not available
 - Delete the debug logger and its call sites.
 - Leave the simulator booted; other work may be using it.
 - Remove the test install if the user wants a clean simulator: `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcrun simctl uninstall booted <bundle id>`. Use the bundle ID from section 3; `$BUNDLE` is gone if the shell changed.
-- The build output in `$TMPDIR/duo-first-pass` can stay; it isn't in the repo.
+- The build output in `$TMPDIR/duo-first-pass` can stay; it isn't in the repo. Delete `~/Library/Caches/duo-first-pass.log` when the report is written.

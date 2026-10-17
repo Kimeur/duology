@@ -1,0 +1,17 @@
+{
+  "description": "Duology: opt-in duo-lint check after Claude edits or writes a Swift file. Set DUOLOGY_LINT_HOOK=1 to turn it on. It reports iPhone Duo findings to Claude and never blocks.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/lint-hook.sh\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

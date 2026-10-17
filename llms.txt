@@ -1,0 +1,48 @@
+# Duology
+
+> Open-source (MIT) agent skills and Claude Code plugins for designing, building, testing and shipping native SwiftUI and UIKit apps on iPhone Duo, Apple's foldable iPhone with a 5.4-inch outer display and a 7.6-inch inner display. Built for Xcode 27.1 and iOS 27.1. A community project, not affiliated with Apple.
+
+Start with the duo-start skill: it detects the app's setup and says which skill to load next. Each skill is a SKILL.md file with detail in its references/ folder. Every iPhone Duo API name in Duology is checked against the iOS 27.1 SDK; reference/api-index.md lists them with Apple's doc links, and its "Not in the SDK" section lists names that sound right but don't exist. Pick layouts by size class, never by UIScreen.main, device model or orientation.
+
+## Start here
+
+- [duo-start](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology/skills/duo-start/SKILL.md): Entry point. Detects SwiftUI or UIKit, new or existing app and the SDK, runs a first pass, routes to the other skills.
+- [AGENTS.md](https://raw.githubusercontent.com/Kimeur/duology/main/AGENTS.md): How to use the skills from Codex, Cursor, GitHub Copilot, Gemini CLI and other agents, and the rules for changing this repo.
+- [README](https://raw.githubusercontent.com/Kimeur/duology/main/README.md): What Duology is, how to install it, and what's inside.
+
+## Foundation skills (plugin: duology)
+
+- [duo-setup](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology/skills/duo-setup/SKILL.md): Xcode 27.1 next to an older Xcode, the iPhone Duo simulator in Device Hub, Xcode's agent connection, Swift 6 project settings.
+- [duo-layout](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology/skills/duo-layout/SKILL.md): Size classes, uneven safe areas, reserved regions, ArrangementView and an even custom split; keeping controls off the fold.
+- [duo-navigation](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology/skills/duo-navigation/SKILL.md): Vertical toolbars and tab bars, tabs that become a sidebar, NavigationSplitView, sheets and overflow.
+- [duo-continuity](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology/skills/duo-continuity/SKILL.md): Scroll position, playback, typed text, selection and navigation that survive fold, unfold, rotate and resize.
+
+## Design skills (plugin: duology-design)
+
+- [duo-patterns](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-design/skills/duo-patterns/SKILL.md): Eight layout patterns with SwiftUI recipes: list-detail, supporting pane, two-page, dual view, extended canvas, feed reflow, tabs to sidebar, displacement.
+- [duo-shared-screen](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-design/skills/duo-shared-screen/SKILL.md): Two people using one phone at once: one half each, input per half, accessibility and UI tests.
+- [duo-design-review](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-design/skills/duo-design-review/SKILL.md): A 15-point review of screenshots and Figma frames, with severity, rule and fix for each finding.
+
+## Test and ship skills (plugin: duology-ship)
+
+- [duo-lint](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/skills/duo-lint/SKILL.md): The fold linter. Finds main-screen sizing, orientation and idiom checks, hard-coded device sizes, fixed widths and UIRequiresFullScreen.
+- [duo-testing](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/skills/duo-testing/SKILL.md): Logic tests on the Mac and UI tests that work on the iPhone Duo simulator.
+
+## Recipes (plugin: duology-recipes)
+
+- [recipe-two-player-game](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/skills/recipe-two-player-game/SKILL.md): Creates a two-player, one-phone SwiftUI game that builds and runs on the iPhone Duo simulator.
+
+## Reference
+
+- [API index](https://raw.githubusercontent.com/Kimeur/duology/main/reference/api-index.md): Every iPhone Duo API Duology uses, with its declaration, availability and Apple doc link.
+- [Device facts](https://raw.githubusercontent.com/Kimeur/duology/main/reference/device-facts.md): Displays, size classes, cameras, the fold and poses, each with its source.
+- [Sources](https://raw.githubusercontent.com/Kimeur/duology/main/reference/sources.md): The Apple pages, Tech Talks and prior art behind each rule.
+
+## Optional
+
+- [duo-lint rules](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/skills/duo-lint/references/rules.md): Each rule with examples and fixes.
+- [Roadmap](https://raw.githubusercontent.com/Kimeur/duology/main/ROADMAP.md): What ships in each release.
+- [Changelog](https://raw.githubusercontent.com/Kimeur/duology/main/CHANGELOG.md): What changed.
+- [Contributing](https://raw.githubusercontent.com/Kimeur/duology/main/CONTRIBUTING.md): How to add a skill, a pattern or a recipe.
+- [Security policy](https://raw.githubusercontent.com/Kimeur/duology/main/SECURITY.md): How to report a security problem.
+- [Preparing your app for iPhone Duo (Apple)](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo): Apple's own overview.

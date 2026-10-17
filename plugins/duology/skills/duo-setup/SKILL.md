@@ -1,0 +1,248 @@
+---
+name: duo-setup
+description: "Sets up a Mac to build, run and test apps for iPhone Duo, the foldable iPhone with an outer display and an inner display, covering Xcode 27.1 next to an older Xcode with DEVELOPER_DIR (no sudo xcode-select), xcodebuild -version, the iOS 27.1 SDK and runtime, the iPhone Duo simulator in Device Hub (xcrun simctl create/bootstatus, a screenshot of each display, the Closed / Partially Open / Open poses and the fold angle), Xcode's MCP server for Claude Code (xcrun mcpbridge, MCP_XCODE_PID, xcrun agent skills export) and project settings (IPHONEOS_DEPLOYMENT_TARGET, SWIFT_VERSION 6, SWIFT_DEFAULT_ACTOR_ISOLATION MainActor, SWIFT_APPROACHABLE_CONCURRENCY, synchronized folders). Use it before any iPhone Duo work, when /duo-doctor fails, when xcodebuild picks the wrong Xcode, when the Duo simulator, iOS 27.1 runtime or hinge pose is missing, or when Claude Code can't reach Xcode."
+metadata:
+  verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
+  sources: "reference/sources.md"
+---
+
+# duo-setup
+
+Get a Mac ready to build and test apps for iPhone Duo. Work through the steps in order. Each step has a check. Run it, compare the output, and fix the step before you move on.
+
+If the Duology plugin is installed, run `/duo-doctor` first. It runs the plugin's `bin/duo-doctor` script, which checks Xcode 27.1, the iPhone Duo simulator in Device Hub and Xcode's agent connection, and says how to fix each failure. Run it again when you finish. Without the plugin, run the checks below by hand.
+
+## Rules
+
+- Never run `sudo xcode-select --switch` unless the user decides to. It changes the Xcode that every terminal and tool on the Mac uses. Use `DEVELOPER_DIR` instead.
+- Put `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer` in front of every `xcrun` and `xcodebuild` call, or export it once per shell.
+- Ask before you run `xcodebuild -runFirstLaunch` (its help says it agrees to the license) or `xcodebuild -downloadPlatform` (a multi-gigabyte download).
+- You can't change the pose from the command line. `simctl` in Xcode 27.1 has no pose command. Ask the user to click in Device Hub.
+- Don't turn on Xcode's external-agent setting for the user. They do it in Xcode's settings.
+- Build Duo work with Xcode 27.1 only. An older Xcode builds with an older SDK, and the SDK decides how the app looks on iPhone Duo ([Apple: Three steps](https://developer.apple.com/iphone-duo/prepare/)).
+
+## 1. Find Xcode 27.1 and pin it
+
+```bash
+ls -d /Applications/Xcode*.app
+xcode-select -p                       # read only: the Mac-wide default
+export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
+xcodebuild -version
+```
+
+Pass when `xcodebuild -version` prints `Xcode 27.1` and `Build version 27A9275` or later. If the Xcode path differs, use the user's path everywhere below.
+
+- No Xcode 27.1: the user installs it. It needs macOS Tahoe 26.6 or later. Check with `sw_vers -productVersion` ([Xcode 27.1 release notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27_1-release-notes)).
+- `xcode-select -p` honours `DEVELOPER_DIR`. With the variable set, it prints the 27.1 path. Without it, it prints the Mac-wide default.
+- Details, scripts and CI: [references/xcode-side-by-side.md](references/xcode-side-by-side.md).
+
+## 2. Check the SDK and the simulator runtime
+
+```bash
+xcrun --show-sdk-version --sdk iphonesimulator     # 27.1
+xcrun simctl list runtimes | grep "iOS 27.1"
+xcrun simctl list devicetypes | grep "iPhone Duo"
+```
+
+Pass when you see `27.1`, an `iOS 27.1` runtime, and `iPhone Duo (com.apple.CoreSimulator.SimDeviceType.iPhone-Duo)`. The Duo device type needs the iOS 27.1 runtime or later.
+
+No iOS 27.1 runtime: ask the user to install it in Xcode > Settings > Components, or to approve `xcodebuild -downloadPlatform iOS` ([Apple: installing components](https://developer.apple.com/documentation/xcode/downloading-and-installing-additional-xcode-components)).
+
+## 3. Find, create and boot the iPhone Duo simulator
+
+```bash
+xcrun simctl list devices available | grep "iPhone Duo"
+# none listed? create one:
+xcrun simctl create "iPhone Duo" com.apple.CoreSimulator.SimDeviceType.iPhone-Duo com.apple.CoreSimulator.SimRuntime.iOS-27-1
+# boot it if needed, and wait until it is ready:
+xcrun simctl bootstatus "iPhone Duo" -b
+# show it:
+open "$DEVELOPER_DIR/../Applications/DeviceHub.app"
+```
+
+- `create` prints the new UDID. Use the UDID instead of the name when more than one device is called "iPhone Duo".
+- `bootstatus -b` boots the device only when it isn't booted. A plain `simctl boot` on a booted device fails with code 405, "Unable to boot device in current state: Booted". That error is harmless.
+- Xcode 27.1 ships `DeviceHub.app` and no `Simulator.app`. You can also open it from Xcode > Open Developer Tool > Device Hub ([Apple: Device Hub](https://developer.apple.com/documentation/xcode/managing-your-simulated-and-physical-devices-in-device-hub)).
+- Build destination: `-destination 'platform=iOS Simulator,name=iPhone Duo,OS=27.1'`, or `id=<UDID>`.
+
+## 4. Change poses in Device Hub
+
+Poses change only in Device Hub's window ([Apple: interacting in Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)):
+
+| To get | What the user does in Device Hub |
+|---|---|
+| Closed (outer display) | Click **Closed** under the bezel, right of the Rotate Right button |
+| Partially open, folded like a book | Click **Partially Open**, the middle pose button |
+| Fully open (inner display) | Click **Open**, on the far right |
+| Any fold angle | Hold Option and drag the slider below the bezel |
+| Split View | On the inner display, drag the app by its home indicator to one side ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)) |
+
+Save each display from the command line. These commands only read the screen:
+
+```bash
+xcrun simctl io booted screenshot --display=primary   outer.png   # outer display
+xcrun simctl io booted screenshot --display=primary-1 inner.png   # inner display
+```
+
+In our run with the phone open, `outer.png` came out black and `inner.png` showed the app at 2853 × 2007.
+
+Know the simulator's limits ([Xcode 27.1 notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27_1-release-notes), [Xcode 27 notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27-release-notes)): the first launch can take minutes; StandBy is missing; most app extensions can't run or be debugged; Device Hub can't send two-finger touches. More in [references/simulator-and-device-hub.md](references/simulator-and-device-hub.md).
+
+## 5. Connect Claude Code to Xcode
+
+Follow [Apple: Giving external agents access to Xcode](https://developer.apple.com/documentation/xcode/giving-external-agents-access-to-xcode):
+
+1. The user opens Xcode 27.1, chooses Xcode > Settings > Intelligence and, under Model Context Protocol, turns on "Allow external agents to use Xcode tools".
+2. Register Xcode's MCP server with Claude Code:
+
+   ```bash
+   claude mcp add --transport stdio xcode -- xcrun mcpbridge
+   claude mcp list
+   ```
+
+3. The user opens the project in Xcode before you prompt. Xcode shows when an agent connects and when it is active.
+
+Two Xcodes on the Mac: `mcpbridge` connects to the Xcode that `xcode-select` picks, unless `MCP_XCODE_PID` names another one (`xcrun mcpbridge --help`). Xcode 26.5 ships its own `mcpbridge` too. If `xcode-select -p` doesn't print the 27.1 path, register the server with the 27.1 developer directory:
+
+```bash
+claude mcp add --transport stdio xcode \
+  -e DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer \
+  -- xcrun mcpbridge
+```
+
+Xcode 27.1 also ships Apple's own agent skills, including **app-resizability**, the skill Apple's prepare page tells you to run for Duo. Export them and read them; don't copy them into a repo:
+
+```bash
+xcrun agent skills export --output-dir ~/xcode-skills
+```
+
+Scopes, failure modes and the full skill list: [references/xcode-agent-access.md](references/xcode-agent-access.md).
+
+## 6. Set the project's build settings
+
+Build with Xcode 27.1, so the app links the iOS 27.1 SDK. With the iOS 26 SDK the app sits in the middle of the inner display. With the iOS 27 SDK it still keeps clear of the status bar. With 27.1 it goes edge to edge and its bars turn vertical ([Apple: Three steps](https://developer.apple.com/iphone-duo/prepare/)).
+
+| Setting | Use | Why |
+|---|---|---|
+| `IPHONEOS_DEPLOYMENT_TARGET` | The lowest iOS your users run. New Duo-first app: `27.1` | Arrangements, reserved regions, the hinge and vertical bars are iOS 27.1 APIs. Below that, gate them with `if #available(iOS 27.1, *)`. |
+| `SWIFT_VERSION` | `6.0` | Data-race errors at compile time. The Xcode 27.1 template still writes `5.0`. |
+| `SWIFT_DEFAULT_ACTOR_ISOLATION` | `MainActor` | UI code needs no `@MainActor` noise. The template sets it on app targets. |
+| `SWIFT_APPROACHABLE_CONCURRENCY` | `YES` | Nonisolated async functions stay on the caller's actor unless marked `@concurrent`. |
+| `TARGETED_DEVICE_FAMILY` | Must include `1` | iPhone Duo runs iPhone apps. The template's `1,2` is fine. |
+| Project folders | Synchronized folders (`objectVersion = 77`) | Files you add on disk join the target with no project-file edit. |
+| `UIRequiresFullScreen` | Remove it | Deprecated since iOS 26 ([TN3192](https://developer.apple.com/documentation/technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key)). |
+
+Check what the project really uses:
+
+```bash
+xcodebuild -scheme <Scheme> -showBuildSettings 2>/dev/null | grep -E \
+  "^ *(SWIFT_VERSION|SWIFT_DEFAULT_ACTOR_ISOLATION|SWIFT_APPROACHABLE_CONCURRENCY|IPHONEOS_DEPLOYMENT_TARGET|TARGETED_DEVICE_FAMILY|SDK_VERSION) ="
+grep -E "objectVersion|isa = PBXFileSystemSynchronizedRootGroup" <App>.xcodeproj/project.pbxproj
+```
+
+Pass when `SDK_VERSION = 27.1` and every row matches the table. Ask before you change `SWIFT_VERSION` on an existing app: Swift 6 can surface many new errors. Code for each setting, and what Swift 6 already turns on: [references/project-settings.md](references/project-settings.md).
+
+## 7. Prove it works: run a setup check on the simulator
+
+Put this file in a new scratch app; it has its own `@main`. It shows the window size, both size classes and the hinge. It builds in Swift 5 and Swift 6 mode, with `MainActor` default isolation, and with a deployment target as low as iOS 26.
+
+```swift
+import SwiftUI
+
+@main
+struct SetupCheckApp: App {
+    var body: some Scene {
+        WindowGroup {
+            SetupCheckView()
+        }
+    }
+}
+
+struct SetupCheckView: View {
+    @Environment(\.horizontalSizeClass) private var widthClass
+    @Environment(\.verticalSizeClass) private var heightClass
+    @State private var hingeText = "hinge: not reported yet"
+
+    var body: some View {
+        GeometryReader { proxy in
+            let size = "\(Int(proxy.size.width)) x \(Int(proxy.size.height)) pt"
+            let classes = "width \(name(widthClass)), height \(name(heightClass))"
+            VStack(spacing: 12) {
+                Text(size)
+                Text(classes)
+                Text(hingeText)
+            }
+            .font(.title3.monospaced())
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onAppear { print("DUO-SETUP", size, classes) }
+            .onChange(of: size) { _, new in print("DUO-SETUP", new, classes) }
+        }
+        .modifier(HingeReader(text: $hingeText))
+    }
+
+    private func name(_ sizeClass: UserInterfaceSizeClass?) -> String {
+        switch sizeClass {
+        case .compact: "compact"
+        case .regular: "regular"
+        default: "unknown"
+        }
+    }
+}
+
+/// Reports the hinge on iOS 27.1 and later. Does nothing on older systems.
+struct HingeReader: ViewModifier {
+    @Binding var text: String
+
+    func body(content: Content) -> some View {
+        if #available(iOS 27.1, *) {
+            content.onHingeChange { _, context in
+                if let hinge = context.hinge {
+                    text = "hinge: \(hinge.status), \(Int(hinge.angle.degrees)) deg"
+                } else {
+                    text = "hinge: none"
+                }
+                print("DUO-SETUP", text)
+            }
+        } else {
+            content
+        }
+    }
+}
+```
+
+Build, install and launch it:
+
+```bash
+xcodebuild -scheme <Scheme> -destination 'platform=iOS Simulator,name=iPhone Duo,OS=27.1' \
+  -derivedDataPath build build
+xcrun simctl install booted build/Build/Products/Debug-iphonesimulator/<App>.app
+xcrun simctl launch --terminate-running-process booted <bundle.id>
+xcrun simctl io booted screenshot --display=primary-1 inner.png
+```
+
+Pass, with the phone fully open and held wide: the inner display shows `regular` width and height and `hinge: fullyOpen, 180 deg`. Our run on the iOS 27.1 simulator showed exactly that, at 867 x 635 pt inside the safe area. Never copy these numbers into app code. If the user clicks Closed, Apple says the outer display has `compact` width ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)); Duology has not measured the closed window yet. Clean up with `xcrun simctl uninstall booted <bundle.id>`.
+
+## When something fails
+
+| Symptom | Fix |
+|---|---|
+| `xcodebuild -version` prints 26.x | `DEVELOPER_DIR` is missing from that call. Export it or prefix the command. |
+| No "iPhone Duo" run destination | Install the iOS 27.1 runtime (step 2), then create the device (step 3). |
+| App sits in the middle of the inner display | It was built with the iOS 26 SDK. Rebuild with Xcode 27.1. |
+| `claude mcp list` shows `xcode` failing | Xcode isn't open, the Intelligence setting is off, or the bridge found the wrong Xcode. See step 5. |
+| `bootstatus` takes minutes | A first launch can take several minutes (Xcode 27.1 known issue). Run it in the background and poll. |
+| A script needs to change the pose | Not possible with `simctl`. Ask the user to click the pose in Device Hub, then continue. |
+
+## Checklist
+
+- [ ] `xcodebuild -version` prints Xcode 27.1 (27A9275 or later) with `DEVELOPER_DIR` set.
+- [ ] No `sudo xcode-select` was run without the user's say-so.
+- [ ] `xcrun --show-sdk-version --sdk iphonesimulator` prints 27.1, and an iOS 27.1 runtime is installed.
+- [ ] An "iPhone Duo" simulator exists, is booted, and shows in Device Hub.
+- [ ] The user knows where the Closed, Partially Open and Open buttons are.
+- [ ] Xcode's external-agent setting is on, `claude mcp list` shows `xcode`, and the project is open in Xcode 27.1.
+- [ ] `SWIFT_VERSION = 6.0`, `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, `SWIFT_APPROACHABLE_CONCURRENCY = YES`.
+- [ ] Deployment target chosen on purpose; Duo APIs gated with `#available(iOS 27.1, *)` if it is lower.
+- [ ] The project uses synchronized folders (`objectVersion = 77`).
+- [ ] The setup check shows regular/regular and a hinge on the inner display.
+- [ ] `/duo-doctor` passes.

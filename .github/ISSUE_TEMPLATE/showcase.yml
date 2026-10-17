@@ -1,0 +1,72 @@
+name: Showcase
+description: Share an app you built or updated for iPhone Duo with Duology.
+title: "[Showcase]: "
+labels: ["showcase"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We'd love to see what you made. Showcase posts help us learn which skills work and which need more.
+
+  - type: input
+    id: app
+    attributes:
+      label: App name
+    validations:
+      required: true
+
+  - type: input
+    id: link
+    attributes:
+      label: Link
+      description: App Store page, TestFlight link or source repository.
+      placeholder: https://apps.apple.com/...
+
+  - type: dropdown
+    id: status
+    attributes:
+      label: Status
+      options:
+        - On the App Store
+        - In TestFlight or beta
+        - Open source
+        - Still in development
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What it does on iPhone Duo
+      description: What changes between the outer and inner display, and when the phone is partially open.
+    validations:
+      required: true
+
+  - type: textarea
+    id: used
+    attributes:
+      label: What from Duology did you use?
+      description: Skills, recipes, duo-lint, commands.
+    validations:
+      required: true
+
+  - type: textarea
+    id: friction
+    attributes:
+      label: What was hard or missing?
+      description: This is the most useful part for us.
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: Drag images here. One of each display is ideal.
+
+  - type: checkboxes
+    id: permission
+    attributes:
+      label: Permission
+      options:
+        - label: Duology may link to this app from the README or release notes.
+        - label: I have the right to share these screenshots.
+          required: true

@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or idea
+    url: https://github.com/Kimeur/duology/discussions
+    about: Ask how to use a skill, or float an idea before you open an issue.
+  - name: Security problem
+    url: https://github.com/Kimeur/duology/security/policy
+    about: Don't open a public issue. SECURITY.md explains how to report it privately.
+  - name: Bug in iOS, Xcode or the simulator
+    url: https://feedbackassistant.apple.com/
+    about: Report it to Apple with Feedback Assistant. If it affects Duology, open an issue here too and include the feedback number.

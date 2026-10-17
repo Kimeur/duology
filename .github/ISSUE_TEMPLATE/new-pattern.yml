@@ -1,0 +1,80 @@
+name: New layout pattern
+description: Propose a layout pattern for duo-patterns and the gallery app.
+title: "[Pattern]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Each pattern in `duo-patterns` comes with a SwiftUI recipe and a screen in the gallery app. Check the ones we have first: list-detail, supporting pane, two-page, dual view, extended canvas, feed reflow, tabs to sidebar and displacement.
+
+        Describe the pattern by display and size class, not by device. Apple's guidance is to design for compact and regular widths, not for each way of holding the phone.
+
+  - type: input
+    id: name
+    attributes:
+      label: Pattern name
+      placeholder: Inspector strip
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does it solve?
+      description: Which apps need it, and what goes wrong without it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: outer
+    attributes:
+      label: Outer display (compact width)
+      description: What the screen shows when the phone is closed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: inner
+    attributes:
+      label: Inner display (regular width)
+      description: What the screen shows when the phone is open.
+    validations:
+      required: true
+
+  - type: textarea
+    id: fold
+    attributes:
+      label: Near the fold
+      description: What happens when the phone is partially open. Which controls must move off the fold, and which content may cross it.
+
+  - type: textarea
+    id: continuity
+    attributes:
+      label: Fold and unfold
+      description: What state must survive the change, for example scroll position, selection or typed text.
+
+  - type: textarea
+    id: approach
+    attributes:
+      label: SwiftUI or UIKit approach
+      description: The containers you would use, such as NavigationSplitView, ArrangementView or a custom split. Link Apple's doc page for each iPhone Duo API.
+
+  - type: textarea
+    id: prior-art
+    attributes:
+      label: Prior art and sources
+      description: Apple's HIG or a Tech Talk with a timestamp, Surface Duo or Android patterns, or apps that already do this.
+
+  - type: textarea
+    id: sketches
+    attributes:
+      label: Sketches or screenshots
+      description: Drag images here. Show both displays if you can.
+
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Contributing
+      options:
+        - label: I'd like to build it (SwiftUI recipe, gallery screen and a test task).

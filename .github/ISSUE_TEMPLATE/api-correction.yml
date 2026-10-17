@@ -1,0 +1,101 @@
+name: API correction
+description: Duology names an API, signature, iOS version or behaviour that doesn't match Apple's docs or the iOS SDK.
+title: "[API]: "
+labels: ["bug", "documentation", "api-correction"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Duology is only useful if every API claim in it is true, so thank you.
+
+        We need a source we can check ourselves: an Apple documentation page, a Tech Talk or WWDC session with a timestamp, or the declaration in the iOS SDK. A blog post or an AI answer isn't enough on its own.
+
+        Please describe the problem in your own words. Link Apple's page instead of pasting long passages from it.
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of mistake is it?
+      options:
+        - The API doesn't exist
+        - Wrong name or signature
+        - Wrong iOS version (availability or deprecation)
+        - Wrong behaviour
+        - Wrong framework or module
+        - Something else
+    validations:
+      required: true
+
+  - type: input
+    id: api
+    attributes:
+      label: API or claim
+      placeholder: GeometryProxy.reservedRegions(kind:options:layoutDirectionBehavior:)
+    validations:
+      required: true
+
+  - type: input
+    id: location
+    attributes:
+      label: Where Duology says it
+      description: File and line, or a link to the line on GitHub.
+      placeholder: plugins/duology/skills/duo-layout/SKILL.md, line 42
+    validations:
+      required: true
+
+  - type: textarea
+    id: duology-says
+    attributes:
+      label: What Duology says
+    validations:
+      required: true
+
+  - type: textarea
+    id: correct
+    attributes:
+      label: What is correct
+    validations:
+      required: true
+
+  - type: input
+    id: source
+    attributes:
+      label: Apple source
+      description: A developer.apple.com link. For a video, add the time, for example ?time=470.
+      placeholder: https://developer.apple.com/documentation/...
+    validations:
+      required: true
+
+  - type: textarea
+    id: sdk
+    attributes:
+      label: SDK evidence
+      description: |
+        Optional, and the strongest proof. Search the SDK that ships with Xcode, for example:
+
+        ```
+        SDK="$(DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcrun --sdk iphonesimulator --show-sdk-path)"
+        grep -rn --include='arm64*.swiftinterface' --include='*.h' "reservedRegions" \
+          "$SDK/System/Library/Frameworks/SwiftUICore.framework" "$SDK/System/Library/Frameworks/UIKit.framework"
+        ```
+
+        A short Swift file that fails or passes `swiftc -typecheck` also works.
+      render: text
+
+  - type: input
+    id: versions
+    attributes:
+      label: Xcode and SDK
+      placeholder: Xcode 27.1 (27A9275), iOS 27.1 SDK
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you send
+      options:
+        - label: My source is Apple's own documentation, a talk, or the SDK.
+          required: true
+        - label: I explained the problem in my own words and didn't paste long passages of Apple's text.
+          required: true

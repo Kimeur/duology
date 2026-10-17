@@ -1,0 +1,3 @@
+// duo-lint test fixture: generated Info.plist keys set as build settings.
+PRODUCT_NAME = Legacy
+INFOPLIST_KEY_UIRequiresFullScreen = YES

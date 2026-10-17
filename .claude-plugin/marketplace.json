@@ -1,0 +1,44 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "duology",
+  "description": "Claude Code plugins for designing, building, testing and shipping apps on iPhone Duo, the foldable iPhone with an outer and an inner display. Community project, not affiliated with Apple.",
+  "version": "0.1.0",
+  "owner": {
+    "name": "Kimeur",
+    "url": "https://github.com/Kimeur"
+  },
+  "plugins": [
+    {
+      "name": "duology",
+      "source": "./plugins/duology",
+      "description": "Foundation for iPhone Duo apps: Xcode 27.1 and simulator setup, layout across the fold, vertical bars, and state that survives fold and unfold. Adds /duo-doctor.",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": ["iphone-duo", "foldable", "ios", "ios-27", "swiftui", "uikit", "xcode", "layout"]
+    },
+    {
+      "name": "duology-design",
+      "source": "./plugins/duology-design",
+      "description": "Design for iPhone Duo: eight layout patterns, two people on one screen, and a 15-point review of screenshots and Figma frames.",
+      "version": "0.1.0",
+      "category": "design",
+      "keywords": ["iphone-duo", "foldable", "design", "design-review", "figma", "hig", "layout-patterns", "swiftui"]
+    },
+    {
+      "name": "duology-recipes",
+      "source": "./plugins/duology-recipes",
+      "description": "App recipes for iPhone Duo. /duo-new creates a project that builds and runs on the iPhone Duo simulator. v0.1 has one recipe: a two-player game.",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": ["iphone-duo", "foldable", "ios", "swiftui", "templates", "recipes", "games", "xcode"]
+    },
+    {
+      "name": "duology-ship",
+      "source": "./plugins/duology-ship",
+      "description": "Test and ship for iPhone Duo: duo-lint (the fold linter), an opt-in lint hook, tests on the Duo simulator, and /duo-audit.",
+      "version": "0.1.0",
+      "category": "development",
+      "keywords": ["iphone-duo", "foldable", "ios", "lint", "testing", "audit", "xcode", "app-store"]
+    }
+  ]
+}

@@ -18,6 +18,7 @@ import json
 import os
 import plistlib
 import re
+import shlex
 import sys
 
 VERSION = "0.1.0"
@@ -361,9 +362,10 @@ def is_suppressed(rule_id, line, by_line, whole_file):
 # Findings.
 
 class Finding(object):
-    __slots__ = ("path", "line", "column", "rule", "snippet", "fix", "code")
+    __slots__ = ("path", "line", "column", "rule", "snippet", "fix", "code", "project")
 
     def __init__(self, path, line, column, rule, snippet, fix=None, code=""):
+        self.project = None  # DUO008 build settings only: project folder still to check
         self.path = path
         self.line = line
         self.column = column
@@ -447,7 +449,8 @@ _KEYWORDS_BEFORE_PAREN = {"if", "guard", "while", "return", "switch", "case", "w
 
 # DUO004: the idiom compared with .pad or .phone.
 _RE_IDIOM_TOKEN = re.compile(r"\buserInterfaceIdiom\b|\bUI_USER_INTERFACE_IDIOM\b")
-_PAD_PHONE = r"(\.\s*(?:pad|phone)\b|\bUIUserInterfaceIdiom(?:Pad|Phone)\b)"
+_PAD_PHONE = (r"((?:\bUIUserInterfaceIdiom\s*)?\.\s*(?:pad|phone)\b"
+              r"|\bUIUserInterfaceIdiom(?:Pad|Phone)\b)")
 _RE_PAD_PHONE = re.compile(_PAD_PHONE)
 _RE_IDIOM_TYPED = re.compile(r"\b([A-Za-z_]\w*)\s*:\s*UIUserInterfaceIdiom\b(?!\s*\.)")
 _RE_IDIOM_OBJC_VAR = re.compile(r"\bUIUserInterfaceIdiom\s+([A-Za-z_]\w*)\s*[=;]")
@@ -1043,6 +1046,11 @@ _RE_PLIST_FULL_SCREEN = re.compile(
 _RE_BUILD_SETTING_FULL_SCREEN = re.compile(
     r"\bINFOPLIST_KEY_UIRequiresFullScreen(?:\[[^\]]*\])?\s*=\s*\"?(YES|true|1)\"?")
 IGNORE_KEY = "UIRequiresFullScreenIgnoredStartingWithVersion"
+_RE_IGNORE_KEY = re.compile(r"<key>\s*" + IGNORE_KEY + r"\s*</key>")
+_RE_INFOPLIST_FILE = re.compile(r"\bINFOPLIST_FILE\s*=\s*\"?([^\";\n]+?)\"?\s*(?:;|$)", re.M)
+_RE_BUILD_SETTINGS_BLOCK = re.compile(r"\bbuildSettings\s*=\s*\{")
+_PROJECT_VARS = ("$(SRCROOT)", "${SRCROOT}", "$(PROJECT_DIR)", "${PROJECT_DIR}",
+                 "$(SOURCE_ROOT)", "${SOURCE_ROOT}")
 
 
 def _blank_xml_comments(text):
@@ -1062,7 +1070,7 @@ def lint_plist_bytes(data, path="<memory>", rules=None):
     if text is not None:
         by_line, whole_file = parse_directives(text)
         body = _blank_xml_comments(text)
-        if IGNORE_KEY in body:
+        if _RE_IGNORE_KEY.search(body):
             return []
         raw_lines = text.split("\n")
         results = []
@@ -1087,19 +1095,90 @@ def lint_plist_bytes(data, path="<memory>", rules=None):
     return []
 
 
+def plist_has_ignore_key(data):
+    """True when plist bytes (XML or binary) set UIRequiresFullScreenIgnoredStartingWithVersion."""
+    if data.startswith(b"bplist"):
+        try:
+            plist = plistlib.loads(data)
+        except Exception:
+            return False
+        return isinstance(plist, dict) and IGNORE_KEY in plist
+    return bool(_RE_IGNORE_KEY.search(_blank_xml_comments(data.decode("utf-8", errors="replace"))))
+
+
+def project_dir(path):
+    """Return the folder that holds the .xcodeproj for path, or the file's own folder."""
+    full = os.path.abspath(path)
+    parts = full.split(os.sep)
+    for i in range(len(parts) - 1, 0, -1):
+        if parts[i].endswith(".xcodeproj"):
+            return os.sep.join(parts[:i]) or os.sep
+    folder = probe = os.path.dirname(full)
+    for _ in range(10):
+        try:
+            if any(n.endswith(".xcodeproj") for n in os.listdir(probe)):
+                return probe
+        except OSError:
+            break
+        parent = os.path.dirname(probe)
+        if parent == probe:
+            break
+        probe = parent
+    return folder
+
+
+def _infoplist_path(value, proj):
+    """Resolve an INFOPLIST_FILE value against the project folder, or return None."""
+    value = value.strip()
+    for var in _PROJECT_VARS:
+        if value.startswith(var):
+            value = value[len(var):].lstrip("/")
+            break
+    if not value or "$" in value:
+        return None
+    full = value if os.path.isabs(value) else os.path.join(proj, value)
+    return full if os.path.isfile(full) else None
+
+
 def lint_build_settings(text, path="<memory>", rules=None):
+    """Flag INFOPLIST_KEY_UIRequiresFullScreen = YES.
+
+    Xcode merges these generated keys into the Info.plist named by INFOPLIST_FILE. When
+    that plist (for the same build configuration) has the ignore key, the setting is fine.
+    """
     if rules is not None and "DUO008" not in rules:
         return []
     rule = RULES_BY_ID["DUO008"]
     by_line, whole_file = parse_directives(text)
     raw_lines = text.split("\n")
+    proj = project_dir(path) if os.path.isfile(path) else None
+    pbxproj = os.path.basename(path) == "project.pbxproj"
+    blocks = [_brace_body(text, m.end() - 1) for m in _RE_BUILD_SETTINGS_BLOCK.finditer(text)]
     results = []
     for m in _RE_BUILD_SETTING_FULL_SCREEN.finditer(text):
         line, col = _line_col(text, m.start())
         if is_suppressed("DUO008", line, by_line, whole_file):
             continue
-        results.append(Finding(path, line, col, rule, "INFOPLIST_KEY_UIRequiresFullScreen",
-                               code=raw_lines[line - 1].strip()))
+        scope = "" if pbxproj else text
+        for a, b in blocks:
+            if a <= m.start() <= b:
+                scope = text[a:b]
+                break
+        plist = None
+        if proj:
+            im = _RE_INFOPLIST_FILE.search(scope)
+            plist = _infoplist_path(im.group(1), proj) if im else None
+        if plist:
+            try:
+                with open(plist, "rb") as fh:
+                    if plist_has_ignore_key(fh.read()):
+                        continue
+            except (IOError, OSError):
+                plist = None
+        f = Finding(path, line, col, rule, "INFOPLIST_KEY_UIRequiresFullScreen",
+                    code=raw_lines[line - 1].strip())
+        f.project = None if plist else proj  # still open: decided by the plists in the run
+        results.append(f)
     return results
 
 
@@ -1107,7 +1186,8 @@ def lint_build_settings(text, path="<memory>", rules=None):
 # Files.
 
 SKIP_DIRS = {".git", ".hg", ".svn", ".build", "build", "DerivedData", "Pods", "Carthage",
-             "node_modules", ".swiftpm", "SourcePackages", "xcuserdata"}
+             "node_modules", ".swiftpm", "SourcePackages", "xcuserdata",
+             ".claude", ".agents"}  # agent folders hold installed skills, duo-lint's included
 SKIP_DIR_SUFFIXES = (".xcassets", ".xcframework", ".framework", ".bundle", ".xcworkspace",
                      ".xcresult", ".lproj", ".docc")
 OBJC_EXTENSIONS = (".m", ".mm", ".h")
@@ -1142,6 +1222,13 @@ def _excluded(path, patterns):
     return False
 
 
+def _own_fixtures(dirpath, name):
+    """True for duo-lint's own tests/fixtures folder, wherever the skill is installed."""
+    parent = os.path.abspath(dirpath)
+    return (name == "fixtures" and os.path.basename(parent) == "tests"
+            and os.path.isfile(os.path.join(os.path.dirname(parent), "scripts", "duo-lint.py")))
+
+
 def collect_files(paths, objc=False, excludes=()):
     """Yield (path, kind). Raise FileNotFoundError for a missing path."""
     seen = set()
@@ -1161,6 +1248,7 @@ def collect_files(paths, objc=False, excludes=()):
             dirnames[:] = sorted(
                 d for d in dirnames
                 if d not in SKIP_DIRS and not d.endswith(SKIP_DIR_SUFFIXES)
+                and not _own_fixtures(dirpath, d)
                 and not _excluded(os.path.relpath(os.path.join(dirpath, d), root), excludes))
             for name in sorted(filenames):
                 full = os.path.join(dirpath, name)
@@ -1169,6 +1257,31 @@ def collect_files(paths, objc=False, excludes=()):
                         not _excluded(os.path.relpath(full, root), excludes):
                     seen.add(full)
                     yield full, kind
+
+
+def lint_paths(paths, objc=False, excludes=(), rules=None):
+    """Lint files and folders. Return (findings, number of files checked).
+
+    Raises FileNotFoundError for a missing path.
+    """
+    findings, files, ignore_plists = [], 0, []
+    for path, kind in collect_files(paths, objc=objc, excludes=excludes):
+        files += 1
+        try:
+            findings.extend(lint_file(path, kind, rules))
+            if kind == "plist":
+                with open(path, "rb") as fh:
+                    if plist_has_ignore_key(fh.read()):
+                        ignore_plists.append(os.path.abspath(path))
+        except (IOError, OSError) as exc:
+            sys.stderr.write("duo-lint: could not read %s: %s\n" % (path, exc))
+    if ignore_plists:
+        # A build setting whose own Info.plist duo-lint couldn't find: fine when an
+        # Info.plist in the same project folder has the ignore key.
+        findings = [f for f in findings if not (
+            f.project and any(p.startswith(f.project.rstrip(os.sep) + os.sep)
+                              for p in ignore_plists))]
+    return findings, files
 
 
 def lint_file(path, kind, rules=None):
@@ -1335,9 +1448,12 @@ def run_claude_hook(stdin_text):
         where, rel)]
     out.append(format_text(shown, 1, verbose=True, base=cwd).rsplit("\n", 1)[0])
     if extra or others:
-        out.append("%d more %s in this file. Run: duo-lint %s" % (
+        # Print the full path: the Bash tool's PATH may not have duo-lint on it.
+        launcher = os.path.join(os.path.dirname(os.path.realpath(__file__)), "duo-lint")
+        out.append("%d more %s in this file. Run: \"%s\" %s" % (
             len(extra) + len(others),
-            "finding" if len(extra) + len(others) == 1 else "findings", rel))
+            "finding" if len(extra) + len(others) == 1 else "findings",
+            launcher, shlex.quote(rel)))
     out.append("This is advice; the edit went through. Fix the finding, or if the code is "
                "not layout, add // duo-lint:disable-next-line <RULE> -- <reason> above it.")
     errors = sum(1 for f in shown + extra if f.severity == ERROR)
@@ -1426,15 +1542,8 @@ def main(argv=None):
         rules -= args.ignore
 
     paths = args.paths or ["."]
-    findings = []
-    files = 0
     try:
-        for path, kind in collect_files(paths, objc=args.objc, excludes=args.exclude):
-            files += 1
-            try:
-                findings.extend(lint_file(path, kind, rules))
-            except (IOError, OSError) as exc:
-                sys.stderr.write("duo-lint: could not read %s: %s\n" % (path, exc))
+        findings, files = lint_paths(paths, objc=args.objc, excludes=args.exclude, rules=rules)
     except FileNotFoundError as exc:
         sys.stderr.write("duo-lint: no such file or folder: %s\n" % exc.args[0])
         return 2

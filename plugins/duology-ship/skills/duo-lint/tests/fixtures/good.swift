@@ -55,11 +55,42 @@ final class AdaptiveViewController: UIViewController {
         print(isWide, scale, String(describing: screen))
     }
 
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        let fallback: UIInterfaceOrientationMask = .allButUpsideDown
+        let wide: UIInterfaceOrientationMask = .all
+        // The idiom picks orientations here, not a layout.
+        if traitCollection.userInterfaceIdiom == .pad {
+            return wide
+        }
+        return fallback
+    }
+
     func makeWindow(for scene: UIWindowScene) -> UIWindow {
         let window = UIWindow(windowScene: scene)
         let label = UILabel()
         label.widthAnchor.constraint(lessThanOrEqualToConstant: 600).isActive = true
         window.addSubview(label)
         return window
+    }
+}
+
+final class TraitHelper {
+    let userInterfaceIdiom: UIUserInterfaceIdiom = .unspecified
+
+    func padTraits() -> UITraitCollection {
+        UITraitCollection(userInterfaceIdiom: .pad)
+    }
+
+    func idiomName(of traits: UITraitCollection) -> String {
+        let idiom = traits.userInterfaceIdiom
+        return String(describing: idiom)
+    }
+
+    func isFullHD(pixelWidth: Int) -> Bool {
+        pixelWidth == 1920
+    }
+
+    func queue(_ preferred: DispatchQueue?) -> DispatchQueue {
+        preferred ?? .main
     }
 }

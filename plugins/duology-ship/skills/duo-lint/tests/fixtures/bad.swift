@@ -93,3 +93,35 @@ struct LegacyScreen: View {
         )
     }
 }
+
+@MainActor
+final class SceneReader {
+    func read(_ windowScene: UIWindowScene, controller: UIViewController) {
+        let geometry = windowScene.effectiveGeometry
+        let shape = geometry.interfaceOrientation // expect: DUO002
+        let old = windowScene.interfaceOrientation // expect: DUO003
+        let legacy = controller.interfaceOrientation // expect: DUO003
+        let first = UIApplication.shared.connectedScenes.first
+        let cast = (first as? UIWindowScene)?.interfaceOrientation // expect: DUO003
+        print(shape, old, legacy, cast as Any)
+    }
+
+    func screens(for scene: UIWindowScene?) {
+        let screen: UIScreen = .main // expect: DUO001
+        let fallback = scene?.screen ?? .main // expect: DUO001
+        print(screen, fallback)
+    }
+
+    var fallbackScreen: UIScreen { .main } // expect: DUO001
+
+    func defaultScreen() -> UIScreen {
+        .main // expect: DUO001
+    }
+
+    func columns() -> Int {
+        let idiom = UIDevice.current.userInterfaceIdiom
+        if idiom == .pad { return 2 } // expect: DUO004
+        if case .phone = UIDevice.current.userInterfaceIdiom { return 1 } // expect: DUO004
+        return 0
+    }
+}

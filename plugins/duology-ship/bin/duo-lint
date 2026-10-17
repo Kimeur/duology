@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+"""duo-lint on your PATH.
+
+Claude Code puts this plugin's bin/ folder on the Bash tool's PATH while the
+duology-ship plugin is enabled, so Claude can run `duo-lint` as a bare command.
+The linter itself is skills/duo-lint/scripts/duo-lint.py in this plugin.
+
+Part of Duology (MIT license). https://github.com/Kimeur/duology
+"""
+import os
+import runpy
+import sys
+
+here = os.path.dirname(os.path.realpath(__file__))
+script = os.path.join(here, os.pardir, "skills", "duo-lint", "scripts", "duo-lint.py")
+sys.argv[0] = "duo-lint"
+runpy.run_path(os.path.normpath(script), run_name="__main__")

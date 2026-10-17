@@ -6,6 +6,7 @@ import json
 import os
 import plistlib
 import re
+import shlex
 import shutil
 import subprocess
 import sys
@@ -15,9 +16,12 @@ import unittest
 HERE = os.path.dirname(os.path.abspath(__file__))
 SKILL = os.path.dirname(HERE)
 PLUGIN = os.path.dirname(os.path.dirname(SKILL))
+REPO = os.path.dirname(os.path.dirname(PLUGIN))
 FIXTURES = os.path.join(HERE, "fixtures")
+SAMPLE = os.path.join(FIXTURES, "sample")
 SCRIPT = os.path.join(SKILL, "scripts", "duo-lint.py")
 LAUNCHER = os.path.join(SKILL, "scripts", "duo-lint")
+PLUGIN_BIN = os.path.join(PLUGIN, "bin", "duo-lint")
 HOOK_SH = os.path.join(PLUGIN, "hooks", "lint-hook.sh")
 HOOKS_JSON = os.path.join(PLUGIN, "hooks", "hooks.json")
 
@@ -180,8 +184,80 @@ class RuleTests(unittest.TestCase):
         self.assertEqual(lint_text(text), [(1, "DUO002")])
 
     def test_window_scene_interface_orientation_is_an_error(self):
-        text = "let o = windowScene.interfaceOrientation\n"
-        self.assertEqual(lint_text(text), [(1, "DUO003")])
+        text = ("func f(windowScene: UIWindowScene) {\n"
+                "    let o = windowScene.interfaceOrientation\n"
+                "}\n")
+        self.assertEqual(lint_text(text), [(2, "DUO003")])
+
+    def test_untyped_receiver_is_only_a_warning(self):
+        # duo-lint can't see the type, so it doesn't claim the API is deprecated.
+        self.assertEqual(lint_text("let o = windowScene.interfaceOrientation\n"),
+                         [(1, "DUO002")])
+
+    def test_geometry_through_any_name_is_a_warning(self):
+        text = ("func f(_ ws: UIWindowScene, previous p: UIWindowScene.Geometry) {\n"
+                "    let current = ws.effectiveGeometry\n"
+                "    let g = current\n"
+                "    print(current.interfaceOrientation, g.interfaceOrientation)\n"
+                "    print(p.interfaceOrientation)\n"
+                "    print((ws.effectiveGeometry).interfaceOrientation)\n"
+                "    print(ws.effectiveGeometry\n"
+                "        .interfaceOrientation)\n"
+                "}\n")
+        self.assertEqual(lint_text(text), [(4, "DUO002"), (5, "DUO002"), (6, "DUO002"),
+                                           (8, "DUO002")])
+
+    def test_deprecated_receivers_are_errors(self):
+        text = ("func f(scene: UIScene, vc: UIViewController) {\n"
+                "    guard let ws = scene as? UIWindowScene else { return }\n"
+                "    print(ws.interfaceOrientation)\n"
+                "    print(vc.interfaceOrientation)\n"
+                "    print((scene as? UIWindowScene)?.interfaceOrientation as Any)\n"
+                "    let fromView = vc.view.window?.windowScene\n"
+                "    print(fromView?.interfaceOrientation as Any)\n"
+                "    print(vc.view.window?\n"
+                "        .windowScene?\n"
+                "        .interfaceOrientation as Any)\n"
+                "}\n")
+        self.assertEqual(lint_text(text), [(3, "DUO003"), (4, "DUO003"), (5, "DUO003"),
+                                           (7, "DUO003"), (10, "DUO003")])
+
+    def test_shadowed_name_uses_the_nearest_binding(self):
+        text = ("func a(scene: UIWindowScene) { print(scene.interfaceOrientation) }\n"
+                "func b(scene: UIWindowScene.Geometry) { print(scene.interfaceOrientation) }\n")
+        self.assertEqual(lint_text(text), [(1, "DUO003"), (2, "DUO002")])
+
+    def test_bare_interface_orientation_needs_a_view_controller(self):
+        vc = ("final class A: UIViewController {\n"
+              "    func f() -> Bool { interfaceOrientation.isPortrait }\n"
+              "    func g() -> Bool { self.interfaceOrientation.isPortrait }\n"
+              "}\n")
+        self.assertEqual(lint_text(vc), [(2, "DUO003"), (3, "DUO003")])
+        other = "extension Model {\n    func f() -> Bool { interfaceOrientation.isPortrait }\n}\n"
+        self.assertEqual(lint_text(other), [(2, "DUO002")])
+
+    def test_labels_are_not_reads(self):
+        text = ("final class D: NSObject, UIWindowSceneDelegate {\n"
+                "    func windowScene(_ windowScene: UIWindowScene,\n"
+                "                     didUpdate previousCoordinateSpace: UICoordinateSpace,\n"
+                "                     interfaceOrientation previousInterfaceOrientation: "
+                "UIInterfaceOrientation,\n"
+                "                     traitCollection previousTraitCollection: UITraitCollection) {}\n"
+                "}\n"
+                "let p = UIWindowScene.GeometryPreferences.iOS(interfaceOrientations: .portrait)\n")
+        self.assertEqual(lint_text(text), [])
+
+    def test_objc_interface_orientation(self):
+        text = ("@implementation ReaderViewController\n"
+                "- (void)f:(UIWindowScene *)scene {\n"
+                "    if ([self interfaceOrientation] == 1) {}\n"
+                "    if (scene.interfaceOrientation == 1) {}\n"
+                "    if (scene.effectiveGeometry.interfaceOrientation == 1) {}\n"
+                "    if ([[self.view.window windowScene] interfaceOrientation] == 1) {}\n"
+                "}\n"
+                "@end\n")
+        self.assertEqual(lint_text(text, "objc"), [(3, "DUO003"), (4, "DUO003"), (5, "DUO002"),
+                                                   (6, "DUO003")])
 
     def test_local_interface_orientation_variable_is_not_flagged(self):
         text = ("let interfaceOrientation = scene.effectiveGeometry.interfaceOrientation\n"
@@ -194,6 +270,96 @@ class RuleTests(unittest.TestCase):
     def test_idiom_switch_is_flagged(self):
         text = "switch UIDevice.current.userInterfaceIdiom {\ncase .pad: break\ndefault: break\n}\n"
         self.assertEqual(lint_text(text), [(1, "DUO004")])
+
+    def test_idiom_switch_without_pad_or_phone_is_fine(self):
+        text = "switch UIDevice.current.userInterfaceIdiom {\ncase .mac: break\ndefault: break\n}\n"
+        self.assertEqual(lint_text(text), [])
+
+    def test_idiom_reads_and_declarations_are_fine(self):
+        text = ("let idiom = UIDevice.current.userInterfaceIdiom\n"
+                "print(idiom)\n"
+                "var userInterfaceIdiom: UIUserInterfaceIdiom { .phone }\n"
+                "let traits = UITraitCollection(userInterfaceIdiom: .pad)\n"
+                "func f(userInterfaceIdiom: UIUserInterfaceIdiom) {}\n"
+                "vc.traitOverrides.userInterfaceIdiom = .pad\n")
+        self.assertEqual(lint_text(text), [])
+
+    def test_idiom_comparisons_in_every_form(self):
+        text = ("let a = UIDevice.current.userInterfaceIdiom == .pad\n"
+                "let b = .phone != traitCollection.userInterfaceIdiom\n"
+                "if case .pad = UIDevice.current.userInterfaceIdiom {}\n"
+                "let c = [.pad, .mac].contains(UIDevice.current.userInterfaceIdiom)\n"
+                "let idiom = UIDevice.current.userInterfaceIdiom\n"
+                "let d = idiom == .phone\n"
+                "func e(_ kind: UIUserInterfaceIdiom) -> Bool { kind == .pad }\n")
+        self.assertEqual(lint_text(text), [(1, "DUO004"), (2, "DUO004"), (3, "DUO004"),
+                                           (4, "DUO004"), (6, "DUO004"), (7, "DUO004")])
+        f = duo_lint.lint_source(text)[1]
+        self.assertEqual(f.snippet, ".phone != userInterfaceIdiom")
+
+    def test_idiom_anywhere_in_an_orientation_mask_body_is_fine(self):
+        text = ("override var supportedInterfaceOrientations: UIInterfaceOrientationMask {\n"
+                "    let a: UIInterfaceOrientationMask = .all\n"
+                "    let b: UIInterfaceOrientationMask = .portrait\n"
+                "    let c: UIInterfaceOrientationMask = .allButUpsideDown\n"
+                "    if UIDevice.current.userInterfaceIdiom == .pad { return a }\n"
+                "    return traitCollection.userInterfaceIdiom == .phone ? b : c\n"
+                "}\n"
+                "func windowScene(_ s: UIWindowScene) -> Bool {\n"
+                "    UIDevice.current.userInterfaceIdiom == .pad\n"
+                "}\n"
+                "func supportedInterfaceOrientations(for windowScene: UIWindowScene)"
+                " -> UIInterfaceOrientationMask {\n"
+                "    UIDevice.current.userInterfaceIdiom == .pad ? .all : .portrait\n"
+                "}\n")
+        self.assertEqual(lint_text(text), [(9, "DUO004")])
+
+    def test_objc_idiom_switch_and_reverse_compare(self):
+        text = ("switch ([UIDevice currentDevice].userInterfaceIdiom) {\n"
+                "    case UIUserInterfaceIdiomPad: break;\n"
+                "    default: break;\n"
+                "}\n"
+                "if (UIUserInterfaceIdiomPhone == UI_USER_INTERFACE_IDIOM()) {}\n")
+        self.assertEqual(lint_text(text, "objc"), [(1, "DUO004"), (5, "DUO004")])
+
+    def test_idiom_compared_with_the_type_named(self):
+        text = ("if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {}\n"
+                "let b = UIUserInterfaceIdiom.phone != traitCollection.userInterfaceIdiom\n"
+                "if case UIUserInterfaceIdiom.pad = UIDevice.current.userInterfaceIdiom {}\n"
+                "switch UIDevice.current.userInterfaceIdiom {\n"
+                "case UIUserInterfaceIdiom.phone: break\n"
+                "default: break\n"
+                "}\n"
+                "let fine = UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.mac\n")
+        self.assertEqual(lint_text(text), [(1, "DUO004"), (2, "DUO004"), (3, "DUO004"),
+                                           (4, "DUO004")])
+
+    def test_implicit_main_screen(self):
+        text = ("let a: UIScreen = .main\n"
+                "let b: UIScreen? = .main\n"
+                "let c = scene?.screen ?? .main\n"
+                "let d = (window?.windowScene?.screen) ?? .main\n"
+                "func e(screen: UIScreen = .main) {}\n"
+                "let f = Observer(screen: .main)\n"
+                "var g: UIScreen { .main }\n"
+                "func h() -> UIScreen {\n"
+                "    .main\n"
+                "}\n"
+                "func i() -> UIScreen {\n"
+                "    return .main\n"
+                "}\n")
+        self.assertEqual(lint_text(text), [(n, "DUO001") for n in (1, 2, 3, 4, 5, 6, 7, 9, 12)])
+
+    def test_other_main_singletons_are_fine(self):
+        text = ("let q = queue ?? .main\n"
+                "let r: RunLoop = .main\n"
+                "DispatchQueue.main.async {}\n"
+                "let b = Bundle.main\n"
+                "let s = screenQueue ?? .main\n"
+                "func j() -> DispatchQueue {\n"
+                "    .main\n"
+                "}\n")
+        self.assertEqual(lint_text(text), [])
 
     def test_regular_width_without_ipad_hint_is_fine(self):
         text = "let wide = horizontalSizeClass == .regular\n"
@@ -220,6 +386,14 @@ class RuleTests(unittest.TestCase):
         self.assertEqual(sorted(lint_text(text)), [(1, "DUO001"), (1, "DUO006")])
         self.assertEqual(lint_text("if window.screen.nativeBounds.height == 2436 { }\n"),
                          [(1, "DUO006")])
+        self.assertEqual(lint_text("let big = [2436, 2532].contains(Int(screen.nativeScale))\n"),
+                         [(1, "DUO006")])
+
+    def test_pixel_sizes_need_native_bounds_or_scale(self):
+        # rules.md: pixel sizes count only on lines that read nativeBounds or nativeScale.
+        self.assertEqual(lint_text("if imagePixelWidth == 1920 { }\n"), [])
+        self.assertEqual(lint_text("let fullHD = [1920, 1080].contains(pixelWidth)\n"), [])
+        self.assertEqual(lint_text("if pixelSize.width == 2436 { }\n"), [])
 
     def test_geometry_proxy_parameter(self):
         text = "func pick(_ geo: GeometryProxy) -> Bool { geo.size.width >= 744 }\n"
@@ -347,7 +521,7 @@ class CliTests(unittest.TestCase):
         for line in lines[:-1]:
             self.assertRegex(line, self.LINE_RE)
         self.assertRegex(lines[-1], self.SUMMARY_RE)
-        self.assertTrue(lines[0].startswith("bad.swift:11  DUO001  error"))
+        self.assertRegex(lines[0], r"^bad\.swift:11 +DUO001  error")
 
     def test_good_file_exits_zero(self):
         r = run_cli("good.swift")
@@ -366,7 +540,7 @@ class CliTests(unittest.TestCase):
         s = data["summary"]
         self.assertEqual(s["findings"], len(data["findings"]))
         self.assertEqual(s["errors"] + s["warnings"], s["findings"])
-        self.assertEqual(s["files"], 4)  # bad.swift, good.swift, Info.plist, Legacy.xcconfig
+        self.assertEqual(s["files"], 8)  # bad, good, Info.plist, Legacy.xcconfig, sample/ (4)
         first = data["findings"][0]
         for key in ("path", "line", "column", "rule", "name", "severity", "snippet",
                     "message", "fix", "source", "code"):
@@ -378,7 +552,7 @@ class CliTests(unittest.TestCase):
     def test_objc_flag_adds_m_files(self):
         data = json.loads(run_cli("--json", "--objc", ".").stdout)
         self.assertTrue(any(f["path"] == "bad.m" for f in data["findings"]))
-        self.assertEqual(data["summary"]["files"], 5)
+        self.assertEqual(data["summary"]["files"], 9)
 
     def test_github_format(self):
         r = run_cli("--format", "github", "bad.swift")
@@ -402,7 +576,8 @@ class CliTests(unittest.TestCase):
         self.assertEqual(run_cli("--select", "DUO999", ".").returncode, 2)
 
     def test_ignore_and_exclude(self):
-        data = json.loads(run_cli("--json", "--ignore", "DUO008", "--exclude", "bad.*", ".").stdout)
+        data = json.loads(run_cli("--json", "--ignore", "DUO008", "--exclude", "bad.*",
+                                  "--exclude", "sample", ".").stdout)
         self.assertEqual(data["findings"], [])
 
     def test_exclude_patterns(self):
@@ -436,6 +611,50 @@ class CliTests(unittest.TestCase):
         finally:
             shutil.rmtree(tmp)
 
+    def test_skips_agent_folders_and_its_own_fixtures(self):
+        tmp = tempfile.mkdtemp()
+        try:
+            os.makedirs(os.path.join(tmp, "Sources"))
+            with open(os.path.join(tmp, "Sources", "A.swift"), "w") as fh:
+                fh.write("let a = 1\n")
+            # The skill installed for an agent, and copied somewhere else in the project.
+            shutil.copytree(SKILL, os.path.join(tmp, ".claude", "skills", "duo-lint"))
+            shutil.copytree(SKILL, os.path.join(tmp, ".agents", "skills", "duo-lint"))
+            shutil.copytree(SKILL, os.path.join(tmp, "tools", "duo-lint"))
+            installed = os.path.join(tmp, ".claude", "skills", "duo-lint", "scripts", "duo-lint")
+            r = subprocess.run([installed, "--json", "--strict", "."], cwd=tmp,
+                               stdout=subprocess.PIPE, universal_newlines=True)
+            data = json.loads(r.stdout)
+            self.assertEqual((r.returncode, data["summary"]["files"]), (0, 1), r.stdout)
+            # Named on the command line, a skipped folder is checked.
+            fixtures = os.path.join(tmp, "tools", "duo-lint", "tests", "fixtures")
+            data = json.loads(run_cli("--json", fixtures).stdout)
+            self.assertGreater(data["summary"]["findings"], 0)
+        finally:
+            shutil.rmtree(tmp)
+
+    def test_plugin_bin_wrapper_on_path(self):
+        # Claude Code puts each enabled plugin's bin/ folder on the Bash tool's PATH.
+        self.assertTrue(os.access(PLUGIN_BIN, os.X_OK))
+        env = dict(os.environ)
+        env["PATH"] = os.path.dirname(PLUGIN_BIN) + os.pathsep + env.get("PATH", "")
+        tmp = tempfile.mkdtemp()
+        try:
+            r = subprocess.run(["duo-lint", "--version"], cwd=tmp, env=env,
+                               stdout=subprocess.PIPE, universal_newlines=True)
+            self.assertEqual(r.stdout.strip(), "duo-lint %s" % duo_lint.VERSION)
+            # A copy of the plugin elsewhere (the plugin cache) works the same way.
+            copy = os.path.join(tmp, "cache", "duology-ship")
+            os.makedirs(os.path.dirname(copy))
+            for part in ("bin", "skills"):
+                shutil.copytree(os.path.join(PLUGIN, part), os.path.join(copy, part))
+            env["PATH"] = os.path.join(copy, "bin") + os.pathsep + os.environ.get("PATH", "")
+            r = subprocess.run(["duo-lint", os.path.join(FIXTURES, "Info.plist")], cwd=tmp,
+                               env=env, stdout=subprocess.PIPE, universal_newlines=True)
+            self.assertIn("Info.plist:8  DUO008  warning", r.stdout)
+        finally:
+            shutil.rmtree(tmp)
+
     def test_list_rules(self):
         rules = json.loads(run_cli("--list-rules", "--json").stdout)
         self.assertEqual([r["id"] for r in rules], ["DUO%03d" % i for i in range(1, 10)])
@@ -446,6 +665,76 @@ class CliTests(unittest.TestCase):
         r = subprocess.run([LAUNCHER, "--version"], stdout=subprocess.PIPE,
                            universal_newlines=True)
         self.assertEqual(r.stdout.strip(), "duo-lint %s" % duo_lint.VERSION)
+
+
+class FullScreenProjectTests(unittest.TestCase):
+    """DUO008 across files: a build setting plus the ignore key in the merged Info.plist."""
+
+    PLIST = ('<?xml version="1.0" encoding="UTF-8"?>\n<plist version="1.0">\n<dict>\n'
+             '{body}</dict>\n</plist>\n')
+    IGNORE = ("\t<key>UIRequiresFullScreenIgnoredStartingWithVersion</key>\n"
+              "\t<string>26</string>\n")
+
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.tmp)
+
+    def write(self, rel, text):
+        path = os.path.join(self.tmp, rel)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as fh:
+            fh.write(text)
+        return path
+
+    def pbxproj(self, infoplist):
+        block = ("\t\tbuildSettings = {{\n\t\t\t{plist}INFOPLIST_KEY_UIRequiresFullScreen = YES;\n"
+                 "\t\t\tPRODUCT_NAME = App;\n\t\t}};\n")
+        plist = "INFOPLIST_FILE = %s;\n\t\t\t" % infoplist if infoplist else ""
+        return self.write("App.xcodeproj/project.pbxproj",
+                          "// !$*UTF8*$!\n{\n" + block.format(plist=plist) * 2 + "}\n")
+
+    def lint(self, *paths):
+        findings, _ = duo_lint.lint_paths([os.path.join(self.tmp, p) for p in paths])
+        return [(os.path.relpath(f.path, self.tmp), f.line, f.rule.id) for f in findings]
+
+    def test_setting_with_ignore_key_in_its_plist_is_fine(self):
+        self.write("App/Info.plist", self.PLIST.format(body=self.IGNORE))
+        self.pbxproj('"$(SRCROOT)/App/Info.plist"')
+        self.assertEqual(self.lint("."), [])
+        self.assertEqual(self.lint("App.xcodeproj/project.pbxproj"), [])
+
+    def test_setting_with_a_plist_that_lacks_the_key_is_flagged(self):
+        self.write("App/Info.plist", self.PLIST.format(body=""))
+        self.write("Other/Info.plist", self.PLIST.format(body=self.IGNORE))
+        self.pbxproj("App/Info.plist")
+        self.assertEqual(self.lint("."), [("App.xcodeproj/project.pbxproj", 5, "DUO008"),
+                                          ("App.xcodeproj/project.pbxproj", 10, "DUO008")])
+
+    def test_xcconfig_with_ignore_key_in_the_project_is_fine(self):
+        self.pbxproj(None)
+        self.write("Config/Base.xcconfig", "INFOPLIST_KEY_UIRequiresFullScreen = YES\n")
+        self.write("App/Info.plist", self.PLIST.format(body=self.IGNORE))
+        self.assertEqual(self.lint("."), [])
+        # Alone, the setting file can't show which plist it goes with.
+        self.assertEqual(self.lint("Config/Base.xcconfig"),
+                         [("Config/Base.xcconfig", 1, "DUO008")])
+        self.assertEqual(self.lint("Config/Base.xcconfig", "App/Info.plist"), [])
+
+    def test_ignore_key_outside_the_project_does_not_count(self):
+        self.pbxproj(None)
+        self.write("Config/Base.xcconfig", "INFOPLIST_KEY_UIRequiresFullScreen = YES\n")
+        os.makedirs(os.path.join(self.tmp, "Elsewhere"))
+        other = tempfile.mkdtemp()
+        try:
+            plist = os.path.join(other, "Info.plist")
+            with open(plist, "w") as fh:
+                fh.write(self.PLIST.format(body=self.IGNORE))
+            findings, _ = duo_lint.lint_paths([self.tmp, plist])
+            self.assertEqual([f.rule.id for f in findings], ["DUO008", "DUO008", "DUO008"])
+        finally:
+            shutil.rmtree(other)
 
 
 class HookTests(unittest.TestCase):
@@ -486,6 +775,11 @@ class HookTests(unittest.TestCase):
         self.assertIn("bad.swift:39  DUO006", context)
         self.assertNotIn("DUO001  error", context)
         self.assertIn("more findings in this file", context)
+        # The hint names the launcher by its full path: duo-lint may not be on PATH.
+        m = re.search(r'Run: "([^"]+)" bad\.swift', context)
+        self.assertIsNotNone(m, context)
+        self.assertEqual(os.path.realpath(m.group(1)), os.path.realpath(LAUNCHER))
+        self.assertTrue(os.access(m.group(1), os.X_OK))
 
     def test_clean_edit_is_silent(self):
         event = {"tool_name": "Edit", "cwd": FIXTURES,
@@ -518,6 +812,39 @@ class HookTests(unittest.TestCase):
         self.assertEqual(hook["type"], "command")
         self.assertIn("${CLAUDE_PLUGIN_ROOT}/hooks/lint-hook.sh", hook["command"])
         self.assertTrue(os.access(HOOK_SH, os.X_OK))
+
+    def test_hook_command_in_an_installed_plugin_copy(self):
+        # Run the command from hooks.json the way Claude Code does, from a copy of the
+        # plugin in a folder with a space (like Application Support), with a bare PATH.
+        with open(HOOKS_JSON) as fh:
+            command = json.load(fh)["hooks"]["PostToolUse"][0]["hooks"][0]["command"]
+        tmp = tempfile.mkdtemp()
+        try:
+            root = os.path.join(tmp, "plugin cache", "duology-ship")
+            for part in ("bin", "hooks", "skills"):
+                shutil.copytree(os.path.join(PLUGIN, part), os.path.join(root, part))
+            env = {"PATH": "/usr/bin:/bin", "HOME": tmp, "DUOLOGY_LINT_HOOK": "1",
+                   "CLAUDE_PLUGIN_ROOT": root}
+            event = {"tool_name": "Edit", "cwd": FIXTURES,
+                     "tool_input": {"file_path": os.path.join(FIXTURES, "bad.swift"),
+                                    "old_string": "x",
+                                    "new_string": "        if view.bounds.height == 844 {"}}
+            r = subprocess.run(["bash", "-c", command], input=json.dumps(event), env=env,
+                               stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                               universal_newlines=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            context = json.loads(r.stdout)["hookSpecificOutput"]["additionalContext"]
+            # The command the hook suggests must run as printed, without duo-lint on PATH.
+            m = re.search(r"Run: (.+ bad\.swift)$", context, re.M)
+            self.assertIsNotNone(m, context)
+            argv = shlex.split(m.group(1))
+            self.assertTrue(os.path.realpath(argv[0]).startswith(os.path.realpath(root)))
+            run = subprocess.run(argv, cwd=FIXTURES, env=env, stdout=subprocess.PIPE,
+                                 universal_newlines=True)
+            self.assertEqual(run.returncode, 1)
+            self.assertIn("bad.swift:11  DUO001  error", run.stdout)
+        finally:
+            shutil.rmtree(tmp)
 
 
 class DocsTests(unittest.TestCase):
@@ -598,6 +925,44 @@ class DocsTests(unittest.TestCase):
         self.assertTrue(text.startswith("---\nname: duo-lint\ndescription: "))
         self.assertIn('verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"', text)
         self.assertLess(text.count("\n"), 300)
+
+    def test_skill_points_to_the_full_audit(self):
+        description = self.read("SKILL.md").split("\n")[2]
+        for name in ("/duo-audit", "duo-design-review"):
+            self.assertIn(name, description)
+
+    def test_skill_says_how_to_run_it_alone(self):
+        # Installed with `npx skills add` or copied, the plugin's bin/ is not on PATH.
+        text = self.read("SKILL.md")
+        self.assertIn("<skill-folder>/scripts/duo-lint", text)
+        self.assertTrue(os.access(LAUNCHER, os.X_OK))
+
+    SAMPLE_PROMPT = "$ duo-lint Sources/"
+
+    def example_output(self, path):
+        """Return the lines under '$ duo-lint Sources/' in a doc's ```text block."""
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+        for block in re.findall(r"```text\n(.*?)```", text, flags=re.S):
+            lines = block.rstrip("\n").split("\n")
+            if lines[0] == self.SAMPLE_PROMPT:
+                return lines[1:]
+        self.fail("no ```text block starting with %r in %s" % (self.SAMPLE_PROMPT, path))
+
+    def test_example_output_in_docs_is_real(self):
+        r = subprocess.run([sys.executable, SCRIPT, "Sources/"], cwd=SAMPLE,
+                           stdout=subprocess.PIPE, universal_newlines=True)
+        real = r.stdout.rstrip("\n").split("\n")
+        self.assertEqual(r.returncode, 1)
+        docs = [os.path.join(SKILL, "SKILL.md"), os.path.join(REPO, "README.md"),
+                os.path.join(REPO, "docs", "readme", "README_fr.md")]
+        checked = 0
+        for doc in docs:
+            if not os.path.isfile(doc):
+                continue  # the skill installed on its own has no README
+            self.assertEqual(self.example_output(doc), real, doc)
+            checked += 1
+        self.assertGreaterEqual(checked, 1)
 
 
 if __name__ == "__main__":

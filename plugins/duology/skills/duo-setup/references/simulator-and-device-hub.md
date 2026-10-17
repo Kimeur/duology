@@ -2,7 +2,7 @@
 
 Everything an agent can do with the iPhone Duo simulator from the shell, and what only the user can do in Device Hub.
 
-Checked on 16 October 2026 with Xcode 27.1 (27A9275) and the iOS 27.1 runtime (24A94425). Every command on this page ran on that Mac unless the text says otherwise. Set `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer` first.
+Checked on 16 October 2026 with Xcode 27.1 (27A9275) and the iOS 27.1 runtime (24A94425). Every command on this page ran on that Mac unless the text says otherwise. Put `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer` in front of each `xcrun` call below. An agent's shell may not keep an `export` from an earlier call; export it only in an interactive terminal.
 
 ## Find the device
 
@@ -25,7 +25,7 @@ The Duo device type needs the iOS 27.1 runtime or later. Simulators are shared b
 ## Create, boot, delete
 
 ```bash
-# create: prints the new UDID; the runtime is optional (newest compatible if left out)
+# create (ask the user first): prints the new UDID; the runtime is optional (newest compatible if left out)
 xcrun simctl create "iPhone Duo" com.apple.CoreSimulator.SimDeviceType.iPhone-Duo com.apple.CoreSimulator.SimRuntime.iOS-27-1
 
 # boot if needed, then wait until it is ready
@@ -45,8 +45,10 @@ xcrun simctl delete <UDID>
 Xcode 27.1 runs simulators in Device Hub. It ships `DeviceHub.app` and no `Simulator.app`.
 
 ```bash
-open "$DEVELOPER_DIR/../Applications/DeviceHub.app"
+open /Applications/Xcode-27.1.app/Contents/Applications/DeviceHub.app
 ```
+
+Use the full path. `"$DEVELOPER_DIR/..."` turns into `/../Applications/...` when the variable isn't set, and a `DEVELOPER_DIR=... open` prefix doesn't help, because the shell expands the path before it sets the variable.
 
 Or, in Xcode, choose Manage Devices from the run destination menu, or Xcode > Open Developer Tool > Device Hub. Running an app on a simulator opens a compact Device Hub window; expand it to see the sidebar, canvas and inspector. The sidebar lists only simulators you added or used as run destinations; add one with the + button ([Apple: managing devices](https://developer.apple.com/documentation/xcode/managing-your-simulated-and-physical-devices-in-device-hub), [Apple: Device Hub](https://developer.apple.com/documentation/xcode/device-hub)).
 

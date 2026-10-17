@@ -32,14 +32,14 @@ Use an overlay arrangement instead when the pane is foreground over a background
 
 All arrangement APIs are iOS 27.1. Mark the screen `@available(iOS 27.1, *)` and keep a plain layout for older systems.
 
-Alternative: [`inspector(isPresented:content:)`](https://developer.apple.com/documentation/swiftui/view/inspector(ispresented:content:)) (iOS 17) is a trailing column at regular width and a sheet at compact width. Apple's hub says the system gives inspectors horizontal bars on iPhone Duo. Whether an inspector moves off the fold when the phone folds is not documented. (unverified)
+Alternative: [`inspector(isPresented:content:)`](https://developer.apple.com/documentation/swiftui/view/inspector(ispresented:content:)) (iOS 17) is a trailing column at regular width and a sheet at compact width. Apple's hub says the system gives inspectors horizontal bars on iPhone Duo. Use it when the screen is also list-detail; see Combining patterns in SKILL.md. Whether an inspector moves off the fold when the phone folds is not documented. (unverified)
 
 ## Rules
 
 1. Put the main content in `primary` and the pane in `secondary`. When the arrangement can only show one view, it shows the primary ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=720)).
 2. Restrict the split to `.horizontal` when the pane must sit beside the content, never below it.
 3. Size the pane with a ratio or a min/ideal/max range. Never a fixed point width.
-4. Put the `ArrangementView` inside your `NavigationStack`, not around it, and never inside a `List`, `ScrollView` or `NavigationSplitView` ([hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo), [HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Arrangement-views)).
+4. Put the `ArrangementView` inside your `NavigationStack`, not around it, and never inside a `List`, `ScrollView` or `NavigationSplitView` ([hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo), [HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Arrangement-views)). If the screen also has a list with its own details, build list-detail and add the pane as an inspector instead (Combining patterns in SKILL.md).
 5. Keep one model for the pane. The inline pane and the sheet read the same comments and the same draft, so nothing is lost when the phone opens with the sheet up.
 6. Offer the pane on every display. Closed, it is one tap away. Apple: don't tie functionality to one pose ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=222)).
 
@@ -51,7 +51,7 @@ On the iOS 27.1 iPhone Duo simulator, open and flat (Xcode 27.1, 16 Oct 2026):
 - `.splitArrangementLayoutRatio(0.3)` on the primary gave it 30% of a wide frame.
 - `splitArrangementAxis` read `nil` inside both views, even in a working horizontal split. Don't build on it until you have checked it folded. (unverified when folded)
 
-Because no API reports "the secondary is hidden", the recipe below mirrors Apple's documented rule: a split goes side by side when the view is wider than tall, and size class is one of its inputs ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=560)). Duology's earlier research notes also report that an arrangement showed only its first view on the closed phone held sideways (not re-measured here). Check the rule in Device Hub for your screen.
+Because no API reports "the secondary is hidden", the recipe below mirrors Apple's documented rule: a split goes side by side when the view is wider than tall, and size class is one of its inputs ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=560)). `duo-layout` measured the compact case: closed and held sideways (compact width, compact height), a split arrangement shows only its primary view ([arrangement-view.md, What we measured](https://github.com/Kimeur/duology/blob/main/plugins/duology/skills/duo-layout/references/arrangement-view.md#what-we-measured)). Check the rule in Device Hub for your screen.
 
 ## Recipe
 
@@ -169,8 +169,8 @@ func makeArticleScreen(article: UIViewController, comments: UIViewController) ->
 
 ## Gallery screen
 
-[`samples/DuologyGallery/DuologyGallery/Patterns/SupportingPaneView.swift`](../../../../../samples/DuologyGallery/DuologyGallery/Patterns/SupportingPaneView.swift)
+[`samples/DuologyGallery/DuologyGallery/Patterns/SupportingPaneView.swift`](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/SupportingPaneView.swift)
 
 ## Sources
 
-IDs point to [`reference/sources.md`](../../../../../reference/sources.md): D1 (hub), D2 (HIG), V3 (talk 111463), V6 (talk 111466), P1f (Microsoft companion pane), P2 (Android canonical layouts).
+IDs point to [`reference/sources.md`](https://github.com/Kimeur/duology/blob/main/reference/sources.md): D1 (hub), D2 (HIG), V3 (talk 111463), V6 (talk 111466), P1f (Microsoft companion pane), P2 (Android canonical layouts).

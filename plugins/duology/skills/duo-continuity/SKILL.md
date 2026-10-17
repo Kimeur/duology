@@ -8,11 +8,11 @@ metadata:
 
 # duo-continuity
 
-Folding or unfolding iPhone Duo does not relaunch your app. Your content moves to the other display, and the window changes size and usually its horizontal size class. State survives only if it lives above the part of the view tree that the change rebuilds. This skill tells you where to put each kind of state and how to prove it survives.
+Apple says your app resizes when someone opens or closes iPhone Duo ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)). Your content moves to the other display, and the window changes size and usually its horizontal size class. State survives only if it lives above the part of the view tree that the change rebuilds. This skill tells you where to put each kind of state and how to prove it survives.
 
 Load other skills for neighbouring work: `duo-layout` (size classes, `ArrangementView`, the even split), `duo-navigation` (bars, sidebars, sheets), `duo-testing` (test setup on the Duo simulator).
 
-Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1). Most of those runs flip the size class from code, the same change a fold makes, because Xcode can't fold the simulator from code; see [references/evidence.md](references/evidence.md). *Unverified* means we could not confirm it. Everything else comes from Apple's pages, linked inline. Full source list: [reference/sources.md](https://github.com/Kimeur/duology/blob/main/reference/sources.md).
+Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1). Fold results come from flipping the size class from code, the change a fold makes to your views, because Xcode can't fold the simulator from code; see [references/evidence.md](references/evidence.md). *Unverified* means we could not confirm it. Everything else comes from Apple's pages, linked inline. Full source list: [reference/sources.md](https://github.com/Kimeur/duology/blob/main/reference/sources.md).
 
 ## Apple has no continuity API
 
@@ -28,8 +28,7 @@ Don't look for one. The iOS 27.1 SDK has no fold, pose or posture symbol, and th
 | Split View, pinned Picture in Picture | The window gets narrower or shorter. |
 | Combinations | Rotate, then close. Close while scrolling. Open while typing. Each step is another resize. |
 
-- *Measured:* a size probe saw one `onAppear`, then 951 × 669 pt (regular) → 466 × 678 pt (compact) → 951 × 669 pt, with no second `onAppear`. The root view lived through close and open.
-- *Unverified:* whether the scene passes through `.inactive` during a fold, and what the keyboard does when the window changes display. Don't depend on either.
+- *Unverified:* that a real close or open keeps your root view alive with no relaunch (Apple calls it a resize; we haven't measured a fold), whether the scene passes through `.inactive`, and what the keyboard does when the window changes display. Don't depend on any of them; check in Device Hub.
 
 ## Where state gets lost
 
@@ -221,7 +220,7 @@ struct NoteEditor: View {
 }
 ```
 
-- *Measured:* a field with stable identity kept focus through close and open. The same field inside an `if`/`else` lost it: its `@FocusState` became `nil`.
+- *Measured:* a field with stable identity kept focus through two size-class flips. The same field inside an `if`/`else` lost it: its `@FocusState` became `nil`.
 - Form drafts work the same way: a struct in the model, fields bound with `$model.form.name` ([references/swiftui.md](references/swiftui.md#form-input)).
 
 ## 7. Playback
@@ -275,8 +274,8 @@ final class FeedViewController: UICollectionViewController {
 ## 10. How to test
 
 1. **By hand in Device Hub.** Run on the iPhone Duo simulator. Build up state: scroll halfway, select an item, push a screen, type and select text, start playback, start an upload, open a sheet. Then press Closed, Open and Partially Open under the bezel, rotate, and try the combinations ([Interacting with your app in Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)). Check every row of the table above after each step.
-2. **Automatic UI test.** A debug-only launch switch adds a button that flips the size class at the root and a hidden element that reports a state summary. The test records the summary, flips, rotates with `XCUIDevice.shared.orientation`, and compares. (Typechecked; not yet run on the simulator.)
-3. **Real fold in a UI test.** Xcode 27.1 can't fold the simulator from code: `XCUIDevice` has no fold control and `simctl` has no pose command. So a test, skipped by default, waits while you press Closed and Open in Device Hub, then compares the summary. Steps, matrix and full test code: [references/testing.md](references/testing.md).
+2. **Automatic UI test.** A debug-only launch switch adds a button that flips the size class at the root and hidden labels that report a state summary. The test records the summary, flips there and back, and compares. *Measured:* it passed on the closed Duo simulator. Don't rotate in it: *measured*, setting `XCUIDevice.shared.orientation` on the closed Duo did not resize the app (open: *unverified*).
+3. **Real fold and rotation in a UI test.** Xcode 27.1 can't fold the simulator from code: `XCUIDevice` has no fold control and `simctl` has no pose command. So a test, skipped by default, waits while you press the pose buttons and the rotate button in Device Hub, then compares the summary. Steps, matrix and full test code: [references/testing.md](references/testing.md).
 
 ## Red flags in review
 
@@ -298,5 +297,4 @@ final class FeedViewController: UICollectionViewController {
 - [ ] One `AVPlayer`, owned by a model above the layout switch; no pause in `onDisappear`.
 - [ ] Sheets and alerts attach to the window root and read their item from the model. Sign-in state lives above every window; secrets are in the Keychain.
 - [ ] UIKit: same view controllers through trait changes; the top item is remembered before the change and restored after the next layout pass.
-- [ ] Tested in Device Hub: Closed, Open, Partially Open, rotate, Split View, and rotate-then-close, with every state in the table.
-- [ ] A UI test flips the size class and rotates, and checks the state summary.
+- [ ] Tested in Device Hub (Closed, Open, Partially Open, rotate, Split View, rotate-then-close) with every state in the table; a UI test flips the size class and checks the state summary.

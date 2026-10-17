@@ -2,12 +2,12 @@
 
 Claude Code can build, run and inspect a project through Xcode's own tools. Xcode exposes them as a Model Context Protocol (MCP) server, reached with `xcrun mcpbridge`. Apple's guide: [Giving external agents access to Xcode](https://developer.apple.com/documentation/xcode/giving-external-agents-access-to-xcode).
 
-Checked on 16 October 2026 with Xcode 27.1 (27A9275) and Claude Code 2.1. We read the help of every command below. We did not register the server or connect it to a running Xcode; see [Not verified](#not-verified).
+Checked on 16 October 2026 with Xcode 27.1 (27A9275) and Claude Code 2.1. We read the help of every command below. We did not register the server or connect it to a running Xcode; see [Not verified](#not-verified). On 17 October, with no Xcode running, we sent the bridge an MCP `initialize` message and kept its input open, as Claude Code does. It replied within a second, as `xcode-tools`.
 
 ## Turn it on
 
 1. **The user** opens Xcode, chooses Xcode > Settings, selects Intelligence and, under Model Context Protocol, turns on "Allow external agents to use Xcode tools". An agent must not change this setting.
-2. **Register the server** with Claude Code:
+2. **Register the server** with Claude Code. Show the user the command and run it only after they agree. With more than one Xcode installed, use the `-e DEVELOPER_DIR` form in [Two Xcodes on one Mac](#two-xcodes-on-one-mac) instead:
 
    ```bash
    claude mcp add --transport stdio xcode -- xcrun mcpbridge
@@ -46,7 +46,13 @@ Both Xcode 26.5 and Xcode 27.1 ship `mcpbridge`. Which one runs, and which Xcode
 - `xcrun` finds `mcpbridge` in `DEVELOPER_DIR`, or in the `xcode-select` default.
 - The bridge connects to the Xcode that `xcode-select` picks. `xcode-select -p` honours `DEVELOPER_DIR` (we checked), so passing `DEVELOPER_DIR` should point both at 27.1.
 
-If `xcode-select -p` doesn't print the 27.1 path, register the server like this:
+Claude Code starts the bridge without your shell's `DEVELOPER_DIR`. So check the Mac-wide default with the variable removed:
+
+```bash
+env -u DEVELOPER_DIR xcode-select -p
+```
+
+Plain `xcode-select -p` won't do: with `DEVELOPER_DIR` set, it prints the variable, not the default. If the command above doesn't print the 27.1 path, register the server like this. With more than one Xcode installed, use this form anyway; it keeps working if the user later switches the default:
 
 ```bash
 claude mcp add --transport stdio xcode \
@@ -60,13 +66,14 @@ If both Xcodes are open at once, `MCP_XCODE_PID` picks one. A PID changes every 
 ps -axo pid=,comm= | grep "/Xcode-27.1.app/Contents/MacOS/Xcode$" | awk '{print $1}'
 ```
 
-Don't use `pgrep -f` with the path here. It also matches the shell that runs it, so it can print a PID while Xcode is closed.
+The `comm` column holds each process's executable path, so this matches Xcode itself and nothing that only mentions the path in its arguments.
 
 ## When it fails
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `claude mcp list` shows `xcode` as failed or timing out | Xcode isn't running | Ask the user to open Xcode 27.1 with the project. With Xcode closed, our bridge sent no reply within 15 seconds. |
+| `claude mcp list` shows `xcode` as failed or timing out | The registered command is wrong. The bridge answers even with Xcode closed, so a closed Xcode doesn't cause this. | Read `claude mcp get xcode` to see the command and its environment. Then, after the user agrees, `claude mcp remove xcode` and register it again as above. |
+| `xcode` shows Connected, but Xcode's tools fail | "Connected" only means the bridge answered. The project isn't open in Xcode 27.1, or the Intelligence setting is off | Ask the user to open the project in Xcode 27.1 with the setting on |
 | Tools act on the wrong project | Another project or another Xcode is in front | Ask the user to open the right project in Xcode 27.1, or set `MCP_XCODE_PID` |
 | Builds use the old SDK | The bridge found Xcode 26.x | Register with `-e DEVELOPER_DIR=...` as above |
 | Xcode refuses the agent | The Intelligence setting is off | Ask the user to turn it on |
@@ -97,6 +104,8 @@ DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer \
 
 `xcrun agent` is a small script that runs `mcpbridge run-agent`. The export takes `--output-dir <path>` and `--replace-existing`. Apple's prepare page shows it with no options; the bridge's help says that form writes to `./xcode-skills`.
 
+Pass an absolute path to `--output-dir`. A relative path is resolved from `/`, not the current folder, and fails: `--output-dir rel-xs` stopped with "the volume 'Macintosh HD' is read only" and the path `/rel-xs`. The shell turns `~/xcode-skills` into an absolute path, so that form works. Xcode 26.5's `xcrun agent` has no `skills` agent, so keep the `DEVELOPER_DIR` prefix.
+
 On our Mac it exported 10 skills:
 
 | Skill | Use it for |
@@ -120,4 +129,4 @@ Xcode can also host agents in its own coding assistant. Their settings live in `
 
 - A live connection: we did not register `xcode` with Claude Code on this Mac (that changes the user's configuration) and did not connect to a running Xcode (that shows prompts in the user's Xcode). The commands follow Apple's guide and each tool's `--help`.
 - That `-e DEVELOPER_DIR=...` makes the bridge connect to Xcode 27.1 when another Xcode is the default. It follows from the bridge's help and from `xcode-select -p` honouring `DEVELOPER_DIR`, but we did not watch it connect.
-- The list of tools the bridge offers.
+- The list of tools the bridge offers, and what each one does once Xcode is open.

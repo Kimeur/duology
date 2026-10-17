@@ -10,7 +10,7 @@ Three layers, from cheapest to closest to a real fold:
 
 | Action | From code? | How |
 |---|---|---|
-| Rotate | No, on the Duo | Device Hub's rotate button. *Measured:* on the closed Duo simulator, setting [`XCUIDevice.shared.orientation`](https://developer.apple.com/documentation/xcuiautomation/xcuidevice/orientation) to landscape changed the device orientation but not the app's 466 × 678 pt window (this skill's run and `duo-testing`'s). Open: *unverified*. From inside the app, *measured:* `requestGeometryUpdate(_:errorHandler:)` on the open inner display failed with "The current windowing mode does not allow for programmatic changes to interface orientation." |
+| Rotate | Not on the closed Duo | Device Hub's rotate button. *Measured:* on the closed Duo simulator, setting [`XCUIDevice.shared.orientation`](https://developer.apple.com/documentation/xcuiautomation/xcuidevice/orientation) to landscape changed the device orientation but not the app's 466 × 678 pt window (this skill's run and `duo-testing`'s). Open: *unverified*. From inside the app, *measured:* `requestGeometryUpdate(_:errorHandler:)` on the open inner display failed with "The current windowing mode does not allow for programmatic changes to interface orientation." |
 | Close, open, partially open | No | Device Hub buttons only. `XCUIDevice` has no fold or hinge property, and `simctl` has no pose command (checked in Xcode 27.1). |
 | Any hinge angle | No | Hold Option and drag the slider under the bezel |
 | Split View | No | Drag the app by its home indicator to one side ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)) |
@@ -76,9 +76,9 @@ struct ContinuityHarness: ViewModifier {
                 .environment(\.horizontalSizeClass, override ?? real)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)   // fill the window, however small the content
                 .background {
-                    Color.clear                                     // measures the whole window, safe areas included
-                        .ignoresSafeArea()
+                    Color.clear
                         .onGeometryChange(for: CGSize.self) { $0.size } action: { size = $0 }
+                        .ignoresSafeArea()                          // keep this last: the reader then sees the whole window
                 }
                 .overlay(alignment: .bottomLeading) {
                     VStack(alignment: .leading) {
@@ -139,6 +139,7 @@ struct ReaderRoot: View {
 ```
 
 - The `if` in the harness reads a launch switch that never changes while the app runs, so it never changes identity.
+- The size label must show the window, not your content or the safe area. *Measured* on the closed Duo simulator: the window was 466 × 678 pt with 84 pt right and 34 pt bottom safe-area insets. A reader on the content saw the text's own 108 × 20 pt; a reader placed after `.ignoresSafeArea()` saw 382 × 644 pt; the reader above, inside `.ignoresSafeArea()`, saw 466 × 678 pt.
 - *Measured:* this kind of override made `NavigationSplitView` collapse and expand, and switched `if`/`else` branches, on the iOS 27.1 simulator ([evidence.md](evidence.md)).
 - The override changes the size class only. It doesn't move the window to the other display, resize it, or touch the keyboard. Keep the Device Hub pass.
 - UIKit: set `traitOverrides.horizontalSizeClass` on the root view controller instead ([traitOverrides](https://developer.apple.com/documentation/uikit/uiviewcontroller/traitoverrides-1z1cc), iOS 17). *Measured:* it ran `registerForTraitChanges` handlers and changed a compositional layout's column count.
@@ -230,7 +231,7 @@ DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcodebuild test \
   -scheme YourApp -destination 'platform=iOS Simulator,name=iPhone Duo,OS=27.1' \
   -only-testing:YourAppUITests/ContinuityUITests/testStateSurvivesSizeClassFlip
 
-# Manual fold test: keep Device Hub visible and press the buttons when the test waits
+# Manual fold test: keep Device Hub visible; fold and rotate when the test asks
 TEST_RUNNER_DUO_MANUAL_FOLD=1 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcodebuild test \
   -scheme YourApp -destination 'platform=iOS Simulator,name=iPhone Duo,OS=27.1' \
   -only-testing:YourAppUITests/ContinuityUITests/testStateSurvivesRealFold
@@ -239,7 +240,8 @@ TEST_RUNNER_DUO_MANUAL_FOLD=1 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Content
 - `xcodebuild` passes any `TEST_RUNNER_` variable to the test runner with the prefix removed (`man xcodebuild`, Xcode 27.1).
 - [wait(for:toEqual:timeout:)](https://developer.apple.com/documentation/xcuiautomation/xcuielement/wait(for:toequal:timeout:)) polls a key path until it matches. [XCTSkipUnless](https://developer.apple.com/documentation/xctest/xctskipunless(_:_:file:line:)) keeps the manual test out of normal runs.
 - The summary should hold only what must not change. Leave the size class out of it.
-- *Unverified:* we typechecked these tests against the Xcode 27.1 SDK but have not yet run them on the simulator. In particular, check that `XCUIDevice.shared.orientation` resizes your app on the open inner display, which doesn't honour supported orientations, and that the test finds the labels at 2% opacity (raise it if not).
+- *Measured:* the automatic test passed on a closed iPhone Duo simulator (iOS 27.1), in an app target with Swift 6 and MainActor default isolation. It found the labels at 2% opacity. The manual test skipped itself when the variable was unset.
+- *Unverified:* the manual test's fold and rotate steps, because they need a person at Device Hub. Whether Device Hub's rotate button resizes your app depends on the display and your supported orientations ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)). Delete the rotate step if your app doesn't rotate in that pose.
 - `duo-testing` has general tips for UI tests on the Duo simulator.
 
 ## Quick checks without a test target

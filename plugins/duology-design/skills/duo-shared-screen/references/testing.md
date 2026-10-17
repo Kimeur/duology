@@ -141,12 +141,13 @@ xcodebuild test -project MyApp.xcodeproj -scheme MyApp \
 
 ## Rules on the Mac
 
-`Seat`, `Facing` and `SeatGate` are plain Swift, so you can check them on the Mac in a second, without a simulator. Put them in their own file (`Seats.swift`, from SKILL.md section 1), then add this `main.swift` next to it:
+`Seat`, `Facing`, `SeatGate` and `SharedSession` are plain Swift with no UI, so you can check them on the Mac in a second, without a simulator. Put the first three in `Seats.swift` (SKILL.md section 1) and `SharedSession` in `Session.swift` ([input.md](input.md#gate-every-action)). Then add this `main.swift` next to them:
 
 ```swift
-// xcrun swiftc Seats.swift main.swift -o seats-check && ./seats-check
+// xcrun swiftc Seats.swift Session.swift main.swift -o seats-check && ./seats-check
 import Foundation
 
+@MainActor  // SharedSession is main-actor code
 func failedChecks() -> [String] {
     var failed: [String] = []
     func check(_ ok: Bool, _ what: String) { if !ok { failed.append(what) } }
@@ -169,10 +170,23 @@ func failedChecks() -> [String] {
     check(Facing.faceToFace.quarterTurns(for: .second, sideBySide: false) == 0, "bottom half upright")
     let sideways = Seat.allCases.map { Facing.faceToFace.quarterTurns(for: $0, sideBySide: true) }
     check(Set(sideways) == [1, 3], "side by side: opposite quarter turns")
+
+    let session = SharedSession()
+    session.gate.mode = .takeTurns
+    session.perform(.first) { false }
+    check(session.canAct(.first) && !session.canAct(.second), "a refused move keeps the turn")
+    check(session.successes[.first] == 0, "a refused move counts nothing")
+    var ran = false
+    session.perform(.second) { ran = true; return true }
+    check(!ran, "a waiting seat's action never runs")
+    session.perform(.first) { true }
+    check(session.successes[.first] == 1 && session.canAct(.second), "a move that counts ends the turn")
+    session.perform(.second, failurePassesTurn: true) { false }
+    check(session.canAct(.first) && session.successes[.second] == 0, "a failed try passes the turn only when asked")
     return failed
 }
 
-let failed = failedChecks()
+let failed = MainActor.assumeIsolated { failedChecks() }  // top-level code runs on the main thread
 failed.forEach { print("FAIL", $0) }
 print(failed.isEmpty ? "ALL PASS" : "\(failed.count) FAILED")
 exit(failed.isEmpty ? 0 : 1)

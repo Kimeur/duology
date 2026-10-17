@@ -8,7 +8,8 @@ import SwiftUI
 /// Same idea as the `FoldGeometry` helper in the `duo-patterns` skill. This copy
 /// builds for iOS 26: the type is always there, and only reading it needs iOS 27.1.
 nonisolated struct FoldGeometry: Equatable, Sendable {
-    /// The fold's frame in this view's space, margins included. Nil when no fold crosses the view.
+    /// The fold's frame in this view's space, margins included. Nil when no fold
+    /// lies inside the view, including a fold that only touches one of its edges.
     var frame: CGRect?
     /// True while the phone is partly folded. False when it lies flat.
     var isActive = false
@@ -29,11 +30,28 @@ nonisolated struct FoldGeometry: Equatable, Sendable {
         // The default query returns active regions only (measured on the iOS 27.1
         // simulator). Ask for inactive ones too, so a flat inner display still
         // tells you where its fold is.
+        //
+        // The query returns every region that intersects the view, so a fold
+        // that only touches the view's edge comes back too. A Split View window
+        // that ends at the fold might do that (not checked). Keep only a fold
+        // that lies inside the view.
+        let size = proxy.size
         let folds = proxy.reservedRegions(kind: .division, options: .includeInactive)
+            .filter { Self.liesInside($0.frame, of: size) }
         if let fold = folds.first(where: \.isActive) ?? folds.first {
             frame = fold.frame
             isActive = fold.isActive
         }
+    }
+
+    /// True when a fold frame splits a view of `size` into two parts: a top to
+    /// bottom fold with view on its left and right, or a side to side fold with
+    /// view above and below. A pure function, so it can be tested on the Mac.
+    static func liesInside(_ frame: CGRect, of size: CGSize) -> Bool {
+        if frame.height > frame.width {
+            return frame.minX > 0 && frame.maxX < size.width
+        }
+        return frame.minY > 0 && frame.maxY < size.height
     }
 
     /// A short description for the gallery's status labels.

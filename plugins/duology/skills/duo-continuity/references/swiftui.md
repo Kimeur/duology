@@ -228,7 +228,7 @@ struct ComposeView: View {
 ```
 
 - [FocusState](https://developer.apple.com/documentation/swiftui/focusstate) can't live in a model. It belongs to a view, so the field and that view must keep their identity.
-- *Measured:* focus survived close and open when the field kept its identity, and became `nil` when the field sat in an `if`/`else`.
+- *Measured:* focus survived two size-class flips when the field kept its identity, and became `nil` when the field sat in an `if`/`else`.
 - [TextSelection](https://developer.apple.com/documentation/swiftui/textselection) and the `selection:` initializers of [TextField](https://developer.apple.com/documentation/swiftui/textfield/init(_:text:selection:prompt:axis:)) and [TextEditor](https://developer.apple.com/documentation/swiftui/texteditor/init(text:selection:)) need iOS 18.
 - *Unverified:* what the software keyboard does when the window moves to the other display. Run the Device Hub pass with the keyboard up.
 

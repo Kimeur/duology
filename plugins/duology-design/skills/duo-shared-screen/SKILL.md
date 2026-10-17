@@ -38,7 +38,7 @@ No API tells you how people sit. There is no posture API; the hinge reports only
 
 1. One half per person with `SharedSplit`. Not `ArrangementView`: closed and held sideways it shows only its primary view (*measured* in `duo-layout`).
 2. Give each half its own named coordinate space and read every touch in it.
-3. Put `.contentShape(Rectangle())` on each half. `.clipped()` hides overflow but doesn't stop it taking the other person's taps (*measured*).
+3. Put `.contentShape(Rectangle())` on each half's container, and no gesture on that container: taps and drags go on child views or on a clear layer beside the content. `.clipped()` hides overflow but doesn't stop it taking the other person's taps (*measured*).
 4. Gate every action per seat in one place, the model. Views can lag a turn.
 5. Something tapped and dragged: `onTapGesture` plus `DragGesture(minimumDistance:)` above zero.
 6. Shared and destructive controls: one place, one seat, confirmed inside the half. No system alerts or sheets during play.
@@ -167,7 +167,7 @@ struct SeatHalf<Content: View>: View {
     var body: some View {
         content()
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .contentShape(Rectangle())   // keeps the other half's overflow from taking touches
+            .contentShape(Rectangle())   // keeps the other half's overflow from taking touches; no gesture here
             .coordinateSpace(seat.space)
             .clipped()                   // hides overflow; does not stop touches
             .accessibilityElement(children: .contain)
@@ -183,6 +183,7 @@ struct SeatHalf<Content: View>: View {
 - Face to face, stacked: the top half turned upside down with its top edge on the seam. Taps worked. A screen drag from (38, 48) to (152, 48) arrived in the turned half as (343, 273) to (229, 273): touches come in the owner's coordinates.
 - Side by side (a wide frame we forced, since the clone did not rotate): the halves turned a quarter each way, laid out at 220 × 190 inside 190 × 220 slots, with both top edges on the seam.
 - Right-to-left: the first seat stayed on the left and the text inside each half ran right to left.
+- `contentShape` with no gesture on the half: children kept their own accessibility frames (a piece 64 × 64 pt, a text line 352 × 26 pt). `recipe-two-player-game` measured `contentShape` plus a tap gesture on one container: a child's frame became the whole field (382 × 261 pt, not 56 × 56). So no gesture on the half itself.
 
 ## 3. A play screen
 
@@ -290,7 +291,7 @@ Same ideas, typechecked but not run: two half views turned with `transform`, `UI
 - [ ] The shared screen has a reason from the "When it fits" table, and nothing private shows on either half.
 - [ ] People choose the seating; the choice is saved. No orientation, idiom or hinge check decides it.
 - [ ] Two halves show in every pose, closed and sideways included (`SharedSplit`, not `ArrangementView`).
-- [ ] Each half has its own named coordinate space and `.contentShape(Rectangle())`; drags stay inside the half.
+- [ ] Each half has its own named coordinate space and `.contentShape(Rectangle())`, with no gesture on the half itself; drags stay inside the half.
 - [ ] Every action goes through one gate per seat in the model; pieces that drag still take taps.
 - [ ] Leave, restart and reset live on one seat, confirm in place, and sit away from the seam.
 - [ ] No system alert, sheet or keyboard appears during play.

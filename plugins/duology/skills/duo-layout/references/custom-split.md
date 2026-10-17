@@ -2,7 +2,7 @@
 
 When `ArrangementView` is the wrong tool, and how to fit content into a half.
 
-`EvenSplit`, `BoardPlan`, `ScorePanel` and `FoldSplitLayout` work on any iOS version that has `Layout` and `AnyLayout`. Only `DuelOnTheFold` reads reserved regions, so it is marked `@available(iOS 27.1, *)` ([SKILL.md](../SKILL.md#deploying-below-ios-271)).
+Everything on this page except `DuelOnTheFold` typechecks at an iOS 17 deployment target. `DuelOnTheFold` reads reserved regions, so it is marked `@available(iOS 27.1, *)` ([SKILL.md](../SKILL.md#deploying-below-ios-271)).
 
 ## Pick the container
 

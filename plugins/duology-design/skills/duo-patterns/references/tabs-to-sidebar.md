@@ -150,8 +150,8 @@ UIKit: set `tabBarController.sidebar.preferredPlacement = .sidebar` (iOS 27.0), 
 
 ## Gallery screen
 
-[`samples/DuologyGallery/DuologyGallery/Patterns/TabsToSidebarView.swift`](../../../../../samples/DuologyGallery/DuologyGallery/Patterns/TabsToSidebarView.swift)
+[`samples/DuologyGallery/DuologyGallery/Patterns/TabsToSidebarView.swift`](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/TabsToSidebarView.swift)
 
 ## Sources
 
-IDs point to [`reference/sources.md`](../../../../../reference/sources.md): D1 (hub), D2 (HIG), V1 (talk 111461), V2 (talk 111462), V6 (talk 111466). Microsoft's navigation rail page is listed in the archive's table of contents next to P1 and is not in `sources.md` yet.
+IDs point to [`reference/sources.md`](https://github.com/Kimeur/duology/blob/main/reference/sources.md): D1 (hub), D2 (HIG), V1 (talk 111461), V2 (talk 111462), V6 (talk 111466). Prior art: Microsoft's [navigation rail](https://learn.microsoft.com/en-us/previous-versions/dual-screen/design/navigation) page.

@@ -44,7 +44,7 @@ There is no posture or "book mode" API. Don't use `onHingeChange` to move contro
 5. Never displace scrolling content. Lists, feeds, articles and documents already adapt by scrolling; moving them breaks continuity ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=146)).
 6. Keep the same controls. Displacement moves, resizes and regroups; it never removes ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=312)).
 7. Animate the move with the system's spring so people can follow it.
-8. Check occlusions too. When the inner front camera is active, its region is active; keep controls out of it if the camera view is central to your screen ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=27)).
+8. Check occlusions too. When the inner front camera is active, its region is active; keep controls out of it if the camera view is central to your screen ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=74)).
 
 ## What we measured
 
@@ -149,8 +149,8 @@ Duology has not run steps 2 to 4: the folded poses can only be set by hand in De
 
 ## Gallery screen
 
-[`samples/DuologyGallery/DuologyGallery/Patterns/DisplacementView.swift`](../../../../../samples/DuologyGallery/DuologyGallery/Patterns/DisplacementView.swift)
+[`samples/DuologyGallery/DuologyGallery/Patterns/DisplacementView.swift`](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/DisplacementView.swift)
 
 ## Sources
 
-IDs point to [`reference/sources.md`](../../../../../reference/sources.md): D1 (hub), D2 (HIG), V3 (talk 111463), V4 (talk 111464), V6 (talk 111466), P2b (Android fold-aware), P3 (Samsung Flex mode).
+IDs point to [`reference/sources.md`](https://github.com/Kimeur/duology/blob/main/reference/sources.md): D1 (hub), D2 (HIG), V3 (talk 111463), V4 (talk 111464), V6 (talk 111466), P2b (Android fold-aware), P3 (Samsung Flex mode).

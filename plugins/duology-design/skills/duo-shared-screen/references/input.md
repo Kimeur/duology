@@ -106,14 +106,20 @@ final class SharedSession {
 
     func canAct(_ seat: Seat) -> Bool { gate.canAct(seat) }
 
-    /// Runs `action` only if `seat` may act now. `action` returns true on success.
-    func perform(_ seat: Seat, _ action: () -> Bool) {
+    /// Runs `action` only if `seat` may act now. `action` returns true when the move counts.
+    /// A refused move keeps the turn, unless `failurePassesTurn` says otherwise.
+    func perform(_ seat: Seat, failurePassesTurn: Bool = false, _ action: () -> Bool) {
         guard gate.canAct(seat) else { return }
-        if action() { successes[seat, default: 0] += 1 }
-        gate.finishTurn(of: seat)
+        let succeeded = action()
+        if succeeded { successes[seat, default: 0] += 1 }
+        if succeeded || failurePassesTurn { gate.finishTurn(of: seat) }
     }
 }
 ```
+
+- **A refused move keeps the turn.** In turn mode, a mis-tap or an illegal move must not hand the turn to the other person. Return `false` from `action` and the same seat goes again.
+- **Pass `failurePassesTurn: true` only when a failed try is a turn,** such as a wrong answer in a quiz.
+- Check both cases on the Mac ([testing.md](testing.md#rules-on-the-mac)).
 
 Show the waiting side. Dim it, say who goes next, and stop its touches:
 
@@ -189,7 +195,7 @@ Rules:
 
 - **One seat owns it.** Two Leave buttons mean either person can end the session for both. Pick the owner from the use case ([use-cases.md](use-cases.md)): the parent, the tutor, the staff member, or an agreed host in a game.
 - **Away from the seam.** The seam is where both people's hands meet. The second seat's bottom edge is far from the seam in every seating, closed or open (see [split-and-seating.md](split-and-seating.md#where-the-seam-is)).
-- **Confirm in place, not in an alert.** `rotationEffect` turns only your view's drawing ([doc](https://developer.apple.com/documentation/swiftui/view/rotationeffect(_:anchor:))). System alerts, sheets, menus and the keyboard keep the interface orientation, so face to face the first seat reads them upside down. They also cover both halves. (Reasoned from the API, not tested on the simulator.)
+- **Confirm in place, not in an alert.** `rotationEffect` turns only your view's drawing ([doc](https://developer.apple.com/documentation/swiftui/view/rotationeffect(_:anchor:))). System alerts, sheets, menus and the keyboard keep the interface orientation, so face to face the first seat reads them upside down. They also cover both halves. (Reasoned from the API, not tested on the simulator.) The one exception: between rounds, with both seats paused, a system dialog is acceptable for a seat whose half is not turned. While a round runs, never, even from an unturned half: it still covers the other person's side.
 - **Pause is shared too.** If either person can pause, either person can resume. Show "Paused by …" in both halves.
 
 ## A panel inside one half

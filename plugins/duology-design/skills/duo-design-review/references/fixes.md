@@ -43,50 +43,69 @@ For hero images and backgrounds that should run under a vertical bar, use [`back
 
 ## R2 State survives fold and unfold
 
-Keep the same views alive when the layout changes, and keep state outside views that come and go. [`AnyLayout`](https://developer.apple.com/documentation/swiftui/anylayout) swaps the layout without rebuilding its children.
+Keep the same views alive when the layout changes, and keep state outside views that come and go. For a list and its detail, use one [`NavigationSplitView`](https://developer.apple.com/documentation/swiftui/navigationsplitview) for every size, with the selection stored above it. Don't build list-detail from stacks: closed, they pile the list on top of the detail. Full recipe: `duo-patterns`, [list-detail](../../duo-patterns/references/list-detail.md).
 
 ```swift
 import SwiftUI
 
 struct LibraryScreen: View {
-    @Environment(\.horizontalSizeClass) private var widthClass
+    // The selection lives above the split view, in scene storage, so fold,
+    // unfold and a relaunch by the system all keep it.
     @SceneStorage("library.selectedID") private var selectedID: String?
 
     var body: some View {
-        // One container whose layout changes. The list and the reader keep
-        // their identity, so scroll position, selection and typing survive.
-        // An `if regular { HStack } else { VStack }` would rebuild both.
-        let layout = widthClass == .regular
-            ? AnyLayout(HStackLayout(spacing: 0))
-            : AnyLayout(VStackLayout(spacing: 0))
-        layout {
+        // One container for every size. Closed, it collapses to one stack:
+        // the list, then the reader. Open, it shows both side by side.
+        // Swapping in another screen on a size class change would rebuild
+        // the views and reset their state.
+        NavigationSplitView {
+            // ItemList is a List(selection: $selectedID).
             ItemList(selectedID: $selectedID)
+        } detail: {
             Reader(itemID: selectedID)
         }
     }
 }
 ```
 
-Scroll position, playback, focus, navigation paths and UIKit: load `duo-continuity`.
+For two views that must both stay visible at every size, such as a player and its controls, use [`AnyLayout`](https://developer.apple.com/documentation/swiftui/anylayout). It swaps the layout without rebuilding its children; R12 shows it. Scroll position, playback, focus, navigation paths and UIKit: load `duo-continuity`.
 
 ## R3 No size from the main screen
 
-Size from the view and re-read on every change ([prepare page](https://developer.apple.com/iphone-duo/prepare/)).
+Size from the view and re-read on every change ([prepare page](https://developer.apple.com/iphone-duo/prepare/)). A grid must also follow R5, so this block calls `columnCount` from [R5](#r5-even-grids): copy both. Across the inner display held wide (951 pt), 160 pt columns fit 5; the fold makes it 4.
 
 ```swift
 import SwiftUI
 
+/// What the grid reads from its own geometry.
+nonisolated struct GridSpace: Equatable, Sendable {
+    var width: CGFloat = 0
+    var foldCrossesGrid = false
+}
+
 struct AdaptivePhotos: View {
-    @State private var width: CGFloat = 0
+    @State private var space = GridSpace()
 
     var body: some View {
         // Size from the view, and re-read it on every change. A fold can
-        // resize the app in the middle of a session.
-        PhotoGrid(columns: max(1, Int(width / 160)))
-            .onGeometryChange(for: CGFloat.self) { proxy in
-                proxy.size.width
-            } action: { newWidth in
-                width = newWidth
+        // resize the app in the middle of a session. The count comes from
+        // columnCount in R5, so a grid the fold crosses gets an even count.
+        PhotoGrid(columns: columnCount(width: space.width, minColumnWidth: 160,
+                                       foldCrossesGrid: space.foldCrossesGrid))
+            .onGeometryChange(for: GridSpace.self) { proxy in
+                var space = GridSpace(width: proxy.size.width)
+                if #available(iOS 27.1, *) {
+                    // Count inactive folds too, so the grid doesn't jump on a fold.
+                    let folds = proxy.reservedRegions(kind: .division, options: .includeInactive)
+                    space.foldCrossesGrid = folds.contains { fold in
+                        // A top-to-bottom fold inside the grid's width.
+                        fold.frame.height > fold.frame.width
+                            && fold.frame.minX > 0 && fold.frame.maxX < proxy.size.width
+                    }
+                }
+                return space
+            } action: { newSpace in
+                space = newSpace
             }
     }
 }
@@ -241,7 +260,13 @@ struct PlayerScreen: View {
 }
 ```
 
-Don't put an arrangement inside a `NavigationSplitView`, `List` or `ScrollView`. Put navigation around it ([hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo), [talk 111463, 16:09](https://developer.apple.com/videos/play/tech-talks/111463/?time=969)). Two pages in book pose: `duo-patterns`, [two-page](../../duo-patterns/references/two-page.md). UIKit: [`UIArrangementViewController`](https://developer.apple.com/documentation/uikit/uiarrangementviewcontroller).
+Keep navigation and scrolling containers in the right place:
+
+- Never put a `NavigationStack`, `NavigationSplitView` or `TabView` inside an `ArrangementView`. An arrangement lays out its two views but gives no navigation ([HIG, Arrangement views](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Arrangement-views), [talk 111463, 16:15](https://developer.apple.com/videos/play/tech-talks/111463/?time=975)).
+- Never put an `ArrangementView` inside a `List` or `ScrollView`. Part of it can end up out of reach ([hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo), [talk 111463, 16:26](https://developer.apple.com/videos/play/tech-talks/111463/?time=986)).
+- An arrangement inside a `NavigationSplitView` is unverified. Apple's sources disagree: the HIG says to put split views and tab views around an arrangement, and the hub says to avoid an arrangement inside a navigation split view. A `NavigationStack` or `TabView` around the arrangement fits both.
+
+Two pages in book pose: `duo-patterns`, [two-page](../../duo-patterns/references/two-page.md). UIKit: [`UIArrangementViewController`](https://developer.apple.com/documentation/uikit/uiarrangementviewcontroller).
 
 ## R8 Split View and PiP work
 
@@ -258,8 +283,9 @@ func makePlayer(url: URL) -> AVPlayerViewController {
     let controller = AVPlayerViewController()
     controller.player = AVPlayer(url: url)
     controller.allowsPictureInPicturePlayback = true
-    // Let PiP start on its own when the video is the main thing on screen
-    // but doesn't fill the width, as on the wide inner display.
+    // Let PiP start by itself when the person leaves the app while this
+    // inline player is the main content. Set it only for video that is the
+    // person's main focus.
     controller.canStartPictureInPictureAutomaticallyFromInline = true
     return controller
 }

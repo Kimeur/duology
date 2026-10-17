@@ -2,7 +2,7 @@
 
 The build settings and project format Duology recommends, why, and how to check them.
 
-Checked on 16 October 2026 with Xcode 27.1 (27A9275). The two app-code Swift blocks below typecheck against the iOS 27.1 simulator SDK, and also build inside a test app with Swift 6, `MainActor` default isolation, approachable concurrency and a deployment target of iOS 26.0. The package manifest builds with `xcrun swift build`.
+Checked on 16 October 2026 with Xcode 27.1 (27A9275). The two app-code Swift blocks below typecheck against the iOS 27.1 simulator SDK, and also build inside a test app with Swift 6, `MainActor` default isolation, approachable concurrency and a deployment target of iOS 26.0. On 17 October we typechecked the test-target block against the same SDK's XCTest. The package manifest builds with `xcrun swift build`.
 
 ## SDK first, deployment target second
 
@@ -22,7 +22,7 @@ We read the templates inside Xcode 27.1 (`Library/Xcode/Templates/Project Templa
 | `IPHONEOS_DEPLOYMENT_TARGET` | `latest_iphoneos`, a placeholder for the newest iOS the Xcode knows | `27.1` for a Duo-first app; lower it on purpose for wider reach |
 | `TARGETED_DEVICE_FAMILY` | `1,2` | Keep. It must include `1` (iPhone). |
 | `SWIFT_VERSION` | `5.0` | **Change to `6.0`** |
-| `SWIFT_DEFAULT_ACTOR_ISOLATION` | `MainActor` (app targets) | Keep |
+| `SWIFT_DEFAULT_ACTOR_ISOLATION` | `MainActor` (app targets only; test targets get no value) | Keep. See [Test targets](#test-targets) before you add it to a test target. |
 | `SWIFT_APPROACHABLE_CONCURRENCY` | `YES` | Keep |
 | `SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY` | `YES` | Keep |
 | `LOCALIZATION_PREFERS_STRING_CATALOGS` | `YES` | Keep |
@@ -32,7 +32,7 @@ We read the templates inside Xcode 27.1 (`Library/Xcode/Templates/Project Templa
 Read a project's real values:
 
 ```bash
-xcodebuild -scheme <Scheme> -showBuildSettings 2>/dev/null | grep -E \
+DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcodebuild -scheme <Scheme> -showBuildSettings 2>/dev/null | grep -E \
   "^ *(SWIFT_VERSION|SWIFT_DEFAULT_ACTOR_ISOLATION|SWIFT_APPROACHABLE_CONCURRENCY|IPHONEOS_DEPLOYMENT_TARGET|TARGETED_DEVICE_FAMILY|SDK_VERSION) ="
 ```
 
@@ -77,6 +77,40 @@ nonisolated struct TitleLoader: Sendable {
 ```
 
 What the compiler says when you forget: a `nonisolated` function that writes to a property of a default-isolated class fails with "main actor-isolated property ... can not be mutated from a nonisolated context". Fix it by making the type `nonisolated` too, or by hopping to the main actor.
+
+### Test targets
+
+Xcode 27.1's app template sets `SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor` on the app target only. Its unit and UI test targets keep the default, which is nonisolated. Keep it that way unless the user asks for main-actor tests.
+
+The reason: `XCTestCase` and its methods are nonisolated. Under `MainActor` default isolation in Swift 6 mode, every subclass's overrides become main-actor isolated, and the build fails. We typechecked Xcode 27.1's own UI test template that way against the iOS 27.1 simulator SDK. It gave these errors, which tell you the cause:
+
+- "main actor-isolated instance method 'setUpWithError()' has different actor isolation from nonisolated overridden declaration", and the same for `tearDownWithError()`.
+- "main actor-isolated initializer 'init(invocation:)' has different actor isolation from nonisolated overridden declaration", and the same for `init(selector:)` and `init()`.
+
+Marking only the overrides `nonisolated` still leaves the initializer errors. The unit test template's `XCTestCase` class fails the same way. In Swift 5 mode the UI test template compiles without errors.
+
+If a test target must use `MainActor` default isolation, mark each `XCTestCase` subclass `nonisolated` and keep `@MainActor` on tests that drive the UI:
+
+```swift
+import XCTest
+
+// Test target built with SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor:
+// opt the XCTestCase subclass out, and keep @MainActor on UI tests.
+nonisolated final class MyAppUITests: XCTestCase {
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+    }
+
+    @MainActor
+    func testLaunch() throws {
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10))
+    }
+}
+```
+
+This class typechecks in Swift 5 and Swift 6 mode, with and without `MainActor` default isolation and approachable concurrency.
 
 ## Approachable concurrency
 

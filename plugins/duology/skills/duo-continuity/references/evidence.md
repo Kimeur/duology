@@ -2,8 +2,8 @@
 
 Every *measured* line in this skill comes from the runs below. Read the limits before you rely on them.
 
-- **When:** 16 October 2026.
-- **Tools:** Xcode 27.1 (27A9275), the iOS 27.1 simulator runtime (24A94425), the booted "iPhone Duo" simulator. We did not change its pose; it was open, held wide (951 × 669 pt).
+- **When:** 16 October 2026 for the probes, 17 October 2026 for the UI tests.
+- **Tools:** Xcode 27.1 (27A9275), the iOS 27.1 simulator runtime (24A94425). The probes ran on an "iPhone Duo" simulator that was open and held wide (951 × 669 pt). The UI tests ran on a new iPhone Duo simulator, which starts closed. We never changed a pose.
 - **Device:** none. Nothing here has run on a real iPhone Duo.
 
 ## The method, and its limits
@@ -14,15 +14,22 @@ What the flip does not do: move content to the other display, resize the window,
 
 ## Does a fold relaunch the app?
 
-No, on the simulator. A separate size probe from this project's device-facts work (16 Oct 2026, same simulator) logged the root view's `onAppear` once and then two size changes, with no second `onAppear`:
+*Unverified.* Apple says the app resizes when someone opens or closes the phone, and compares it to resizing in iPhone Mirroring ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)). We have not measured a real fold.
+
+A size log from this project's device-facts work looks like a fold but isn't one. Its compact line, in full:
 
 ```text
-PROBE appear size=951x669pt h=regular v=regular scale=3.0 ...
-PROBE change size=466x678pt h=compact v=regular scale=3.0 ...
-PROBE change size=951x669pt h=regular v=regular scale=3.0 ...
+PROBE change size=466x678pt h=compact v=regular scale=3.0 safe(t0 l0 b0 r0) | scene screen bounds=(669.0, 951.0) native=(2007.0, 2853.0) scale=3.0 nativeScale=3.0 maxFPS=60 window=(466.0, 678.0) traits h=1 v=2
 ```
 
-The middle line is the phone closed (outer display, compact width). The root view and its state lived through close and open. The probe is a small SwiftUI app like the one in the "How we measured" section of [device-facts.md](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md#how-we-measured). Its raw log is in the project's research notes, not in the repo, and we did not see who pressed Closed and Open for that run.
+The screen is still the inner one (2007 × 2853 px native), and the probe logged no hinge change. So the phone never closed. For comparison, the same probe on our closed simulator logged the outer screen and the hinge:
+
+```text
+PROBE appear size=466x678pt h=compact v=regular scale=3.0 safe(t0 l0 b0 r0) | scene screen bounds=(466.0, 678.0) native=(1398.0, 2034.0) scale=3.0 nativeScale=3.0 maxFPS=60 window=(466.0, 678.0) traits h=1 v=2
+PROBE hinge: closed angle=0 | scene screen bounds=(466.0, 678.0) native=(1398.0, 2034.0) scale=3.0 nativeScale=3.0 maxFPS=60 window=(466.0, 678.0) traits h=1 v=2
+```
+
+To settle it, run a probe that logs the root view's `onAppear`, the window scene's `screen.nativeBounds` and every `onHingeChange` (the probe in [device-facts.md](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md#how-we-measured) plus a `nativeBounds` print). Press Closed and then Open in Device Hub, and keep the full lines. A fold that keeps the app alive shows one appear line, then size changes whose native screen size switches between 2007 × 2853 and 1398 × 2034 px, with a hinge line at each step.
 
 ## Results
 
@@ -31,14 +38,14 @@ The middle line is the phone closed (outer display, compact width). The root vie
 | A child view inside `if wide { HStack } else { VStack }` | New `@State` on every flip, `onAppear` again, old `.task` cancelled |
 | The same child inside `AnyLayout` | One `onAppear` for the whole run, `.task` never cancelled |
 | `@SceneStorage("probe.note")` written in one branch, read in the other | The other branch read the written value |
-| `@FocusState` on a field with stable identity | Focus kept through close and open (two flips) |
+| `@FocusState` on a field with stable identity | Focus kept through two flips (to compact and back) |
 | `@FocusState` on a field inside an `if`/`else` | Focus became `nil` after the flip |
 | A model-owned `AVPlayer` shown by `VideoPlayer` inside an `if`/`else` | Kept playing through every flip; time kept rising |
 | `ScrollPosition` by ID (item 150), grid 4 → 1 → 4 columns, width 600 → 300 → 600 pt | `viewID` stayed 150; offset moved to keep item 150 at the top (1784 → 7200 → 1776) |
 | `ScrollPosition` by point (y = 1480), same grid | Offset stayed 1480; rows 31 to 33 showed instead of item 150's row |
 | `onScrollTargetVisibilityChange` on the ID grid after the column change | Reported no IDs, while `viewID` stayed right |
 | `.sheet(isPresented:)` attached inside an `if`/`else` | Sheet closed on the flip; the binding stayed `true` |
-| The same sheet attached at the root | Stayed open through close and open |
+| The same sheet attached at the root | Stayed open through two flips |
 | `NavigationSplitView` with `horizontalSizeClass` overridden to compact | Collapsed: the sidebar's `onDisappear` ran; the selection stayed; on expand the sidebar `List` came back at the same offset (6158 pt) |
 | `scrollPosition(id:)` on a `List` | Didn't scroll it; `ScrollViewReader.scrollTo` did |
 | `Self._printChanges()` after a flip | Branch view: `@self, @identity, __count changed.` `AnyLayout` view: `@self changed.` |
@@ -65,6 +72,19 @@ CPROBE after-close wide=false focus=nil byID.viewID=150 ... byID.y=7200 byPoint.
 ```
 
 The `anylayout` leaf never logs again: no new token, no `disappear`, no `task-cancelled`.
+
+## UI tests on the closed Duo simulator
+
+We built the harness, `ReaderRoot` and `ContinuityUITests` from [testing.md](testing.md) unchanged into an app target (Swift 6, MainActor default isolation, portrait and both landscapes allowed). The new simulator was closed: the probe above logged `hinge: closed angle=0`.
+
+| What we ran | Result |
+|---|---|
+| `testStateSurvivesSizeClassFlip` | Passed. The flip button and the labels at 2% opacity worked. |
+| `testStateSurvivesRealFold` without `DUO_MANUAL_FOLD` | Skipped |
+| `XCUIDevice.shared.orientation` set to landscape left, portrait, landscape right, portrait, waiting 8 s each | The orientation read back as set each time. The window-size label never changed. |
+| Size readers on a `Text` root, in a 466 × 678 pt window with 84 pt right and 34 pt bottom safe-area insets | On the content: 108 × 20. After `.ignoresSafeArea()`: 382 × 644. Inside it (the harness): 466 × 678. |
+
+An earlier version of the automatic test also rotated and asserted a resize. In a review run on another closed Duo simulator it failed with "rotation did not resize the app", so rotation moved to the manual test. `duo-testing` measured the same on the closed Duo.
 
 ## Build and run a probe
 

@@ -146,7 +146,7 @@ Put `TwoPageReader` inside a `NavigationStack` so the bottom bar has a toolbar t
 
 ## Pitfalls
 
-- **Splitting at `width / 2`.** On the open phone the content area is not centred on the fold. We measured an 84 pt column on the trailing edge for the status bar, even with no bars on screen.
+- **Splitting at `width / 2`.** On the open phone the content area is not centred on the fold. With no bars on screen, a full-screen view measured 867 pt wide in the 951 pt window, and the screenshot showed the status bar in an 84 pt column down the trailing edge. The fold sits at the window's centre, not the content's.
 - **Only the default query.** It returns nothing while the phone is flat, so the reader shows one stretched page until someone folds it.
 - **Odd spreads.** If page 3 is on the left when open, closing and reopening can show 3 and 4, then 2 and 3. Snap spreads to even pages.
 - **Spreads in the tall layout.** Held tall, the fold runs across. Two pages stacked top and bottom don't read like a book.
@@ -163,8 +163,8 @@ Put `TwoPageReader` inside a `NavigationStack` so the bottom bar has a toolbar t
 
 ## Gallery screen
 
-[`samples/DuologyGallery/DuologyGallery/Patterns/TwoPageView.swift`](../../../../../samples/DuologyGallery/DuologyGallery/Patterns/TwoPageView.swift)
+[`samples/DuologyGallery/DuologyGallery/Patterns/TwoPageView.swift`](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/TwoPageView.swift)
 
 ## Sources
 
-IDs point to [`reference/sources.md`](../../../../../reference/sources.md): D1 (hub), D4 (Device Hub poses), V3 (talk 111463), V6 (talk 111466), P1d (Microsoft two-page).
+IDs point to [`reference/sources.md`](https://github.com/Kimeur/duology/blob/main/reference/sources.md): D1 (hub), D4 (Device Hub poses), V3 (talk 111463), V6 (talk 111466), P1d (Microsoft two-page).

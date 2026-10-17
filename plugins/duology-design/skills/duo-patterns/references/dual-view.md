@@ -1,6 +1,6 @@
 # Dual view
 
-The same data shown two ways at once: a list of places and a map of them, Markdown and its preview, a table and a chart, a photo before and after an edit. Closed, one view with a switch. Open, both, side by side, kept in sync.
+The same data shown two ways at once: a list of places and a map of them, Markdown and its preview, a table and a chart. Closed, one view with a switch. Open, both, side by side, kept in sync.
 
 Prior art: Microsoft's [dual view pattern](https://learn.microsoft.com/en-us/previous-versions/dual-screen/design/dual-view) for Surface Duo. Apple's split arrangement is the matching tool: two distinct pieces of content, shown at the same time, neither covering the other ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=879)).
 
@@ -12,6 +12,7 @@ Prior art: Microsoft's [dual view pattern](https://learn.microsoft.com/en-us/pre
 Not this pattern:
 
 - A list on one side and the picked item's details on the other is [list-detail](list-detail.md). Microsoft's dual view guidance warns against mixing the two.
+- Two views that must both show in every pose, such as a photo before and after an edit, or two players. A dual view shows one view when closed. Use `EvenSplit` from the `duo-layout` skill.
 - Two separate documents side by side are better as two windows. iPhone Duo supports multiple windows and Split View on the inner display ([talk 111464](https://developer.apple.com/videos/play/tech-talks/111464/?time=179)).
 
 ## How it behaves
@@ -173,8 +174,8 @@ How it works:
 
 ## Gallery screen
 
-[`samples/DuologyGallery/DuologyGallery/Patterns/DualView.swift`](../../../../../samples/DuologyGallery/DuologyGallery/Patterns/DualView.swift)
+[`samples/DuologyGallery/DuologyGallery/Patterns/DualView.swift`](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/DualView.swift)
 
 ## Sources
 
-IDs point to [`reference/sources.md`](../../../../../reference/sources.md): D1 (hub), D2 (HIG), V3 (talk 111463), V4 (talk 111464), V6 (talk 111466), A12 (Xcode 27 release notes), P1e (Microsoft dual view).
+IDs point to [`reference/sources.md`](https://github.com/Kimeur/duology/blob/main/reference/sources.md): D1 (hub), D2 (HIG), V3 (talk 111463), V4 (talk 111464), V6 (talk 111466), A12 (Xcode 27 release notes), P1e (Microsoft dual view).

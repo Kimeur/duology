@@ -1,6 +1,6 @@
 ---
 name: duo-patterns
-description: Picks and builds layout patterns for iPhone Duo, Apple's foldable iPhone, in SwiftUI - list-detail, supporting pane, two-page, dual view, extended canvas, feed reflow with even columns, tabs to sidebar, and displacement off the fold. Use it when you design or fix a screen for the outer display and the inner display, when content or buttons land in the fold, or when choosing between NavigationSplitView, ArrangementView (split and overlay styles), TabView with sidebarAdaptable and defaultTabBarPlacement, and reserved regions (division, occlusion, includeInactive).
+description: Picks and builds layout patterns for iPhone Duo, Apple's foldable iPhone, in SwiftUI - list-detail, supporting pane, two-page, dual view, extended canvas, feed reflow with even columns, tabs to sidebar, and displacement off the fold. Use it when you design or fix a screen for the outer display and the inner display, when content or buttons land in the fold, or when choosing between NavigationSplitView, inspector, ArrangementView (split and overlay styles), TabView with sidebarAdaptable and defaultTabBarPlacement, and reserved regions (division, occlusion, includeInactive).
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
   sources: "reference/sources.md"
@@ -20,7 +20,7 @@ Read the reference for the pattern you pick before you write code. For bars and 
 4. **Nothing interactive in the fold.** Scrolling content may cross it ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=568)).
 5. **Even columns** whenever a fold crosses a grid, active or not ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Reserved-regions), [talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=470)).
 6. **Small moves.** Move only what must move. Don't swap in a different view tree when the window resizes; you lose scroll position, selection and typing ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Reserved-regions)).
-7. **Arrangement placement.** Navigation containers go around an `ArrangementView`. Never put one inside a `NavigationSplitView`, `List` or `ScrollView` ([hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo), [HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Arrangement-views), [talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=969)).
+7. **Arrangement placement.** Navigation outside, content inside. Put an `ArrangementView` inside a `NavigationStack` or a tab. Never put a navigation container inside an arrangement, and never put an arrangement inside a `List` or `ScrollView`. Don't nest it with a `NavigationSplitView` either way; Apple's pages disagree on that case, so see [Combining patterns](#combining-patterns) ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=969), [HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Arrangement-views), [hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo)).
 8. **No posture API exists.** Lay out with size classes, the view's own size, arrangements and reserved regions. Use the hinge (`onHingeChange`) for effects only ([talk 111464](https://developer.apple.com/videos/play/tech-talks/111464/)).
 9. **No device checks.** Never lay out from `UIScreen.main`, `userInterfaceIdiom`, interface orientation or fixed sizes ([prepare page](https://developer.apple.com/iphone-duo/prepare/)).
 
@@ -37,16 +37,17 @@ Read the reference for the pattern you pick before you write code. For bars and 
 
 ## Pick a pattern
 
-Answer in order. Stop at the first yes.
+Answer in order. The first yes is the screen's main pattern. If a later question is also a yes, read [Combining patterns](#combining-patterns).
 
 1. Many top-level sections, information-dense? **Tabs to sidebar**, then pick a pattern for each tab.
-2. Items, each with its own detail that makes sense alone? **List-detail.**
-3. A second view that only makes sense next to the main one (comments, transcript, tools)? **Supporting pane.**
-4. The same data shown two ways (list and map, source and preview)? **Dual view.**
-5. Content made of pages (book, slides, document)? **Two-page.**
-6. Many equivalent items in a scrolling grid? **Feed reflow.**
-7. One continuous surface to pan or draw on (map, canvas, timeline)? **Extended canvas.**
-8. Any screen with a control you place yourself near the middle: add **displacement** to whatever you picked.
+2. Two halves that must both show in every pose (two players, a before and after), or two people sharing the screen? None of these patterns: use `EvenSplit` or `FoldSplitLayout` from `duo-layout`, and `duo-shared-screen`. A split arrangement can drop to its primary view alone, for example on the closed phone held sideways.
+3. Items, each with its own detail that makes sense alone? **List-detail.**
+4. A second view that only makes sense next to the main one (comments, transcript, tools)? **Supporting pane.**
+5. The same data shown two ways (list and map, source and preview)? **Dual view.**
+6. Content made of pages (book, slides, document)? **Two-page.**
+7. Many equivalent items in a scrolling grid? **Feed reflow.**
+8. One continuous surface to pan or draw on (map, canvas, timeline)? **Extended canvas.**
+9. Any screen with a control you place yourself near the middle: add **displacement** to whatever you picked.
 
 ## Catalog
 
@@ -54,20 +55,70 @@ Answer in order. Stop at the first yes.
 
 | Pattern | Closed (outer) | Open, flat | Partly folded | Build with | Reference | Gallery screen |
 |---|---|---|---|---|---|---|
-| List-detail | List, then detail | Both, list narrower | 50/50 at the fold, by the system | `NavigationSplitView` | [list-detail.md](references/list-detail.md) | [ListDetailView](../../../../samples/DuologyGallery/DuologyGallery/Patterns/ListDetailView.swift) |
-| Supporting pane | Main content; pane in a sheet | Main plus a narrower pane | One per side | `ArrangementView`, `.split.axes(.horizontal)` | [supporting-pane.md](references/supporting-pane.md) | [SupportingPaneView](../../../../samples/DuologyGallery/DuologyGallery/Patterns/SupportingPaneView.swift) |
-| Two-page | One page | Two pages, gap on the fold line | One page per side | Custom split from the `.division` region | [two-page.md](references/two-page.md) | [TwoPageView](../../../../samples/DuologyGallery/DuologyGallery/Patterns/TwoPageView.swift) |
-| Dual view | One view and a switch | Both views, in sync | One per side | `ArrangementView` split, shared model | [dual-view.md](references/dual-view.md) | [DualView](../../../../samples/DuologyGallery/DuologyGallery/Patterns/DualView.swift) |
-| Extended canvas | Canvas | Canvas across the fold | Canvas across; tools move to one side | Full-size view, tools placed from `.division` | [extended-canvas.md](references/extended-canvas.md) | [ExtendedCanvasView](../../../../samples/DuologyGallery/DuologyGallery/Patterns/ExtendedCanvasView.swift) |
-| Feed reflow | As many columns as fit | Even column count | Half the columns per side, fold as the gap | `LazyVGrid`, `.division` with `.includeInactive` | [feed-reflow.md](references/feed-reflow.md) | [FeedReflowView](../../../../samples/DuologyGallery/DuologyGallery/Patterns/FeedReflowView.swift) |
-| Tabs to sidebar | Tab bar on the side | Sidebar | Sidebar (not measured folded) | `TabView`, `.sidebarAdaptable`, `.defaultTabBarPlacement(.sidebar)` | [tabs-to-sidebar.md](references/tabs-to-sidebar.md) | [TabsToSidebarView](../../../../samples/DuologyGallery/DuologyGallery/Patterns/TabsToSidebarView.swift) |
-| Displacement | Unchanged | Unchanged | Controls move to the trailing region; content stays | `.division` region, active only | [displacement.md](references/displacement.md) | [DisplacementView](../../../../samples/DuologyGallery/DuologyGallery/Patterns/DisplacementView.swift) |
+| List-detail | List, then detail | Both, list narrower | 50/50 at the fold, by the system | `NavigationSplitView` | [list-detail.md](references/list-detail.md) | [ListDetailView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/ListDetailView.swift) |
+| Supporting pane | Main content; pane in a sheet | Main plus a narrower pane | One per side | `ArrangementView`, `.split.axes(.horizontal)` | [supporting-pane.md](references/supporting-pane.md) | [SupportingPaneView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/SupportingPaneView.swift) |
+| Two-page | One page | Two pages, gap on the fold line | One page per side | Custom split from the `.division` region | [two-page.md](references/two-page.md) | [TwoPageView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/TwoPageView.swift) |
+| Dual view | One view and a switch | Both views, in sync | One per side | `ArrangementView` split, shared model | [dual-view.md](references/dual-view.md) | [DualView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/DualView.swift) |
+| Extended canvas | Canvas | Canvas across the fold | Canvas across; tools move to one side | Full-size view, tools placed from `.division` | [extended-canvas.md](references/extended-canvas.md) | [ExtendedCanvasView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/ExtendedCanvasView.swift) |
+| Feed reflow | As many columns as fit | Even column count | Half the columns per side, fold as the gap | `LazyVGrid`, `.division` with `.includeInactive` | [feed-reflow.md](references/feed-reflow.md) | [FeedReflowView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/FeedReflowView.swift) |
+| Tabs to sidebar | Tab bar on the side | Sidebar | Sidebar (not measured folded) | `TabView`, `.sidebarAdaptable`, `.defaultTabBarPlacement(.sidebar)` | [tabs-to-sidebar.md](references/tabs-to-sidebar.md) | [TabsToSidebarView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/TabsToSidebarView.swift) |
+| Displacement | Unchanged | Unchanged | Controls move to the trailing region; content stays | `.division` region, active only | [displacement.md](references/displacement.md) | [DisplacementView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/DisplacementView.swift) |
 
 Folded across instead (the phone held tall and set on a table like a laptop), the regions are top and bottom: content to look at goes up, controls go down ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=240)).
 
+## Combining patterns
+
+Most screens need one pattern. When two questions above get a yes, combine them like this:
+
+| Screen | Build it like this |
+|---|---|
+| Tabs plus any pattern | The pattern goes inside each tab. Prefer a `NavigationStack` in a tab; a `NavigationSplitView` there adds a second leading column ([tabs-to-sidebar.md](references/tabs-to-sidebar.md#pitfalls)). |
+| List-detail plus a side pane (a notes list, the note, a summary pane) | `NavigationSplitView`, with [`inspector(isPresented:content:)`](https://developer.apple.com/documentation/swiftui/view/inspector(ispresented:content:)) on the detail column. Recipe below. |
+| Supporting pane or dual view with navigation | `NavigationStack { ArrangementView { … } }`, also inside a tab. The recipes in [supporting-pane.md](references/supporting-pane.md) and [dual-view.md](references/dual-view.md) already do this. |
+| Any pattern plus your own centred controls | Add [displacement](references/displacement.md) to those controls only. |
+
+Split views and arrangements: the talk and the HIG say navigation containers, split views included, go around an arrangement, not inside it. The hub says to avoid an arrangement inside a navigation split view, because part of it can become unreachable. Follow the stricter hub rule, as `duo-navigation` does: never nest an `ArrangementView` with a `NavigationSplitView` in either direction. For a pane beside list-detail, use an inspector. It is a system container, so it needs no arrangement.
+
+```swift
+import SwiftUI
+
+// requires: Note, NoteDetail (references/list-detail.md)
+
+struct NotesWithSummary: View {
+    let notes: [Note]
+    @SceneStorage("notes.selection") private var selection: Note.ID?
+    @SceneStorage("notes.showsSummary") private var showsSummary = false
+
+    var body: some View {
+        NavigationSplitView {
+            List(notes, selection: $selection) { Text($0.title) }
+                .navigationTitle("Notes")
+        } detail: {
+            if let note = notes.first(where: { $0.id == selection }) {
+                NoteDetail(note: note)
+                    .toolbar {
+                        ToolbarItem {
+                            Button("Summary", systemImage: "sparkles") { showsSummary.toggle() }
+                        }
+                    }
+                    // Open: a trailing column. Closed: a sheet. Same view, same state.
+                    .inspector(isPresented: $showsSummary) {
+                        Text("Summary of \(note.title)")
+                            .inspectorColumnWidth(min: 240, ideal: 300, max: 360)
+                    }
+            } else {
+                ContentUnavailableView("No Note Selected", systemImage: "note.text")
+            }
+        }
+    }
+}
+```
+
+Apple's inspector doc promises a trailing column at regular width and a sheet at compact width. Measured on the closed simulator (382 pt wide, compact): the pane came up at 374 × 636 pt over a full-width detail, whether the inspector sat on the detail column or on the whole split view. Open, the list, the note and the pane share the inner display; check in Device Hub that the note keeps a usable width. (unverified open and folded)
+
 ## Shared helper: FoldGeometry
 
-Three recipes (two-page, extended canvas, displacement) use this helper. Add it to the app once. It typechecks against the iOS 27.1 simulator SDK in Swift 5 and Swift 6 mode, also with an iOS 26 deployment target.
+Three recipes (two-page, extended canvas, displacement) use this helper. Add it to the app once. It typechecks against the iOS 27.1 simulator SDK in Swift 5 and Swift 6 mode, with an iOS 26 deployment target, and with a new Xcode 27.1 app's settings (`SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor`, approachable concurrency). Keep `nonisolated`: without it, that setting makes the struct's `Equatable` conformance main-actor isolated, and `onGeometryChange` rejects it.
 
 ```swift
 import SwiftUI
@@ -75,7 +126,7 @@ import SwiftUI
 /// Where the fold crosses a view, read from the view's reserved regions.
 /// Layout input only. Never drive layout from the hinge angle.
 @available(iOS 27.1, *)
-struct FoldGeometry: Equatable, Sendable {
+nonisolated struct FoldGeometry: Equatable, Sendable {
     /// The fold's frame in this view's space, margins included. Nil when no fold crosses the view.
     var frame: CGRect?
     /// True while the phone is partly folded. False when it lies flat.
@@ -163,7 +214,7 @@ Duology's pattern names come from earlier foldables. Their guidance describes ot
 - Samsung [Flex mode](https://developer.samsung.com/galaxy-z/flex-mode.html): content up, controls down when half folded on a table.
 - Displacement and arrangements are Apple's own, from talk 111463.
 
-Every source with its check date: [`reference/sources.md`](../../../../reference/sources.md). Every API with its availability: [`reference/api-index.md`](../../../../reference/api-index.md).
+Every source with its check date: [`reference/sources.md`](https://github.com/Kimeur/duology/blob/main/reference/sources.md). Every API with its availability: [`reference/api-index.md`](https://github.com/Kimeur/duology/blob/main/reference/api-index.md).
 
 ## Checklist
 
@@ -173,7 +224,8 @@ Every source with its check date: [`reference/sources.md`](../../../../reference
 - [ ] No button, slider or text field sits in the fold when partly folded.
 - [ ] Scrolling content is never displaced.
 - [ ] Grids use an even column count when a fold crosses them.
-- [ ] No `ArrangementView` inside a `NavigationSplitView`, `List` or `ScrollView`; navigation sits around it.
+- [ ] No `ArrangementView` inside a `List`, a `ScrollView` or a `NavigationSplitView` column, and no navigation container inside an arrangement. A pane beside list-detail is an `inspector`.
+- [ ] Types passed to `onGeometryChange` are `nonisolated` when the target uses main actor default isolation.
 - [ ] iOS 27.0 and 27.1 APIs are behind `@available` or `if #available` when the app supports iOS 26.
 - [ ] Selection, scroll position and drafts survive close, open, Partially Open, rotation and Split View.
 - [ ] Checked in Device Hub: Closed, Open, Partially Open, held wide and held tall, and Split View on the inner display.

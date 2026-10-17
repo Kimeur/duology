@@ -402,25 +402,46 @@ EOF
     MCP_RC=$?
     if [ $MCP_RC = 0 ] && printf '%s\n' "$MCP_OUT" | grep -q '^xcode:'; then
       scope=$(printf '%s\n' "$MCP_OUT" | sed -n 's/^ *Scope: *\(.*\)$/\1/p' | head -n 1)
-      status=$(printf '%s\n' "$MCP_OUT" | sed -n 's/^ *Status: *\(.*\)$/\1/p' | head -n 1 | LC_ALL=C tr -cd '[:print:]' | sed 's/^ *//')
+      issue=$(printf '%s\n' "$MCP_OUT" | sed -n 's/^ *Issue: *\(.*\)$/\1/p' | head -n 1)
+      # Drop the status icon (a check mark, "!", a cross, a pause sign) and the
+      # middle dot, so "! Connected · tools fetch failed" becomes
+      # "Connected tools fetch failed".
+      status=$(printf '%s\n' "$MCP_OUT" | sed -n 's/^ *Status: *\(.*\)$/\1/p' | head -n 1 | LC_ALL=C tr -cd '[:print:]' | sed 's/^[^A-Za-z]*//; s/  */ /g')
+      # Registered without DEVELOPER_DIR while xcode-select picks another Xcode.
+      wrong_xcode=0
+      if [ -n "$XP" ] && ! printf '%s\n' "$MCP_OUT" | grep -q 'DEVELOPER_DIR'; then wrong_xcode=1; fi
       case "$status" in
-        Connected|"Connected "*)
+        Connected*[Ff]etch*[Ff]ailed*)
+          # The bridge started, but Claude Code gave up waiting for its tool list
+          # (it waits a few seconds). It happens on a cold start. The registered
+          # command is fine, so don't suggest a re-register for this.
+          if [ "$wrong_xcode" = 1 ]; then
+            bad optional "$MCP_LABEL" "connected, but its tools didn't load${issue:+ ($issue)}, ${scope:-unknown scope}" \
+              "The bridge connects to the Xcode that xcode-select picks, which isn't Xcode $MIN_XCODE here. Re-register it (ask the user first):" \
+              "claude mcp remove xcode && $ADD_CMD"
+          else
+            bad optional "$MCP_LABEL" "connected, but its tools didn't load${issue:+ ($issue)}, ${scope:-unknown scope}" \
+              "The bridge answered, so its command is right. Don't re-register it. A cold start can be slow: run duo-doctor again." \
+              "If it fails every time, open the project in Xcode $MIN_XCODE with its Intelligence setting on, then run duo-doctor again."
+          fi
+          ;;
+        Connected*)
           ok optional "$MCP_LABEL" "$status, ${scope:-unknown scope}"
           note "the bridge answers even while Xcode is closed, so this doesn't prove Xcode is reachable."
           note "before you use Xcode's tools, open the project in Xcode $MIN_XCODE with its Intelligence setting on."
-          if [ -n "$XP" ] && ! printf '%s\n' "$MCP_OUT" | grep -q 'DEVELOPER_DIR'; then
+          if [ "$wrong_xcode" = 1 ]; then
             note "the bridge connects to the Xcode that xcode-select picks, which isn't Xcode $MIN_XCODE here. Re-register it:"
             note "claude mcp remove xcode && $ADD_CMD"
           fi
           ;;
-        *[Pp]ending*)
+        *[Pp]ending*|*[Nn]eeds*[Aa]uth*)
           bad optional "$MCP_LABEL" "$status, ${scope:-unknown scope}" \
             "Start Claude Code in this project and approve the server, or run /mcp."
           ;;
         *)
-          # The bridge answers even with Xcode closed, so a failure means the
-          # registered command itself is wrong.
-          issue=$(printf '%s\n' "$MCP_OUT" | sed -n 's/^ *Issue: *\(.*\)$/\1/p' | head -n 1)
+          # "Failed to connect" or "Connection error": the bridge didn't start or
+          # didn't speak MCP. It starts even with Xcode closed, so the usual cause
+          # is the registered command (a typo, or a path that doesn't exist).
           cmd=$(printf '%s\n' "$MCP_OUT" | sed -n 's/^ *Command: *\(.*\)$/\1/p' | head -n 1)
           args=$(printf '%s\n' "$MCP_OUT" | sed -n 's/^ *Args: *\(.*\)$/\1/p' | head -n 1)
           scope_flag=$(printf '%s' "$scope" | awk '{print tolower($1)}')

@@ -45,14 +45,14 @@ The grid only changes column count and spacing. It never moves out of the fold a
 
 ## Recipe
 
-Self-contained. Typechecks against the iOS 27.1 simulator SDK, also with an iOS 26 deployment target. We ran `feedColumns` on the Mac: for a 867 pt wide grid it returns 5 flexible columns with no fold, 4 with an inactive fold, and with an active fold from x = 435 to 475 it returns 213.5, 213.5, 192 and 192 pt columns whose widths and gaps add up to exactly 867.
+Self-contained. Typechecks against the iOS 27.1 simulator SDK, also with an iOS 26 deployment target and with a new Xcode 27.1 app's main actor default isolation. `nonisolated` on `FeedGridInput` and `feedColumns` makes that last case work; see FoldGeometry in SKILL.md. We ran `feedColumns` on the Mac: for a 867 pt wide grid it returns 5 flexible columns with no fold, 4 with an inactive fold, and with an active fold from x = 435 to 475 it returns 213.5, 213.5, 192 and 192 pt columns whose widths and gaps add up to exactly 867.
 
 ```swift
 import SwiftUI
 
 /// What the grid needs to know, in the grid's own coordinate space.
 /// Only x values are kept, so scrolling does not trigger a new layout.
-struct FeedGridInput: Equatable, Sendable {
+nonisolated struct FeedGridInput: Equatable, Sendable {
     var width: CGFloat = 0
     /// Left and right edges of a top-to-bottom fold that crosses the grid, margins included.
     var foldMinX: CGFloat?
@@ -76,7 +76,7 @@ struct FeedGridInput: Equatable, Sendable {
 }
 
 /// Columns for a feed. Pure function: unit-test it on the Mac.
-func feedColumns(for input: FeedGridInput, minTileWidth: CGFloat, spacing: CGFloat) -> [GridItem] {
+nonisolated func feedColumns(for input: FeedGridInput, minTileWidth: CGFloat, spacing: CGFloat) -> [GridItem] {
     guard input.width > 0 else { return [GridItem(.flexible(), spacing: spacing)] }
     var count = max(1, Int((input.width + spacing) / (minTileWidth + spacing)))
     // A fold crosses the grid (active or not): use an even count so it divides cleanly.
@@ -156,8 +156,8 @@ Steps 3 and 4 are untested by Duology: the folded pose can only be set by hand i
 
 ## Gallery screen
 
-[`samples/DuologyGallery/DuologyGallery/Patterns/FeedReflowView.swift`](../../../../../samples/DuologyGallery/DuologyGallery/Patterns/FeedReflowView.swift)
+[`samples/DuologyGallery/DuologyGallery/Patterns/FeedReflowView.swift`](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/FeedReflowView.swift)
 
 ## Sources
 
-IDs point to [`reference/sources.md`](../../../../../reference/sources.md): D2 (HIG), V3 (talk 111463), V6 (talk 111466), P2 (Android canonical layouts).
+IDs point to [`reference/sources.md`](https://github.com/Kimeur/duology/blob/main/reference/sources.md): D2 (HIG), V3 (talk 111463), V6 (talk 111466), P2 (Android canonical layouts).

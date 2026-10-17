@@ -159,8 +159,8 @@ Not tested by Duology yet: the folded states. `simctl` has no pose command in Xc
 
 ## Gallery screen
 
-[`samples/DuologyGallery/DuologyGallery/Patterns/ExtendedCanvasView.swift`](../../../../../samples/DuologyGallery/DuologyGallery/Patterns/ExtendedCanvasView.swift)
+[`samples/DuologyGallery/DuologyGallery/Patterns/ExtendedCanvasView.swift`](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/ExtendedCanvasView.swift)
 
 ## Sources
 
-IDs point to [`reference/sources.md`](../../../../../reference/sources.md): D1 (hub), D2 (HIG), V1 (talk 111461), V3 (talk 111463), V4 (talk 111464), V6 (talk 111466), A12 (Xcode 27 release notes), P1b (Microsoft extended canvas).
+IDs point to [`reference/sources.md`](https://github.com/Kimeur/duology/blob/main/reference/sources.md): D1 (hub), D2 (HIG), V1 (talk 111461), V3 (talk 111463), V4 (talk 111464), V6 (talk 111466), A12 (Xcode 27 release notes), P1b (Microsoft extended canvas).

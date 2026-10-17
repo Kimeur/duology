@@ -69,7 +69,7 @@ fi
 echo "Using Xcode $version at $DEVELOPER_DIR"
 ```
 
-We ran it with `sh`, `bash`, `zsh` and `dash`, five ways each. With no variable it passed, because the script's own default is the 27.1 path; the Mac default is never read. Set to Xcode 27.1, it passed. Set to Xcode 26.5, to a mistyped path, or to `/Library/Developer/CommandLineTools`, it stopped with exit 1. A wrong path is the usual CI mistake, for example a runner that installs Xcode at `/Applications/Xcode_27.1.app`.
+We ran it with `sh`, `bash`, `zsh` and `dash`, five ways each. With no variable it passed, because the script's own default is the 27.1 path; the Mac default is never read. Set to Xcode 27.1, it passed. Set to Xcode 26.5, to a mistyped path, or to `/Library/Developer/CommandLineTools`, it stopped with exit 1. A wrong path is a common CI mistake, for example a runner that installs Xcode at `/Applications/Xcode_27.1.app`.
 
 In CI, set `DEVELOPER_DIR` in the job's environment to the path where the runner installs Xcode 27.1.
 

@@ -3,9 +3,11 @@ import SwiftUI
 /// Two-page: a short book.
 ///
 /// Closed, one page at a time. Open and held wide, two facing pages with the
-/// gap on the fold line. Page turns move one page or two to match. The split
-/// comes from the `.division` reserved region (iOS 27.1), read with
-/// `.includeInactive` so a flat phone still reports where its fold is.
+/// gap on the fold line. Page turns move one page or two to match. Partly
+/// folded across (tabletop), one page above the fold and a contents list below
+/// it, so no line of text lands in the fold. The split comes from the
+/// `.division` reserved region (iOS 27.1), read with `.includeInactive` so a
+/// flat phone still reports where its fold is.
 ///
 /// Pattern guide: `duo-patterns/references/two-page.md`.
 struct TwoPageView: View {
@@ -35,6 +37,13 @@ private struct BookReader: View {
         return widthClass == .regular && size.width > size.height
     }
 
+    /// Partly folded with the fold running side to side (tabletop). Top and bottom
+    /// pages would not read like a book, so the page goes above the fold and the
+    /// contents go below it.
+    private var isFoldedAcross: Bool {
+        fold.frame != nil && fold.isActive && !fold.isVertical
+    }
+
     /// A spread always starts on an even page, so pages don't swap sides when you fold.
     private var firstIndex: Int { showsSpread ? page - page % 2 : page }
     private var step: Int { showsSpread ? 2 : 1 }
@@ -42,16 +51,25 @@ private struct BookReader: View {
     var body: some View {
         GeometryReader { proxy in
             let spine = spineFrame(in: proxy.size)
-            HStack(spacing: 0) {
-                // The same view in both layouts, so it keeps its identity when the
-                // second page appears.
+            // AnyLayout keeps each child's identity when the stack changes direction.
+            let layout = isFoldedAcross ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(HStackLayout(spacing: 0))
+            layout {
+                // The same view in every layout, so it keeps its identity when the
+                // second page or the contents appear.
                 PageSheet(page: page(at: firstIndex), number: firstIndex, total: pages.count)
-                    .frame(width: showsSpread ? spine.minX : proxy.size.width)
+                    .frame(width: showsSpread ? spine.minX : proxy.size.width,
+                           height: isFoldedAcross ? spine.minY : proxy.size.height)
                 if showsSpread {
                     Color.clear
                         .frame(width: spine.width)
                     PageSheet(page: page(at: firstIndex + 1), number: firstIndex + 1, total: pages.count)
                         .frame(width: max(0, proxy.size.width - spine.maxX))
+                }
+                if isFoldedAcross {
+                    Color.clear
+                        .frame(height: spine.height)
+                    ContentsPanel(pages: pages, current: firstIndex) { page = $0 }
+                        .frame(height: max(0, proxy.size.height - spine.maxY))
                 }
             }
         }
@@ -80,7 +98,7 @@ private struct BookReader: View {
     /// else a centred gutter. Never `width / 2` alone: side bars and the status
     /// bar make the view off-centre on the open phone.
     private func spineFrame(in size: CGSize) -> CGRect {
-        if fold.isVertical, let frame = fold.frame { return frame }
+        if fold.isVertical || isFoldedAcross, let frame = fold.frame { return frame }
         let gutter: CGFloat = 32
         return CGRect(x: (size.width - gutter) / 2, y: 0, width: gutter, height: size.height)
     }
@@ -93,6 +111,39 @@ private struct BookReader: View {
 
     private func page(at index: Int) -> BookPage {
         pages.indices.contains(index) ? pages[index] : .end
+    }
+}
+
+/// Below the fold when the phone is partly folded across: jump to any page.
+/// Buttons sit in the bottom region, clear of the fold.
+private struct ContentsPanel: View {
+    let pages: [BookPage]
+    let current: Int
+    let select: (Int) -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Contents")
+                    .font(.headline)
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 120), spacing: 8)], spacing: 8) {
+                    ForEach(pages.indices, id: \.self) { index in
+                        Button {
+                            select(index)
+                        } label: {
+                            Text(pages[index].shortTitle)
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(index == current ? Color(hex: 0x0E7490) : .secondary)
+                        .accessibilityAddTraits(index == current ? .isSelected : [])
+                    }
+                }
+            }
+            .padding(.horizontal, 24)
+            .padding(.top, 20)
+        }
+        .scrollBounceBehavior(.basedOnSize)
     }
 }
 
@@ -198,6 +249,15 @@ enum BookPage: Hashable {
     case title
     case month(name: String, symbol: String, text: String)
     case end
+
+    /// The label in the contents list.
+    var shortTitle: String {
+        switch self {
+        case .title: "Title"
+        case .month(let name, _, _): name
+        case .end: "End"
+        }
+    }
 
     static let harbourYear: [BookPage] = [
         .title,

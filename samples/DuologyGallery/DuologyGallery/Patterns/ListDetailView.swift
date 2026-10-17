@@ -3,8 +3,10 @@ import SwiftUI
 /// List-detail: an inbox.
 ///
 /// Closed, the split view collapses to one stack: the list, then the message.
-/// Open, list and message sit side by side. Partly folded, the system evens the
-/// columns out to one per side of the fold. No Duo-only API is needed.
+/// Open and held wide, list and message sit side by side. Partly folded like a
+/// book, the system evens the columns out to one per side of the fold. Held
+/// tall (tabletop), the list starts over the detail column when nothing is
+/// selected. No Duo-only API is needed.
 ///
 /// Pattern guide: `duo-patterns/references/list-detail.md`.
 struct ListDetailView: View {
@@ -13,6 +15,13 @@ struct ListDetailView: View {
     @SceneStorage("inbox.selection") private var selection: Int?
     // Which column a collapsed split view (the outer display) shows on top.
     @State private var compactColumn = NavigationSplitViewColumn.sidebar
+    // Both columns when the split view expands with nothing to show. Without
+    // this, the open phone held tall (tabletop) hides the list and shows only
+    // the placeholder. Held tall, the list then sits over the detail column.
+    // Launched with a message (`-select`), the system chooses: held tall, the
+    // message alone; held wide, list and message side by side.
+    @State private var columnVisibility: NavigationSplitViewVisibility =
+        LaunchOptions.selection == nil ? .all : .automatic
     @State private var messages = MailMessage.samples
     @State private var showsUnreadOnly = false
 
@@ -21,7 +30,7 @@ struct ListDetailView: View {
     }
 
     var body: some View {
-        NavigationSplitView(preferredCompactColumn: $compactColumn) {
+        NavigationSplitView(columnVisibility: $columnVisibility, preferredCompactColumn: $compactColumn) {
             List(visibleMessages, selection: $selection) { message in
                 MessageRow(message: message)
                     .tag(message.id)
@@ -44,11 +53,7 @@ struct ListDetailView: View {
                 MessageDetail(message: $messages[index])
             } else {
                 // Open with nothing selected: a placeholder, never an empty pane.
-                ContentUnavailableView(
-                    "No Message Selected",
-                    systemImage: "envelope.open",
-                    description: Text("Pick a message from the list.")
-                )
+                NoMessageSelected()
             }
         }
         .onChange(of: selection) { _, newValue in
@@ -62,6 +67,32 @@ struct ListDetailView: View {
                 selection = preset
             }
         }
+    }
+}
+
+/// The detail placeholder. Centred, except when the phone is partly folded
+/// across (tabletop): then it sits above the fold, so its text never lands in it.
+private struct NoMessageSelected: View {
+    @State private var fold = FoldGeometry()
+
+    var body: some View {
+        GeometryReader { proxy in
+            let area = placeholderArea(in: proxy.size)
+            ContentUnavailableView(
+                "No Message Selected",
+                systemImage: "envelope.open",
+                description: Text("Pick a message from the list.")
+            )
+            .frame(width: area.width, height: area.height)
+            .position(x: area.midX, y: area.midY)
+        }
+        .onFoldChange { fold = $0 }
+    }
+
+    private func placeholderArea(in size: CGSize) -> CGRect {
+        let whole = CGRect(origin: .zero, size: size)
+        guard fold.isActive, !fold.isVertical, let frame = fold.frame else { return whole }
+        return CGRect(x: 0, y: 0, width: size.width, height: max(0, frame.minY))
     }
 }
 

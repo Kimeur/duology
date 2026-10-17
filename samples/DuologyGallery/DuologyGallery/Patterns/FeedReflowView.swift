@@ -11,6 +11,9 @@ import SwiftUI
 /// Pattern guide: `duo-patterns/references/feed-reflow.md`.
 struct FeedReflowView: View {
     @State private var input = FeedGridInput()
+    // The fold as the scroll view sees it. Only for the status line: a fold that
+    // runs side to side doesn't change the columns, rows just scroll past it.
+    @State private var fold = FoldGeometry()
     @State private var category = Product.Category.all
     // A minimum tile width that grows with Dynamic Type. A content size, not a screen size.
     @ScaledMetric(relativeTo: .body) private var minTileWidth = 150.0
@@ -43,6 +46,8 @@ struct FeedReflowView: View {
                 .containerMargins(.horizontal)
                 .padding(.bottom, 24)
             }
+            // Read on the scroll view, not its content, so scrolling doesn't change it.
+            .onFoldChange { fold = $0 }
             .navigationTitle("Shelf")
             .galleryCloseButton()
             .toolbar {
@@ -81,7 +86,12 @@ struct FeedReflowView: View {
     private var layoutSummary: String {
         let count = columns.count
         let noun = count == 1 ? "column" : "columns"
-        guard input.foldMinX != nil else { return "\(count) \(noun), no fold across the grid" }
+        guard input.foldMinX != nil else {
+            if fold.frame != nil, !fold.isVertical {
+                return "\(count) \(noun), the fold runs across: rows scroll past it"
+            }
+            return "\(count) \(noun), no fold across the grid"
+        }
         let state = input.foldIsActive ? "folded: the fold is the middle gap" : "flat: even count, ready to fold"
         return "\(count) \(noun), \(state)"
     }

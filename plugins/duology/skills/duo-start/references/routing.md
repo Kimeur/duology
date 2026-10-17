@@ -15,7 +15,7 @@ Which skill to load for which job. Duology v0.1 ships 11 skills in four plugins,
 | `duo-shared-screen` | `duology-design` | Two people use one phone: games, teaching, showing a customer. | Single-user layouts. |
 | `duo-design-review` | `duology-design` | Reviewing screenshots or Figma frames against the Duo checklist. | Writing code. |
 | `duo-testing` | `duology-ship` | Unit and UI tests that must hold up on the Duo simulator: logic tested on the Mac, launch switches, UI tests that reach SwiftUI gestures. | Visual pose checks (coming: `duo-pose-matrix`). |
-| `duo-lint` | `duology-ship` | Finding code Apple warns against (`UIScreen.main`, orientation and idiom checks, fixed sizes) before it ships. | Fixing it; it reports. |
+| `duo-lint` | `duology-ship` | Finding code Apple warns against (`UIScreen.main`, orientation and idiom checks, fixed sizes) before it ships. It reports each finding and explains the fix for its rule. | Checking screenshots; it reads code only. Use `/duo-audit` or `duo-design-review`. |
 | `recipe-two-player-game` | `duology-recipes` | Building a two-player game on one phone from scratch. Run it with `/duo-new recipe-two-player-game`. | Existing apps. |
 
 Install a missing plugin with `/plugin install <plugin>@duology`. On other agents, `npx skills add Kimeur/duology --skill <name>` adds one skill.
@@ -44,7 +44,7 @@ Install a missing plugin with `/plugin install <plugin>@duology`. On other agent
 | Two players or two people at once | `duo-shared-screen`, or `recipe-two-player-game` for a new game |
 | "Review these designs for Duo" | `duo-design-review` |
 | UI tests pass on iPhone and fail on the Duo simulator | `duo-testing` |
-| `UIScreen.main`, `userInterfaceIdiom`, orientation checks in the code | `duo-lint` to list them, Apple's App Resizability skill to fix them |
+| `UIScreen.main`, `userInterfaceIdiom`, orientation checks in the code | `duo-lint` to list them with the fix for each rule; Apple's App Resizability skill for the generic fixes |
 | The agent can't reach Xcode, or the wrong Xcode builds | `duo-setup` |
 
 ## Coming skills and what to use until then

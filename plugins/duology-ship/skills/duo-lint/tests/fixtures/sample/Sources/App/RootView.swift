@@ -1,4 +1,4 @@
-// duo-lint sample app: the "Read the output" example in SKILL.md is real output on Sources/.
+// duo-lint sample app. The example output in SKILL.md and the READMEs is real output on Sources/; a test checks it.
 import SwiftUI
 import UIKit
 

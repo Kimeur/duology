@@ -4,6 +4,7 @@ description: "Audit an app for iPhone Duo: run duo-lint on the code, run the 15-
 argument-hint: "[app-folder] [--frames <screenshot-folder>] [--code-only]"
 allowed-tools:
   - Bash(duo-doctor *)
+  - Bash(duo-lint *)
   - Bash(${CLAUDE_PLUGIN_ROOT}/skills/duo-lint/scripts/duo-lint *)
   - Bash("${CLAUDE_PLUGIN_ROOT}/skills/duo-lint/scripts/duo-lint" *)
   - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/duo-lint/scripts/duo-lint.py *)
@@ -31,10 +32,10 @@ Arguments as typed: `$ARGUMENTS`
 "${CLAUDE_PLUGIN_ROOT}/skills/duo-lint/scripts/duo-lint" --json <app-folder>
 ```
 
-If that file can't run, use `python3 "${CLAUDE_PLUGIN_ROOT}/skills/duo-lint/scripts/duo-lint.py" --json <app-folder>`. Add `--objc` when the app has `.m` or `.mm` files.
+`duo-lint --json <app-folder>` does the same: this plugin puts `duo-lint` on the Bash tool's PATH. If the file can't run, use `python3 "${CLAUDE_PLUGIN_ROOT}/skills/duo-lint/scripts/duo-lint.py" --json <app-folder>`. Add `--objc` when the app has `.m` or `.mm` files.
 
 - Exit code 1 means it found errors. That is a result, not a failure. Exit code 2 means a bad path or option.
-- It skips `build/`, `DerivedData/`, `Pods/`, `Carthage/`, `.build/` and `SourcePackages/` on its own.
+- It skips `build/`, `DerivedData/`, `Pods/`, `Carthage/`, `.build/`, `SourcePackages/`, `.claude/`, `.agents/` and its own test fixtures on its own.
 - Each JSON finding has `path`, `line`, `rule`, `severity`, `snippet`, `message`, `fix` and `source` (an Apple link).
 - Group repeated findings: one finding per rule, with the count and up to five `path:line` places.
 - A finding in test code, a preview or a debug-only file is usually harmless. Say so instead of ranking it.

@@ -14,7 +14,7 @@ Does Duology make Claude Code better at iPhone Duo work? These evals answer that
 
 For each task, each *arm* (`with`, `without`) and each trial:
 
-1. **Fresh copy.** `run.sh` makes a new throwaway folder under `$TMPDIR/evals-work/`, outside the repo. It copies the task's fixture into `work/` and commits it to a new git repo, so the agent's changes show up as a diff. The `with` arm also gets a copy of the plugins in `plugins/`. The agent never sees the Duology repo.
+1. **Fresh copy.** `run.sh` makes a new throwaway folder under `$TMPDIR/evals-work/`, outside the repo. It copies the task's fixture into `work/` and commits it to a new git repo, so the agent's changes show up as a diff. The `with` arm also gets a copy of the plugins in `plugins/`. The agent works in that copy and is never told where the Duology repo is.
 2. **Empty environment.** The agent starts under `env -i`. It gets `HOME` set to a new empty `home/` inside the trial folder, `PATH=/usr/bin:/bin:/usr/sbin:/sbin`, `DEVELOPER_DIR` for Xcode 27.1, `TMPDIR` inside the trial folder, `SHELL=/bin/bash`, and one sign-in variable. Nothing else of yours reaches it: not your shell variables, not your `~/.claude` settings or plugins, not your git config.
 3. **Same agent call.** Both arms run this command (paths shortened):
 

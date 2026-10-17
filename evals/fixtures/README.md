@@ -99,3 +99,5 @@ done
 ```
 
 Then run `evals/run.sh --selftest` to confirm every task still fails on its untouched fixture.
+
+`run.sh` builds under `env -i` with an empty `HOME`, so a fixture must not depend on anything in your account (a user-level Swift package cache, a signing identity, an environment variable). On 17 October 2026 all five built for the iPhone Duo simulator that way with `build-for-testing`.

@@ -55,6 +55,7 @@ If `duo-design-review` did not load, Glob for `**/skills/duo-design-review/SKILL
 6. Judge layouts by size class and available space, not by pose. A tabletop layout is optional.
 7. Say how you know. Positions you read off a picture are estimates: write "about" and round to 5 pt. Use exact numbers only when the caller measured them.
 8. Mark what a picture can't prove: real-device behaviour, motion, 120 Hz, hinge feel, camera handover.
+9. When skills disagree, the `duo-design-review` checklist decides R1 to R15; add one line naming the skill that says otherwise. Outside the checklist, don't file a finding against something a skill allows. For example, `duo-patterns` (feed reflow) lets the two halves of a folded grid differ in width when a vertical bar takes room on one side.
 
 ## Step 1: Take stock of the frames
 

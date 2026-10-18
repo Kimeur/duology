@@ -41,12 +41,15 @@ What the frames get wrong, by rubric rule: three columns open (R5), sizes scaled
 Gates: builds for the iPhone Duo simulator; duo-lint reports nothing (so no `UIScreen.main`, idiom or orientation).
 
 ```sh check tokens-in-their-own-file
-# The prompt asks for the design system in its own Swift file: at least one new
-# Swift file in the app (not in the UI test folder). run.sh stages the agent's
-# changes before scoring, so a new file shows as A (staged) or ?? (not staged).
-new="$(git status --porcelain --untracked-files=all 2>/dev/null | awk '($1 == "??" || $1 ~ /^A/) && $NF ~ /\.swift$/ && $NF !~ /UITests\// { print $NF }')"
+# The prompt asks for the design system in its own Swift file: at least one Swift
+# file in the app that the fixture doesn't have (UI test files don't count).
+new=""
+for f in $(swift_files); do
+  case "$f" in *UITests/*) continue ;; esac
+  [ -f "$EVALS/fixtures/Trips/${f#./}" ] || new="$new ${f#./}"
+done
 [ -n "$new" ] || { echo "no new Swift file in the app"; exit 1; }
-echo "new Swift files: $new"
+echo "new Swift files:$new"
 ```
 
 ```sh check one-type-scale
@@ -73,19 +76,17 @@ cat > TripsUITests/TokensOracleTests.swift <<'SWIFT'
 import XCTest
 
 final class TokensOracleTests: XCTestCase {
-    override func setUpWithError() throws {
-        continueAfterFailure = true
-    }
-
     @MainActor
     func testDefaultTextSize() throws {
         let app = XCUIApplication()
         app.launch()
         let heart = app.descendants(matching: .any).matching(identifier: "trip.favorite.1").firstMatch
         XCTAssertTrue(heart.waitForExistence(timeout: 20), "trip.favorite.1 is missing")
-        XCTAssertGreaterThanOrEqual(heart.frame.width, 43.5, "the heart button is \(heart.frame.width) pt wide")
-        XCTAssertGreaterThanOrEqual(heart.frame.height, 43.5, "the heart button is \(heart.frame.height) pt tall")
         var problems: [String] = []
+        // 0.5 pt of slack: a 44 pt frame can come back as 43.99999.
+        if heart.frame.width < 43.5 || heart.frame.height < 43.5 {
+            problems.append("the heart button is \(Int(heart.frame.width)) x \(Int(heart.frame.height)) pt")
+        }
         try app.performAccessibilityAudit(for: [.contrast, .dynamicType]) { issue in
             if issue.auditType == .contrast && !issue.compactDescription.lowercased().contains("failed") {
                 return true

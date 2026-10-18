@@ -56,10 +56,6 @@ cat > TrailUITests/ReachOracleTests.swift <<'SWIFT'
 import XCTest
 
 final class ReachOracleTests: XCTestCase {
-    override func setUpWithError() throws {
-        continueAfterFailure = true
-    }
-
     @MainActor
     func testButtonsAreInReach() throws {
         let app = XCUIApplication()
@@ -67,22 +63,27 @@ final class ReachOracleTests: XCTestCase {
         let window = app.windows.firstMatch
         XCTAssertTrue(window.waitForExistence(timeout: 20), "the app has no window")
         let bounds = window.frame
+        var problems: [String] = []
         for id in ["track.record", "track.lap", "track.locate"] {
             let button = app.descendants(matching: .any).matching(identifier: id).firstMatch
             guard button.waitForExistence(timeout: 10) else {
-                XCTFail("\(id) is missing")
+                problems.append("\(id) is missing")
                 continue
             }
-            XCTAssertTrue(button.isHittable, "\(id) can't be tapped")
+            if !button.isHittable { problems.append("\(id) can't be tapped") }
             let frame = button.frame
             // 0.5 pt of slack: a 44 pt frame can come back as 43.99999.
-            XCTAssertGreaterThanOrEqual(frame.width, 43.5, "\(id) is \(frame.width) pt wide")
-            XCTAssertGreaterThanOrEqual(frame.height, 43.5, "\(id) is \(frame.height) pt tall")
+            if frame.width < 43.5 || frame.height < 43.5 {
+                problems.append("\(id) is \(Int(frame.width)) x \(Int(frame.height)) pt")
+            }
             let inTopCentre = frame.midY < bounds.minY + bounds.height * 0.4
                 && frame.midX > bounds.minX + bounds.width * 0.25
                 && frame.midX < bounds.maxX - bounds.width * 0.25
-            XCTAssertFalse(inTopCentre, "\(id) sits in the top centre of a \(bounds.size) window, at \(frame)")
+            if inTopCentre {
+                problems.append("\(id) sits in the top centre of a \(Int(bounds.width)) x \(Int(bounds.height)) pt window, at \(frame)")
+            }
         }
+        XCTAssertTrue(problems.isEmpty, problems.joined(separator: "; "))
     }
 }
 SWIFT

@@ -12,7 +12,7 @@ When iPhone Duo folds or unfolds, the window moves to the other display and resi
 | Set `AccessibilityFocusState` at once in `onChange(of: horizontalSizeClass)` | `Back, Button`: the request was lost |
 | Set it 0.3 s after the size class changed | `Lunch on Friday, Heading`: the message title |
 
-The same app with the size class forced through the environment, with no real resize, behaved differently: there, setting the focus at once worked, and posting `AccessibilityNotification.LayoutChanged()` without an element left VoiceOver on the Back button. So the real fold is what drops an early request. Test focus code with a real pose change, not a simulated size class.
+The same app with the size class forced through the environment, with no real resize, behaved differently: there, setting the focus at once worked, and posting `AccessibilityNotification.LayoutChanged()` without an element left VoiceOver on the Back button. Our reading: the real resize drops an early request. Test focus code with a real pose change, not a simulated size class.
 
 Not measured: unfold (closed to open), partial fold, Split View, and real hardware. Device Hub had no open window in our second run, so we could not press the poses (*unverified*).
 
@@ -101,7 +101,7 @@ Why it is built this way:
 - **`.task(id:)`, not `onChange` plus a `Task`.** The task restarts on every change and SwiftUI cancels the old one, so a fast fold and unfold moves focus once, for the final layout.
 - **One move, no announcement.** Apple's focus guidance says not to move focus on your own, with one exception: when people step through items one at a time and the focused item disappears, move focus to a nearby item they can find ([HIG, Focus](https://developer.apple.com/design/human-interface-guidelines/focus-and-selection#Best-practices)). VoiceOver moves one step at a time, and a fold is when items disappear. Don't also post an announcement; VoiceOver already speaks the element it lands on.
 - **Remember, don't guess.** The fallback depends on what the person was doing. In list-detail, the open item is their place when the list goes away.
-- **The delay.** 0.3 s worked in our run; 0.5 s leaves room for slower moments. Check on hardware (*unverified*).
+- **The delay.** Our run used `onChange` with a 0.3 s `Task.sleep`. The modifier above does the same through `.task(id:)`, with 0.5 s for slower moments. The modifier itself was not run on a real fold, nor on hardware (*unverified*).
 - **Without VoiceOver.** Setting the focus state should do nothing visible when no assistive technology runs (*unverified*: we tested with VoiceOver on).
 
 ## Text fields and the keyboard focus

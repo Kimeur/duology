@@ -17,7 +17,7 @@ Every block typechecks against the iOS 27.1 simulator SDK in Swift 5 mode, Swift
 What follows from it:
 
 - On rotation, layout you change inside the alongside block rides the system's animation. That is the classic UIKit pattern, and it still works.
-- On open and close, the same block runs with no animation. Your layout takes its new place at once, the same frame as the resize. That is a good default: see "Should open and close animate?" in [SKILL.md](../SKILL.md).
+- On open and close, the same block runs with no animation. Your layout takes its new place at once, together with the resize. That is one of the two valid choices; see "Should open and close animate?" in [SKILL.md](../SKILL.md).
 - The trait change and the size transition don't arrive in a fixed order. In both closes we logged with a `registerForTraitChanges(_:handler:)` handler for the horizontal size class, it ran about 25 ms before `viewWillTransition(to:with:)`. In the two opens, it ran 2 ms after once and 19 ms before once. Decide layout from the size you are handed, or from the trait collection when the trait handler runs. Never assume one comes first.
 - A partial fold sends no size transition. Only the fold's reserved region changes.
 

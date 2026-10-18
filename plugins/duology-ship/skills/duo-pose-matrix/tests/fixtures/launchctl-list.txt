@@ -1,0 +1,7 @@
+PID	Status	Label
+-	0	com.apple.progressd
+-	-9	com.apple.CoreAuthentication.daemon
+93419	0	UIKitApplication:com.apple.Spotlight[013a][rb-legacy]
+70169	0	UIKitApplication:com.example.other[79a3][rb-legacy]
+-	0	UIKitApplication:dev.duology.gallery[1f2e][rb-legacy]
+20442	0	UIKitApplication:com.apple.ios.StoreKitUIService[c98e][rb-legacy]

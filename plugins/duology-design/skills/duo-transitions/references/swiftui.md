@@ -88,7 +88,7 @@ struct LibraryWithPlayer: View {
         }
         // One animated update removes one artwork and inserts the other,
         // so matchedGeometryEffect moves a single picture from the bar to the pane.
-        .animation(reduceMotion ? nil : .smooth, value: isWide)
+        .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: isWide)
     }
 }
 
@@ -188,7 +188,7 @@ struct PhotoGrid: View {
                 }
             }
             .scrollTargetLayout()
-            .animation(reduceMotion ? nil : .smooth, value: columns)
+            .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: columns)
         }
     }
 }
@@ -223,7 +223,7 @@ struct ShelfGrid: View {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: columns), spacing: 8) {
                 ForEach(photos) { PhotoTile(photo: $0) }
             }
-            .animation(reduceMotion ? nil : .smooth, value: columns)
+            .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: columns)
         }
         // The width comes back after layout, so the count changes one update later.
         .onGeometryChange(for: Int.self) { proxy in

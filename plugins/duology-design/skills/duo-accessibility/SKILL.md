@@ -8,7 +8,7 @@ metadata:
 
 # duo-accessibility
 
-iPhone Duo changes shape while people use it. One pane becomes two, a row of text gets 500 points more room, the window jumps to another display. Accessibility settings don't change with it: the same VoiceOver user, text size and Reduce Motion setting meet every layout. This skill makes each layout work for them.
+iPhone Duo changes shape while people use it. One pane becomes two, a row of text gets about twice the width, the window jumps to another display. Accessibility settings don't change with it: the same VoiceOver user, text size and Reduce Motion setting meet every layout. This skill makes each layout work for them.
 
 Load neighbours for depth: `duo-design-system` (type scale, colour tokens, contrast checks), `duo-transitions` (animating the resize), `duo-postures` (hinge effects), `duo-ergonomics` (44 pt targets), `duo-testing` (UI test setup), `duo-shared-screen` (two people, one screen).
 
@@ -141,7 +141,7 @@ struct MessageScreen: View {
 
 - The task runs on first appear too. With nothing focused yet, `lastSpot` is nil and it does nothing.
 - Move focus only to keep the person's place. Apple allows a move to a nearby item when the focused one disappears ([HIG, Focus](https://developer.apple.com/design/human-interface-guidelines/focus-and-selection#Best-practices)). Don't announce it.
-- 0.3 s worked in our run. We use 0.5 s for slower devices; not tested on hardware (*unverified*).
+- Our run used `onChange` and a 0.3 s sleep. This modifier does the same with `.task(id:)` and 0.5 s; not run on a real fold or on hardware (*unverified*).
 - Unfold (closed to open) was not measured: Device Hub had no window during our second run (*unverified*). Test it the same way.
 - UIKit (`UIAccessibility.post(notification: .layoutChanged, argument:)`), `@FocusState` for text fields, and the full measurements: [references/focus-after-fold.md](references/focus-after-fold.md).
 
@@ -175,7 +175,7 @@ struct MessageRow: View {
 }
 ```
 
-*Measured* on the closed display: this row grew from 348 × 42 pt to 297 × 370 pt at AX5, and the audit found nothing. The same row with `lineLimit(1)` and `frame(height: 30)` got two "Text clipped" issues, at the default size and at AX5.
+*Measured* closed, with a row built the same way: 348 × 42 pt at Large, 297 × 370 pt at AX5, no audit issues. The same row with `lineLimit(1)` and `frame(height: 30)` got two "Text clipped" issues, at the default size and at AX5.
 
 - `AnyLayout` keeps view identity, so state survives the switch ([doc](https://developer.apple.com/documentation/swiftui/anylayout)).
 - `ViewThatFits` picks the first child that fits, for short strips of controls ([doc](https://developer.apple.com/documentation/swiftui/viewthatfits)).
@@ -249,7 +249,7 @@ struct ReplyControls: View {
 
 ## 6. Accessibility modifiers before .position
 
-`.position` returns a view as large as its parent. Anything after it applies to that whole area. *Measured*: a 60 pt circle with `contentShape(Rectangle())`, a tap gesture and its accessibility element after `.position` got a 382 × 103 pt element, and a tap at the far left of the area counted. With those modifiers before `.position`: 60 × 60 pt. A `contentShape` and tap on a container also stretched its child's element to the container (*measured*, as in `recipe-two-player-game`).
+`.position` returns a view as large as its parent. A `contentShape` or gesture after it covers that whole area, and the accessibility element grows with it. *Measured*: a 60 pt circle with `contentShape(Rectangle())`, a tap gesture and its accessibility element after `.position` got a 382 × 103 pt element, and a tap at the far left of the area counted. With those modifiers before `.position`: 60 × 60 pt. An accessibility element alone after `.position` stayed 60 × 60 pt; keep the order anyway. A `contentShape` and tap on a container also stretched its child's element to the container (*measured*, as in `recipe-two-player-game`).
 
 ```swift
 import SwiftUI

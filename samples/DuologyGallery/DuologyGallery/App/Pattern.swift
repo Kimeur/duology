@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// The eight layout patterns in the gallery. The raw values are the names
-/// the `-pattern` launch argument takes.
+/// The screens in the gallery: the eight layout patterns from `duo-patterns`,
+/// then three screens added in v0.2 for poses, fold transitions and design
+/// tokens. The raw values are the names the `-pattern` launch argument takes.
 enum Pattern: String, CaseIterable, Identifiable {
     case listDetail
     case supportingPane
@@ -11,8 +12,21 @@ enum Pattern: String, CaseIterable, Identifiable {
     case feedReflow
     case tabsToSidebar
     case displacement
+    case tabletopPlayer
+    case foldTransition
+    case designTokens
 
     var id: String { rawValue }
+
+    /// The eight layout patterns, in the order `duo-patterns` lists them.
+    static let layoutPatterns: [Pattern] = [
+        .listDetail, .supportingPane, .twoPage, .dualView,
+        .extendedCanvas, .feedReflow, .tabsToSidebar, .displacement
+    ]
+
+    /// Screens for the v0.2 design skills: `duo-postures`, `duo-transitions`
+    /// with `duo-continuity`, and `duo-design-system`.
+    static let designScreens: [Pattern] = [.tabletopPlayer, .foldTransition, .designTokens]
 
     var title: String {
         switch self {
@@ -24,6 +38,9 @@ enum Pattern: String, CaseIterable, Identifiable {
         case .feedReflow: "Feed reflow"
         case .tabsToSidebar: "Tabs to sidebar"
         case .displacement: "Displacement"
+        case .tabletopPlayer: "Tabletop player"
+        case .foldTransition: "Fold transition"
+        case .designTokens: "Design tokens"
         }
     }
 
@@ -38,6 +55,9 @@ enum Pattern: String, CaseIterable, Identifiable {
         case .feedReflow: "Photos, shops, news"
         case .tabsToSidebar: "Apps with many sections"
         case .displacement: "Controls you place near the middle"
+        case .tabletopPlayer: "Video, calls, recipes, workouts"
+        case .foldTransition: "Readers, maps, editors: work in progress"
+        case .designTokens: "Grids, margins, type and touch targets"
         }
     }
 
@@ -52,6 +72,9 @@ enum Pattern: String, CaseIterable, Identifiable {
         case .feedReflow: "A homeware shop"
         case .tabsToSidebar: "A music library"
         case .displacement: "Voice memos with a record button"
+        case .tabletopPlayer: "A nature film with one set of controls"
+        case .foldTransition: "A field guide that keeps your place"
+        case .designTokens: "A home energy dashboard on its grid"
         }
     }
 
@@ -65,6 +88,9 @@ enum Pattern: String, CaseIterable, Identifiable {
         case .feedReflow: "As many columns as fit"
         case .tabsToSidebar: "A tab bar on the side"
         case .displacement: "Controls at the bottom"
+        case .tabletopPlayer: "Controls over the film"
+        case .foldTransition: "The article, tools at the bottom"
+        case .designTokens: "4 columns, 12 pt gutters"
         }
     }
 
@@ -78,6 +104,17 @@ enum Pattern: String, CaseIterable, Identifiable {
         case .feedReflow: "An even number of columns"
         case .tabsToSidebar: "A sidebar"
         case .displacement: "Same place flat; off the fold when folded"
+        case .tabletopPlayer: "Film on one side of the fold, controls on the other"
+        case .foldTransition: "Same column, place and tools; contents beside"
+        case .designTokens: "8 columns; the fold becomes the middle gutter"
+        }
+    }
+
+    /// The caption over the second diagram on the home screen.
+    var openCaption: String {
+        switch self {
+        case .tabletopPlayer: "Folded"
+        default: "Open"
         }
     }
 
@@ -92,6 +129,9 @@ enum Pattern: String, CaseIterable, Identifiable {
         case .feedReflow: "LazyVGrid"
         case .tabsToSidebar: "defaultTabBarPlacement"
         case .displacement: "reservedRegions"
+        case .tabletopPlayer: "reservedRegions"
+        case .foldTransition: "ScrollPosition"
+        case .designTokens: "contentMargins"
         }
     }
 
@@ -105,6 +145,9 @@ enum Pattern: String, CaseIterable, Identifiable {
         case .feedReflow: "square.grid.2x2"
         case .tabsToSidebar: "sidebar.left"
         case .displacement: "arrow.left.and.right.square"
+        case .tabletopPlayer: "play.rectangle.fill"
+        case .foldTransition: "text.book.closed"
+        case .designTokens: "ruler"
         }
     }
 
@@ -118,6 +161,9 @@ enum Pattern: String, CaseIterable, Identifiable {
         case .feedReflow: Color(hex: 0xC0266D)
         case .tabsToSidebar: Color(hex: 0xD9480F)
         case .displacement: Color(hex: 0x0E7490)
+        case .tabletopPlayer: Color(hex: 0xBE123C)
+        case .foldTransition: Color(hex: 0xA16207)
+        case .designTokens: Color(hex: 0x4338CA)
         }
     }
 
@@ -132,6 +178,9 @@ enum Pattern: String, CaseIterable, Identifiable {
         case .feedReflow: FeedReflowView()
         case .tabsToSidebar: TabsToSidebarView()
         case .displacement: DisplacementView()
+        case .tabletopPlayer: TabletopPlayerView()
+        case .foldTransition: FoldTransitionView()
+        case .designTokens: DesignTokensView()
         }
     }
 }

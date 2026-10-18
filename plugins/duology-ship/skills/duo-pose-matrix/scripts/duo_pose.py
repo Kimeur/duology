@@ -54,8 +54,8 @@ HINGE_FOR_POSE = {"closed": "closed", "open": "fullyOpen", "book": "partiallyOpe
 ROTATE_RIGHT = "Rotate Right"
 POSE_BUTTONS = ("Closed", "Partially Open", "Open")
 
-# Processes that mean someone is running UI tests on a simulator.
-BUSY_PATTERN = "xctrunner|xcodebuild.*test"
+# xcodebuild actions that run tests. build-for-testing only builds.
+TEST_ACTIONS = ("test", "test-without-building")
 
 EXIT_OK = 0
 EXIT_FAILED = 1
@@ -228,24 +228,62 @@ def find_simulator(system, udid=None, need_booted=True):
     return sim
 
 
-def parse_busy(output, ignore=()):
-    """Parse `pgrep -fl` output into [{"pid", "command"}], skipping our own processes."""
+def parse_busy(ps_output, ignore=()):
+    """UI test processes in `ps -axo pid=,args=` output: [{"pid", "command"}].
+
+    Looks at the program itself, not at any text in its arguments, so a shell
+    script that merely mentions "xcodebuild test" (another agent's wait loop,
+    for example) doesn't count:
+    - xcodebuild (also through xcrun) running the test or test-without-building action;
+    - a UI test runner app (a path with ".xctrunner" or "-Runner.app/").
+    """
     busy = []
-    for line in output.splitlines():
-        line = line.strip()
-        pid_text, _, command = line.partition(" ")
+    for line in ps_output.splitlines():
+        pid_text, _, command = line.strip().partition(" ")
         if not pid_text.isdigit() or int(pid_text) in ignore:
             continue
-        busy.append({"pid": int(pid_text), "command": command.strip()})
+        command = command.strip()
+        tokens = command.split()
+        if not tokens:
+            continue
+        exe = tokens[0]
+        if os.path.basename(exe) == "xcrun" and len(tokens) > 1:
+            tokens = tokens[1:]
+            exe = tokens[0]
+        name = os.path.basename(exe)
+        if (name == "xcodebuild" and any(t in TEST_ACTIONS for t in tokens[1:])) \
+                or ".xctrunner" in exe or "-Runner.app/" in exe:
+            busy.append({"pid": int(pid_text), "command": command})
     return busy
 
 
-def busy_processes(system):
-    """UI test processes (xctrunner, xcodebuild test) running on this Mac."""
-    code, out, _ = system.run(["pgrep", "-fl", BUSY_PATTERN])
-    if code != 0:
-        return []
-    return parse_busy(out, ignore=system.own_pids())
+def parse_launchctl(output):
+    """Running apps from `launchctl list` inside the simulator: {bundle id: pid or None}."""
+    apps = {}
+    for line in output.splitlines():
+        parts = line.split("\t") if "\t" in line else line.split(None, 2)
+        if len(parts) < 3:
+            continue
+        m = re.match(r"^UIKitApplication:([^\[\s]+)\[", parts[2].strip())
+        if m:
+            pid = parts[0].strip()
+            apps[m.group(1)] = int(pid) if pid.isdigit() and int(pid) > 0 else None
+    return apps
+
+
+def busy_processes(system, sim=None):
+    """UI tests running on this Mac, and UI test runners running in the simulator."""
+    busy = []
+    code, out, _ = system.run(["ps", "-axo", "pid=,args="])
+    if code == 0:
+        busy = parse_busy(out, ignore=system.own_pids())
+    if sim is not None:
+        code, out, _ = system.run(["xcrun", "simctl", "spawn", sim["udid"], "launchctl", "list"])
+        if code == 0:
+            for bundle, pid in sorted(parse_launchctl(out).items()):
+                if pid and bundle.endswith(".xctrunner") and pid not in [b["pid"] for b in busy]:
+                    busy.append({"pid": pid, "command": "%s (UI test runner in the simulator)" % bundle})
+    return busy
 
 
 # --------------------------------------------------------------------------
@@ -696,7 +734,7 @@ def gather_status(system, udid=None, bring_forward=False):
     try:
         sim = find_simulator(system, udid)
         status["simulator"] = sim
-        status["busy"] = busy_processes(system)
+        status["busy"] = busy_processes(system, sim)
         try:
             status["state"] = read_state(system, sim).to_dict()
         except PoseError as exc:
@@ -708,6 +746,9 @@ def gather_status(system, udid=None, bring_forward=False):
         status["window"] = hub.info.get("window")
         status["buttons"] = hub.info.get("buttons")
         status["reachable"] = hub.reachable()
+        if status["busy"]:
+            raise PoseError(EXIT_BUSY, "UI tests are running, so `set` would refuse",
+                            "Wait until they finish, or pass --force to `set` if they use another simulator.")
         status["ready"] = True
     except PoseError as exc:
         status["problem"] = {"code": exc.code, "message": exc.message, "hint": exc.hint}
@@ -826,7 +867,7 @@ def main(argv=None, system=None, out=None, err=None):
                 out.write("Poses it can set: %s\n" % ", ".join(hub.reachable()))
             return EXIT_OK
 
-        busy = busy_processes(system)
+        busy = busy_processes(system, sim)
         if busy and not args.force:
             raise PoseError(EXIT_BUSY, "UI tests are running on this Mac (%s)" % ", ".join(
                 "pid %d" % b["pid"] for b in busy),

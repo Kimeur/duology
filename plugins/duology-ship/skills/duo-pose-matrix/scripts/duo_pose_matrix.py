@@ -173,21 +173,7 @@ def parse_args(argv):
 # The app on the simulator
 # --------------------------------------------------------------------------
 
-APP_JOB = re.compile(r"^UIKitApplication:([^\[\s]+)\[")
-
-
-def parse_launchctl(output):
-    """Running apps from `launchctl list` inside the simulator: {bundle id: pid or None}."""
-    apps = {}
-    for line in output.splitlines():
-        parts = line.split("\t") if "\t" in line else line.split(None, 2)
-        if len(parts) < 3:
-            continue
-        m = APP_JOB.match(parts[2].strip())
-        if m:
-            pid = parts[0].strip()
-            apps[m.group(1)] = int(pid) if pid.isdigit() and int(pid) > 0 else None
-    return apps
+parse_launchctl = dp.parse_launchctl
 
 
 def running_apps(system, sim):
@@ -420,21 +406,21 @@ def manual_command(args, pose):
 # The run
 # --------------------------------------------------------------------------
 
-def wait_until_free(system, args):
+def wait_until_free(system, sim, args):
     """Wait while UI tests run. Returns the busy list that remains (empty when free)."""
     if args.force:
         return []
-    busy = dp.busy_processes(system)
+    busy = dp.busy_processes(system, sim)
     deadline = system.monotonic() + args.busy_wait
     while busy and system.monotonic() < deadline:
         system.sleep(5)
-        busy = dp.busy_processes(system)
+        busy = dp.busy_processes(system, sim)
     return busy
 
 
 def run_matrix(system, args, log=lambda text: None):
     sim = dp.find_simulator(system, args.udid)
-    busy = [] if args.force else dp.busy_processes(system)
+    busy = [] if args.force else dp.busy_processes(system, sim)
     if busy:
         raise dp.PoseError(dp.EXIT_BUSY, "UI tests are running on this Mac (%s)" % ", ".join(
             "pid %d" % b["pid"] for b in busy),
@@ -473,7 +459,7 @@ def run_matrix(system, args, log=lambda text: None):
             state = dp.read_state(system, sim)
             log("%s: set by hand; %s" % (pose, state.describe()))
             return state
-        busy_now = wait_until_free(system, args)
+        busy_now = wait_until_free(system, sim, args)
         if busy_now:
             raise StopRun("UI tests started on this Mac (%s); stopped before changing the pose again"
                           % ", ".join("pid %d" % b["pid"] for b in busy_now))

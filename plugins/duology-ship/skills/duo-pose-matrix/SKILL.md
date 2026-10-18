@@ -23,8 +23,8 @@ Related skills: `duo-design-review` (read the screenshots against its 15 rules),
 
 - Never change macOS privacy settings, and never ask the user to let you do it. Accessibility permission is the user's decision. If `duo-pose status` says it isn't allowed, tell the user how to allow it (below) and offer the manual route.
 - Use the existing iPhone Duo simulator. Never create, clone or delete one: each takes 4-6 GB of disk.
-- Tell the user before a run: it brings Device Hub's window to the front and changes the pose of the whole simulator, for every app and test on it.
-- Don't run it while someone runs UI tests on the simulator. The tools refuse while `xctrunner` or `xcodebuild test` processes run; pass `--force` only when the user confirms those tests use another simulator.
+- Tell the user before a run: it changes the pose of the whole simulator, for every app and test on it, and when it can't see Device Hub's window it brings Device Hub to the front, out of whatever app or full-screen Space the user is in. If the user is working on the Mac, pass `--no-bring-forward` and ask them to show Device Hub on the current desktop instead.
+- Don't run it while someone runs UI tests on the simulator. The tools refuse while an `xcodebuild test` runs on the Mac or a UI test runner (`.xctrunner`) runs in the simulator; pass `--force` only when the user confirms those tests use another simulator.
 - Treat open and book as "not confirmed" unless the app reports its fold (see [Tell open from book](#tell-open-from-book)). From outside the app they look the same.
 - Never use the screenshots' pixel sizes in app code. They are for reading frames only.
 
@@ -110,7 +110,7 @@ duo-pose-matrix com.example.notes --no-relaunch --poses closed,open,book -- -uiT
 | `--force` | Run even while UI tests run. |
 | `--no-restore`, `--keep-running`, `--no-bring-forward`, `--json` | Leave the last pose; leave the app running; fail instead of bringing Device Hub forward; print the summary as JSON. |
 
-Each pose takes about 7 to 20 seconds to set, plus `--wait` per case. Four poses and two cases take about two minutes.
+From the default waits, setting a pose takes about 7 to 20 seconds. Each screenshot takes about 6 to 7 seconds more (*measured*: two cases in one pose took 13 seconds). Four poses and two cases take about two minutes.
 
 ### 3. Read the results
 

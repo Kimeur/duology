@@ -232,11 +232,21 @@ class RunTests(unittest.TestCase):
         self.assertIsNotNone(mac.app_pid)
 
     def test_refuses_while_ui_tests_run(self):
-        run, mac = Run(self), fakes.FakeMac(busy="99 FooUITests-Runner.xctrunner\n")
+        run, mac = Run(self), fakes.FakeMac(runner=True)
         self.assertEqual(run([], mac), dp.EXIT_BUSY)
         self.assertEqual(mac.pressed, [])
         self.assertEqual(run.pngs(), [])
         self.assertIn("--force", run.stderr)
+
+    def test_stops_without_restoring_when_tests_start_mid_run(self):
+        busy = "4242 /usr/bin/xcodebuild test -scheme Other\n"
+        run, mac = Run(self), fakes.FakeMac(busy=busy, busy_after=2)
+        self.assertEqual(run(["--busy-wait", "30"], mac), dp.EXIT_FAILED)
+        s = run.summary()
+        self.assertIn("UI tests started", s["stopped"])
+        self.assertEqual(mac.pressed, ["Closed", "Open"])  # no restore press after the stop
+        self.assertEqual(sorted(x["pose"] for x in s["shots"]), ["closed", "open"])
+        self.assertIn("Stopped early", run.markdown())
 
     def test_app_not_installed(self):
         run, mac = Run(self), fakes.FakeMac(installed=False)

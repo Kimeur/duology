@@ -83,16 +83,23 @@ A `--manual` run in a folder that already has a `summary.json` for the same app 
 ## Order of a run
 
 1. Pick the simulator: the UDID you pass, else the booted one named "iPhone Duo", else any booted iPhone Duo. Stop if it isn't booted.
-2. Stop if UI tests run (unless `--force`) or the app isn't installed.
+2. Stop if UI tests run (unless `--force`) or the app isn't installed. "UI tests run" means an `xcodebuild test` or `test-without-building` process on the Mac, or an `.xctrunner` app running in the simulator (see [limits.md](limits.md#the-pose-belongs-to-the-whole-simulator)).
 3. Read the start pose. Connect to Device Hub (bringing it forward if needed).
 4. For each pose: check for UI tests again, press the buttons, check the pose; then for each case launch the app with `simctl launch --terminate-running-process`, wait, take the screenshot and check it. With `--no-relaunch` the loops swap: each case launches once and stays running through every pose.
 5. Restore the start pose, quit the app (`simctl terminate`), read the end pose, write the summary.
 
 ## What we checked
 
+On 18 October 2026, on the shared iPhone Duo simulator:
+
 | Check | Result |
 |---|---|
-| Unit tests (`python3 -m unittest discover` on the `tests/` folder), Python 3.11 and the Xcode Python 3.9 | 70 pass, 1 skipped (the Swift build test, which runs with `DUO_POSE_SWIFT=1`) |
-| Swift build test with `DUO_POSE_SWIFT=1` | Passes: the helper builds and answers `trust` |
-| `duo-pose status` on the shared simulator | Simulator, start pose (closed), Device Hub, trust (allowed) and UI test check all read correctly |
-| Pressing the buttons with this tool | *Unverified* in our last run: Device Hub's window was not on the current desktop (Mission Control was open over a system dialog), so the Accessibility tree listed no windows. The same Accessibility calls set all four poses in the 17 and 18 October research runs. |
+| Unit tests (`python3 -m unittest discover` on the `tests/` folder), Python 3.11 and Xcode's Python 3.9 | All pass; the Swift build test skips itself unless `DUO_POSE_SWIFT=1` |
+| Swift build test with `DUO_POSE_SWIFT=1` | Passes: the helper builds with Xcode 27.1 and answers `trust` |
+| `duo-pose status` | Read the simulator, the start pose (closed), Device Hub's process, trust (allowed) and the UI test check correctly |
+| `duo-pose-matrix --manual closed` on the gallery, two cases | Two screenshots, 1398 x 2034 px, both `ok`; the pictures show the list-detail and two-page screens on the outer display with no fold |
+| `--manual book` while the phone was closed | The shot `failed` with "the inner display should be active for book, but the outer one is"; exit 1 |
+| An app that isn't installed | Exit 8, nothing written |
+| `duo-pose set` while another session ran `xcodebuild test-without-building` on the simulator | Refused with exit 6 and named both processes (xcodebuild and the runner app) |
+| `duo-pose set` with Device Hub's window off the current desktop and `--no-bring-forward` | Exit 4 with the manual instructions; nothing pressed |
+| Pressing the buttons with this tool | *Unverified*. While we could run it, Device Hub's window was off the current desktop: first behind Mission Control and a system dialog, then behind the user's full-screen app, and another session's UI tests were running. We didn't bring Device Hub forward over the user's work. The same Accessibility calls set all four poses in the 17 and 18 October research runs. |

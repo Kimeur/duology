@@ -18,7 +18,8 @@ How you notice: `duo-pose list` exits 4 with "Device Hub's window shows no pose 
 
 There is one hinge per simulator. When the tool presses Open, every app and every UI test on that simulator sees the phone open.
 
-- The tools refuse to start while `xctrunner` or `xcodebuild test` processes run on the Mac (`pgrep -fl "xctrunner|xcodebuild.*test"`). They can't tell which simulator a test uses, so `--force` exists for when the user knows.
+- The tools refuse to start while UI tests run. They count two things: an `xcodebuild` process running the `test` or `test-without-building` action anywhere on the Mac (read from `ps`), and a UI test runner app (a bundle ID ending in `.xctrunner`) running inside this simulator (read from `simctl spawn <UDID> launchctl list`). `--force` skips the check, for when the user knows the tests use another simulator.
+- They look at the program, not at text in its arguments. A plain `pgrep -f "xctrunner|xcodebuild.*test"` also matches a shell loop that merely contains that text, such as another agent waiting for the simulator, and `xcodebuild build-for-testing`, which only builds. It also misses the runner itself, whose process path ends in `-Runner.app/<Name>-Runner` (*measured* on 18 October, with another session's UI tests running on the shared simulator).
 - Between poses, the matrix checks again and waits up to `--busy-wait` seconds. If tests still run, it stops, writes what it has, and does not restore the pose, so it doesn't move the screen under the tests a second time.
 - Launching your app takes the screen from whatever ran before. The matrix flags a shot `check` when another app starts during a capture, but it can't see which app is in front.
 - Our research runs saw this happen: another session's UI tests started in the pose we had left, and someone pressed Open in Device Hub in the middle of a book capture.

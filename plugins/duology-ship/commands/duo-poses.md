@@ -54,24 +54,24 @@ It changes nothing. Read the last lines:
 |---|---|
 | 0 | Go on. |
 | 3 | The app that runs Claude Code may not use Accessibility. Tell the user what that permission allows and how to allow it: System Settings > Privacy & Security > Accessibility, then turn on that app, and quit and reopen it if needed. Never change the setting yourself or open it for them. Offer the manual route (step 5). |
-| 4 | Device Hub isn't running, its window isn't on this desktop, or it shows no pose buttons. Ask the user to open Device Hub on the iPhone Duo, or go on: the matrix brings Device Hub forward itself. If it says "no pose buttons", use the manual route. |
+| 4 | Device Hub isn't running, its window isn't on this desktop, or it shows no pose buttons. Ask the user to show Device Hub's iPhone Duo window on the current desktop, or go on: the matrix brings Device Hub forward itself. If it says "no pose buttons", use the manual route. |
 | 5 | No booted iPhone Duo simulator. Ask the user to boot the existing one, or run `/duo-doctor`. Never create a simulator. |
 | 6 | UI tests are running. Tell the user and wait. Pass `--force` only if they say those tests use another simulator. |
 | 7 | The helper couldn't be built. Show the output; Xcode 27.1 is probably missing. |
 
 ## 3. Run the matrix
 
-Tell the user in one line that the run brings Device Hub to the front and changes the simulator's pose for everything on it, then run:
+Tell the user in one line that the run changes the simulator's pose for everything on it, and brings Device Hub to the front if its window isn't on the current desktop. If the user is working in another app or a full-screen Space, add `--no-bring-forward`. Then run:
 
 ```bash
 "${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo-pose-matrix" <bundle-id> <the user's other arguments>
 ```
 
-- Give the Bash call a timeout of 10 minutes. Each pose takes about 7 to 20 seconds, plus 4 seconds per case.
+- Give the Bash call a timeout of 10 minutes. Setting a pose takes about 7 to 20 seconds, and each screenshot about 7 more.
 - Exit 0: every screenshot passed its checks. Exit 1: some failed; that is a result, so go on to step 4.
 - Exit 8: the app isn't installed on the simulator. Tell the user to build and install it for the iPhone Duo simulator (`/duo-audit` step 2 has the commands), then run this again.
 - Exit 3 or 4: go to step 5. The output already lists the manual commands.
-- The first lines of the output name the output folder. Tell the user where it is.
+- The line "Saved ... in <folder>" names the output folder. Tell the user where it is.
 
 ## 4. Read and report
 

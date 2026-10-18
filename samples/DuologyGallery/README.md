@@ -1,8 +1,8 @@
 # Duology Gallery
 
-A small SwiftUI app with one screen for each layout pattern in the [`duo-patterns`](../../plugins/duology-design/skills/duo-patterns/SKILL.md) skill. Run it on the iPhone Duo simulator, then close, open and fold the phone in Device Hub to see what each pattern does.
+A small SwiftUI app with one screen for each layout pattern in the [`duo-patterns`](../../plugins/duology-design/skills/duo-patterns/SKILL.md) skill, plus three screens for the v0.2 design skills: a tabletop player ([`duo-postures`](../../plugins/duology-design/skills/duo-postures/SKILL.md)), a fold transition ([`duo-transitions`](../../plugins/duology-design/skills/duo-transitions/SKILL.md) with [`duo-continuity`](../../plugins/duology/skills/duo-continuity/SKILL.md)) and design tokens ([`duo-design-system`](../../plugins/duology-design/skills/duo-design-system/SKILL.md)). Run it on the iPhone Duo simulator, then close, open and fold the phone in Device Hub to see what each screen does.
 
-Every screen uses real sample content (an inbox, an article, a short book, a day in Lisbon, a trail map, a shop, a music library, voice memos). All names, companies and text are made up for the sample.
+Every screen uses real sample content (an inbox, an article, a short book, a day in Lisbon, a trail map, a shop, a music library, voice memos, a nature film, a rock-pooling guide, a home energy dashboard). All names, companies and text are made up for the sample.
 
 <p align="center">
   <img src="../../docs/assets/gallery/home-closed.png" width="260" alt="The gallery's home screen on the closed iPhone Duo: a card for each pattern with what it is for and a closed and open diagram" />
@@ -40,12 +40,12 @@ xcrun simctl launch "iPhone Duo" dev.duology.gallery -pattern listDetail
 
 | Argument | What it does |
 |---|---|
-| `-pattern <name>` | Opens one screen straight away. Names: `listDetail`, `supportingPane`, `twoPage`, `dualView`, `extendedCanvas`, `feedReflow`, `tabsToSidebar`, `displacement`. |
+| `-pattern <name>` | Opens one screen straight away. Names: `listDetail`, `supportingPane`, `twoPage`, `dualView`, `extendedCanvas`, `feedReflow`, `tabsToSidebar`, `displacement`, `tabletopPlayer`, `foldTransition`, `designTokens`. |
 | `-showsRegions YES` | Starts with the region overlay on: every reserved region drawn over the screen (the fold in pink, cameras and the status bar corner in orange), with their frames and the window size. The dashed-rectangle button on the home screen still turns it off. The button's choice is saved for the next launch without the argument. |
-| `-select <id>` | Preselects an item: a message in list-detail, a place in dual view. |
+| `-select <id>` | Preselects an item: a message in list-detail, a place in dual view, a paragraph in the fold transition (which then opens at that paragraph's section). |
 | `-show map` | Starts the dual view on its map when only one view fits. |
 
-The shared scheme lists the `-pattern` and `-showsRegions` arguments, turned off. Tick one in **Product > Scheme > Edit Scheme > Run > Arguments**.
+The shared scheme lists every `-pattern` argument and `-showsRegions`, turned off. Tick one in **Product > Scheme > Edit Scheme > Run > Arguments**.
 
 ### Try the poses
 
@@ -158,11 +158,13 @@ DuologyGallery/
   App/
     DuologyGalleryApp.swift    app entry; patterns open as full-screen covers
     GalleryHome.swift          home grid, window facts, closed and open diagrams
-    Pattern.swift              the eight patterns: names, one-liners, launch names
-  Patterns/                    one file per pattern, each with its sample data
+    Pattern.swift              the eleven screens: names, one-liners, launch names
+  Patterns/                    one file per screen, each with its sample data
   Shared/
     EvenSplit.swift            two halves that always show (see below)
     FoldGeometry.swift         where the fold is, from the .division region
+    FoldRegionsLayout.swift    content and controls in the regions a fold makes
+    DuoTokens.swift            the duo-design-system tokens and grid helper
     FeedGrid.swift             even column counts around a fold
     ReservedRegionOverlay.swift  debug overlay for every reserved region
     GalleryChrome.swift        launch arguments, Close button, avatars
@@ -177,6 +179,8 @@ The project uses file-system synchronized groups (`objectVersion = 77`). Add a S
 - **`FoldGeometry`** and `onFoldChange(_:)` read the fold from `reservedRegions(kind: .division, options: .includeInactive)` on every geometry change. Ask for inactive regions too: a flat phone returns none by default. The query also returns a region that only touches the view, so `FoldGeometry` keeps a fold only when it lies inside the view (`liesInside(_:of:)`). Before iOS 27.1 the modifier does nothing.
 - **`feedColumns(for:minTileWidth:spacing:)`** is a pure function, so you can test it on the Mac. We did, with a 150 pt minimum tile and 12 pt spacing: 5 columns at 867 pt with no fold, 4 with an inactive fold, and with an active 40 pt fold the column widths and gaps add up to exactly 867 pt.
 - **`controlRegion(in:fold:)`** returns where controls may sit: the whole view when flat, the trailing region when folded like a book, the bottom region when folded across.
+- **`FoldRegionsLayout`** is the `duo-postures` layout for two views, content first and controls second. With no active fold the controls float over the content at the bottom. Folded like a book, the content goes leading and the controls trailing; folded across, the content goes on top and the controls below. It is one `Layout` in every pose, so neither view is rebuilt. The tabletop player uses it.
+- **`DuoTokens.swift`** holds the `duo-design-system` token module (`DuoSpace`, `DuoTokens`, `@DuoMetrics`, `DuoType`, `DuoCard`, `duoTouchTarget()`) and its grid helper (`DuoFold`, `DuoGridGeometry`, `DuoColumns`). The design tokens screen draws `DuoColumns` over a real screen. The skill's `duoContainerMargins()` is left out because `containerMargins(_:)` in `FeedGrid.swift` is the same code.
 
 ## Rules the screens follow
 

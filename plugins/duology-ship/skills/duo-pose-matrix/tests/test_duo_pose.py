@@ -69,10 +69,30 @@ class SimulatorTests(unittest.TestCase):
             dp.find_simulator(mac, "00000000-0000-4000-8000-000000000002")
         self.assertIn("not booted", ctx.exception.message)
 
-    def test_parse_busy_skips_own_processes(self):
-        out = "123 /usr/bin/xcodebuild test -scheme App\n2 bash -c xcodebuild test\nnoise\n456 Foo.xctrunner\n"
-        busy = dp.parse_busy(out, ignore={2})
-        self.assertEqual([b["pid"] for b in busy], [123, 456])
+    def test_parse_busy_looks_at_the_program(self):
+        ps = "\n".join([
+            "  123 /Applications/Xcode-27.1.app/Contents/Developer/usr/bin/xcodebuild test -scheme App",
+            "  124 /usr/bin/xcrun xcodebuild test-without-building -project A.xcodeproj",
+            "  125 /usr/bin/xcodebuild build-for-testing -scheme App",
+            "  126 /bin/zsh -c for i in 1 2; do pgrep -f \"xctrunner|xcodebuild.*test\"; done",
+            "  127 /Users/me/Library/Developer/CoreSimulator/Devices/X/data/Containers/Bundle/Application/Y/"
+            "AppUITests-Runner.app/AppUITests-Runner",
+            "    2 /usr/bin/xcodebuild test -scheme Mine",
+            "noise",
+        ])
+        busy = dp.parse_busy(ps, ignore={2})
+        self.assertEqual([b["pid"] for b in busy], [123, 124, 127])
+
+    def test_parse_launchctl(self):
+        apps = dp.parse_launchctl(fakes.fixture("launchctl-list.txt"))
+        self.assertEqual(apps["com.example.other"], 70169)
+        self.assertIsNone(apps[fakes.BUNDLE])
+
+    def test_ui_test_runner_in_the_simulator_counts_as_busy(self):
+        busy = dp.busy_processes(fakes.FakeMac(runner=True), SIM)
+        self.assertEqual([b["pid"] for b in busy], [78061])
+        self.assertIn("xctrunner", busy[0]["command"])
+        self.assertEqual(dp.busy_processes(fakes.FakeMac(), SIM), [])
 
 
 class DisplayStateTests(unittest.TestCase):
@@ -266,6 +286,11 @@ class CommandLineTests(unittest.TestCase):
         self.assertIn("Accessibility:  allowed", out)
         self.assertIn("Poses it can set: closed, open, book, tabletop", out)
         self.assertIn("Ready:", out)
+
+    def test_status_not_ready_while_tests_run(self):
+        code, out, _ = run_main(["status"], fakes.FakeMac(runner=True))
+        self.assertEqual(code, dp.EXIT_BUSY)
+        self.assertIn("Not ready: UI tests are running", out)
 
     def test_status_changes_nothing(self):
         mac = fakes.FakeMac(window=False)

@@ -48,6 +48,7 @@ private struct EnergyDashboard: View {
 
     @DuoMetrics private var tokens
     @Environment(\.dynamicTypeSize) private var typeSize
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var grid = DuoGridGeometry()
     /// The grid's frame inside the full-width content, to draw the margins.
     @State private var gridFrame = CGRect.zero
@@ -125,7 +126,8 @@ private struct EnergyDashboard: View {
         }
         .environment(\.showsTouchTargets, showsTargets)
         .background(DuoColor.groupedBackground)
-        .animation(.smooth(duration: 0.3), value: grid)
+        // Columns glide when the fold changes the middle gutter. Nil under Reduce Motion.
+        .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: grid)
     }
 
     private var margins: (leading: CGFloat, trailing: CGFloat) {

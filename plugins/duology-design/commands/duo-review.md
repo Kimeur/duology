@@ -25,12 +25,14 @@ Arguments as typed: `$ARGUMENTS`
 
 ## 1. Find the frames
 
+Search with the Glob and Grep tools. This command needs two shell commands only, `printenv TMPDIR` and `file -- <paths>`. Run each on its own, never inside a longer command line, and never `ls` or `find`.
+
 With a folder or files, use them and go to step 2.
 
 With no path, look for the newest duo-pose-matrix run. It writes to `$TMPDIR/duo-poses/<bundle id>-<YYYYMMDD-HHMMSS>/` unless someone passed `--out`.
 
 1. Run `printenv TMPDIR` and call the result `TMP`.
-2. Glob `<TMP>/duo-poses/*/summary.json`. Pick the folder whose name ends in the latest date and time.
+2. Glob `<TMP>/duo-poses/*/summary.json`. Pick the folder whose name ends in the latest date and time. The temp folder is outside the project, so Claude Code may ask the user once before it reads there. That is expected.
 3. If there is none, Grep the current folder for `"shots"` in files named `summary.json` (a run saved with `--out`). Skip `DerivedData` and `.build`.
 4. Tell the user which folder you picked and when it was taken (`startedAt` in `summary.json`), then go on.
 
@@ -44,7 +46,7 @@ If you still have no frames, stop and say how to get them:
 
 Glob the folder for `*.png`, `*.PNG`, `*.jpg`, `*.jpeg`.
 
-- From a duo-pose-matrix run, read `summary.json`. Each shot has `file`, `pose`, `display`, `size`, `status`, `fold` and `notes`. Keep that per file.
+- From a duo-pose-matrix run, read `summary.json`. Each shot has `file` (a name inside the run folder), `pose`, `display`, `size` (`[width, height]`), `status`, `fold` and `notes`. Keep that per file. Send shots with `status` `ok` or `check` as frames. Send `failed` shots under "Frames not reviewed" with their notes: a note that the app was not running is itself a finding.
 - Otherwise get the pixel sizes in one call: `file -- <path> <path> ...`. It prints, for example, `PNG image data, 1398 x 2034`.
 - Note the pose a file name gives (`closed`, `open`, `book`, `tabletop`, `partially-open`). Never guess a pose from content alone.
 - Skip anything that isn't a PNG or JPEG, and say so. The agent can't read videos.

@@ -59,7 +59,7 @@ class FakeMac:
 
     def __init__(self, fold="Closed", turns=0, trusted=True, window=True, buttons=None, busy="",
                  installed=True, switch_delay=2.0, broken_button=None, readout=None, crash_in=None,
-                 foreign_in=None):
+                 foreign_in=None, busy_after=0, runner=False):
         self.fold = fold                  # "Closed", "Open" or "Partially Open"
         self.turns = turns
         self.shown_fold = fold            # what the displays show (lags after a press)
@@ -67,7 +67,9 @@ class FakeMac:
         self.trusted = trusted
         self.window = window
         self.buttons = list(buttons) if buttons is not None else ["Rotate Right", "Closed", "Partially Open", "Open"]
-        self.busy = busy
+        self.busy = busy                     # extra `ps -axo pid=,args=` lines
+        self.busy_after = busy_after         # the busy lines appear after this many presses
+        self.runner = runner                 # a UI test runner app is running in the simulator
         self.installed = installed
         self.switch_delay = switch_delay
         self.broken_button = broken_button   # a button whose press reports success but does nothing
@@ -101,8 +103,9 @@ class FakeMac:
         self.calls.append(argv)
         if argv[:4] == ["xcrun", "simctl", "list", "-j"]:
             return 0, fixture("simctl-devices.json"), ""
-        if argv[:2] == ["pgrep", "-fl"]:
-            return (0, self.busy, "") if self.busy else (1, "", "")
+        if argv[:2] == ["ps", "-axo"]:
+            busy = self.busy if len(self.pressed) >= self.busy_after else ""
+            return 0, "    1 /sbin/launchd\n   57 /usr/libexec/logd\n" + busy, ""
         if argv[:2] == ["pgrep", "-x"]:
             return 0, "88720\n", ""
         if argv[0] == "open":
@@ -194,6 +197,8 @@ class FakeMac:
 
     def _launchctl(self):
         lines = ["PID\tStatus\tLabel", "93419\t0\tUIKitApplication:com.apple.Spotlight[013a][rb-legacy]"]
+        lines.append("%s\t0\tUIKitApplication:com.example.app.uitests.xctrunner[b392][rb-legacy]"
+                     % ("78061" if self.runner else "-"))
         running = self.app_pid is not None and self.fold != self.crash_in
         lines.append("%s\t0\tUIKitApplication:%s[1f2e][rb-legacy]" % (self.app_pid if running else "-", BUNDLE))
         if self.foreign_in == self.fold:

@@ -10,7 +10,6 @@ Duology is built in the open. Dates are targets, not promises. Each release says
 - `duo-lint`, the fold linter
 - Gallery app with every layout pattern
 - First test tasks in `evals/` (the with/without harness)
-- French README
 
 ## v0.2: design (by 20 November 2026)
 

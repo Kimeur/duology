@@ -15,12 +15,14 @@
 **Votre agent a appris iOS avant que l'iPhone Duo existe. Duology lui apprend le reste.**
 
 [![GitHub stars](https://img.shields.io/github/stars/Kimeur/duology?style=flat-square&color=f4c430)](https://github.com/Kimeur/duology/stargazers)
-[![Statut](https://img.shields.io/badge/statut-v0.1_en_cours-9a5a00?style=flat-square)](../../ROADMAP.md)
+[![Version](https://img.shields.io/github/v/release/Kimeur/duology?style=flat-square&color=1d7a4b)](https://github.com/Kimeur/duology/releases)
 [![Skills](https://img.shields.io/badge/skills-11_pr%C3%AAts_·_36_pr%C3%A9vus-2b55c7?style=flat-square)](#contenu)
 [![Recettes](https://img.shields.io/badge/recettes-1_pr%C3%AAte_·_8_pr%C3%A9vues-2b55c7?style=flat-square)](#recettes)
 [![Conçu pour Xcode 27.1](https://img.shields.io/badge/con%C3%A7u_pour-Xcode_27.1_·_iOS_27.1-1d7a4b?style=flat-square)](#vérifié-sur)
 [![Plugin Claude Code](https://img.shields.io/badge/Claude_Code-plugin-d97757?style=flat-square)](#démarrage-rapide)
+<!-- badge skills.sh : à ajouter quand le dépôt y sera listé
 [![skills.sh](https://skills.sh/b/Kimeur/duology?style=flat-square)](https://skills.sh/Kimeur/duology)
+-->
 [![Dernier commit](https://img.shields.io/github/last-commit/Kimeur/duology?style=flat-square)](https://github.com/Kimeur/duology/commits)
 [![Licence MIT](https://img.shields.io/badge/licence-MIT-blue?style=flat-square)](../../LICENSE)
 
@@ -31,7 +33,7 @@
 </div>
 
 > [!IMPORTANT]
-> **Duology se construit au grand jour.** La v0.1 (11 skills, `/duo-doctor`, `/duo-new`, `/duo-audit`) arrive d'ici le 30 octobre 2026. Le pack complet de 36 skills est prévu pour la v1.0, en janvier 2027. Tant que la v0.1 n'est pas publiée, les commandes d'installation ci-dessous ne fonctionnent pas encore. Ajoutez une étoile ou suivez le dépôt pour être prévenu de la sortie. Voir la [feuille de route](../../ROADMAP.md) (en anglais).
+> **La v0.1 est sortie** (18 octobre 2026) : 11 skills, `/duo-doctor`, `/duo-new` et `/duo-audit`, vérifiés avec Xcode 27.1 et le simulateur iPhone Duo. Duology se construit au grand jour : la v0.2 (skills de design et vérification des positions) arrive ensuite, et le pack complet de 36 skills est prévu pour la v1.0, en janvier 2027. Ajoutez une étoile ou suivez le dépôt pour suivre la suite. Voir la [feuille de route](../../ROADMAP.md) et les [notes de version](../../CHANGELOG.md) (en anglais).
 
 > [!NOTE]
 > Duology est un projet communautaire. Il n'est ni affilié à Apple Inc., ni approuvé ou soutenu par Apple.

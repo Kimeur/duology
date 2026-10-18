@@ -2,14 +2,14 @@
 
 Duology is built in the open. Dates are targets, not promises. Each release says which Xcode and iOS versions it was checked on.
 
-## v0.1: launch (by 30 October 2026)
+## v0.1: launch (released 18 October 2026)
 
 - Plugins: `duology`, `duology-design`, `duology-recipes`, `duology-ship`
 - 11 skills: `duo-start`, `duo-setup`, `duo-layout`, `duo-navigation`, `duo-continuity`, `duo-patterns`, `duo-shared-screen`, `duo-design-review`, `duo-testing`, `duo-lint`, `recipe-two-player-game`
 - Commands: `/duo-doctor`, `/duo-new`, `/duo-audit`
 - `duo-lint`, the fold linter
 - Gallery app with every layout pattern
-- First test tasks and results
+- First test tasks in `evals/` (the with/without harness)
 - French README
 
 ## v0.2: design (by 20 November 2026)
@@ -18,6 +18,7 @@ Duology is built in the open. Dates are targets, not promises. Each release says
 - `duo-pose-matrix` and `/duo-poses` (screenshots of every pose)
 - `duo-design-reviewer` agent and `/duo-review`
 - `duo-scenes`
+- First published test results (the harness runs in a separate macOS user account or a VM)
 - First checks on a real iPhone Duo
 
 ## v0.3: iOS 27 features (by 18 December 2026)

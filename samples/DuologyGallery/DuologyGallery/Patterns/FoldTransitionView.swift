@@ -167,7 +167,10 @@ final class ReadingModel {
     /// The reader's own text size step, on top of the system Dynamic Type size.
     var textStep = 2
     /// The block the reader is on. Set when a scroll comes to rest or a jump
-    /// lands, never by a resize, so a fold can put it back at the top.
+    /// lands, never by a resize. The article scrolls back to it after every
+    /// width change (open, close, fold, rotate): on the iOS 27.1 simulator the
+    /// scroll view alone lost the paragraph when the column got narrower
+    /// (measured on unfold and when launched open).
     var anchorID = 0
 
     static let textScales: [CGFloat] = [0.84, 0.92, 1, 1.1, 1.22, 1.36]
@@ -186,16 +189,7 @@ final class ReadingModel {
         }
     }
 
-    /// Puts the reader's block back at the top. Called when the article first
-    /// appears and whenever its width changes: open, close, fold or rotate.
-    /// The scroll view alone kept the offset, not the paragraph, when the
-    /// column narrowed at launch on the open phone (measured), so the screen
-    /// asks for the paragraph by ID itself.
-    func keepPlace() {
-        scroll.scrollTo(id: anchorID, anchor: .top)
-    }
-
-    /// A scroll came to rest: remember where the reader is.
+    /// A scroll the reader made came to rest: remember where they are.
     func scrollDidSettle() {
         anchorID = topID
     }
@@ -256,52 +250,67 @@ final class ReadingModel {
 private struct ArticleColumn: View {
     @Bindable var model: ReadingModel
     var leadingInset: CGFloat = 0
+    @State private var columnWidth = 0
     @ScaledMetric(relativeTo: .body) private var bodySize = 19.0
 
     var body: some View {
-        ScrollView {
-            // A plain stack: the guide is short, and every block has its real
-            // height, so a position by ID lands exactly where it should.
-            VStack(alignment: .leading, spacing: 16) {
-                ArticleHeader(guide: model.guide)
-                    .id(0)
-                ForEach(model.guide.blocks) { block in
-                    BlockView(block: block,
-                              bodySize: bodySize * model.textScale,
-                              isSelected: model.selected == block.id,
-                              isHighlighted: model.highlights.contains(block.id),
-                              isBookmarked: model.bookmark == block.id) {
-                        model.toggleSelection(block.id)
+        // The reader gives a scroll command that always runs. A ScrollPosition
+        // that already names the paragraph does nothing when asked again.
+        ScrollViewReader { proxy in
+            ScrollView {
+                // A plain stack: the guide is short, and every block has its real
+                // height, so a position by ID lands exactly where it should.
+                VStack(alignment: .leading, spacing: 16) {
+                    ArticleHeader(guide: model.guide)
+                        .id(0)
+                    ForEach(model.guide.blocks) { block in
+                        BlockView(block: block,
+                                  bodySize: bodySize * model.textScale,
+                                  isSelected: model.selected == block.id,
+                                  isHighlighted: model.highlights.contains(block.id),
+                                  isBookmarked: model.bookmark == block.id) {
+                            model.toggleSelection(block.id)
+                        }
+                        .id(block.id)
                     }
-                    .id(block.id)
+                }
+                .scrollTargetLayout()
+                .padding(.leading, leadingInset)
+                .containerMargins(.horizontal)
+                .padding(.top, 8)
+            }
+            .scrollPosition($model.scroll, anchor: .top)
+            .onGeometryChange(for: Int.self) { Int($0.size.width.rounded()) } action: { width in
+                columnWidth = width
+                proxy.scrollTo(model.anchorID, anchor: .top)
+            }
+            // The width arrives in steps while the window resizes. Once it has
+            // settled, put the reader's paragraph back at the top again.
+            .task(id: columnWidth) {
+                try? await Task.sleep(for: .milliseconds(200))
+                guard !Task.isCancelled else { return }
+                proxy.scrollTo(model.anchorID, anchor: .top)
+            }
+            .onScrollPhaseChange { oldPhase, newPhase in
+                // Only a scroll the reader made moves the anchor. A resize or a jump does not.
+                if newPhase == .idle, oldPhase == .interacting || oldPhase == .decelerating {
+                    model.scrollDidSettle()
                 }
             }
-            .scrollTargetLayout()
-            .padding(.leading, leadingInset)
-            .containerMargins(.horizontal)
-            .padding(.top, 8)
+            .scrollEdgeEffectStyle(.hard, for: [.top, .bottom])
+            .onScrollTargetVisibilityChange(idType: Int.self) { ids in
+                if !ids.isEmpty { model.visible = ids }
+            }
+            // Bars of our own with the system's scroll edge effect (iOS 26): text
+            // fades under them, and the scroll view makes room for them.
+            .safeAreaBar(edge: .top, spacing: 0) {
+                ReadingProgress(model: model, leadingInset: leadingInset)
+            }
+            .safeAreaBar(edge: .bottom) {
+                ReadingTools(model: model)
+            }
+            .background { Color(.systemBackground).ignoresSafeArea() }
         }
-        .scrollPosition($model.scroll, anchor: .top)
-        .task { model.keepPlace() }
-        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { _ in
-            model.keepPlace()
-        }
-        .onScrollPhaseChange { oldPhase, newPhase in
-            if newPhase == .idle, oldPhase != .idle { model.scrollDidSettle() }
-        }
-        .scrollEdgeEffectStyle(.hard, for: [.top, .bottom])
-        .onScrollTargetVisibilityChange(idType: Int.self) { ids in
-            if !ids.isEmpty { model.visible = ids }
-        }
-        // Bars of our own with the system's scroll edge effect (iOS 26): text
-        // fades under them, and the scroll view makes room for them.
-        .safeAreaBar(edge: .top, spacing: 0) {
-            ReadingProgress(model: model, leadingInset: leadingInset)
-        }
-        .safeAreaBar(edge: .bottom) {
-            ReadingTools(model: model)
-        }
-        .background { Color(.systemBackground).ignoresSafeArea() }
     }
 }
 

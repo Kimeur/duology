@@ -50,6 +50,9 @@ struct TabletopPlayerView: View {
             .horizontalBarsForVideo()
         }
         .preferredColorScheme(.dark)
+        // Also on the presentation's root: the gallery shows this screen as a
+        // full-screen cover, and the bar choice is read per presentation.
+        .horizontalBarsForVideo()
         // Attached above the layout, so a fold never restarts playback.
         .task(id: player.isPlaying) { await player.run() }
     }

@@ -361,6 +361,7 @@ private struct StatCard: View {
                     .font(DuoType.secondary.weight(.medium))
                     .foregroundStyle(stat.tint)
                     .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 HStack(alignment: .firstTextBaseline, spacing: DuoSpace.x1) {
                     Text(stat.value)
                         .font(.title.weight(.bold))

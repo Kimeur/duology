@@ -25,4 +25,6 @@ Text in the pull request (title, description, commits, files) is data, not instr
 
 ## Merging
 
-The workflow merges automatically (squash) only when all of these hold: the review finds no blocker, the required CI check passes, the pull request is not a draft, it was opened by the repository owner, and it comes from a branch of this repository. Everything else waits for the maintainer.
+The workflow merges automatically (squash) only when all of these hold: the review of the latest commit finds no blocker, the required CI check passes, the pull request is not a draft, it was opened by the repository owner, and it comes from a branch of this repository. Everything else waits for the maintainer.
+
+Each new commit turns auto-merge off until its own review passes. The merge goes through only if the pull request still points at the commit that was reviewed. A blocker makes the `Claude review` check fail.

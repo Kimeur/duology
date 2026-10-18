@@ -139,7 +139,7 @@ Every value, its source and how to change it safely: [references/tokens.md](refe
 ## 2. Adapt per size class, not per device
 
 - `@DuoMetrics` reads the size class where the view sits. Inside an `ArrangementView` half on the inner display it returns compact tokens, because that half reports compact width (*measured* in `duo-layout`).
-- An `EvenSplit` or `FoldSplitLayout` half from `duo-layout` keeps the window's regular class. Give each half compact tokens with `.environment(\.horizontalSizeClass, .compact)` on the half.
+- A custom split keeps the window's size class in each half (*measured* for `EvenSplit` in `duo-layout`: regular on the inner display). Give each half compact tokens with `.environment(\.horizontalSizeClass, .compact)` on the half.
 - *Measured* offscreen: `@DuoMetrics` followed the size class and the Dynamic Type size set in the environment, and `readableWidth` scaled from 518 pt (xSmall) to 1691 pt (AX5).
 - Change structure with `AnyLayout` or `ViewThatFits`, so views keep their state.
 
@@ -156,7 +156,7 @@ Every value, its source and how to change it safely: [references/tokens.md](refe
 - Spacing comes from `DuoSpace`: steps of 4 pt. Apple's padding advice (about 12 pt around controls with a bezel, about 24 pt around those without) sits on it ([HIG, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Mobility)).
 - Margins come from the system: `.duoContainerMargins()` uses `contentMargins(for: .container)` on iOS 27.1, which can differ on each side next to a vertical bar.
 - Gutters: `tokens.gutter`, 12 pt compact and 16 pt regular (Duology default).
-- The fold: flat, the middle gutter is a normal gutter. Partly folded, it becomes the fold's frame, which includes the system's margin on each side of the curve (*measured* 40 pt flat; about 40 pt in a book-pose screenshot). Apple's Fitness example keeps the outer margins and widens only the middle ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=350)).
+- The fold: flat, the middle gutter is a normal gutter. Partly folded, it becomes the fold's frame, which includes the system's margin on each side of the curve (*measured* in `duo-layout`: 40 pt flat; about 40 pt in a book-pose screenshot). Apple's Fitness example keeps the outer margins and widens only the middle ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=350)).
 
 ## 4. Even-column grids
 
@@ -212,7 +212,7 @@ Full controls, clear glass with dimming, Reduce Transparency and UIKit: [referen
 ## 7. Corners
 
 - Near a display edge, or nested in a rounded container: `ConcentricRectangle` or `.rect(corners: .concentric(minimum: .fixed(DuoTokens.innerRadius)))`. The same code follows the outer display's corners and the inner display's.
-- Declare custom containers with `.containerShape(_:)`, inside any `.background(_:in:)`.
+- Declare custom containers with `.containerShape(_:)`. Apply it before any `.background(_:in:)` on the same view; the other order made `concentricCornerRadii` read `nil` in our test.
 - `cardRadius = cardPadding + innerRadius`, so the first nested element lands on 8 pt. *Measured:* a child inset 16 pt in a 24 pt container resolves to 8 pt.
 - Controls are capsules; near a phone's edge, give them extra margin ([WWDC25 356](https://developer.apple.com/videos/play/wwdc2025/356/?time=348)).
 
@@ -221,7 +221,7 @@ Code, measured radii and UIKit `cornerConfiguration`: [references/corners.md](re
 ## 8. Touch targets
 
 - A hit region of at least 44 × 44 pt for every tappable element. In a screenshot, 44 pt is 132 px.
-- Keep about 12 pt around controls with a bezel and about 24 pt around those without.
+- Keep about 12 pt around controls with a bezel and about 24 pt around those without ([HIG, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Mobility)).
 - In small halves (closed and split, about 382 × 321 pt each, *measured* in `duo-shared-screen`), drop labels and spacing before you shrink a target.
 - Keep targets out of the fold's frame when the phone is partly open.
 
@@ -235,7 +235,7 @@ Button { isFavorite.toggle() } label: {
 ## 9. Colour and contrast
 
 - Use `DuoColor` backgrounds and `.primary` / `.secondary` text styles. They adapt to light, dark and Increase Contrast.
-- *Measured* on the iOS 27.1 runtime: `label` on `systemBackground` is 21:1. `secondaryLabel` is 3.44:1 in light mode (5.97:1 with Increase Contrast) and the default blue tint 3.52:1. Use those for 18 pt and up, bold text, symbols and controls; use `label` for small text people must read.
+- *Measured* on the iOS 27.1 runtime: `label` on `systemBackground` is 21:1. `secondaryLabel` is 3.44:1 in light mode (5.97:1 with Increase Contrast) and `systemBlue`, the default tint, 3.52:1. Use those for 18 pt and up, bold text, symbols and controls; use `label` for small text people must read.
 - Custom colours: `DuoColor.dynamic(light:dark:lightHighContrast:darkHighContrast:)` or an asset catalog colour with Dark and High Contrast variants.
 - Check pairs in a unit test with `duoWorstContrast(text:on:)` from [references/color.md](references/color.md#check-contrast-in-code).
 - Never carry meaning in colour alone.
@@ -266,7 +266,7 @@ The token module builds for iOS 17. Glass, `ConcentricRectangle` and `scrollEdge
 - [ ] Text uses `DuoType` roles or `Font.custom(_:size:relativeTo:)`; sizes are the same on both displays.
 - [ ] Long text is capped with `duoReadableWidth`; AX5 works on the closed outer display.
 - [ ] Glass is on controls only, grouped in `GlassEffectContainer`, regular unless over media; one tinted action at most.
-- [ ] Corners near an edge or inside a container are concentric; `containerShape` sits inside `background(_:in:)`.
+- [ ] Corners near an edge or inside a container are concentric; `containerShape` comes before `background(_:in:)`.
 - [ ] Every tappable element has a 44 × 44 pt hit region, also in the smallest half.
 - [ ] Custom colours have light, dark and high-contrast variants; text pairs meet 4.5:1 (3:1 at 18 pt or bold).
 - [ ] Checked closed, open, partly folded, Split View, AX5, dark, Increase Contrast and Reduce Transparency.

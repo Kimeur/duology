@@ -4,18 +4,19 @@ Every *measured* line in this skill comes from the runs below. Read the limits f
 
 - **When:** 18 October 2026.
 - **Tools:** Xcode 27.1 (27A9275), iOS 27.1 simulator SDK, the shared "iPhone Duo" simulator on iOS 27.1. The probe app was built with `swiftc` and installed with `simctl`; logs came from `simctl launch --stdout`.
-- **Pose:** closed, portrait, the whole time. The outer display was active (`devicectl device info displays` marked LCD active).
+- **Pose:** closed and portrait for most runs (`devicectl device info displays` marked LCD active). One session pressed Open, Closed, Open, Closed in Device Hub through the macOS Accessibility API, checked the active display after each press, and left the simulator closed.
 - **Device:** none. Nothing here has run on a real iPhone Duo.
 
 ## Limits
 
-- **No open phone.** We tried to press Open in Device Hub through the macOS Accessibility API. The Mac's screen was locked: a hit test returned the login window, and Device Hub's window gave no usable accessibility tree. So every inner-display question (Split View, a second window beside the first, fold and unfold) is *unverified*.
+- **Open phone, late.** At first the Mac's screen was locked: a hit test returned the login window and Device Hub gave no usable accessibility tree, so we couldn't press a pose. Once the screen was unlocked, the pose buttons worked and we ran the open-phone session below.
+- **No Split View, no Partially Open.** Split View needs a drag on the home indicator, which we didn't script. We pressed only Closed and Open.
 - **No camera.** The simulator has none. Accessory results say only what happened with no capture session.
 - **Shared simulator.** Other sessions used the same simulator. Before each launch we checked for running UI tests, and we waited while one ran.
 
 ## The probe
 
-A SwiftUI app with one `WindowGroup`, `UIApplicationSupportsMultipleScenes` set to `YES`, and launch arguments that trigger actions on a timer (open a window, send a UIKit request, set a `@SceneStorage` value, present a menu). The core is below; it typechecks. Add it to a debug build of your own app to read the same events.
+A SwiftUI app with one `WindowGroup`, `UIApplicationSupportsMultipleScenes` set to `YES`, and launch arguments that trigger actions on a timer (open a window, send a UIKit request, set a `@SceneStorage` value, present a menu). We couldn't tap, so the menu test presented an edit menu from code with `UIEditMenuInteraction.presentEditMenu(with:)` and listed the visible `UILabel` texts in every window. The core is below; it typechecks. Add it to a debug build of your own app to read the same events.
 
 ```swift
 import SwiftUI
@@ -91,7 +92,7 @@ Run it with output in a file, change the pose in Device Hub, then read the file:
 xcrun simctl launch --terminate-running-process --stdout="$PWD/scenes.log" booted com.example.probe
 ```
 
-## Results (closed phone)
+## Results: closed phone
 
 | What we did | What happened |
 |---|---|
@@ -101,7 +102,9 @@ xcrun simctl launch --terminate-running-process --stdout="$PWD/scenes.log" boote
 | The covered window, while in the background | Two geometry updates: 466 × 678 to 951 × 669 pt (interface orientation landscape right), then back to 466 × 678 pt |
 | The new window's first layout | Root view 466 × 562 pt, then 382 × 644 pt |
 | Edit menu with `UIWindowScene.ActivationAction` (no alternate) and a plain `UIAction` | Only the plain action appeared |
+| The same menu, with an `alternate:` action given | The alternate appeared where the window action would be, next to the plain action |
 | `UIWindowScene.ActivationAction(title: "A") { _ in config }` | Built with a warning; at launch threw `NSInternalInconsistencyException`, "Initializer is unavailable" |
+| `UIWindowScene.ActivationAction(title: "B") { _ in return config }` | No warning; created a `UIWindowSceneActivationAction` |
 | `CameraCaptureAccessory` with `onAvailabilityChange` | Called once with `false` at launch; the accessory content never appeared |
 | `@SceneStorage` count set to 7 in window 1, then a new window | Window 2 read 0 |
 | Terminate and relaunch | Only the last window used reconnected (open 2, connected 1), restored with activity type `com.apple.SwiftUI.stateRestoration` |
@@ -120,10 +123,36 @@ PROBE 0.1 [0706] accessory availability -> false
 PROBE 3.4 [E734] root onAppear ... count=7
 ```
 
+## Results: open and fold
+
+One session, run between another session's UI tests: Open, launch the probe with the accessory on, a second window at 3 s, an edit menu at 7 s; then Closed, Open, Closed.
+
+| What we did | What happened |
+|---|---|
+| Launch on the open phone | Window 951 × 669 pt on the inner screen (2007 × 2853 px native), regular width and height; root view 867 × 635 pt |
+| Camera capture accessory, no capture session | Availability `false` then `true`; a scene with role `UIWindowSceneSessionRoleCameraCaptureAccessory` on the outer screen at 466 × 678 pt. UIKit didn't call `configurationForConnecting` for it. |
+| `openWindow(id:)` | A second full-size window (951 × 669 pt) covered the first; the first went inactive, then background. The first window's accessory went unavailable and its session was discarded; the second window got its own. |
+| Edit menu with `ActivationAction` (no alternate) | The window action showed, next to the plain action |
+| Closed | The front window's scene moved to the outer screen: one `didUpdateEffectiveGeometry` (951 × 669 to 466 × 678 pt), width class regular to compact, phase stayed `active`, no `onAppear`. The accessory went unavailable and its session was discarded. |
+| Open | The same scene moved back: one geometry update, width class compact to regular, phase stayed `active`. A new accessory scene appeared; its content's `onAppear` ran again. |
+
+Sample log lines (trimmed):
+
+```text
+PROBE  0.3 [30A6] accessory availability -> true
+  scene B28572 role=UIWindowSceneSessionRoleCameraCaptureAccessory state=0 screen=outer(1398x2034) window=466x678
+PROBE  3.5 willConnect scene EE5849 ... screen=inner(2007x2853) window=951x669 restoring=nil
+PROBE  4.3 didDiscardSceneSessions ["B28572"]
+PROBE  9.6 MENU labels=["Zeta New Window", "Zeta Plain"]
+PROBE 14.4 didUpdateEffectiveGeometry from 951x669 to scene EE5849 ... state=0 screen=outer(1398x2034) window=466x678
+PROBE 14.5 didDiscardSceneSessions ["7E34CB"]
+PROBE 20.9 didUpdateEffectiveGeometry from 466x678 to scene EE5849 ... state=0 screen=inner(2007x2853) window=951x669
+```
+
 ## Not verified yet
 
-- Anything on the inner display: a second window beside the first, Split View sizes and size classes, the activation action's visibility, the `alternate:` replacing it on the outer display.
-- Scene events during a fold or unfold, and which window survives a close from Split View.
+- Split View: window sizes and size classes, two windows of one app side by side, and which window survives a close from Split View.
+- Partially Open.
 - What a real iPhone Duo returns for a new-window request on the outer display (Apple says it fails).
 - Camera capture accessory availability with a running capture session.
 - `UISceneActivationConditions` routing on iPhone Duo.

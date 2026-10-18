@@ -34,7 +34,7 @@ Add `FoldGeometry` and `FoldRegionsLayout` from [references/fold-regions.md](ref
 |---|---|---|---|---|---|
 | Closed | closed | Outer display | compact, regular in portrait; compact, compact in landscape ([111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=187)) | none | `frame == nil` |
 | Tent | "folded like a tent", "standing on its edges" | Outer display, held sideways (our reading of Apple's drawing; unverified) | compact, compact | none | `frame == nil` |
-| Open, flat | "open in a wide layout", "open in a tall layout" | Inner display | regular, regular (*measured* held wide) | inactive | `!isActive` |
+| Open, flat | "open in a wide layout", "open in a tall layout" | Inner display | regular, regular (*measured* held wide) | inactive | `frame != nil && !isActive` |
 | Book | "partially folded, like a book" | Inner display, held wide | regular width expected (unverified) | active, top to bottom | `isActive && isVertical` |
 | Tabletop | "seated on a table like a laptop" | Inner display, held tall | regular width expected (unverified) | active, side to side | `isActive && !isVertical` |
 | Flipped | "open, turned around" | Outer display, phone still open (camera apps) | compact width (derived; unverified) | none | `frame == nil` |
@@ -42,7 +42,7 @@ Add `FoldGeometry` and `FoldRegionsLayout` from [references/fold-regions.md](ref
 What this means for code:
 
 - A view sees its size, its size class and its regions. That is all a layout needs. "Book" is just "an active fold runs top to bottom through this view".
-- Tent and closed look the same to your app, and so does flipped. Don't try to tell them apart.
+- Tent looks like the closed phone held sideways, and flipped looks like the closed phone. Don't try to tell them apart.
 - Hinge status says how open the phone is, not which display you are on. When flipped, the phone is open but your app is on the outer display. Never pick a layout from `DeviceHinge.Status`.
 
 ## What to do in each pose
@@ -76,6 +76,7 @@ What this means for code:
 - This is the one optional per-pose layout. Things to watch from a distance go in the top region: video, the other person in a call, a timer. Things to touch go in the bottom region, the stable base ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=283), [talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=263)).
 - Keep every control and the same hierarchy. Never add a feature that only exists here ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=295)).
 - The inner camera sits on the right edge of the bottom region (*measured* region frame, below). In a video call it is active: keep controls clear of it.
+- Held tall, bars stay horizontal, so the toolbar sits at the top, in the top region ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=327)). Keep playback or call controls in your own bottom-region view, not in that toolbar.
 - Recipe: [Tabletop media](#recipe-tabletop-media).
 
 ### Tent (standing on its edges)
@@ -166,7 +167,7 @@ When to pick `.split` or `.overlay`, and the full code: [references/book-two-reg
 - Decoration only. The app must work the same with the effect off, on a phone without a hinge, and when the phone sits still.
 - Turn it off with Reduce Motion. Zooming and scaling are the motion that setting asks you to cut ([HIG Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Cognitive)).
 - Hinge input needs an on-screen control that does the same job, and the person turns the hinge on. Some people can't fold the phone, or use it on a mount ([HIG Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Mobility)).
-- Never trigger an action, and never a destructive one, when the hinge crosses an angle.
+- Never trigger an action when the hinge crosses an angle. Folds happen by accident, in a pocket or a shifting grip.
 - `hinge` is `nil` without a hinge. Reset the effect when the status is not `partiallyOpen`.
 - Prefer `status`. The angle's update rate and precision are system policy (UIKit's `UIHinge.h`).
 
@@ -206,11 +207,11 @@ Hinge input with an on-screen alternative, UIKit, and testing angles: [reference
 
 ## Measured fold frames
 
-iOS 27.1 iPhone Duo simulator, read from the reserved regions with the gallery app's region overlay (16 and 18 October 2026). Frames are in a view that fills the window. Full detail: [`duo-patterns` two-page measurements](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/two-page.md#what-we-measured) and [references/measurements.md](references/measurements.md).
+iOS 27.1 iPhone Duo simulator, read from the reserved regions with the gallery app's region overlay and our probes (16 and 18 October 2026). Frames are in a view that fills the window. Full detail: [`duo-patterns` two-page measurements](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/two-page.md#what-we-measured) and [references/measurements.md](references/measurements.md).
 
 | Pose | Window | `.division` region | Camera (`.occlusion`, our reading) |
 |---|---|---|---|
-| Closed | 466 × 678 pt | none | outer camera, active, 37 × 37 pt at (399, 29) |
+| Closed | 466 × 678 pt | none | outer camera, active, 37 × 37 pt at (400, 29) |
 | Open, flat, held wide | 951 × 669 pt | inactive, 40 × 669 pt at (455, 0) | inner camera, inactive, 58 × 37 pt at (677, 21) |
 | Book | 951 × 669 pt | active, 40 × 669 pt at (455, 0) | inner camera, inactive, 58 × 37 pt at (677, 21) |
 | Tabletop | 669 × 951 pt | active, 669 × 40 pt at (0, 455) | inner camera, inactive, 37 × 58 pt at (611, 677): right edge, bottom half |

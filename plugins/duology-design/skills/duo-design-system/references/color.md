@@ -52,7 +52,7 @@ We resolved each colour for light, dark and Increase Contrast with `UIColor.reso
 What follows from it:
 
 - `label` passes everywhere. Use it for essential text at any size.
-- `secondaryLabel` and the default blue tint pass 3:1 in light mode but not 4.5:1. They pass 4.5:1 with Increase Contrast on, which is the fallback Apple accepts. Use them for text of 18 pt or more, bold text, symbols and controls. For small, regular-weight text that people must read, prefer `label`.
+- `secondaryLabel` and `systemBlue` (the default tint) pass 3:1 in light mode but not 4.5:1. They pass 4.5:1 with Increase Contrast on, which is the fallback Apple accepts. Use them for text of 18 pt or more, bold text, symbols and controls. For small, regular-weight text that people must read, prefer `label`.
 - `tertiaryLabel` is for decoration and disabled states, not for information.
 - These are today's values. Apple may change them in any release; re-run the check after an Xcode update.
 
@@ -146,20 +146,24 @@ func duoWorstContrast(text: UIColor, on background: UIColor) -> Double {
 }
 ```
 
-Use it in a unit test for every text and background pair your design uses:
+Use it in a test (Swift Testing) for every text and background pair your design uses:
 
 ```swift
-import XCTest
+import Testing
 import UIKit
 
-// requires: Contrast.swift
+// requires: Contrast.swift, DuoTokens.swift (for DuoColor.brand above)
 
-final class ColorContrastTests: XCTestCase {
-    @MainActor
-    func testBodyTextPairs() {
-        XCTAssertGreaterThanOrEqual(duoWorstContrast(text: .label, on: .systemBackground), 4.5)
-        XCTAssertGreaterThanOrEqual(
-            duoWorstContrast(text: .label, on: .secondarySystemGroupedBackground), 4.5)
+@MainActor
+struct ColorContrastTests {
+    @Test func bodyTextPairs() {
+        #expect(duoWorstContrast(text: .label, on: .systemBackground) >= 4.5)
+        #expect(duoWorstContrast(text: .label, on: .secondarySystemGroupedBackground) >= 4.5)
+    }
+
+    @Test func brandOnBackground() {
+        let brand = UIColor(DuoColor.brand)
+        #expect(duoWorstContrast(text: brand, on: .systemBackground) >= 4.5)
     }
 }
 ```

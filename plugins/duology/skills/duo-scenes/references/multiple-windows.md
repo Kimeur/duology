@@ -1,17 +1,17 @@
 # Multiple windows on iPhone Duo
 
-How to open, route and refuse windows, in SwiftUI and UIKit. Every Swift block on this page typechecks against the iOS 27.1 simulator SDK in Swift 5 and Swift 6 mode (see [evidence.md](evidence.md#typecheck)). *Measured* lines come from the closed phone only.
+How to open, route and refuse windows, in SwiftUI and UIKit. Every Swift block on this page typechecks against the iOS 27.1 simulator SDK in Swift 5 and Swift 6 mode (see [evidence.md](evidence.md#typecheck)). *Measured* lines come from the iPhone Duo simulator, closed and fully open.
 
 ## What Apple says, and what we saw
 
-| | Apple | Simulator, closed phone (*measured*) |
+| | Apple | Simulator (*measured*) |
 |---|---|---|
-| More than one window | Supported for apps that support it on iPad ([Tech Talk 111464](https://developer.apple.com/videos/play/tech-talks/111464/?time=218)) | `supportsMultipleScenes` and `supportsMultipleWindows` were `true` |
+| More than one window | Supported for apps that support it on iPad ([Tech Talk 111464](https://developer.apple.com/videos/play/tech-talks/111464/?time=218)) | `supportsMultipleScenes` and `supportsMultipleWindows` were `true`, closed and open |
 | New window on the outer display | Can't be created; handle the error ([111464](https://developer.apple.com/videos/play/tech-talks/111464/?time=233)) | `openWindow(id:)` and `activateSceneSession(for:)` both succeeded. The new window covered the old one. No error handler ran. |
-| `UIWindowScene.ActivationAction` | Hides itself when a new window isn't possible ([111464](https://developer.apple.com/videos/play/tech-talks/111464/?time=248)) | Not shown in the menu; a plain action next to it was |
-| New window on the inner display | Allowed | *Unverified*: the Mac's screen was locked, so we couldn't press Open in Device Hub |
+| New window on the inner display | Allowed | `openWindow(id:)` opened a full-size window (951 × 669 pt) over the first one. Not side by side. |
+| `UIWindowScene.ActivationAction` | Hides itself when a new window isn't possible ([111464](https://developer.apple.com/videos/play/tech-talks/111464/?time=248)) | Shown on the open phone. On the closed phone: missing with `alternate: nil`, replaced by the alternate when one was given. |
 
-Write code that is correct in both columns: a request may fail, may cover the current window, or may open beside it.
+Write code that is correct in every case: a request may fail, or cover the current window. People put two windows side by side themselves, by dragging.
 
 ## Turn it on
 
@@ -80,7 +80,7 @@ struct ComposeView: View {
 
 - The button opens a sheet. The context menu offers a window as an extra.
 - `dismissWindow` is iOS 17 and later.
-- *Measured* (closed phone): `supportsMultipleWindows` stayed `true`, so it can't hide the window option on the outer display. SwiftUI has no built-in equivalent of the UIKit action that hides itself.
+- *Measured:* `supportsMultipleWindows` was `true` on both displays, so it can't hide the window option on the outer display. SwiftUI has no built-in equivalent of the UIKit action that hides itself.
 
 ### When you need to know if it failed
 
@@ -168,7 +168,7 @@ final class NotesViewController: UICollectionViewController {
                 activity.userInfo = ["noteID": noteID.uuidString]
                 return UIWindowScene.ActivationConfiguration(userActivity: activity)
             }
-            return UIMenu(children: [newWindow, inPlace])
+            return UIMenu(children: [newWindow])   // never list `inPlace` again: it would show twice
         })
     }
 
@@ -179,7 +179,9 @@ final class NotesViewController: UICollectionViewController {
 ```
 
 - The `alternate:` action replaces the window action where multiple windows aren't supported, and runs when the request fails (Apple's `UIWindowSceneActivationAction.h`).
-- *Measured:* with no alternate, the action was missing from a menu on the closed phone. *Unverified:* that the alternate takes its place there. Keep the plain "Open" item too, as above, so the menu works either way.
+- *Measured* on the closed phone: with an alternate, the menu showed the alternate where the window action would be; with `alternate: nil`, it showed nothing for it. So list the in-place action only as the alternate, or the outer display shows it twice.
+- Tapping the cell stays the main way to open a note. If your menu is the only way in, always pass an alternate.
+- *Measured:* on the open phone the window action showed as itself.
 
 ### The initializer trap
 
@@ -204,7 +206,7 @@ func makeActions(_ activity: NSUserActivity) -> [UIAction] {
 }
 ```
 
-*Measured:* the commented form built with one warning, then threw `NSInternalInconsistencyException` at launch: "Initializer is unavailable. Please use init(title:image:identifier:discoverabilityTitle:attributes:alternate:_:)". Treat that warning as an error in review.
+*Measured:* the commented form built with one warning, then threw `NSInternalInconsistencyException` at launch: "Initializer is unavailable. Please use init(title:image:identifier:discoverabilityTitle:attributes:alternate:_:)". The explicit `return` form built a real `UIWindowSceneActivationAction` with no warning. Treat that warning as an error in review.
 
 ## Split View
 

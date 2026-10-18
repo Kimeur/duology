@@ -135,7 +135,28 @@ func showNote(_ noteID: UUID, otherwise showHere: @escaping @MainActor @Sendable
 
 ### Clean up closed windows
 
-When people close windows, UIKit reports the discarded sessions to the app delegate ([application(_:didDiscardSceneSessions:)](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/application(_:diddiscardscenesessions:))). Delete any per-window files there. *Unverified:* how people close a window on iPhone Duo; we didn't see this callback in our runs.
+When people close windows, UIKit reports the discarded sessions to the app delegate ([application(_:didDiscardSceneSessions:)](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/application(_:diddiscardscenesessions:))). Delete any per-window files there, but only for your own windows.
+
+```swift
+import UIKit
+
+final class NotesAppDelegate: UIResponder, UIApplicationDelegate {
+    func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>) {
+        for session in sceneSessions where session.role == .windowApplication {
+            WindowFiles.remove(for: session.persistentIdentifier)
+        }
+    }
+}
+
+enum WindowFiles {
+    static func remove(for sessionID: String) {
+        let url = URL.applicationSupportDirectory.appending(path: "windows/\(sessionID).json")
+        try? FileManager.default.removeItem(at: url)
+    }
+}
+```
+
+*Measured:* the callback fired for camera capture accessory sessions each time the accessory went away, which is why the loop filters on `role`. *Unverified:* how people close one of your windows on iPhone Duo; no app window was discarded in our runs.
 
 ## The lifecycle on fold and unfold
 
@@ -183,6 +204,15 @@ final class PlayerSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 ### What we saw, and what we couldn't check
 
+*Measured* on the simulator, one window in front, pressing Closed and Open in Device Hub:
+
+| Step | Scene events | SwiftUI |
+|---|---|---|
+| Open to closed | One `didUpdateEffectiveGeometry`: 951 × 669 pt on the inner screen to 466 × 678 pt on the outer screen. No resign or become-active calls. Same session. | Phase stayed `active`. Width class `regular` to `compact`. No new `onAppear`; `@State` kept. |
+| Closed to open | One `didUpdateEffectiveGeometry` back to 951 × 669 pt on the inner screen | Phase stayed `active`. Root sizes 466 × 562, 951 × 553, then 867 × 635 pt within a tenth of a second. |
+
+So a fold is a resize of the same scene, as Apple says. Your window code doesn't restart.
+
 *Measured* on the closed phone, when a second window covered the first:
 
 | Order | First window |
@@ -193,13 +223,13 @@ final class PlayerSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 The new window, meanwhile, laid out first at 466 × 562 pt and then at 382 × 644 pt (its root view inside the safe area).
 
-*Unverified,* because the Mac's screen was locked and Device Hub's pose buttons couldn't be pressed:
+*Unverified:*
 
-- whether a fold or unfold passes the scene through `.inactive`;
-- which window stays on screen when the phone closes with two windows in Split View, and what happens to the other one;
-- whether the scene keeps the same session and connection through a fold (Apple's "resize" says yes).
+- which window stays on screen when the phone closes with two windows in Split View, and what happens to the other one (Split View needs a drag in Device Hub, which we didn't script);
+- Partially Open (we pressed only Closed and Open);
+- all of it on a real iPhone Duo.
 
-Run the probe in [evidence.md](evidence.md#the-probe), press Open, Partially Open and Closed in Device Hub, and read the log to settle these for your app. Until then:
+Run the probe in [evidence.md](evidence.md#the-probe), set up Split View by hand, press the poses, and read the log. Meanwhile:
 
 - Save on `.background`. Never tear down (stop playback, clear drafts, release the UI) on `.inactive`.
 - Check `activationState` before doing work in a geometry callback.

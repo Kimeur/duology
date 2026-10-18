@@ -138,7 +138,7 @@ struct DuoCard<Content: View>: View {
         content
             .padding(tokens.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            // containerShape inside background(_:in:), or GeometryProxy radii read nil.
+            // containerShape before background(_:in:), or GeometryProxy radii read nil.
             .containerShape(.rect(cornerRadius: tokens.cardRadius))
             .background(DuoColor.card, in: .rect(cornerRadius: tokens.cardRadius))
     }

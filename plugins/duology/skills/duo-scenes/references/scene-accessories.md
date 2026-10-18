@@ -206,7 +206,8 @@ final class SubjectSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 - `userInfo` only identifies the object for the new scene. Keep your own strong reference to it, as `model` does here (Apple's guide).
 - Accessory scenes have no scene manifest entry; one would be ignored. The system sets the role.
-- If your app delegate implements `application(_:configurationForConnecting:options:)`, return `connectingSceneSession.configuration` for any role you don't handle, so you never replace the accessory's delegate. *Unverified:* whether UIKit calls it for accessory sessions at all.
+- If your app delegate implements `application(_:configurationForConnecting:options:)`, return `connectingSceneSession.configuration` for any role you don't handle, so you never replace the accessory's delegate. *Measured* in a SwiftUI app: UIKit didn't call it for the accessory scenes.
+- `application(_:didDiscardSceneSessions:)` reports accessory sessions too (*measured*: one each time the accessory went away). Skip sessions whose role is `windowCameraCaptureAccessory` when you clean up per-window data.
 - `isEnabled` hides the content and keeps the registration. `unregisterSceneAccessory(_:)` removes it and dismisses anything on screen ([doc](https://developer.apple.com/documentation/uikit/uiviewcontroller/unregistersceneaccessory(_:))).
 
 ## Camera direction on each display
@@ -244,7 +245,21 @@ Camera choice and the virtual front camera are beyond this skill; see Apple's [C
 | Where | What you can check |
 |---|---|
 | Xcode Previews or the simulator | The accessory view's layout at the outer display's size, and that it reads the shared model. |
-| iPhone Duo simulator | Only that your code runs. The simulator has no camera, and in the Duo simulator the accessory can show on both displays with no capture session (known issue in the [Xcode 27.1 release notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27_1-release-notes)). So it proves nothing about availability. *Measured:* on the closed phone availability was `false` and nothing showed. |
+| iPhone Duo simulator | The fold part of the lifecycle, not the capture part. The simulator has no camera, and in the Duo simulator the accessory shows with no capture session (known issue in the [Xcode 27.1 release notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27_1-release-notes)). See the measured run below. |
 | Real iPhone Duo | Everything else: open the phone, start capture, check the subject view appears; stop capture, close the phone, switch to Split View, push a screen that registers its own accessory, background the app. Each must hide the accessory and hide your toggle. Turn it off and on with the toggle. |
 
 Apple's guide also asks you to test anything that depends on capture on a device before you ship.
+
+### What the simulator did (*measured*)
+
+SwiftUI probe, `CameraCaptureAccessory` on each window's root view, no capture session:
+
+| Step | Availability | Scenes |
+|---|---|---|
+| Launch, phone closed | `false` once | the app's window only |
+| Launch, phone open | `false`, then `true` 0.1 s later | a second scene, role `windowCameraCaptureAccessory`, on the outer screen at 466 × 678 pt; the accessory content appeared |
+| A second window opened in front | first window `false`, second window `true` | the first window's accessory session was discarded; a new one served the second window |
+| Phone closed | `false` | the accessory session was discarded; the window moved to the outer screen |
+| Phone opened again | `true` | a new accessory scene; the content's `onAppear` ran again |
+
+So the fold behaviour matches Apple's guide. Keep accessory state in the model: each reopen builds new views.

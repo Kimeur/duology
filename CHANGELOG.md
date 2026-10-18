@@ -6,6 +6,10 @@ Each release says which Xcode and iOS versions it was checked on.
 
 ## [Unreleased]
 
+### Added
+
+- A 25-second demo at the top of the README (GIF, linked to the MP4 in `docs/assets/demo/`): duo-lint finds four problems in an app built before iPhone Duo, Claude fixes them, then the gallery app in every pose.
+
 ### Removed
 
 - The French README. The README is English only.

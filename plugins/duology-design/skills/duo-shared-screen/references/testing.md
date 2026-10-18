@@ -136,8 +136,11 @@ final class SeatingUITests: XCTestCase {
 ```bash
 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer \
 xcodebuild test -project MyApp.xcodeproj -scheme MyApp \
-  -destination 'platform=iOS Simulator,name=iPhone Duo'
+  -destination 'platform=iOS Simulator,name=iPhone Duo' \
+  -parallel-testing-enabled NO   # stay on this simulator; no clone
 ```
+
+- `-parallel-testing-enabled NO` keeps the tests on the simulator you named. Without it, a scheme with parallel testing on runs them on a clone, as above. A clone is one more simulator on disk, and it ignores the pose you set in Device Hub ([`duo-testing`](https://github.com/Kimeur/duology/blob/main/plugins/duology-ship/skills/duo-testing/references/commands.md)).
 
 ## Rules on the Mac
 

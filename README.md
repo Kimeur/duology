@@ -43,7 +43,13 @@
 
 <div align="center">
 <br />
-<img src="docs/assets/poses.svg" alt="The four ways people hold iPhone Duo: closed, open, book and tabletop" width="100%" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/hero-light.png" />
+  <img src="docs/assets/hero-light.png" alt="The gallery app's two-page screen on the iPhone Duo simulator: one page on the closed 5.4-inch outer display, two facing pages on the open 7.6-inch inner display" width="100%" />
+</picture>
+<br />
+<sub>Real screenshots of the <a href="samples/DuologyGallery">gallery app</a> on the iPhone Duo simulator (iOS 27.1), drawn at the same scale.</sub>
 <br /><br />
 </div>
 
@@ -69,7 +75,7 @@ Apple published the rules in six Tech Talks, a HIG page and the iOS 27.1 SDK. Du
 4. **It checks its own work.** `duo-lint` finds code Apple warns against. `/duo-audit` adds a 15-point design checklist on screenshots from the simulator. A pose check that screenshots every pose (`/duo-poses`) is planned for v0.2.
 
 <div align="center">
-<img src="docs/assets/how-it-works.svg" alt="You ask Claude Code, Duology guides the code, Xcode 27.1 builds it, duo-lint and the pose check verify it, then you ship" width="100%" />
+<img src="docs/assets/how-it-works.svg" alt="You ask Claude Code, Duology guides the code, Xcode 27.1 builds it for the iPhone Duo simulator, duo-lint and the 15-point design review check it, then you ship. Screenshots of every pose (v0.2) and an App Store checklist (v1.0) are planned" width="100%" />
 </div>
 
 ## Quick start
@@ -268,13 +274,18 @@ Every pattern in `duo-patterns` comes with a SwiftUI recipe and a screen in the 
 | Tabs to sidebar | tab bar on the side | sidebar | apps with many sections |
 | Displacement | n/a | controls move off the fold, scrolling content stays put | any screen with controls near the middle |
 
-The gallery app on the iPhone Duo simulator (iOS 27.1), closed, on the outer display. Open and partly folded screenshots come later; the [gallery README](samples/DuologyGallery/README.md#add-screenshots-of-other-poses) says how to take them.
+The gallery app on the iPhone Duo simulator (iOS 27.1): closed on the outer display, open on the inner display. The [gallery README](samples/DuologyGallery/README.md#screenshots) also shows each screen in book and tabletop poses.
 
-| List-detail | Supporting pane | Two-page | Dual view |
-|---|---|---|---|
-| <img src="docs/assets/gallery/listDetail.png" width="180" alt="Inbox list on the closed phone, with Close and filter buttons in the vertical bar" /> | <img src="docs/assets/gallery/supportingPane.png" width="180" alt="Article on the closed phone, with Discussion and Share in the vertical bar" /> | <img src="docs/assets/gallery/twoPage.png" width="180" alt="Title page of a short book on the closed phone, with page buttons at the foot of the vertical bar" /> | <img src="docs/assets/gallery/dualView.png" width="180" alt="List of places on the closed phone, with a List and Map switch" /> |
-| **Extended canvas** | **Feed reflow** | **Tabs to sidebar** | **Displacement** |
-| <img src="docs/assets/gallery/extendedCanvas.png" width="180" alt="Trail map on the closed phone, with the tool palette at the bottom" /> | <img src="docs/assets/gallery/feedReflow.png" width="180" alt="Shop grid in two columns on the closed phone" /> | <img src="docs/assets/gallery/tabsToSidebar.png" width="180" alt="Music app on the closed phone, with its tabs in a vertical bar" /> | <img src="docs/assets/gallery/displacement.png" width="180" alt="Voice memo list on the closed phone, with the record controls at the bottom" /> |
+| Pattern | Closed | Open |
+|---|---|---|
+| List-detail | <img src="docs/assets/gallery/listDetail-closed.png" width="100" alt="Inbox list on the closed phone, with Close and filter buttons in the vertical bar" /> | <img src="docs/assets/gallery/listDetail-open.png" width="206" alt="Open: inbox list on the left, a message on the right, message actions in the vertical bar" /> |
+| Supporting pane | <img src="docs/assets/gallery/supportingPane-closed.png" width="100" alt="Article on the closed phone, with Discussion and Share in the vertical bar" /> | <img src="docs/assets/gallery/supportingPane-open.png" width="206" alt="Open: the article with the discussion pane beside it" /> |
+| Two-page | <img src="docs/assets/gallery/twoPage-closed.png" width="100" alt="Title page of the book on the closed phone, with page buttons at the bottom of the vertical bar" /> | <img src="docs/assets/gallery/twoPage-open.png" width="206" alt="Open: the title page and January as facing pages, the gap on the fold line" /> |
+| Dual view | <img src="docs/assets/gallery/dualView-closed.png" width="100" alt="Places list on the closed phone with the List and Map switch" /> | <img src="docs/assets/gallery/dualView-open.png" width="206" alt="Open: the list of places on the left, the map of Lisbon on the right" /> |
+| Extended canvas | <img src="docs/assets/gallery/extendedCanvas-closed.png" width="100" alt="Trail map on the closed phone with the tool palette at the bottom" /> | <img src="docs/assets/gallery/extendedCanvas-open.png" width="206" alt="Open: the trail map across the whole display, the palette bottom centre" /> |
+| Feed reflow | <img src="docs/assets/gallery/feedReflow-closed.png" width="100" alt="Shop grid in two columns on the closed phone" /> | <img src="docs/assets/gallery/feedReflow-open.png" width="206" alt="Open: the shop grid in four columns" /> |
+| Tabs to sidebar | <img src="docs/assets/gallery/tabsToSidebar-closed.png" width="100" alt="Listen Now on the closed phone with eight tabs in a vertical tab bar" /> | <img src="docs/assets/gallery/tabsToSidebar-open.png" width="206" alt="Open: a sidebar with a Library section next to Listen Now" /> |
+| Displacement | <img src="docs/assets/gallery/displacement-closed.png" width="100" alt="Voice memo list on the closed phone with the record controls at the bottom" /> | <img src="docs/assets/gallery/displacement-open.png" width="206" alt="Open: voice memos with the record group bottom centre" /> |
 
 ## App recipes
 

@@ -61,7 +61,7 @@ Never run `sudo`, `xcode-select --switch` or `xcode-select -s`. They change the 
 | Click Closed, Partially Open or Open in Device Hub | User | `simctl` has no pose command. |
 | `xcrun simctl bootstatus <UDID> -b`, `open .../DeviceHub.app` | You | Safe. Run it if the user wants the simulator up. A first boot can take minutes. |
 | `export DEVELOPER_DIR=...` | You | Safe for your own shell commands. Prefix every `xcrun` and `xcodebuild` call with it. |
-| `xcrun simctl create "iPhone Duo" ...` | You, after the user says yes | Adds a simulator. |
+| `xcrun simctl create "iPhone Duo" ...` | You, after the user says yes | Only when the doctor finds no iPhone Duo simulator. It adds one, which takes about 4-6 GB of disk. Create only one; every Duology step reuses it. |
 | `claude mcp add ...` or `claude mcp remove ...` | You, after the user says yes | Changes Claude Code's configuration. Show the exact command first. |
 | `xcodebuild -downloadPlatform iOS` | You, after the user says yes | Downloads several GB. |
 | `xcodebuild -runFirstLaunch` | You, after the user says yes | Its help says it accepts the license. |

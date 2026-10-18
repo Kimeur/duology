@@ -24,14 +24,16 @@ The Duo device type needs the iOS 27.1 runtime or later. Simulators are shared b
 
 ## Create, boot, delete
 
+Reuse the iPhone Duo simulator the Mac already has. Create one only when `list` shows none, and only after the user agrees. Each simulator takes about 4-6 GB of disk once it has booted (*measured* on 18 October 2026: 3.9 GB for a Duo simulator in use). Never create a second one for tests, and never clone one. Pass `-parallel-testing-enabled NO` to `xcodebuild test`, or it may clone the simulator for you.
+
 ```bash
-# create (ask the user first): prints the new UDID; the runtime is optional (newest compatible if left out)
+# create (ask the user first, and say it takes about 4-6 GB): prints the new UDID; the runtime is optional (newest compatible if left out)
 xcrun simctl create "iPhone Duo" com.apple.CoreSimulator.SimDeviceType.iPhone-Duo com.apple.CoreSimulator.SimRuntime.iOS-27-1
 
 # boot if needed, then wait until it is ready
 xcrun simctl bootstatus <UDID or name> -b
 
-# delete a simulator you created
+# delete a simulator you created, by its UDID; never one you didn't create
 xcrun simctl delete <UDID>
 ```
 

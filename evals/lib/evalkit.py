@@ -69,9 +69,11 @@ BASE_TOOLS = [
 DEVELOPER_DIR_TOOLS = ["Bash(DEVELOPER_DIR=%s xcodebuild:*)", "Bash(DEVELOPER_DIR=%s xcrun simctl:*)"]
 
 # simctl subcommands the agent never needs: delete and erase can wipe simulators
-# that aren't the eval's (`simctl delete all`), and spawn runs any program in a
-# simulator as your macOS user. Deny rules win over the `xcrun simctl` allow rules.
-SIMCTL_DENIED = ("delete", "erase", "spawn")
+# that aren't the eval's (`simctl delete all`), spawn runs any program in a
+# simulator as your macOS user, and create and clone add a simulator (about
+# 4-6 GB of disk each) when the run already names one to reuse. Deny rules win
+# over the `xcrun simctl` allow rules.
+SIMCTL_DENIED = ("create", "clone", "delete", "erase", "spawn")
 
 DENIED_TOOLS = [
     "Agent", "WebFetch", "WebSearch",

@@ -39,7 +39,13 @@
 
 <div align="center">
 <br />
-<img src="../assets/poses.svg" alt="Les quatre façons de tenir l'iPhone Duo : fermé, ouvert, en livre et posé sur une table" width="100%" />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../assets/hero-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset="../assets/hero-light.png" />
+  <img src="../assets/hero-light.png" alt="L'écran deux pages de l'app galerie sur le simulateur iPhone Duo : une page sur l'écran extérieur de 5,4 pouces, téléphone fermé, deux pages face à face sur l'écran intérieur de 7,6 pouces, téléphone ouvert" width="100%" />
+</picture>
+<br />
+<sub>De vraies captures de l'<a href="../../samples/DuologyGallery">app galerie</a> sur le simulateur iPhone Duo (iOS 27.1), dessinées à la même échelle.</sub>
 <br /><br />
 </div>
 
@@ -65,7 +71,7 @@ Apple a publié les règles dans six Tech Talks, une page des Human Interface Gu
 4. **Il vérifie son propre travail.** `duo-lint` trouve le code qu'Apple déconseille. `/duo-audit` y ajoute une grille de 15 points appliquée à des captures du simulateur. Une vérification qui capture chaque position (`/duo-poses`) est prévue pour la v0.2.
 
 <div align="center">
-<img src="../assets/how-it-works.svg" alt="Vous demandez à Claude Code, Duology guide le code, Xcode 27.1 le compile, duo-lint et la vérification des positions le contrôlent, puis vous publiez" width="100%" />
+<img src="../assets/how-it-works.svg" alt="Vous demandez à Claude Code, Duology guide le code, Xcode 27.1 le compile pour le simulateur iPhone Duo, duo-lint et la grille de 15 points le contrôlent, puis vous publiez. Les captures de chaque position (v0.2) et une liste de contrôle App Store (v1.0) sont prévues" width="100%" />
 </div>
 
 ## Démarrage rapide
@@ -264,13 +270,18 @@ Chaque modèle de `duo-patterns` est livré avec une recette SwiftUI et un écra
 | Onglets vers barre latérale | barre d'onglets sur le côté | barre latérale | apps avec beaucoup de sections |
 | Déplacement | sans objet | les commandes quittent le pli, le contenu qui défile reste en place | tout écran avec des commandes près du centre |
 
-L'app galerie sur le simulateur iPhone Duo (iOS 27.1), fermé, sur l'écran extérieur. Les captures ouvert et à moitié plié viendront plus tard ; le [README de la galerie](../../samples/DuologyGallery/README.md#add-screenshots-of-other-poses) (en anglais) explique comment les faire.
+L'app galerie sur le simulateur iPhone Duo (iOS 27.1) : fermé sur l'écran extérieur, ouvert sur l'écran intérieur. Le [README de la galerie](../../samples/DuologyGallery/README.md#screenshots) (en anglais) montre aussi chaque écran en position livre et posé sur une table.
 
-| Liste-détail | Panneau d'appoint | Deux pages | Double vue |
-|---|---|---|---|
-| <img src="../assets/gallery/listDetail.png" width="180" alt="Liste de messages sur le téléphone fermé, avec les boutons Fermer et Filtrer dans la barre verticale" /> | <img src="../assets/gallery/supportingPane.png" width="180" alt="Article sur le téléphone fermé, avec Discussion et Partager dans la barre verticale" /> | <img src="../assets/gallery/twoPage.png" width="180" alt="Page de titre d'un court livre sur le téléphone fermé, avec les boutons de page en bas de la barre verticale" /> | <img src="../assets/gallery/dualView.png" width="180" alt="Liste de lieux sur le téléphone fermé, avec un sélecteur Liste et Carte" /> |
-| **Canevas étendu** | **Flux réorganisé** | **Onglets vers barre latérale** | **Déplacement** |
-| <img src="../assets/gallery/extendedCanvas.png" width="180" alt="Carte de randonnée sur le téléphone fermé, avec la palette d'outils en bas" /> | <img src="../assets/gallery/feedReflow.png" width="180" alt="Grille de boutique sur deux colonnes sur le téléphone fermé" /> | <img src="../assets/gallery/tabsToSidebar.png" width="180" alt="App de musique sur le téléphone fermé, avec ses onglets dans une barre verticale" /> | <img src="../assets/gallery/displacement.png" width="180" alt="Liste de mémos vocaux sur le téléphone fermé, avec les commandes d'enregistrement en bas" /> |
+| Modèle | Fermé | Ouvert |
+|---|---|---|
+| Liste-détail | <img src="../assets/gallery/listDetail-closed.png" width="100" alt="Liste de messages sur le téléphone fermé, avec les boutons Fermer et Filtrer dans la barre verticale" /> | <img src="../assets/gallery/listDetail-open.png" width="206" alt="Ouvert : la liste de messages à gauche, un message à droite, ses actions dans la barre verticale" /> |
+| Panneau d'appoint | <img src="../assets/gallery/supportingPane-closed.png" width="100" alt="Article sur le téléphone fermé, avec Discussion et Partager dans la barre verticale" /> | <img src="../assets/gallery/supportingPane-open.png" width="206" alt="Ouvert : l'article avec le panneau de discussion à côté" /> |
+| Deux pages | <img src="../assets/gallery/twoPage-closed.png" width="100" alt="Page de titre du livre sur le téléphone fermé, avec les boutons de page en bas de la barre verticale" /> | <img src="../assets/gallery/twoPage-open.png" width="206" alt="Ouvert : la page de titre et January face à face, l'espace entre les deux sur la ligne du pli" /> |
+| Double vue | <img src="../assets/gallery/dualView-closed.png" width="100" alt="Liste de lieux sur le téléphone fermé, avec le sélecteur Liste et Carte" /> | <img src="../assets/gallery/dualView-open.png" width="206" alt="Ouvert : la liste des lieux à gauche, la carte de Lisbonne à droite" /> |
+| Canevas étendu | <img src="../assets/gallery/extendedCanvas-closed.png" width="100" alt="Carte de randonnée sur le téléphone fermé, avec la palette d'outils en bas" /> | <img src="../assets/gallery/extendedCanvas-open.png" width="206" alt="Ouvert : la carte de randonnée sur tout l'écran, la palette en bas au centre" /> |
+| Flux réorganisé | <img src="../assets/gallery/feedReflow-closed.png" width="100" alt="Grille de boutique sur deux colonnes sur le téléphone fermé" /> | <img src="../assets/gallery/feedReflow-open.png" width="206" alt="Ouvert : la grille de boutique sur quatre colonnes" /> |
+| Onglets vers barre latérale | <img src="../assets/gallery/tabsToSidebar-closed.png" width="100" alt="L'écran Listen Now sur le téléphone fermé, avec huit onglets dans une barre d'onglets verticale" /> | <img src="../assets/gallery/tabsToSidebar-open.png" width="206" alt="Ouvert : une barre latérale avec une section Library à côté de l'écran Listen Now" /> |
+| Déplacement | <img src="../assets/gallery/displacement-closed.png" width="100" alt="Liste de mémos vocaux sur le téléphone fermé, avec les commandes d'enregistrement en bas" /> | <img src="../assets/gallery/displacement-open.png" width="206" alt="Ouvert : les mémos vocaux, avec le groupe d'enregistrement en bas au centre" /> |
 
 ## Recettes
 

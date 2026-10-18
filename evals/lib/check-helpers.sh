@@ -143,13 +143,15 @@ project_path() {
 
 # Runs xcodebuild test on the iPhone Duo simulator. Extra arguments are passed on,
 # for example: xcb_test -only-testing:NaiveListUITests
+# No parallel testing: with it on, xcodebuild runs the tests on a clone of the
+# simulator, which is one more simulator on disk and ignores the pose set in Device Hub.
 xcb_test() {
   skip_if_light xcb_test
   local proj scheme
   proj="$(project_path)"
   scheme="${SCHEME:-$(basename "$proj" .xcodeproj)}"
   xcodebuild test -project "$proj" -scheme "$scheme" \
-    -destination "platform=iOS Simulator,id=$SIM_UDID" \
+    -destination "platform=iOS Simulator,id=$SIM_UDID" -parallel-testing-enabled NO \
     -derivedDataPath "$DERIVED_DATA" -collect-test-diagnostics never \
     CODE_SIGNING_ALLOWED=NO "$@" 2>&1 | tail -40
 }

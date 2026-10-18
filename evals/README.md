@@ -33,7 +33,7 @@ For each task, each *arm* (`with`, `without`) and each trial:
    ```
 
    The `with` arm adds two things: `--plugin-dir <trial>/plugins`, which loads all four Duology plugins for that session, and allow rules for the plugins' own scripts (duo-lint, the recipe's `new-project.sh`, `duo-doctor`), each by its exact path in that copy. Every trial's exact command is in its `command.txt`, with the sign-in value redacted.
-4. **Preamble.** Both arms get the same short system-prompt addition. It says to run headless without asking questions, that `DEVELOPER_DIR` already points at Xcode 27.1, which simulator UDID to build for, and which shell commands are allowed. Tasks marked `preamble: minimal` (the Mac check) leave out the Xcode facts, because finding them is the task.
+4. **Preamble.** Both arms get the same short system-prompt addition. It says to run headless without asking questions, that `DEVELOPER_DIR` already points at Xcode 27.1, which simulator UDID to build for (and to reuse it, not create or clone another), and which shell commands are allowed. Tasks marked `preamble: minimal` (the Mac check) leave out the Xcode facts, because finding them is the task.
 5. **Score.** Build, duo-lint and the task's checks run on the work folder, under `env -i` with a fresh scoring `HOME`. A checklist template is written for the human review.
 
 The prompt never mentions Duology or its skills. With the plugins loaded, Claude decides on its own whether a skill applies. The summary records which skills it loaded.
@@ -44,7 +44,7 @@ The prompt never mentions Duology or its skills. With the plugins loaded, Claude
 |---|---|
 | Shell | No blanket `Bash`. The base list is `xcodebuild`, `xcrun simctl`, `git diff`, `git status`, `ls`, `head`, `tail` and `cd`, plus `DEVELOPER_DIR=<Xcode 27.1> xcodebuild` and `xcrun simctl`, the form skills write. A task can add rules in its `tools:` line. |
 | Rule gate | `run.sh` refuses to start if any rule is too broad: blanket `Bash`, `Bash(*)`, an interpreter with a wildcard (`python3 *`), a wildcard path that doesn't start with a project folder (`Tools/*` is fine; `/bin/*`, `../*` and `./*` are not), `sudo`, `rm`, `curl`, `env`, commands that run another command (`find`, `nice`, `time`, `timeout`, `source`, `awk` and others), `xcrun` with anything but `simctl`, `swiftc` or its `--find`/`--show-sdk` options, `git` with anything but `diff`, `status`, `log` or `show` right after it, `xcode-select` with anything but printing, and more. See `rule_problem()` in [`lib/evalkit.py`](lib/evalkit.py). |
-| Other tools | Read, Edit, Write, Glob, Grep and Skill. The Agent tool and the web tools are denied, so neither arm can start subagents or fetch Duology from GitHub. `xcrun simctl delete`, `erase` and `spawn` are denied too: the first two could wipe simulators that aren't the eval's, and `spawn` runs any program. |
+| Other tools | Read, Edit, Write, Glob, Grep and Skill. The Agent tool and the web tools are denied, so neither arm can start subagents or fetch Duology from GitHub. `xcrun simctl delete`, `erase`, `spawn`, `create` and `clone` are denied too: the first two could wipe simulators that aren't the eval's, `spawn` runs any program, and the last two add a simulator (about 4-6 GB of disk each) when the run already reuses one. |
 | Prompts | `--permission-mode manual` with `--permission-prompts none`. Per `claude --help` (2.1.301), anything that would prompt is denied automatically. Nothing is ever auto-approved, and `run.sh` never passes `bypassPermissions` or `--dangerously-skip-permissions`. |
 | Settings | `HOME` is empty, so no user settings, plugins or MCP servers load. `--strict-mcp-config` with no config starts no MCP servers. Deny rules keep the agent from writing `.claude/` settings mid-run. |
 | Sign-in | Exactly one variable is passed: `CLAUDE_CODE_OAUTH_TOKEN` if set, else `ANTHROPIC_API_KEY`. The value is added to `env`'s argument list only at the moment `env` starts claude, so it never sits in a long-lived process's arguments, where `ps` would show it. |
@@ -56,12 +56,16 @@ What this does **not** stop: the agent runs as your macOS user. Read, Edit and W
 ### Set up a separate macOS user
 
 1. In System Settings, open Users & Groups and add a Standard user, for example `evals`.
-2. Log in as that user. Xcode 27.1 in `/Applications` is shared, but simulators are per user. Create an iPhone Duo simulator:
+2. Log in as that user. Xcode 27.1 in `/Applications` is shared, but simulators are per user. Check for an iPhone Duo simulator, and create one only if none is listed. It takes about 4-6 GB of disk, so create exactly one: `run.sh` reuses it for every trial and never creates one itself.
 
    ```bash
+   DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcrun simctl list devices available | grep "iPhone Duo"
+   # none listed:
    DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcrun simctl create "iPhone Duo" \
      com.apple.CoreSimulator.SimDeviceType.iPhone-Duo com.apple.CoreSimulator.SimRuntime.iOS-27-1
    ```
+
+   When you stop running evals, delete that user's simulator with `xcrun simctl delete <UDID>` (as that user), or delete the user.
 
 3. Install Claude Code, clone Duology, and make a sign-in token with `claude setup-token`. Export it as `CLAUDE_CODE_OAUTH_TOKEN`, or export `ANTHROPIC_API_KEY` instead.
 4. Run `evals/run.sh --dry-run --all` first, then the real run.
@@ -219,7 +223,7 @@ Checks run with `bash`, `set -e` and `pipefail`, from the work folder, after [`l
 | `first_offset FILE RE` | prints where RE first matches, to check order |
 | `pycheck single_owner.py RE` | the state declared or created on lines matching RE has one owner that a fold can't rebuild: a view's `@State`, a model object kept in `@State` or `@StateObject`, or a static. `@Binding` and `@Bindable` lines are skipped |
 | `build_setting_is KEY VALUE` | the app target's build setting has this value |
-| `xcb_test ARGS`, `xcb_build_for_testing` | `xcodebuild test` or `build-for-testing` on the iPhone Duo simulator succeeds |
+| `xcb_test ARGS`, `xcb_build_for_testing` | `xcodebuild test` or `build-for-testing` on the iPhone Duo simulator succeeds. `xcb_test` turns parallel testing off, so xcodebuild doesn't clone the simulator. |
 | `launch_ok` | the built app installs, launches and is still running 8 seconds later |
 
 Oracle tests live in [`oracles/`](oracles), outside the fixtures, so the agent never sees them. A check copies one into the app's UI test folder after the run, then runs it.

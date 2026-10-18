@@ -86,6 +86,12 @@ class RuleGate(unittest.TestCase):
             self.assertIn("Bash(xcrun simctl %s:*)" % sub, evalkit.DENIED_TOOLS)
             self.assertIn("Bash(DEVELOPER_DIR=* xcrun simctl %s *)" % sub, evalkit.DENIED_TOOLS)
 
+    def test_new_simulators_are_denied(self):
+        # Each simulator takes about 4-6 GB; the run reuses the one pick-sim found.
+        for sub in ("create", "clone"):
+            self.assertIn("Bash(xcrun simctl %s:*)" % sub, evalkit.DENIED_TOOLS)
+            self.assertIn("Bash(DEVELOPER_DIR=* xcrun simctl %s *)" % sub, evalkit.DENIED_TOOLS)
+
 
 class TaskFiles(unittest.TestCase):
     def test_there_are_tasks_for_every_v01_skill(self):

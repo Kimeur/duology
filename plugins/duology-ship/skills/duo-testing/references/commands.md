@@ -10,23 +10,32 @@ export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
 
 ## Pick and boot the simulator
 
+Reuse the "iPhone Duo" simulator that is already on the Mac. Find its UDID and boot it:
+
 ```bash
 xcrun simctl list devices available | grep "iPhone Duo"
-xcrun simctl bootstatus <UDID or name> -b
+xcrun simctl bootstatus <UDID> -b
 ```
 
+- Don't create a simulator for tests. Each one takes about 4-6 GB of disk once it has booted (*measured* on 18 October: the shared "iPhone Duo" on our Mac took 3.9 GB). If none is listed, `duo-setup` step 3 creates one after the user agrees, and every later run reuses it.
 - *Measured:* a newly created iPhone Duo simulator made `xcodebuild test` fail with "Timed out trying to boot simulator after waiting 60.00s" and exit 65. `bootstatus -b` then booted it in about a minute, and the same tests ran. Boot first, in the background if you can't wait.
-- Address the simulator with `-destination "id=<UDID>"`. A name is fine only for a simulator that is yours alone: two simulators can share a name, and other people or agents may be using the shared "iPhone Duo". *Measured:* `-destination "platform=iOS Simulator,name=iPhone Duo"` resolved and built.
-- A UI test brings the app to the front of that simulator, and each `launch()` ends any running copy first (XCUIAutomation header). Don't do that on a simulator someone else is watching or scripting. Create your own and delete it after:
+- Address the simulator with `-destination "id=<UDID>"`: two simulators can share a name. *Measured:* `-destination "platform=iOS Simulator,name=iPhone Duo"` resolved and built.
+- A UI test brings the app to the front of that simulator, and each `launch()` ends any running copy first (XCUIAutomation header). Tell the user before a run on their simulator. If another agent or script is driving it, wait until it is done.
+- *Measured:* a new Duo simulator boots closed (the hinge reported `closed`, window 466 × 678 pt). Poses change only in Device Hub.
+
+### A dedicated simulator (opt-in)
+
+Only when the user asks for a separate test simulator. Warn them first that it takes about 4-6 GB of disk. Create it, run the tests, and delete it in the same session, even when a test fails:
 
 ```bash
 UDID=$(xcrun simctl create "Tests Duo" com.apple.CoreSimulator.SimDeviceType.iPhone-Duo com.apple.CoreSimulator.SimRuntime.iOS-27-1)
 xcrun simctl bootstatus "$UDID" -b
 # ... run tests with -destination "id=$UDID" ...
-xcrun simctl shutdown "$UDID" && xcrun simctl delete "$UDID"
+xcrun simctl shutdown "$UDID"; xcrun simctl delete "$UDID"
 ```
 
-- *Measured:* a new Duo simulator boots closed (the hinge reported `closed`, window 466 × 678 pt). Poses change only in Device Hub.
+- Delete only the simulator you created, by the UDID `create` printed. Never delete or erase one you didn't create.
+- The runner script below does all of this with `CREATE_SIMULATOR=1`, and deletes the simulator when it exits.
 - *Measured:* the iOS 27.1 runtime refused other iPhones: `simctl create` with iPhone 17, 17e, 17 Pro, Air, 18 Pro or 18 Pro Max failed with "Incompatible device". To run the same suite on another iPhone, use the iOS 27.0 runtime and a deployment target of 27.0 or lower (an iPhone 17 Pro on iOS 27.0 worked).
 
 ## Run the tests
@@ -44,8 +53,8 @@ xcodebuild test \
 
 | Flag | Why |
 |---|---|
-| `-destination` | `id=<UDID>` of your own simulator. `platform=iOS Simulator,name=iPhone Duo,OS=27.1` also works, but only for a simulator nobody else uses. |
-| `-parallel-testing-enabled NO` | Overrides the scheme's parallel setting (`man xcodebuild`). With parallel testing on, xcodebuild runs the tests on a clone of the simulator, not the one you named. `duo-shared-screen` measured this: "Clone 1 of iPhone Duo", which started closed. A clone starts in its own pose, not the one you set in Device Hub. It boots fresh, which the two-player recipe's runner says can take minutes. And a manual fold test then waits on a device nobody is looking at. Its log lines also change to `Test case '...' passed on 'Clone 1 of ...'`, which the greps on this page don't match. Always pass `NO` for Duo runs. |
+| `-destination` | `id=<UDID>` of the iPhone Duo simulator. `platform=iOS Simulator,name=iPhone Duo,OS=27.1` also works, but two simulators can share a name. |
+| `-parallel-testing-enabled NO` | Overrides the scheme's parallel setting (`man xcodebuild`). With parallel testing on, xcodebuild runs the tests on a clone of the simulator, not the one you named, and each clone is one more simulator on disk. `duo-shared-screen` measured this: "Clone 1 of iPhone Duo", which started closed. A clone starts in its own pose, not the one you set in Device Hub. It boots fresh, which the two-player recipe's runner says can take minutes. And a manual fold test then waits on a device nobody is looking at. Its log lines also change to `Test case '...' passed on 'Clone 1 of ...'`, which the greps on this page don't match. Always pass `NO` for Duo runs. |
 | `-derivedDataPath build/DerivedData` | Keeps build products next to the project, so later commands can find the `.xctestrun` file. |
 | `-resultBundlePath` | Writes an `.xcresult` bundle. The man page says xcodebuild exits with an error if the path already exists, so delete it first. |
 | `-collect-test-diagnostics never` | Skips sysdiagnoses and log archives on failure. See "Sitting after the last test". |
@@ -120,43 +129,53 @@ xcrun xcresulttool export attachments --path build/UITests.xcresult --output-pat
 
 ## A runner script
 
-`Tools/run-ui-tests.sh`. *Measured* (16 October): on a private iPhone Duo simulator it printed each test line, then `Passed | passed 2 | failed 0 | skipped 0` and exited 0; with a broken assertion it printed the `FAIL` line with the message and exited 65. On 17 October it gained the private-simulator default and `-parallel-testing-enabled NO`; that version was syntax-checked and its find-or-create step was run, but the full UI run was not repeated (the Mac was out of disk space).
+`Tools/run-ui-tests.sh`. *Measured* (16 October): on a private iPhone Duo simulator it printed each test line, then `Passed | passed 2 | failed 0 | skipped 0` and exited 0; with a broken assertion it printed the `FAIL` line with the message and exited 65. On 18 October it changed to reuse the existing iPhone Duo by default, with a dedicated simulator only on request. That version passed `zsh -n`. Its find step picked the shared "iPhone Duo" on our Mac, and stopped with the setup hint when the list had no Duo. With stand-in `xcrun` and `xcodebuild` commands, `CREATE_SIMULATOR=1` deleted the simulator it made, by its UDID, after a failing run. The full UI run was not repeated, and no real simulator was created.
 
 ```bash
 #!/bin/zsh
-# Runs the UI tests on your own iPhone Duo simulator, then prints the result summary.
+# Runs the UI tests on the iPhone Duo simulator, then prints the result summary.
 #   Tools/run-ui-tests.sh                                   all UI tests
 #   Tools/run-ui-tests.sh -only-testing:AppUITests/BoardUITests
-# Settings: PROJECT, SCHEME, DEVICE_ID (a UDID). Without DEVICE_ID it uses the iOS 27.1
-# simulator named $DEVICE_NAME (default "Tests Duo") and creates it if it doesn't exist.
-# It never picks the shared "iPhone Duo": a UI test takes over the simulator it runs on.
+# Settings: PROJECT, SCHEME, DEVICE_ID (a UDID). Without DEVICE_ID it reuses the existing
+# iOS 27 simulator named "iPhone Duo" (or another iPhone Duo), booted ones first.
+# It never creates a simulator unless you set CREATE_SIMULATOR=1. Then it makes a
+# dedicated one (about 4-6 GB of disk) and deletes it when the run ends.
+# A UI test brings the app to the front of the simulator it runs on.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export DEVELOPER_DIR="${DEVELOPER_DIR:-/Applications/Xcode-27.1.app/Contents/Developer}"
 PROJECT="${PROJECT:-App.xcodeproj}"
 SCHEME="${SCHEME:-App}"
-DEVICE_NAME="${DEVICE_NAME:-Tests Duo}"
 RESULT="build/UITests.xcresult"
 LOG="build/ui-tests.log"
 
-if [[ -z "${DEVICE_ID:-}" ]]; then
-  DEVICE_ID=$(xcrun simctl list --json devices available | DEVICE_NAME="$DEVICE_NAME" python3 -I -c '
-import json, os, sys
-devices = json.load(sys.stdin)["devices"]
-print(next((d["udid"] for runtime, list in devices.items() if runtime.endswith("iOS-27-1")
-            for d in list if d["name"] == os.environ["DEVICE_NAME"]), ""))')
+if [[ -n "${DEVICE_ID:-}" ]]; then
+  :
+elif [[ "${CREATE_SIMULATOR:-0}" == 1 ]]; then
+  echo "Creating a dedicated iPhone Duo simulator (about 4-6 GB of disk). It is deleted when this run ends." >&2
+  DEVICE_ID=$(xcrun simctl create "Tests Duo" com.apple.CoreSimulator.SimDeviceType.iPhone-Duo \
+    com.apple.CoreSimulator.SimRuntime.iOS-27-1) || { echo "Could not create an iPhone Duo simulator. See duo-setup." >&2; exit 1; }
+  trap 'xcrun simctl shutdown "$DEVICE_ID" > /dev/null 2>&1; xcrun simctl delete "$DEVICE_ID"' EXIT
+else
+  DEVICE_ID=$(xcrun simctl list --json devices available | python3 -I -c '
+import json, sys
+found = [(d["name"] == "iPhone Duo", d["state"] == "Booted", d["udid"])
+         for runtime, devices in json.load(sys.stdin)["devices"].items() if "iOS-27" in runtime
+         for d in devices if d.get("deviceTypeIdentifier", "").endswith("iPhone-Duo")]
+print(max(found)[2] if found else "")')
   if [[ -z "$DEVICE_ID" ]]; then
-    DEVICE_ID=$(xcrun simctl create "$DEVICE_NAME" com.apple.CoreSimulator.SimDeviceType.iPhone-Duo \
-      com.apple.CoreSimulator.SimRuntime.iOS-27-1) || { echo "Could not create an iPhone Duo simulator. See duo-setup."; exit 1; }
+    echo "No iPhone Duo simulator found. Create one with duo-setup (step 3), or set DEVICE_ID." >&2
+    echo "For a throwaway one, rerun with CREATE_SIMULATOR=1 (about 4-6 GB, deleted after the run)." >&2
+    exit 1
   fi
 fi
 
 mkdir -p build
-xcrun simctl bootstatus "$DEVICE_ID" -b > /dev/null   # xcodebuild gives a new simulator only 60 s to boot
+xcrun simctl bootstatus "$DEVICE_ID" -b > /dev/null   # xcodebuild gives a simulator only 60 s to boot
 rm -rf "$RESULT"                                       # xcodebuild refuses an existing result path
 
 # -parallel-testing-enabled NO: otherwise xcodebuild may run the tests on a clone of the
-# simulator, which boots fresh and ignores the pose you set in Device Hub.
+# simulator, which takes more disk, boots fresh and ignores the pose you set in Device Hub.
 set +e
 xcodebuild test \
   -project "$PROJECT" -scheme "$SCHEME" \

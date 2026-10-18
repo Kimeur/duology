@@ -17,7 +17,8 @@ If the Duology plugin is installed, run `/duo-doctor` first. It runs the plugin'
 - Never run `sudo xcode-select --switch` unless the user decides to. It changes the Xcode that every terminal and tool on the Mac uses. Use `DEVELOPER_DIR` instead.
 - Put `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer` in front of every `xcrun` and `xcodebuild` call. Claude Code's Bash tool doesn't keep environment variables between calls, so an `export` from an earlier call is gone. Export it only in an interactive terminal.
 - Ask before you run `xcodebuild -runFirstLaunch` (its help says it agrees to the license) or `xcodebuild -downloadPlatform` (a multi-gigabyte download).
-- Ask before you run `xcrun simctl create` (it adds a simulator) or `claude mcp add` / `claude mcp remove` (they change the user's Claude Code configuration). Show the exact command first.
+- Reuse the iPhone Duo simulator the Mac already has. Run `xcrun simctl create` only when none is listed, and only after the user agrees: each simulator takes about 4-6 GB of disk. Never create a second one, and never clone one (`xcodebuild test` can clone it unless you pass `-parallel-testing-enabled NO`).
+- Ask before you run `claude mcp add` / `claude mcp remove` (they change the user's Claude Code configuration). Show the exact command first.
 - You can't change the pose from the command line. `simctl` in Xcode 27.1 has no pose command. Ask the user to click in Device Hub.
 - Don't turn on Xcode's external-agent setting for the user. They do it in Xcode's settings.
 - Build Duo work with Xcode 27.1 only. An older Xcode builds with an older SDK, and the SDK decides how the app looks on iPhone Duo ([Apple: Three steps](https://developer.apple.com/iphone-duo/prepare/)).
@@ -52,7 +53,7 @@ No iOS 27.1 runtime: ask the user to install it in Xcode > Settings > Components
 
 ```bash
 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcrun simctl list devices available | grep "iPhone Duo"
-# none listed? show the user this command and run it after they agree:
+# none listed? show the user this command, say it takes about 4-6 GB of disk, and run it after they agree:
 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcrun simctl create "iPhone Duo" com.apple.CoreSimulator.SimDeviceType.iPhone-Duo com.apple.CoreSimulator.SimRuntime.iOS-27-1
 # boot it if needed, and wait until it is ready:
 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcrun simctl bootstatus <UDID> -b
@@ -60,6 +61,7 @@ DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcrun simctl boots
 open /Applications/Xcode-27.1.app/Contents/Applications/DeviceHub.app
 ```
 
+- Every Duology skill and script reuses this one simulator. If one is listed, use it; don't create another.
 - `create` prints the new UDID, and `list` shows each device's UDID. Use the UDID, not the name or `booted`: several devices can share a name, and `booted` picks any booted device when more than one runs.
 - `bootstatus -b` boots the device only when it isn't booted. A plain `simctl boot` on a booted device fails with code 405, "Unable to boot device in current state: Booted". That error is harmless.
 - Xcode 27.1 ships `DeviceHub.app` and no `Simulator.app`. You can also open it from Xcode > Open Developer Tool > Device Hub ([Apple: Device Hub](https://developer.apple.com/documentation/xcode/managing-your-simulated-and-physical-devices-in-device-hub)).

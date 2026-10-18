@@ -353,7 +353,8 @@ EOF
     else
       rid_text="${RT_ID:-com.apple.CoreSimulator.SimRuntime.iOS-27-1}"
       bad required "iPhone Duo simulator" "none on iOS $MIN_IOS or later" \
-        "${XP}xcrun simctl create \"iPhone Duo\" $DUO_TYPE $rid_text"
+        "After the user agrees (a simulator takes about 4-6 GB of disk): ${XP}xcrun simctl create \"iPhone Duo\" $DUO_TYPE $rid_text" \
+        "Create only this one. Every Duology step reuses it."
     fi
 
     # Optional: xcodebuild boots the simulator when a build or test needs it.

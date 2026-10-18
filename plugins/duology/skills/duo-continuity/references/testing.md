@@ -229,14 +229,17 @@ Run them:
 # Automatic test
 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcodebuild test \
   -scheme YourApp -destination 'platform=iOS Simulator,name=iPhone Duo,OS=27.1' \
+  -parallel-testing-enabled NO \
   -only-testing:YourAppUITests/ContinuityUITests/testStateSurvivesSizeClassFlip
 
 # Manual fold test: keep Device Hub visible; fold and rotate when the test asks
 TEST_RUNNER_DUO_MANUAL_FOLD=1 DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer xcodebuild test \
   -scheme YourApp -destination 'platform=iOS Simulator,name=iPhone Duo,OS=27.1' \
+  -parallel-testing-enabled NO \
   -only-testing:YourAppUITests/ContinuityUITests/testStateSurvivesRealFold
 ```
 
+- `-parallel-testing-enabled NO` keeps the run on the simulator you see in Device Hub. With parallel testing on, xcodebuild may run the tests on a clone: one more simulator on disk, in its own pose, where the manual test waits for a fold nobody can make.
 - `xcodebuild` passes any `TEST_RUNNER_` variable to the test runner with the prefix removed (`man xcodebuild`, Xcode 27.1).
 - [wait(for:toEqual:timeout:)](https://developer.apple.com/documentation/xcuiautomation/xcuielement/wait(for:toequal:timeout:)) polls a key path until it matches. [XCTSkipUnless](https://developer.apple.com/documentation/xctest/xctskipunless(_:_:file:line:)) keeps the manual test out of normal runs.
 - The summary should hold only what must not change. Leave the size class out of it.

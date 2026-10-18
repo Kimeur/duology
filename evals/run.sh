@@ -570,7 +570,7 @@ preamble() {  # $1 = full | minimal, $2 = the shared Bash commands
   echo "You are running headless inside an automated evaluation. Nobody will answer questions, so make reasonable choices and finish the whole task. Work only inside the current folder."
   if [ "$1" = "full" ]; then
     echo "Xcode 27.1 is at /Applications/Xcode-27.1.app, and DEVELOPER_DIR already points at it in this environment, so plain xcodebuild and xcrun use it. Never run sudo or xcode-select."
-    echo "An iPhone Duo simulator (iOS 27.1) has the UDID $SIM_UDID. Build for it with -destination 'platform=iOS Simulator,id=$SIM_UDID'. It may be shut down; xcodebuild boots it when needed."
+    echo "An iPhone Duo simulator (iOS 27.1) has the UDID $SIM_UDID. Build for it with -destination 'platform=iOS Simulator,id=$SIM_UDID'. It may be shut down; xcodebuild boots it when needed. Use this simulator; don't create or clone another one."
     echo "The Bash tool runs only commands on an allow list, which includes: $2. Anything else is refused. Use the Read, Edit, Write, Glob and Grep tools for files instead of shell commands."
   else
     echo "The Bash tool runs only commands on an allow list; anything else is refused. Use the Read, Edit, Write, Glob and Grep tools for files instead of shell commands."

@@ -1,6 +1,6 @@
 ---
 name: duo-testing
-description: "Writes and runs tests for iPhone Duo apps, Apple's foldable with an outer display and an inner display, on the Mac and on the iPhone Duo simulator in Xcode 27.1. Use when adding logic tests (swiftc script, or Swift Testing with @Test and #expect), UI tests with XCTest and XCUIAutomation, launch arguments such as -uiTesting, -resetState and jump-to-screen switches with a TestSupport type, test markers with accessibilityIdentifier and accessibilityValue, when a tap or drag in a UI test doesn't reach a SwiftUI gesture (coordinate(withNormalizedOffset:), press(forDuration:thenDragTo:)), when XCUIDevice rotation or a fold can't be scripted, or when running xcodebuild test on a private simulator with -destination id=<UDID>, -parallel-testing-enabled NO, -only-testing, -resultBundlePath, -collect-test-diagnostics and xcresulttool."
+description: "Writes and runs tests for iPhone Duo apps, Apple's foldable with an outer display and an inner display, on the Mac and on the iPhone Duo simulator in Xcode 27.1. Use when adding logic tests (swiftc script, or Swift Testing with @Test and #expect), UI tests with XCTest and XCUIAutomation, launch arguments such as -uiTesting, -resetState and jump-to-screen switches with a TestSupport type, test markers with accessibilityIdentifier and accessibilityValue, when a tap or drag in a UI test doesn't reach a SwiftUI gesture (coordinate(withNormalizedOffset:), press(forDuration:thenDragTo:)), when XCUIDevice rotation or a fold can't be scripted, or when running xcodebuild test on the existing iPhone Duo simulator with -destination id=<UDID>, -parallel-testing-enabled NO, -only-testing, -resultBundlePath, -collect-test-diagnostics and xcresulttool."
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
   sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
@@ -27,7 +27,7 @@ Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1) on 16 
 - Find elements by accessibility identifier. Read state from `accessibilityValue`. Never assert on pixels, point sizes or device names.
 - Touch through elements: `element.tap()`, `element.coordinate(withNormalizedOffset:)`, `press(forDuration:thenDragTo:)` between element coordinates. Never work out points from `app.frame`.
 - A UI test can't fold the simulator, and on the closed Duo simulator it couldn't rotate the app either (*measured*, below). Plan pose and rotation checks for Device Hub.
-- Run UI tests on a simulator nobody else is using, addressed by UDID, and boot it before `xcodebuild test`.
+- Run UI tests on the existing "iPhone Duo" simulator, addressed by UDID, and boot it before `xcodebuild test`. Never create or clone a simulator unless the user asks: each one takes about 4-6 GB of disk.
 
 ## 1. Test the logic on the Mac
 
@@ -254,8 +254,8 @@ XCUIAutomation types are main-actor types. Mark each test method `@MainActor`, a
 
 ```bash
 export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
-UDID=$(xcrun simctl create "Tests Duo" com.apple.CoreSimulator.SimDeviceType.iPhone-Duo \
-  com.apple.CoreSimulator.SimRuntime.iOS-27-1)  # your own simulator, or reuse one only you use
+xcrun simctl list devices available | grep "iPhone Duo"   # reuse this one
+UDID=<its UDID>
 xcrun simctl bootstatus "$UDID" -b               # boot first; xcodebuild waits only 60 s
 rm -rf build/UITests.xcresult                    # xcodebuild refuses an existing path
 xcodebuild test \
@@ -266,15 +266,17 @@ xcodebuild test \
   -resultBundlePath build/UITests.xcresult \
   -collect-test-diagnostics never
 xcrun xcresulttool get test-results summary --path build/UITests.xcresult
-xcrun simctl shutdown "$UDID" && xcrun simctl delete "$UDID"   # when you are done with it
 ```
 
+- **Reuse the "iPhone Duo" simulator.** Don't create one for tests: each new simulator takes about 4-6 GB of disk. If none is listed, follow `duo-setup` step 3, which creates one after the user agrees.
+- A UI test brings the app to the front and ends any running copy. Tell the user before you run it on their simulator, and wait if someone else is driving it.
+- **A dedicated test simulator is opt-in.** Create one only when the user asks, after you warn them about the 4-6 GB, and delete it when the run ends. Commands: [references/commands.md](references/commands.md#a-dedicated-simulator-opt-in).
 - Exit code 0 means every test passed; 65 means a test failed or the run couldn't start (*measured*).
-- **`-parallel-testing-enabled NO` keeps the tests on the simulator you named.** When the scheme runs tests in parallel, xcodebuild runs them on a clone instead. `duo-shared-screen` measured its tests running on "Clone 1 of iPhone Duo", which started closed. A clone starts in its own pose, not the one you set in Device Hub. It boots fresh, which can take minutes. It also logs `Test case ... passed on 'Clone 1 of ...'`, which the `Test Case` grep in commands.md misses.
+- **`-parallel-testing-enabled NO` keeps the tests on the simulator you named.** When the scheme runs tests in parallel, xcodebuild runs them on a clone instead, which is one more simulator on disk. `duo-shared-screen` measured its tests running on "Clone 1 of iPhone Duo", which started closed. A clone starts in its own pose, not the one you set in Device Hub. It boots fresh, which can take minutes. It also logs `Test case ... passed on 'Clone 1 of ...'`, which the `Test Case` grep in commands.md misses.
 - **xcodebuild can sit after the last test.** *Measured:* after one failed test it waited 600 s "collecting diagnostics from simulator", then timed out; the result bundle grew to 50 MB. With `-collect-test-diagnostics never` it exited the same second. Each `Test Case ... passed` or `failed` line reaches the log before that wait, so an agent can read results early.
 - A freshly created Duo simulator failed with "Timed out trying to boot simulator after waiting 60.00s" (*measured*). `simctl bootstatus -b` first took about a minute, then tests ran.
 - One test: `-only-testing:AppUITests/BoardUITests/testDragPieceIntoSlot`. Build once, run many: `build-for-testing`, then `test-without-building`.
-- A UI test brings the app to the front and ends any running copy, so never point it at the shared "iPhone Duo" while someone else uses it. `-destination "platform=iOS Simulator,name=iPhone Duo"` resolves and builds (*measured*); use a name only for a simulator that is yours alone.
+- `-destination "platform=iOS Simulator,name=iPhone Duo"` resolves and builds (*measured*), but two simulators can share a name. Use the UDID.
 - The iOS 27.1 simulator runtime refused every other iPhone we tried (iPhone 17, 17e, 17 Pro, Air, 18 Pro, 18 Pro Max) with "Incompatible device" (*measured*). To run the same tests on another iPhone, use the iOS 27.0 runtime and a deployment target of 27.0 or lower.
 
 Scripts, flags, `xcresulttool` recipes and a troubleshooting table: [references/commands.md](references/commands.md).
@@ -288,5 +290,5 @@ Scripts, flags, `xcresulttool` recipes and a troubleshooting table: [references/
 - [ ] No test computes points from `app.frame`; taps and drags use element coordinates and `press(forDuration:thenDragTo:)`.
 - [ ] Tests wait with `waitForExistence`, `wait(for:toEqual:timeout:)` or predicates, not fixed sleeps.
 - [ ] Rotation and pose checks are listed for Device Hub, not left to `XCUIDevice`.
-- [ ] The run uses a private simulator by UDID, boots it first, and passes `DEVELOPER_DIR`, `-parallel-testing-enabled NO`, a fresh `-resultBundlePath` and `-collect-test-diagnostics never`.
+- [ ] The run reuses the existing iPhone Duo simulator by UDID (a dedicated one only if the user asked, deleted afterwards), boots it first, and passes `DEVELOPER_DIR`, `-parallel-testing-enabled NO`, a fresh `-resultBundlePath` and `-collect-test-diagnostics never`.
 - [ ] Results are read with `xcresulttool get test-results summary`, and failures attach a screenshot of each display.

@@ -6,7 +6,8 @@ import SwiftUI
 /// - The reading column and its tools. On the inner display the article sits in
 ///   the region beside the fold, about as wide as the outer display, so lines
 ///   barely reflow and the floating tools keep their place under the text.
-/// - The scroll position, anchored to a paragraph ID with `ScrollPosition`.
+/// - The scroll position: the paragraph at the top, kept as an ID and put back
+///   with `ScrollPosition` whenever the column changes width.
 /// - The selected paragraph, the highlights, the text size and the bookmark,
 ///   all in one model above the layout.
 ///

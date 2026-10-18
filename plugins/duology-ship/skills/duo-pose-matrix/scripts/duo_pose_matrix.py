@@ -200,9 +200,24 @@ def app_installed(system, sim, bundle_id):
 
 
 def launch(system, sim, bundle_id, args):
+    """Launch the app, ending a running copy. Returns (ok, message, pid or None)."""
     code, out, err = system.run(["xcrun", "simctl", "launch", "--terminate-running-process",
                                  sim["udid"], bundle_id] + list(args))
-    return code == 0, (err or out).strip()
+    m = re.search(r":\s*(\d+)\s*$", out.strip())
+    return code == 0, (err or out).strip(), int(m.group(1)) if code == 0 and m else None
+
+
+# A screenshot whose PNG takes fewer bytes per pixel than this is nearly one colour:
+# usually an app that hasn't drawn yet. Measured on 18 October: a blank launch frame
+# with only the status bar was 0.026 bytes per pixel; real gallery screens were 0.09 to 0.43.
+BLANK_BYTES_PER_PIXEL = 0.03
+
+
+def looks_blank(path, size):
+    try:
+        return os.path.getsize(path) / float(size[0] * size[1]) < BLANK_BYTES_PER_PIXEL
+    except (OSError, ZeroDivisionError, TypeError):
+        return False
 
 
 # --------------------------------------------------------------------------
@@ -212,9 +227,11 @@ def launch(system, sim, bundle_id, args):
 def capture(system, sim, args, case, pose, state, hub, relaunch=True):
     """Launch (or keep) the app, take the screenshot and check it. Returns one shot record."""
     notes = []
+    flags = []          # reasons for "check"
     before = running_apps(system, sim)
+    app_pid = (before or {}).get(args.bundle_id)
     if relaunch:
-        ok, message = launch(system, sim, args.bundle_id, case["args"])
+        ok, message, app_pid = launch(system, sim, args.bundle_id, case["args"])
         if not ok:
             notes.append("launch failed: %s" % (message[-200:] or "no output"))
     system.sleep(args.wait)
@@ -223,11 +240,25 @@ def capture(system, sim, args, case, pose, state, hub, relaunch=True):
     display = state.shot_display() if state.active else ("primary" if pose == "closed" else "primary-1")
     ok, message = dp.screenshot(system, sim, display, path)
     size = dp.png_size(path) if ok else None
+    if size and looks_blank(path, size):
+        # The app may still be drawing: wait once more and take it again.
+        system.sleep(args.wait)
+        ok, message = dp.screenshot(system, sim, display, path)
+        size = dp.png_size(path) if ok else None
+        if size and looks_blank(path, size):
+            flags.append("the screenshot looks almost blank (the app may not have drawn yet; raise --wait)")
     expected = state.shot_size()
     after = running_apps(system, sim)
+    try:
+        state_after = dp.read_state(system, sim)
+    except dp.PoseError:
+        state_after = None
 
     checks = {}
     problems = dp.check_pose(state, pose)
+    if not problems and state_after is not None and dp.check_pose(state_after, pose):
+        problems = ["the pose changed during the capture (%s); someone else may be pressing Device Hub's buttons"
+                    % state_after.pose_guess()]
     checks["pose"] = "fail" if problems else "pass"
     notes.extend(problems)
     if size is None:
@@ -238,23 +269,28 @@ def capture(system, sim, args, case, pose, state, hub, relaunch=True):
         notes.append("screenshot is %d x %d px, expected %d x %d" % (tuple(size) + tuple(expected)))
     else:
         checks["size"] = "pass"
+    after_pid = after.get(args.bundle_id) if after is not None else None
     if after is None:
         checks["appRunning"] = "not checked"
-    elif after.get(args.bundle_id):
+    elif after_pid:
         checks["appRunning"] = "pass"
+        if app_pid and after_pid != app_pid:
+            flags.append("the app restarted during the capture (process %d, then %d): someone else relaunched "
+                         "or reinstalled it, so the picture may not be this case" % (app_pid, after_pid))
     else:
         checks["appRunning"] = "fail"
         notes.append("%s was not running when the screenshot was taken (did it crash?)" % args.bundle_id)
     foreign = new_foreign_apps(before, after, args.bundle_id)
     if foreign:
-        notes.append("another app started during the capture (%s); it may be on screen instead" % ", ".join(foreign))
+        flags.append("another app started during the capture (%s); it may be on screen instead" % ", ".join(foreign))
     fold = dp.check_fold(hub, pose, args.readout_id)
     if fold["status"] == "fail":
         notes.append(fold["note"])
+    notes.extend(flags)
 
     if "fail" in checks.values() or fold["status"] == "fail":
         status = "failed"
-    elif foreign:
+    elif flags:
         status = "check"
     else:
         status = "ok"
@@ -420,6 +456,14 @@ def wait_until_free(system, sim, args):
 
 def run_matrix(system, args, log=lambda text: None):
     sim = dp.find_simulator(system, args.udid)
+    lock = dp.SimulatorLock(sim["udid"]).acquire(system)
+    try:
+        return _run_matrix(system, args, log, sim)
+    finally:
+        lock.release()
+
+
+def _run_matrix(system, args, log, sim):
     busy = [] if args.force else dp.busy_processes(system, sim)
     if busy:
         raise dp.PoseError(dp.EXIT_BUSY, "UI tests are running on this Mac (%s)" % ", ".join(
@@ -475,7 +519,7 @@ def run_matrix(system, args, log=lambda text: None):
                 for i, pose in enumerate(poses):
                     state = put_in(pose)
                     if i == 0:
-                        launch_ok, message = launch(system, sim, args.bundle_id, case["args"])
+                        launch_ok, message, _ = launch(system, sim, args.bundle_id, case["args"])
                         if not launch_ok:
                             log("launch failed: %s" % message)
                     shot = capture(system, sim, args, case, pose, state, hub, relaunch=False)

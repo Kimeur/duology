@@ -22,6 +22,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import duo_pose_fakes as fakes  # noqa: E402
 
+# Keep the tests' lock files and helper builds out of the user's cache folder.
+_CACHE = tempfile.mkdtemp(prefix="duo-pose-test-cache-")
+os.environ["DUOLOGY_CACHE_DIR"] = _CACHE
+
+
+def tearDownModule():
+    shutil.rmtree(_CACHE, ignore_errors=True)
+
 _spec = importlib.util.spec_from_file_location("duo_pose", os.path.join(fakes.SCRIPTS, "duo_pose.py"))
 dp = importlib.util.module_from_spec(_spec)
 sys.modules["duo_pose"] = dp
@@ -87,6 +95,22 @@ class SimulatorTests(unittest.TestCase):
         apps = dp.parse_launchctl(fakes.fixture("launchctl-list.txt"))
         self.assertEqual(apps["com.example.other"], 70169)
         self.assertIsNone(apps[fakes.BUNDLE])
+
+    def test_parse_launchctl_prefers_the_running_copy(self):
+        # A relaunch leaves the old job listed, with no process, next to the new one (seen on 18 October).
+        out = "PID\tStatus\tLabel\n8220\t0\tUIKitApplication:a.b[922c][rb-legacy]\n" \
+              "-\t0\tUIKitApplication:a.b[1f2e][rb-legacy]\n"
+        self.assertEqual(dp.parse_launchctl(out), {"a.b": 8220})
+
+    def test_lock_is_released(self):
+        mac = fakes.FakeMac()
+        dp.SimulatorLock(fakes.UDID).acquire(mac).release()
+        dp.SimulatorLock(fakes.UDID).acquire(mac).release()
+        held = dp.SimulatorLock(fakes.UDID).acquire(mac)
+        self.addCleanup(held.release)
+        code, _, err = run_main(["set", "open"], mac)
+        self.assertEqual(code, dp.EXIT_BUSY)
+        self.assertIn("another duo-pose", err)
 
     def test_ui_test_runner_in_the_simulator_counts_as_busy(self):
         busy = dp.busy_processes(fakes.FakeMac(runner=True), SIM)

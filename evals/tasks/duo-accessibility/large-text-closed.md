@@ -28,7 +28,7 @@ People who use the largest text sizes say the inbox is hard to read on the close
 
 Fixture [`Inbox`](../../fixtures/Inbox): a mail inbox. Open, a custom list and message pane sit side by side; closed, the list pushes the message. iOS 17 target, Swift 5, with a UI test target, `InboxUITests`. duo-lint finds nothing.
 
-- Every text uses a fixed point size (`.font(.system(size: 16))`), so none of it follows the text size setting.
+- The texts in the list and the message use fixed point sizes (`.font(.system(size: 16))`), so they don't follow the text size setting.
 - Each row has a fixed height of 76 pt and the preview line is cut to one line with `lineLimit(1)`.
 - The message header puts the sender and date in a 40 pt high box.
 
@@ -46,7 +46,9 @@ no_src '\.frame\(height: *(4[0-9]|[5-9][0-9]|[1-9][0-9]{2})(\.[0-9]+)?\)'
 # app at the largest accessibility text size (AX5) and runs Xcode's accessibility
 # audit for text that doesn't scale and text that is clipped, on the inbox and
 # again after opening the first message. It runs in whatever pose the simulator is
-# in; closed is the hard case.
+# in; closed and upright is the hard case. The audit also flags, with no element,
+# the texts inside the child a ViewThatFits rejected (measured in Xcode 27.1);
+# those are ignored.
 [ -d InboxUITests ] || { echo "the InboxUITests folder is gone"; exit 1; }
 cat > InboxUITests/LargeTextOracleTests.swift <<'SWIFT'
 import XCTest
@@ -73,7 +75,10 @@ final class LargeTextOracleTests: XCTestCase {
     private func audit(_ app: XCUIApplication, screen: String) throws {
         var problems: [String] = []
         try app.performAccessibilityAudit(for: [.dynamicType, .textClipped]) { issue in
-            problems.append("\(issue.compactDescription): \(issue.element?.label ?? "an element")")
+            // Issues with no element come from SwiftUI nodes that aren't on screen,
+            // such as the child a ViewThatFits rejected. Text people can see has one.
+            guard let element = issue.element else { return true }
+            problems.append("\(issue.compactDescription): \(element.label)")
             return true
         }
         XCTAssertTrue(problems.isEmpty, "\(screen) at AX5: \(problems.joined(separator: "; "))")

@@ -266,8 +266,11 @@ def parse_launchctl(output):
             continue
         m = re.match(r"^UIKitApplication:([^\[\s]+)\[", parts[2].strip())
         if m:
-            pid = parts[0].strip()
-            apps[m.group(1)] = int(pid) if pid.isdigit() and int(pid) > 0 else None
+            pid_text = parts[0].strip()
+            pid = int(pid_text) if pid_text.isdigit() and int(pid_text) > 0 else None
+            # A relaunch leaves the old job listed with no process next to the new one.
+            if pid is not None or m.group(1) not in apps:
+                apps[m.group(1)] = pid
     return apps
 
 
@@ -284,6 +287,49 @@ def busy_processes(system, sim=None):
                 if pid and bundle.endswith(".xctrunner") and pid not in [b["pid"] for b in busy]:
                     busy.append({"pid": pid, "command": "%s (UI test runner in the simulator)" % bundle})
     return busy
+
+
+class SimulatorLock:
+    """One duo-pose or duo-pose-matrix run per simulator at a time.
+
+    A lock file in the cache folder, held with flock while the run lasts. It
+    only keeps Duology's own tools apart; the busy check and the per-shot checks
+    catch other scripts.
+    """
+
+    def __init__(self, udid):
+        self.path = os.path.join(cache_root(), "locks", "%s.lock" % re.sub(r"[^A-Za-z0-9-]", "", udid))
+        self.fh = None
+
+    def acquire(self, system, wait=0.0):
+        import fcntl
+        os.makedirs(os.path.dirname(self.path), exist_ok=True)
+        self.fh = open(self.path, "a+")
+        deadline = system.monotonic() + wait
+        while True:
+            try:
+                fcntl.flock(self.fh, fcntl.LOCK_EX | fcntl.LOCK_NB)
+                self.fh.seek(0)
+                self.fh.truncate()
+                self.fh.write("%d\n" % os.getpid())
+                self.fh.flush()
+                return self
+            except OSError:
+                if system.monotonic() >= deadline:
+                    self.fh.close()
+                    self.fh = None
+                    raise PoseError(EXIT_BUSY, "another duo-pose or duo-pose-matrix run is using this simulator",
+                                    "Wait for it to finish. Lock file: %s" % self.path)
+                system.sleep(2)
+
+    def release(self):
+        if self.fh is not None:
+            import fcntl
+            try:
+                fcntl.flock(self.fh, fcntl.LOCK_UN)
+            finally:
+                self.fh.close()
+                self.fh = None
 
 
 # --------------------------------------------------------------------------
@@ -873,9 +919,13 @@ def main(argv=None, system=None, out=None, err=None):
                 "pid %d" % b["pid"] for b in busy),
                 "The pose is shared by everything on the simulator. Wait until they finish, "
                 "or pass --force if you know they use another simulator.")
-        hub = connect(system, sim, bring_forward=not args.no_bring_forward)
-        timing = Timing(fold_wait=args.wait, timeout=args.timeout)
-        result = set_pose(system, sim, args.pose, hub, timing=timing, readout_id=args.readout_id)
+        lock = SimulatorLock(sim["udid"]).acquire(system)
+        try:
+            hub = connect(system, sim, bring_forward=not args.no_bring_forward)
+            timing = Timing(fold_wait=args.wait, timeout=args.timeout)
+            result = set_pose(system, sim, args.pose, hub, timing=timing, readout_id=args.readout_id)
+        finally:
+            lock.release()
     except PoseError as exc:
         return emit_error(exc, args.json, out, err)
 

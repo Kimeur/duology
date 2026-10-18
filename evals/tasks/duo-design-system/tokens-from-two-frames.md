@@ -70,7 +70,8 @@ no_src 'cornerRadius: *[4-9][0-9]'
 # the simulator is in. At the default text size: no contrast failure and no text that
 # ignores Dynamic Type (Xcode's accessibility audit), and the first heart button is at
 # least 44 x 44 pt. At AX5: no clipped text. The audit also reports "contrast nearly
-# passed" for the system's secondary label colour; only failures count here.
+# passed" for the system's secondary label colour, and clipped text with no element
+# for a ViewThatFits's rejected child (both measured in Xcode 27.1); neither counts.
 [ -d TripsUITests ] || { echo "the TripsUITests folder is gone"; exit 1; }
 cat > TripsUITests/TokensOracleTests.swift <<'SWIFT'
 import XCTest
@@ -91,7 +92,9 @@ final class TokensOracleTests: XCTestCase {
             if issue.auditType == .contrast && !issue.compactDescription.lowercased().contains("failed") {
                 return true
             }
-            problems.append("\(issue.compactDescription): \(issue.element?.label ?? "an element")")
+            // Issues with no element come from SwiftUI nodes that aren't on screen.
+            guard let element = issue.element else { return true }
+            problems.append("\(issue.compactDescription): \(element.label)")
             return true
         }
         XCTAssertTrue(problems.isEmpty, problems.joined(separator: "; "))
@@ -106,7 +109,10 @@ final class TokensOracleTests: XCTestCase {
             .waitForExistence(timeout: 20), "trip.favorite.1 is missing")
         var problems: [String] = []
         try app.performAccessibilityAudit(for: [.textClipped]) { issue in
-            problems.append("\(issue.compactDescription): \(issue.element?.label ?? "an element")")
+            // The audit also flags, with no element, the texts inside the child a
+            // ViewThatFits rejected (measured in Xcode 27.1). Text people can see has one.
+            guard let element = issue.element else { return true }
+            problems.append("\(issue.compactDescription): \(element.label)")
             return true
         }
         XCTAssertTrue(problems.isEmpty, "at AX5: " + problems.joined(separator: "; "))

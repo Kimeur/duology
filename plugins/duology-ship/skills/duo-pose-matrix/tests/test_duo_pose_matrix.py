@@ -19,6 +19,14 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import duo_pose_fakes as fakes  # noqa: E402
 
+# Keep the tests' lock files and helper builds out of the user's cache folder.
+_CACHE = tempfile.mkdtemp(prefix="duo-pose-test-cache-")
+os.environ["DUOLOGY_CACHE_DIR"] = _CACHE
+
+
+def tearDownModule():
+    shutil.rmtree(_CACHE, ignore_errors=True)
+
 sys.path.insert(0, fakes.SCRIPTS)
 _spec = importlib.util.spec_from_file_location("duo_pose_matrix", os.path.join(fakes.SCRIPTS, "duo_pose_matrix.py"))
 dm = importlib.util.module_from_spec(_spec)
@@ -290,6 +298,38 @@ class RunTests(unittest.TestCase):
         self.assertEqual(run(["--poses", "closed,open"], mac), 0)
         status = {x["pose"]: x["status"] for x in run.summary()["shots"]}
         self.assertEqual(status, {"closed": "ok", "open": "check"})
+
+    def test_a_blank_frame_is_retaken_then_flagged(self):
+        run, mac = Run(self), fakes.FakeMac(blank_in="Open")
+        self.assertEqual(run(["--poses", "closed,open"], mac), 0)
+        shots = {x["pose"]: x for x in run.summary()["shots"]}
+        self.assertEqual(shots["closed"]["status"], "ok")
+        self.assertEqual(shots["open"]["status"], "check")
+        self.assertIn("almost blank", " ".join(shots["open"]["notes"]))
+        self.assertEqual(mac.shots, 3)  # closed once, open twice
+
+    def test_someone_else_relaunching_the_app_is_flagged(self):
+        run, mac = Run(self), fakes.FakeMac(steal_in="Open")
+        self.assertEqual(run(["--poses", "closed,open"], mac), 0)
+        shots = {x["pose"]: x for x in run.summary()["shots"]}
+        self.assertEqual(shots["open"]["status"], "check")
+        self.assertIn("restarted during the capture", " ".join(shots["open"]["notes"]))
+
+    def test_a_pose_change_during_the_capture_fails_the_shot(self):
+        run, mac = Run(self), fakes.FakeMac(move_in="Partially Open")
+        self.assertEqual(run(["--poses", "book", "--no-restore"], mac), dp.EXIT_FAILED)
+        shot = run.summary()["shots"][0]
+        self.assertEqual(shot["status"], "failed")
+        self.assertIn("pose changed during the capture", " ".join(shot["notes"]))
+
+    def test_one_run_per_simulator(self):
+        mac = fakes.FakeMac()
+        lock = dp.SimulatorLock(fakes.UDID).acquire(mac)
+        self.addCleanup(lock.release)
+        run = Run(self)
+        self.assertEqual(run([], mac), dp.EXIT_BUSY)
+        self.assertIn("another duo-pose or duo-pose-matrix run", run.stderr)
+        self.assertEqual(mac.pressed, [])
 
     def test_skips_a_pose_without_its_button(self):
         run, mac = Run(self), fakes.FakeMac(buttons=["Closed", "Partially Open", "Open"])

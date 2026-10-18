@@ -44,14 +44,20 @@ def displays_json(active, turns):
     return data
 
 
-def write_png_header(path, width, height):
-    """A PNG with only its header chunks: enough for duo-pose's size reader."""
+def write_png_header(path, width, height, bytes_per_pixel=None):
+    """A PNG with only its header chunks: enough for duo-pose's size reader.
+
+    With bytes_per_pixel, the file is padded (sparsely, so nothing is written)
+    to the size a real screenshot of that busyness would have.
+    """
     def chunk(kind, data):
         return struct.pack(">I", len(data)) + kind + data + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
     with open(path, "wb") as fh:
         fh.write(b"\x89PNG\r\n\x1a\n")
         fh.write(chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 6, 0, 0, 0)))
         fh.write(chunk(b"IEND", b""))
+        if bytes_per_pixel:
+            fh.truncate(int(width * height * bytes_per_pixel))
 
 
 class FakeMac:
@@ -59,7 +65,7 @@ class FakeMac:
 
     def __init__(self, fold="Closed", turns=0, trusted=True, window=True, buttons=None, busy="",
                  installed=True, switch_delay=2.0, broken_button=None, readout=None, crash_in=None,
-                 foreign_in=None, busy_after=0, runner=False):
+                 foreign_in=None, busy_after=0, runner=False, blank_in=None, steal_in=None, move_in=None):
         self.fold = fold                  # "Closed", "Open" or "Partially Open"
         self.turns = turns
         self.shown_fold = fold            # what the displays show (lags after a press)
@@ -70,6 +76,10 @@ class FakeMac:
         self.busy = busy                     # extra `ps -axo pid=,args=` lines
         self.busy_after = busy_after         # the busy lines appear after this many presses
         self.runner = runner                 # a UI test runner app is running in the simulator
+        self.blank_in = blank_in             # fold in which screenshots come out blank
+        self.steal_in = steal_in             # fold in which someone else relaunches the app mid-capture
+        self.move_in = move_in               # fold in which someone else presses Rotate Right mid-capture
+        self.shots = 0
         self.installed = installed
         self.switch_delay = switch_delay
         self.broken_button = broken_button   # a button whose press reports success but does nothing
@@ -192,7 +202,12 @@ class FakeMac:
         native = (1398, 2034) if display == "primary" else (2007, 2853)
         rot = (self.turns * 90) % 360 if display == "primary" else (90 + self.turns * 90) % 360
         w, h = (native[1], native[0]) if rot in (90, 270) else native
-        write_png_header(path, w, h)
+        self.shots += 1
+        write_png_header(path, w, h, None if self.fold == self.blank_in else 0.2)
+        if self.fold == self.steal_in and self.app_pid:
+            self.app_pid += 1000
+        if self.fold == self.move_in:
+            self.turns = (self.turns + 1) % 4
         return 0, "Wrote screenshot to: %s\n" % path, ""
 
     def _launchctl(self):

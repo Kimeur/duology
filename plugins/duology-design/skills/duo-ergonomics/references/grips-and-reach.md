@@ -32,7 +32,7 @@ Apple gives four reasons. Each one matters for where your own controls go.
 
 The inner display held tall is the exception: it has room for normal top and bottom bars ([111466, 5:27](https://developer.apple.com/videos/play/tech-talks/111466/?time=327)).
 
-The vertical bar holds, from top to bottom: the Dynamic Island, the status bar, top-bar items, bottom-bar items, then the tab bar ([111466, 1:34](https://developer.apple.com/videos/play/tech-talks/111466/?time=94); HIG Duo). Apple reserves the top for Back or Close, then prominent actions such as Done, and says this order keeps the important actions reachable (HIG Duo, Vertical controls).
+The vertical bar holds, from top to bottom: the Dynamic Island, the status bar, top-bar items, bottom-bar items, then the tab bar ([111466, 6:04 to 6:15](https://developer.apple.com/videos/play/tech-talks/111466/?time=364); HIG Duo, Vertical controls). Apple reserves the top for Back or Close, then prominent actions such as Done, and says this order keeps the important actions reachable (HIG Duo, Vertical controls).
 
 ## One hand, closed
 
@@ -54,7 +54,7 @@ The vertical bar holds, from top to bottom: the Dynamic Island, the status bar, 
 
 **Derived:** open, the phone is 164.6 × 117.8 mm (Specs). The centre is about 82 mm from either side edge. The window is 951 × 669 pt held wide (*measured* by [device-facts](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md#how-we-measured)).
 
-**Measured by Duology** (see `duo-patterns`): the fold is a 40 pt band, x 455–495, top to bottom. The status bar corner is an occlusion at x 867–951, y 0–124. An inactive occlusion at x 677–735, y 21–58 is likely the inner camera (our reading).
+**Measured by Duology** (see `duo-layout` and `duo-patterns`): the fold is a 40 pt band, x 455–495, top to bottom. The status bar corner is an occlusion at x 867–951, y 0–124. An inactive occlusion at x 677–735, y 21–58 is likely the inner camera (our reading).
 
 **Judgement:**
 
@@ -78,7 +78,7 @@ Apple's Podcasts example: with the transcript hidden, the Now Playing view stays
 
 **Apple:**
 
-- iPhone Duo is good for hands-free use on a table. Media can sit at the top, tappable controls on a stable base at the bottom ([111466, 4:43 and 4:48](https://developer.apple.com/videos/play/tech-talks/111466/?time=283)).
+- iPhone Duo is good for hands-free use on a table. Media can sit at the top, tappable controls on a stable base at the bottom ([111466, 4:24 and 4:48](https://developer.apple.com/videos/play/tech-talks/111466/?time=264)).
 - Partly folded in portrait, interactive elements move to the bottom half, easier to reach while the phone stays steady on the surface ([111466, 2:32](https://developer.apple.com/videos/play/tech-talks/111466/?time=152)).
 - The top region suits content seen from a distance; the bottom region suits controls, a more stable surface for touch ([111463, 4:23 to 4:43](https://developer.apple.com/videos/play/tech-talks/111463/?time=263)).
 - A special layout for this pose is optional. If you make one, keep all the same controls and the same hierarchy ([111466, 4:55 and 5:03](https://developer.apple.com/videos/play/tech-talks/111466/?time=295)).

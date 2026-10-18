@@ -15,26 +15,40 @@ Apple's model, from [WWDC23 Explore SwiftUI animation](https://developer.apple.c
 - [`disablesAnimations`](https://developer.apple.com/documentation/swiftui/transaction/disablesanimations) stops `animation(_:)` modifiers below from adding an animation. Apple's example on the `transaction(value:_:)` page spells it `disableAnimations`, which does not compile; the SDK property is `disablesAnimations`.
 - SwiftUI applies frame changes at the leaf views that draw. So an opt-out on a container stops its frame too, and [`geometryGroup()`](https://developer.apple.com/documentation/swiftui/view/geometrygroup()) makes a group resolve and animate its frame as one unit.
 
-MEASURED-REF-SWIFTUI
+*Measured* on the iPhone Duo simulator, with `Animatable` probes that log every value SwiftUI hands them ([evidence.md](evidence.md)):
+
+- Open, close and a quarter-turn rotation all reached SwiftUI with no animation. A probe with no opt-in took its new value in one step every time.
+- During a rotation, `body` ran inside UIKit's 0.3 s rotation animation (`UIView.inheritedAnimationDuration` read 0.3). No SwiftUI value interpolated anyway: in our probe, UIKit's animation context did not become a SwiftUI animation.
+- `.animation(.linear(duration: 0.5), value: horizontalSizeClass)` interpolated: 27 to 30 in-between values over 0.5 s. The first one came 60 to 80 ms after a real open or close, and 25 to 40 ms after a size-class flip made from code. That is simulator timing; a device will differ.
+- Under that opt-in, `.transaction { $0.animation = nil }` on a leaf and `.animation(nil, value:)` both gave one step.
+- On open, the size class and the new size arrived in the same update. On close, the size class flipped 25 to 70 ms before the window shrank, in an update of its own. A spring started by the size class is still running when the size changes, and springs keep their velocity when the target moves ([WWDC23 Animate with springs](https://developer.apple.com/videos/play/wwdc2023/10158/?time=900)).
 
 ## See what a change hands you
 
-Add this while debugging, then remove it. Put it on a leaf whose content depends on the size class, so it runs in the updates you care about.
+Add this while debugging, then remove it. It is the probe behind the measured lines above. SwiftUI hands an `Animatable` modifier every in-between value of an animated change, and only the final value of one that isn't animated.
 
 ```swift
 import SwiftUI
 
-extension View {
-    /// Prints the animation, if any, that reaches this view in each update. Remove before shipping.
-    func logTransaction(_ label: String) -> some View {
-        transaction { transaction in
-            print(label, transaction.animation.map { "\($0)" } ?? "no animation")
-        }
+/// Debug only: prints every value SwiftUI hands it. Remove before shipping.
+/// One line per change: no animation reached this view. A run of values between 0 and 1: it animated.
+struct AnimationProbe: ViewModifier, Animatable {
+    let label: String
+    var progress: Double
+    var animatableData: Double {
+        get { progress }
+        set { progress = newValue }
+    }
+    func body(content: Content) -> some View {
+        print(label, progress)
+        return content
     }
 }
 ```
 
-Usage: `Text(isWide ? "Wide" : "Narrow").logTransaction("title")`, then press Open and Closed in Device Hub and read Xcode's console.
+Usage: inside the subtree you want to check, add `.modifier(AnimationProbe(label: "layout", progress: isWide ? 1 : 0))`. Press Open and Closed in Device Hub and read Xcode's console.
+
+- Don't rely on logging from `transaction(_:)` for this. In our probe its closure skipped some updates, including the one where the size class flipped on Open, so a missing line proved nothing.
 
 ## A pane that comes and goes, with a shared element
 
@@ -220,9 +234,11 @@ struct ShelfGrid: View {
 }
 ```
 
-MEASURED-REF-GEOMETRY
+- *Measured:* on Open, the geometry action and the size-class update ran in the same millisecond in our probe. Whether a frame with the old count reaches the screen first is *unverified*; check a recording.
+- *Measured:* on Open, a full-width view's width went 382 → 466 → 951 → 867 pt in about 250 ms, as the safe area insets changed around the resize. The transform runs for each.
 
-- Return the column count from the transform, not the width. The action then runs only when the count changes, and the animation key stays discrete. `duo-patterns`' feed reflow keys its animation on a struct that includes the width; that animates on every width change, so prefer the count.
+- Return the column count from the transform, not the width. The action then runs only when the count changes, and the animation key stays discrete.
+- `duo-patterns`' feed reflow doesn't animate. If you add an animation to it, key it on the column count it derives, not on `FeedGridInput`, which holds the width and would retarget the animation at every one of those passes.
 
 ## Opt out of motion
 
@@ -303,7 +319,7 @@ struct MotionAwarePanes<Main: View, Side: View>: View {
 ```
 
 - [`accessibilityPrefersCrossFadeTransitions`](https://developer.apple.com/documentation/swiftui/environmentvalues/accessibilityprefersCrossFadeTransitions) is iOS 26.4 and later. Below that, pass `reduceMotion` for both values.
-- The fade carries its own animation, so it runs even though the layout animation is `nil`. MEASURED-REF-OWNANIMATION
+- The fade carries its own animation, so it runs even though the layout animation is `nil`. *Measured:* a transition with its own `.animation` ran its full 0.5 s on a size-class change that carried no animation; the same transition without one appeared in one step.
 - Apple's list for Reduce Motion: tighter springs, fades instead of slides, no depth or blur animations, and motion that tracks a gesture is fine ([HIG, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Cognitive)). A hinge effect that follows the angle directly is closer to tracking a gesture than to an automatic animation, but zoom and parallax still belong off.
 
 ## Keep a group moving as one

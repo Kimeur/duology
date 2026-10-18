@@ -99,7 +99,7 @@ xcrun simctl launch --terminate-running-process --stdout="$PWD/scenes.log" boote
 | Read `supportsMultipleScenes` and SwiftUI's `supportsMultipleWindows` | Both `true` |
 | `openWindow(id:)` from the first window | No error. A second scene connected on the outer screen (1398 × 2034 px native, window 466 × 678 pt) and became active. The first went `inactive`, then `background`, and stayed connected. |
 | `activateSceneSession(for: UISceneSessionActivationRequest())` | Same: a third scene, no error handler call |
-| The covered window, while in the background | Two geometry updates: 466 × 678 to 951 × 669 pt (interface orientation landscape right), then back to 466 × 678 pt |
+| The covered window, while in the background | Two geometry updates: 466 × 678 to 951 × 669 pt (`effectiveGeometry.interfaceOrientation` raw value 4, `landscapeLeft`), then back to 466 × 678 pt, on the outer screen |
 | The new window's first layout | Root view 466 × 562 pt, then 382 × 644 pt |
 | Edit menu with `UIWindowScene.ActivationAction` (no alternate) and a plain `UIAction` | Only the plain action appeared |
 | The same menu, with an `alternate:` action given | The alternate appeared where the window action would be, next to the plain action |
@@ -167,3 +167,5 @@ xcrun -sdk iphonesimulator swiftc -typecheck -target arm64-apple-ios27.1-simulat
 ```
 
 We ran it in Swift 5 and Swift 6 language modes, at deployment targets iOS 27.1 and iOS 26.0 (the iOS 27 APIs are behind `@available` and `#available`), and in Swift 6 with `-default-isolation MainActor`. No errors and no warnings in any mode.
+
+The Mac Catalyst helper in [scene-accessories.md](scene-accessories.md#deploying-below-ios-271) was also typechecked for `arm64-apple-ios27.1-macabi` against the macOS SDK's iOSSupport frameworks: no issues with the guard. Without the guard, the same code fails there with "cannot find 'CameraCaptureAccessory' in scope".

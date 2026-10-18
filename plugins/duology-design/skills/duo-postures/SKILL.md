@@ -51,7 +51,7 @@ What this means for code:
 
 - Use your compact-width layout: one column, with the system's vertical bars on the side.
 - Keep the same features and state as open. Open may add one level of hierarchy, as Mail adds the message beside the list ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Best-practices)).
-- Support landscape on the outer display. Apple asks for it because people set the phone down like a tent ([111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=210)).
+- Support landscape on the outer display. Apple suggests it because people may set the phone down like a tent ([111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=210)).
 - The outer camera always occludes part of the view. Bars already avoid it; custom corner controls read `.occlusion` (see `duo-layout`).
 
 ### Open, flat (wide or tall)
@@ -76,12 +76,12 @@ What this means for code:
 - This is the one optional per-pose layout. Things to watch from a distance go in the top region: video, the other person in a call, a timer. Things to touch go in the bottom region, the stable base ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=283), [talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=263)).
 - Keep every control and the same hierarchy. Never add a feature that only exists here ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=295)).
 - The inner camera sits on the right edge of the bottom region (*measured* region frame, below). In a video call it is active: keep controls clear of it.
-- Held tall, bars stay horizontal, so the toolbar sits at the top, in the top region ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=327)). Keep playback or call controls in your own bottom-region view, not in that toolbar.
+- Held tall, the inner display keeps the familiar horizontal bars ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=327)), so navigation bar items sit at the top, in the top region (*measured*, gallery list-detail screen). Keep playback or call controls in your own bottom-region view, not in a bar.
 - Recipe: [Tabletop media](#recipe-tabletop-media).
 
 ### Tent (standing on its edges)
 
-- Apple only draws it and mentions it once, as a reason to support landscape on the outer display. It gives no other design guidance, Device Hub has no tent button, and no API reports it.
+- Apple's material shows the tent only as an illustration: a drawing among the six poses, plus passing mentions ("standing on its edges", "set the phone down like a tent"). The only guidance attached is to support landscape on the outer display ([111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=215)). Device Hub has no tent button, and no API reports it.
 - Make sure your closed layout works held sideways (compact width, compact height). Build nothing tent-specific.
 - Test it as Closed plus a rotation in Device Hub.
 

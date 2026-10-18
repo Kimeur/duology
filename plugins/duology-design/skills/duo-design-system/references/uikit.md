@@ -98,7 +98,9 @@ func makeGlassControls() -> (UIButton, UIVisualEffectView) {
 }
 ```
 
-`containerConcentric` makes a corner concentric with the view that contains it ([UICornerConfiguration](https://developer.apple.com/documentation/uikit/uicornerconfiguration-swift.struct)), here the content view with its fixed `cardRadius`. We typechecked this cell but did not render it.
+`containerConcentric` makes a corner concentric with the view that contains it ([UICornerConfiguration](https://developer.apple.com/documentation/uikit/uicornerconfiguration-swift.struct)), here the content view with its fixed `cardRadius`. *Measured* headless on the iOS 27.1 simulator runtime with `effectiveRadius(corner:)` (iOS 26), the cell placed in a window: the content view resolved to 24 pt and the thumbnail, inset 16 pt, to 8 pt on every corner (concentric at the top leading corner, the minimum elsewhere). Outside a window the same thumbnail's top leading corner read 32 pt, so check radii only in a window.
+
+The play button needs its two constraints. *Measured* the same way: a symbol-only `prominentGlass()` button reported an intrinsic size of 34.3 × 34.3 pt, and laid out at 44 × 44 pt with the constraints.
 
 ## Grids
 

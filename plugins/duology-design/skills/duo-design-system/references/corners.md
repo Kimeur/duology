@@ -25,14 +25,17 @@ A concentric corner far from its container's corner gets a radius of 0. A minimu
 | 16 pt, no container shape declared | none | 0 pt (Apple's doc says `nil` here; in our offscreen render it was 0) |
 | 16 pt, a 64 pt thumbnail at the leading edge of a compact `DuoCard` | 24 pt | 8 pt leading corners, 0 pt trailing corners |
 | 16 pt, under `.background(_:in:)` with no `containerShape` inside it | 24 pt | `nil` |
+| 16 pt, `.background(_:in:)` first, then `.containerShape(_:)` | 24 pt | `nil` |
+| 20 pt, in a regular `DuoCard` built with an iOS 17 deployment target and a plain `.containerShape(_:)` | 28 pt | `nil` |
+| 20 pt, the same card using `duoContainerShape(_:)` | 28 pt | 8 pt on all four corners |
 
-We also checked the drawn shape, pixel by pixel. A `ConcentricRectangle(corners: .concentric(minimum: .fixed(8)))` inset 16 pt in a 48 pt container drew the same corner as a fixed 32 pt radius, whether we used it as a view, as the shape of `.background(_:in:)` or through `.clipShape(.rect(corners:))`. With no container it drew the 8 pt minimum. Under a parent's `.background(_:in: .rect(cornerRadius: 48))` alone it also drew 32 pt, although `concentricCornerRadii` read `nil` there. So apply `.containerShape(_:)` before `.background(_:in:)` in the modifier chain, as `DuoCard` does, and both APIs agree.
+We also checked the drawn shape, pixel by pixel. A `ConcentricRectangle(corners: .concentric(minimum: .fixed(8)))` inset 16 pt in a 48 pt container drew the same corner as a fixed 32 pt radius, whether we used it as a view, as the shape of `.background(_:in:)` or through `.clipShape(.rect(corners:))`. With no container it drew the 8 pt minimum. Under a parent's `.background(_:in: .rect(cornerRadius: 48))` alone it also drew 32 pt, although `concentricCornerRadii` read `nil` there. So apply `.containerShape(_:)` before `.background(_:in:)` in the modifier chain, as `DuoCard` does through `duoContainerShape(_:)`, and both APIs agree.
 
 ## Rules
 
 1. Anything that touches or nearly touches a display edge (a bottom panel, a full-width sheet-like card, a floating toolbar) uses `ConcentricRectangle` or `.rect(corners: .concentric(minimum:))` for the corners near that edge.
 2. Never hard-code a display corner radius. The two displays differ, and other iPhones differ again.
-3. Declare the shape of every custom rounded container with `.containerShape(_:)`, before any `.background(_:in:)` on it, so concentric children inside it can resolve. System sheets, popovers and the window already provide one ([ConcentricRectangle](https://developer.apple.com/documentation/swiftui/concentricrectangle)).
+3. Declare the shape of every custom rounded container with `.containerShape(_:)`, before any `.background(_:in:)` on it, so concentric children inside it can resolve. System sheets, popovers and the window already provide one ([ConcentricRectangle](https://developer.apple.com/documentation/swiftui/concentricrectangle)). If the app deploys below iOS 26, use `duoContainerShape(_:)` from [tokens.md](tokens.md); see the pitfall below.
 4. Controls are capsules. Near a screen edge on a phone, give a capsule button extra margin from the edge ([Get to know the new design system](https://developer.apple.com/videos/play/wwdc2025/356/?time=348)).
 5. Cards in scrolling content use a fixed radius (`tokens.cardRadius`). Their children use concentric corners against the card.
 6. Watch for corners that look pinched or flared, mostly in nested containers. The fix is usually a concentric inner shape ([Get to know the new design system](https://developer.apple.com/videos/play/wwdc2025/356/?time=319)).
@@ -168,6 +171,7 @@ UIKit: `view.cornerConfiguration = .corners(radius: .containerConcentric(minimum
 - **Concentric corners on cards in a long list.** Use a fixed radius for scrolling cards, so they look the same at every position. (Duology's choice; we have not measured how a scrolling concentric card behaves near the display corners.)
 - **No `containerShape` on a custom container.** Children have nothing to be concentric with.
 - **`containerShape` after `.background(_:in:)`.** `GeometryProxy.concentricCornerRadii` then read `nil` in our test. Apply `.containerShape(_:)` first, then the background.
+- **A plain `.containerShape(_:)` in an app that deploys below iOS 26.** `containerShape` has two overloads: an iOS 15 one for any `InsettableShape` and an iOS 26 one for `RoundedRectangularShape`. Outside an `if #available(iOS 26.0, *)` check the compiler can only pick the iOS 15 one. Drawn `ConcentricRectangle` children still matched the corner in our renders, but `concentricCornerRadii` read `nil`. `duoContainerShape(_:)` puts the call inside the check, so both agree.
 - **A 24 pt card with 20 pt padding and an 8 pt child.** The child looks flared. Keep `cardRadius = cardPadding + innerRadius`.
 
 ## Test it

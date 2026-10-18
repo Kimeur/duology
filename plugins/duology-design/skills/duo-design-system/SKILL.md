@@ -19,7 +19,7 @@ Labels: *measured* means we ran it on the iOS 27.1 simulator runtime (offscreen 
 1. Key every token to the size class or to the view's own space. Never to the device, the display, the idiom, the orientation or a screen size. Apple warns against breakpoints and metrics tied to one screen ([111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=230)).
 2. Keep one type scale. System text styles, the same on both displays; the inner display shows more, not bigger.
 3. Use the system margins, per side. They differ next to a vertical bar ([111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=453)).
-4. Use even column counts. When the phone is partly folded, the fold's frame is the middle gutter and the outer margins stay ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=350)).
+4. Use even column counts whenever a fold crosses the grid, active or not ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=456)). Partly folded, the fold's frame is the middle gutter and the outer margins stay ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=350)).
 5. Put Liquid Glass on controls only, and sparingly. Regular by default; clear only over media, with dimming ([HIG, Materials](https://developer.apple.com/design/human-interface-guidelines/materials#Liquid-Glass)).
 6. Make corners near a display edge or inside a container concentric. Never hard-code a display radius ([111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=258)).
 7. Give everything people tap a 44 × 44 pt hit region, in every pane and half ([HIG, Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons)).
@@ -33,7 +33,7 @@ Labels: *measured* means we ran it on the iOS 27.1 simulator runtime (offscreen 
 | Window, portrait or held wide | 466 × 678 pt (*derived*) | 951 × 669 pt (*measured*) |
 | Safe area | 382 × 644 pt (*measured*) | 867 × 635 pt (*measured*, bar on the right) |
 | Layout columns | 4 | 8 |
-| Gutter | 12 pt | 16 pt; at the fold, the fold's frame (about 40 pt, *measured*) |
+| Gutter | 12 pt | 16 pt; partly folded, the fold's frame in the middle (40 pt, *measured*) |
 | Margins | system: 16 to 20 pt on iPhone ([doc](https://developer.apple.com/documentation/swiftui/contentmarginguide/container)); not measured on Duo | same, and asymmetric next to the vertical bar |
 | Card padding, radius | 16 pt, 24 pt | 20 pt, 28 pt |
 | Section spacing | 24 pt | 32 pt |
@@ -156,7 +156,7 @@ Every value, its source and how to change it safely: [references/tokens.md](refe
 - Spacing comes from `DuoSpace`: steps of 4 pt. Apple's padding advice (about 12 pt around controls with a bezel, about 24 pt around those without) sits on it ([HIG, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Mobility)).
 - Margins come from the system: `.duoContainerMargins()` uses `contentMargins(for: .container)` on iOS 27.1, which can differ on each side next to a vertical bar.
 - Gutters: `tokens.gutter`, 12 pt compact and 16 pt regular (Duology default).
-- The fold: flat, the middle gutter is a normal gutter. Partly folded, it becomes the fold's frame, which includes the system's margin on each side of the curve (*measured* in `duo-layout`: 40 pt flat; about 40 pt in a book-pose screenshot). Apple's Fitness example keeps the outer margins and widens only the middle ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=350)).
+- The fold: flat, the middle gutter is a normal gutter. Partly folded, it becomes the fold's frame, which includes the system's margin on each side of the curve (*measured*: 40 pt flat in `duo-layout`, and 40 pt partly folded in the gallery app's region overlay). Apple's Fitness example keeps the outer margins and widens only the middle ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=350)).
 
 ## 4. Even-column grids
 
@@ -213,6 +213,7 @@ Full controls, clear glass with dimming, Reduce Transparency and UIKit: [referen
 
 - Near a display edge, or nested in a rounded container: `ConcentricRectangle` or `.rect(corners: .concentric(minimum: .fixed(DuoTokens.innerRadius)))`. The same code follows the outer display's corners and the inner display's.
 - Declare custom containers with `.containerShape(_:)`. Apply it before any `.background(_:in:)` on the same view; the other order made `concentricCornerRadii` read `nil` in our test.
+- In an app that deploys below iOS 26, call it inside `if #available(iOS 26.0, *)`, as `duoContainerShape(_:)` does. Outside that check the compiler picks the iOS 15 overload, and `concentricCornerRadii` read `nil` (*measured*).
 - `cardRadius = cardPadding + innerRadius`, so the first nested element lands on 8 pt. *Measured:* a child inset 16 pt in a 24 pt container resolves to 8 pt.
 - Controls are capsules; near a phone's edge, give them extra margin ([WWDC25 356](https://developer.apple.com/videos/play/wwdc2025/356/?time=348)).
 
@@ -224,6 +225,7 @@ Code, measured radii and UIKit `cornerConfiguration`: [references/corners.md](re
 - Keep about 12 pt around controls with a bezel and about 24 pt around those without ([HIG, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Mobility)).
 - In small halves (closed and split, about 382 × 321 pt each, *measured* in `duo-shared-screen`), drop labels and spacing before you shrink a target.
 - Keep targets out of the fold's frame when the phone is partly open.
+- *Measured* offscreen: a symbol-only `Button` was 23 × 20 pt and a symbol-only `.glassProminent` circle 29 × 30 pt until we added `duoTouchTarget()` (then 44 × 44 and 58 × 58 pt). Never trust a style to reach 44 pt on its own.
 
 ```swift
 Button { isFavorite.toggle() } label: {
@@ -252,7 +254,7 @@ The token module builds for iOS 17. Glass, `ConcentricRectangle` and `scrollEdge
 
 1. In Device Hub, check Closed, Open and Partially Open, held wide and held tall, and Split View on both sides. `simctl` can't change the pose.
 2. Text sizes: Large, xxxLarge and AX5 on the closed outer display first (`xcrun simctl ui <device> content_size accessibility-extra-extra-extra-large`; set it back afterwards on a shared simulator).
-3. Light and dark (`xcrun simctl ui <device> appearance dark`), Increase Contrast (`increase_contrast enabled`), and Reduce Transparency in Settings, one at a time and together.
+3. Light and dark (`xcrun simctl ui <device> appearance dark`), Increase Contrast (`increase_contrast enabled`), and Reduce Transparency in Settings, one at a time and together. Put each setting back when you finish.
 4. Measure hit regions and the middle gutter on screenshots: `xcrun simctl io booted screenshot --display=primary` (outer) and `--display=primary-1` (inner).
 5. Run `duo-design-review`'s checklist, rules R5 (even grids) and R13 (touch targets) at least.
 

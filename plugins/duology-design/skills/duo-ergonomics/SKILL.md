@@ -1,6 +1,6 @@
 ---
 name: duo-ergonomics
-description: "Puts controls where hands can reach them on iPhone Duo, Apple's foldable iPhone: one hand on the closed phone, two hands on the open display, the book grip, and hands-free on a table. Use it when you decide where a primary action, a floating button, player controls or a custom control strip goes; when buttons sit at the top centre of the open display, on the fold or out of thumb reach; when you design for left-handed people or right-to-left languages; or when touch targets are small. Covers why bars move to the side edge, toolbarVerticalEdge and verticalBarEdge (leading in right-to-left), a ThumbCorner modifier for floating controls, an in-app hand preference, ArrangementView with the overlay style to put controls in the bottom half, reservedRegions(kind: .division) to keep targets off the fold, contentMargins(for: .container), and 44 pt hit regions with frame(minWidth:minHeight:), contentShape and controlSize."
+description: "Puts controls where hands can reach them on iPhone Duo, Apple's foldable iPhone: one-handed on the closed phone, two hands on the open display, the book grip, and hands-free on a table. Use it when you decide where a primary action, a floating button, player controls or a custom control strip goes; when buttons sit at the top centre of the open display, on the fold or out of thumb reach; when you check thumb zones or reachability; when you design for left-handed people or right-to-left languages; or when touch targets are small. Covers why bars move to the side edge, toolbarVerticalEdge and verticalBarEdge (leading in right-to-left), visibilityPriority for bottom-bar actions, a ThumbCorner modifier for floating controls, an in-app hand preference, ArrangementView with the overlay style to put controls in the bottom half, reservedRegions(kind: .division) to keep targets off the fold, and 44 pt hit regions with frame(minWidth:minHeight:), contentShape and controlSize."
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
   sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
@@ -12,9 +12,7 @@ iPhone Duo changes shape in people's hands. Closed, it is a phone you hold in on
 
 Load other skills for neighbouring work: `duo-navigation` (bar order, overflow, sheets), `duo-layout` (reserved regions, safe areas, margins), `duo-patterns` (layouts and displacement), `duo-design-review` (rules R4, R7 and R13 check this skill's advice on screenshots).
 
-Labels: a link means Apple says it. *Measured* means we ran it on the iPhone Duo simulator (iOS 27.1, closed, portrait, 18 Oct 2026; details in [references/measured.md](references/measured.md)). *Derived* means arithmetic on Apple's numbers. *Judgement* means Duology's design advice, not Apple's. *Unverified* means we could not confirm it.
-
-Apple never says "tabletop" or "book grip". Like `duo-design-review`, Duology says *book* for Apple's "partially folded, like a book" (fold top to bottom) and *tabletop* for "seated on a table like a laptop" (fold side to side, the lower half flat on the table).
+Labels: a link means Apple says it. *Measured* means we ran it on the iPhone Duo simulator (iOS 27.1, closed, portrait, 18 Oct 2026; details in [references/measured.md](references/measured.md)). *Derived* means arithmetic on Apple's numbers. *Judgement* means Duology's design advice, not Apple's. *Unverified* means we could not confirm it. Apple never says "tabletop" or "book grip". Like `duo-design-review`, Duology says *book* for Apple's "partially folded, like a book" (fold top to bottom) and *tabletop* for "seated on a table like a laptop" (fold side to side, the lower half flat on the table).
 
 ## How people hold iPhone Duo
 
@@ -23,11 +21,21 @@ Apple never says "tabletop" or "book grip". Like `duo-design-review`, Duology sa
 | One hand, closed | Outer display | One hand; the thumb works from the lower side edge | Closed, it fits comfortably in the hand. Controls move to the right side to save vertical space and so the right thumb reaches them ([talk 111466, 0:28 and 1:10](https://developer.apple.com/videos/play/tech-talks/111466/?time=70)) |
 | Two hands, open | Inner display, held wide, flat | A hand on each side edge | Controls stay on the side, within easy reach ([talk 111466, 1:51](https://developer.apple.com/videos/play/tech-talks/111466/?time=111), [HIG, Vertical controls](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls)) |
 | Book grip | Inner display, held wide, partly folded | A hand on each half, at the outer edges | Buttons move off the curve to the sides, where they are easier to target ([talk 111466, 2:09](https://developer.apple.com/videos/play/tech-talks/111466/?time=129)) |
-| Tabletop, hands-free | Inner display, held tall, partly folded, on a table | None; one finger taps | Media at the top, tappable controls on the stable bottom half ([talk 111466, 4:43](https://developer.apple.com/videos/play/tech-talks/111466/?time=283), [talk 111463, 4:23](https://developer.apple.com/videos/play/tech-talks/111463/?time=263)) |
+| Tabletop, hands-free | Inner display, held tall, partly folded, on a table | None; one finger taps | Media at the top, tappable controls on the stable bottom half ([talk 111466, 4:48](https://developer.apple.com/videos/play/tech-talks/111466/?time=288), [talk 111463, 4:23](https://developer.apple.com/videos/play/tech-talks/111463/?time=263)) |
 | Two hands, open tall | Inner display, held tall, flat | Both hands, low on the sides | Horizontal bars come back, because there is room ([talk 111466, 5:27](https://developer.apple.com/videos/play/tech-talks/111466/?time=327)) |
 | Split View | Inner display, two apps side by side | A hand on each side edge | Each app puts its bar on its own outer edge, so the left app's controls are near the left thumb and away from the fold ([talk 111466, 3:07](https://developer.apple.com/videos/play/tech-talks/111466/?time=187)) |
 
-*Derived* from Apple's specs ([A2](https://github.com/Kimeur/duology/blob/main/reference/sources.md#a2)): the closed phone is 84.1 mm wide; open, it is 164.6 × 117.8 mm. The centre of the open display is about 82 mm from either side edge, as far as the whole closed phone is wide. *Judgement:* a thumb resting on a side edge does not reach the centre without changing grip.
+*Judgement:* the Hands column is Duology's reading. Apple says only that people hold an iPhone in one or both hands ([HIG, Designing for iOS](https://developer.apple.com/design/human-interface-guidelines/designing-for-ios)), and describes poses, not hands. *Derived* from Apple's specs ([A2](https://github.com/Kimeur/duology/blob/main/reference/sources.md#a2)): the closed phone is 84.1 mm wide; open, it is 164.6 × 117.8 mm. The centre of the open display is about 82 mm from either side edge, as far as the whole closed phone is wide. *Judgement:* a thumb resting on a side edge does not reach the centre without changing grip.
+
+## Why the bars sit on the side
+
+Apple gives these reasons ([HIG, Vertical controls](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls), [talk 111462, 0:41 to 1:02](https://developer.apple.com/videos/play/tech-talks/111462/?time=41), [talk 111466, 1:10](https://developer.apple.com/videos/play/tech-talks/111466/?time=70)):
+- The outer display is wider and shorter than other iPhones. Bars on the side leave more height for content.
+- On the side, controls are easier to reach; closed, the right thumb reaches them.
+- They stay on the same edge when the phone opens held wide, so nothing jumps between displays.
+- They line up with the hardware: same spot next to the outer camera, same edge in right-to-left languages.
+
+So the side edge is the reach zone the system already gives you. *Judgement:* put your own controls near it, not across from it. Held tall, the inner display keeps top and bottom bars ([talk 111466, 5:27](https://developer.apple.com/videos/play/tech-talks/111466/?time=327)).
 
 ## Where thumbs reach
 
@@ -44,9 +52,9 @@ Apple's general iPhone guidance: controls in the middle or bottom of the display
 ## Rules
 
 1. **Put actions in system bars.** On the outer display, and on the inner display held wide, the system gathers them on the side edge, where Apple says they are easy to reach ([talk 111462, 0:47](https://developer.apple.com/videos/play/tech-talks/111462/?time=47)). A hand-built bar never moves there; see `duo-navigation`.
-2. **Keep Apple's order, then rank for the thumb.** Back or Close at the top of the bar, the prominent action next ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls)). Raise frequent items with `.visibilityPriority(.high)` so they don't overflow. *Judgement:* put actions people repeat many times in a row in `.bottomBar`; they land at the foot of the vertical bar, closest to a one-handed thumb (*measured*: Share and Delete at the bar's foot, closed).
+2. **Keep Apple's order, then rank for the thumb.** Back or Close at the top of the bar, the prominent action next ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls)). *Judgement:* put actions people repeat many times in a row in `.bottomBar`; they land at the foot of the vertical bar, closest to a one-handed thumb (*measured*: Share and Delete at the bar's foot, closed). Items overflow from the bottom up by default, so give that group `.visibilityPriority(.high)` or it is the first to vanish ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls), [talk 111462, 13:23](https://developer.apple.com/videos/play/tech-talks/111462/?time=803)).
 3. **Don't move or mirror the bar for a hand.** Apple asks you, in general, not to override the default placement ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls)); its few exceptions are in `duo-navigation`, and handedness isn't one. The bar stays on the same hardware edge for left-handed people and in right-to-left languages.
-4. **Float at most one control, in the bottom corner on the thumb side.** Use `ThumbCorner` below. It follows the bar's edge and an in-app hand preference. It never lands on the fold, because it hugs a side edge.
+4. **Float at most one control, in the bottom corner on the thumb side** (*judgement*). Use `ThumbCorner` below. It follows the bar's edge and an in-app hand preference. It never lands on the fold, because it hugs a side edge.
 5. **Keep the top centre of the open display for content.** Titles, media and status go there. Frequent buttons don't (*judgement*, from the reach table).
 6. **Nothing interactive on the fold.** Apple found buttons hard to tap there. Sheets, alerts, menus and toolbar buttons move aside on their own; move your own controls with displacement ([talk 111466, 9:28](https://developer.apple.com/videos/play/tech-talks/111466/?time=568); `duo-patterns`). Scrolling content may cross the fold.
 7. **Tabletop: a layout of its own is optional; if you make one, controls go in the bottom half, with the same controls as every other pose** ([talk 111466, 4:24 to 5:03](https://developer.apple.com/videos/play/tech-talks/111466/?time=264)). If one doesn't fit the bottom half, put it in a menu; don't drop it. Use an overlay `ArrangementView`; see section 3.
@@ -173,18 +181,10 @@ struct MapScreen: View {
 }
 ```
 
-*Measured* on the closed simulator (content area 382 pt wide):
-
-| Setting | `toolbarVerticalEdge` | Bar | Button |
-|---|---|---|---|
-| Left to right, automatic | `.trailing` | right edge | bottom right, x 310–366, beside the bar's foot |
-| Right to left (forced), automatic | `.leading` | still the right edge | still bottom right |
-| Left to right, `.left` | `.trailing` | right edge | bottom left, x 16–72 |
-
+- *Measured*, closed: with `.automatic` the button sat bottom right, beside the bar's foot, in both directions. Right to left, `toolbarVerticalEdge` read `.leading` and the bar stayed on the right. `.left` moved it bottom left. Frames: [references/measured.md](references/measured.md).
+- Apple's own `toolbarVerticalEdge` example aligns a floating palette with the bar's edge, and `.automatic` does the same. Where the system never places a vertical bar, the value is `nil` ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/toolbarverticaledge)) and the button goes trailing.
 - Why 16 pt: *measured*, the container margin next to the bar is 0 pt and the far side keeps 20 pt. Without padding the button touches the bar's items.
-- A wide tool palette is different: `duo-navigation` keeps it on the side away from the bar so it doesn't crowd the bar's items. Both stay in the bottom band.
-- Where no vertical bar exists (inner display held tall), `toolbarVerticalEdge` is `nil` ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/toolbarverticaledge)) and the button goes trailing. *Unverified* on the open phone; we measured only the closed phone.
-- Tabletop and book need nothing extra: the button stays at the bottom and against a side edge, so it is near the person and off the fold (*judgement*, not measured folded).
+- Tabletop and book need nothing extra: the button stays at the bottom and against a side edge, so it is near the person and off the fold (*judgement*).
 
 ## 3. Tabletop and book: controls go where the hands are
 

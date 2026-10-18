@@ -14,7 +14,7 @@ Apple's sources: [Registering a camera capture accessory on iPhone Duo](https://
 | Touch | Yes. Keep it to one small task, such as tap to focus. | No |
 | Scene role | `UISceneSession.Role.windowCameraCaptureAccessory` (iOS 27.1), set by the system | Apple doesn't say |
 
-Both are unavailable on macOS, Mac Catalyst, tvOS, watchOS and visionOS in the SDK. The external accessory does not use the outer display; don't reach for it on iPhone Duo.
+Both are unavailable on macOS, Mac Catalyst, tvOS, watchOS and visionOS in the SDK. Apple's page for the external accessory names only a connected display and AirPlay. Use it for a TV or a monitor, not to reach the outer display.
 
 ## When the camera capture accessory shows
 
@@ -69,24 +69,29 @@ struct CameraPreview: View {
 
 ### Deploying below iOS 27.1
 
-`sceneAccessory(content:)` is iOS 27.0 and `CameraCaptureAccessory` is iOS 27.1. Put both behind one check:
+`sceneAccessory(content:)` is iOS 27.0 and `CameraCaptureAccessory` is iOS 27.1. Put both behind one check. If the target also builds for Mac Catalyst, add a compile-time guard: both are marked unavailable there, so `#available` alone doesn't build. The Xcode 27.1 release notes list the same kind of Catalyst build errors for iOS 27.1 APIs and suggest this guard ([release notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27_1-release-notes)).
 
 ```swift
 import SwiftUI
 
 extension View {
     /// Shows the subject view on the outer display while this camera view captures.
-    /// Does nothing before iOS 27.1.
+    /// Does nothing before iOS 27.1 or on Mac Catalyst.
     @ViewBuilder
     func subjectAccessory(_ model: ShootModel) -> some View {
+        #if !targetEnvironment(macCatalyst)
         if #available(iOS 27.1, *) {
             modifier(SubjectAccessory(model: model))
         } else {
             self
         }
+        #else
+        self
+        #endif
     }
 }
 
+#if !targetEnvironment(macCatalyst)
 @available(iOS 27.1, *)
 private struct SubjectAccessory: ViewModifier {
     @Bindable var model: ShootModel
@@ -100,6 +105,7 @@ private struct SubjectAccessory: ViewModifier {
         }
     }
 }
+#endif
 
 struct CameraScreen: View {
     @State private var model = ShootModel()
@@ -120,7 +126,7 @@ struct CameraScreen: View {
 ```
 
 - Attach it to the camera view. Attached at the app root, it would claim the outer display on screens that don't capture.
-- Watch the content's lifecycle with `onAppear`, `onDisappear` and `scenePhase` inside the accessory view, as Apple's page suggests.
+- Watch the content's lifecycle with `onAppear`, `onDisappear` and `scenePhase` inside the accessory view, as Apple's [sceneAccessory(content:)](https://developer.apple.com/documentation/swiftui/view/sceneaccessory(content:)) page suggests.
 
 ### Both accessories at once
 
@@ -147,7 +153,7 @@ struct PresenterCamera: View {
 
 ## UIKit
 
-Register on the view controller that shows the camera, keep the registration, and read `isAvailable` in `updateProperties()` (iOS 26). Apple's guide says availability supports observation, so UIKit calls `updateProperties()` again when it changes.
+Register on the view controller that shows the camera, keep the registration, and read `isAvailable` in `updateProperties()` (iOS 26). Apple's guide says availability supports observation, and `UISceneAccessoryRegistration.h` says it is observable in `updateProperties` and `layoutSubviews`. So UIKit calls `updateProperties()` again when it changes. Mac Catalyst targets need the same `#if !targetEnvironment(macCatalyst)` guard as above around this code.
 
 ```swift
 import UIKit

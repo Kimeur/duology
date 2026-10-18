@@ -43,7 +43,7 @@ Use clear glass only when all three hold: the element sits over media, a dimming
 
 ## Accessibility settings
 
-System glass adapts on its own: Reduce Transparency makes it frostier, Increase Contrast makes elements mostly black or white with a border, and Reduce Motion tones down its effects ([Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/?time=1102)). People can also choose a preferred look for Liquid Glass in Settings ([HIG, Materials](https://developer.apple.com/design/human-interface-guidelines/materials#Liquid-Glass)). Check custom glass with each setting on. A custom translucent surface that is not glass should turn opaque when `accessibilityReduceTransparency` is true ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/accessibilityreducetransparency)).
+System glass adapts on its own: Reduce Transparency makes it frostier, Increase Contrast makes elements mostly black or white with a border, and Reduce Motion tones down its effects ([Meet Liquid Glass](https://developer.apple.com/videos/play/wwdc2025/219/?time=1102)). People can also pick how Liquid Glass looks in the Settings app ([HIG, Materials](https://developer.apple.com/design/human-interface-guidelines/materials#Liquid-Glass)). Check custom glass with each setting on. A custom translucent surface that is not glass should turn opaque when `accessibilityReduceTransparency` is true ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/accessibilityreducetransparency)).
 
 ## Code
 

@@ -84,7 +84,7 @@ struct ComposeView: View {
 
 ### When you need to know if it failed
 
-`openWindow` reports nothing back. If your flow depends on the result, call UIKit's request from SwiftUI and fall back in the error handler (next section). *Measured:* a bare `UISceneSessionActivationRequest()` from a SwiftUI app opened a new window of the first `WindowGroup`.
+`openWindow` reports nothing back. If your flow depends on the result, call UIKit's request from SwiftUI and fall back in the error handler (next section). *Measured:* a bare `UISceneSessionActivationRequest()` from a SwiftUI app with one `WindowGroup` opened a new window of that group. *Unverified:* which group it picks when the app has several. Test that on the simulator before you rely on it.
 
 ## UIKit
 
@@ -207,6 +207,37 @@ func makeActions(_ activity: NSUserActivity) -> [UIAction] {
 ```
 
 *Measured:* the commented form built with one warning, then threw `NSInternalInconsistencyException` at launch: "Initializer is unavailable. Please use init(title:image:identifier:discoverabilityTitle:attributes:alternate:_:)". The explicit `return` form built a real `UIWindowSceneActivationAction` with no warning. Treat that warning as an error in review.
+
+### Ask before a window with unsaved work closes
+
+iOS 27.0 adds [closureConfirmation](https://developer.apple.com/documentation/uikit/uiwindowscene/closureconfirmation) on `UIWindowScene`. When it is set, the system shows a confirmation before a close that people start themselves. By default the dialog has a Close and a Cancel button. A `.cancel` action you pass replaces Cancel, and a `.destructive` one replaces Close ([UISceneClosureConfirmation](https://developer.apple.com/documentation/uikit/uisceneclosureconfirmation)).
+
+```swift
+import UIKit
+
+final class DraftSceneDelegate: UIResponder, UIWindowSceneDelegate {
+    var window: UIWindow?
+
+    /// Call when the draft in this window gains or loses unsaved changes.
+    func draftDidChange(hasUnsavedChanges: Bool, in windowScene: UIWindowScene) {
+        guard #available(iOS 27.0, *) else { return }
+        if hasUnsavedChanges {
+            let keep = UIAlertAction(title: "Keep Editing", style: .cancel)
+            windowScene.closureConfirmation = UISceneClosureConfirmation(
+                title: "Close this draft?",
+                message: "Your changes in this window are not saved.",
+                actions: [keep])                     // the system keeps its Close button
+        } else {
+            windowScene.closureConfirmation = nil
+        }
+    }
+}
+```
+
+- Set it only while there is something to lose, and clear it after saving.
+- Still save on `.background`. A confirmation doesn't cover the system ending a background app.
+- SwiftUI has no matching modifier in the iOS 27.1 SDK.
+- *Unverified:* how people close one window on iPhone Duo and whether this dialog appears there. We didn't close a window in our runs.
 
 ## Split View
 

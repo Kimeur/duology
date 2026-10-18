@@ -112,7 +112,7 @@ struct NoteDetail: View {
 }
 ```
 
-- `openWindow` has no error callback. Apple's page says SwiftUI ignores the call and logs when multiple windows aren't supported.
+- `openWindow` has no error callback. Where multiple windows aren't supported, SwiftUI ignores the call and logs an error ([supportsMultipleWindows](https://developer.apple.com/documentation/swiftui/environmentvalues/supportsmultiplewindows)).
 - *Measured*, closed and open: `openWindow(id:)` raised no error. The new window took the whole display (951 × 669 pt when open, not half), and the old one moved to the background, still connected. Split View comes from people dragging a window aside, not from your request. When the app later launched with two saved windows, the system showed a "2 Views Open" pill. That is why rule 2 matters: people may not find the old window again.
 - Apple says the outer display can't create new windows ([111464](https://developer.apple.com/videos/play/tech-talks/111464/?time=233)). Our simulator didn't refuse. Code for both. *Unverified:* what a real iPhone Duo does here.
 
@@ -173,7 +173,7 @@ A scene accessory is extra content you declare. The system decides if, when and 
 | Accessory | Where it shows | Interactive | Since |
 |---|---|---|---|
 | `CameraCaptureAccessory` / `UISceneAccessory.cameraCapture(sceneConfiguration:)` | The outer display, while your camera UI runs on the inner display | Yes, keep it minimal | iOS 27.1 |
-| `ExternalNonInteractiveAccessory` / `UISceneAccessory.externalNonInteractive(sceneConfiguration:)` | A connected or AirPlay display. Not the outer display. | No | iOS 27.0 |
+| `ExternalNonInteractiveAccessory` / `UISceneAccessory.externalNonInteractive(sceneConfiguration:)` | A connected or AirPlay display. Apple names no other. | No | iOS 27.0 |
 
 The camera capture accessory shows only when all of these hold ([111464](https://developer.apple.com/videos/play/tech-talks/111464/?time=314), [Apple's guide](https://developer.apple.com/documentation/avfoundation/registering-a-camera-capture-accessory-on-iphone-duo)): the phone is fully open, your app is in the foreground and full screen on the inner display, a capture session is running (Apple's [overview](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo) names the rear camera), and the view that registered it is on screen. It goes away when capture stops, the app leaves the foreground, the phone closes, or a deeper view registers its own.
 
@@ -229,7 +229,7 @@ struct CameraPreview: View {            // stand-in for your preview layer
 - Hand the accessory the same model object. A tap on the outer display then changes what the photographer sees, with no messages in between ([Apple's guide](https://developer.apple.com/documentation/avfoundation/registering-a-camera-capture-accessory-on-iphone-duo)).
 - Turn it off with `isEnabled`, not by removing it. Availability and enabled are separate: the system owns the first, you own the second. It's on by default.
 - *Measured*, no capture session (the simulator's known issue): open, availability became `true` and the system made a scene with role `windowCameraCaptureAccessory` on the outer screen (466 × 678 pt). Closing the phone set it to `false` and discarded that session; reopening made a new scene and new content views. Closed at launch, it stayed `false`. A second window in front made the first window's accessory unavailable.
-- Deploying below iOS 27.1: wrap the modifier in `if #available(iOS 27.1, *)`. Code, the UIKit version, both accessories at once and camera direction per display: [references/scene-accessories.md](references/scene-accessories.md).
+- Deploying below iOS 27.1: wrap the modifier in `if #available(iOS 27.1, *)`. If the target also builds for Mac Catalyst, wrap it in `#if !targetEnvironment(macCatalyst)` too: the accessory types don't exist there. Code, the UIKit version, both accessories at once and camera direction per display: [references/scene-accessories.md](references/scene-accessories.md).
 
 ## 5. State per window
 
@@ -246,7 +246,7 @@ Code for both frameworks, and cleaning up discarded windows: [references/restora
 
 ## 6. Scene lifecycle on fold and unfold
 
-Apple calls open and close a resize: content moves to the other display and the window changes size ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=277)). For a scene this means:
+Apple says opening and closing work like resizing the app in iPhone Mirroring ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=135)). For a scene this means it moves to the other screen and changes size:
 
 | Event | What to expect | Source |
 |---|---|---|
@@ -291,6 +291,7 @@ What the simulator can't tell you:
 - [ ] Existing windows come back through `UISceneSessionActivationRequest(session:)`, not duplicates.
 - [ ] The layout works at half the inner display, with bars on either edge (Split View on both sides).
 - [ ] The camera capture accessory is registered on the camera view, shares the capture model, has a toggle shown only while available, and carries no essential control.
+- [ ] Accessory code sits behind `#available(iOS 27.1, *)`, and behind `#if !targetEnvironment(macCatalyst)` when the target builds for Mac Catalyst.
 - [ ] Per-window state saves on `.background`; nothing tears down on `.inactive`.
 - [ ] No cached `UIScreen`; display links come from the window scene.
 - [ ] Accessory tested on a real iPhone Duo with capture running; inner-display windows tested in Device Hub.

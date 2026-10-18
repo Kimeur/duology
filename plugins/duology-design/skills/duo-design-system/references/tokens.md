@@ -127,6 +127,19 @@ extension View {
     func duoReadableWidth(_ tokens: DuoTokens) -> some View {
         frame(maxWidth: tokens.readableWidth).frame(maxWidth: .infinity)
     }
+
+    /// Declares a rounded container shape for concentric children.
+    /// Both branches read the same, but the compiler binds them to different
+    /// overloads. In an app that deploys below iOS 26, only the first branch
+    /// reaches the iOS 26 overload that `GeometryProxy.concentricCornerRadii` reads.
+    @ViewBuilder
+    func duoContainerShape(_ shape: RoundedRectangle) -> some View {
+        if #available(iOS 26.0, *) {
+            containerShape(shape)
+        } else {
+            containerShape(shape)
+        }
+    }
 }
 
 /// A content-layer card. Children can use `ConcentricRectangle` to match its corners.
@@ -135,12 +148,13 @@ struct DuoCard<Content: View>: View {
     @ViewBuilder var content: Content
 
     var body: some View {
+        let shape = RoundedRectangle(cornerRadius: tokens.cardRadius)
         content
             .padding(tokens.cardPadding)
             .frame(maxWidth: .infinity, alignment: .leading)
-            // containerShape before background(_:in:), or GeometryProxy radii read nil.
-            .containerShape(.rect(cornerRadius: tokens.cardRadius))
-            .background(DuoColor.card, in: .rect(cornerRadius: tokens.cardRadius))
+            // The container shape goes before background(_:in:), or radii read nil.
+            .duoContainerShape(shape)
+            .background(DuoColor.card, in: shape)
     }
 }
 ```

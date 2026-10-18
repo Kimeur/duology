@@ -46,14 +46,12 @@ final class FoldRegionsView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         let area = bounds.inset(by: safeAreaInsets)
-        let controlsSize = controlsView.systemLayoutSizeFitting(
-            CGSize(width: area.width, height: UIView.layoutFittingCompressedSize.height))
         guard let fold = reservedRegions(kind: .division, options: .includeInactive)
             .first(where: \.isActive)?.frame else {
             contentView.frame = bounds
-            controlsView.frame = CGRect(x: area.midX - controlsSize.width / 2,
-                                        y: area.maxY - controlsSize.height,
-                                        width: controlsSize.width, height: controlsSize.height)
+            let size = controlsSize(width: area.width)
+            controlsView.frame = CGRect(x: area.midX - size.width / 2, y: area.maxY - size.height,
+                                        width: size.width, height: size.height)
             return
         }
         let first: CGRect

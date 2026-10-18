@@ -160,7 +160,7 @@ enum WindowFiles {
 
 ## The lifecycle on fold and unfold
 
-Apple describes open and close as a resize: the window moves to the other display and changes size ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=277)). The UIKit header for `windowScene(_:didUpdateEffectiveGeometry:)` (iOS 26) says it is always called when a window scene moves between screens. Use that callback, or plain trait and size changes, to react. Read the screen from the scene when you need it.
+Apple says opening and closing the phone work like resizing the app in iPhone Mirroring ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=135)), and that the app still resizes on open and close even with `UIRequiresFullScreen` ([same talk](https://developer.apple.com/videos/play/tech-talks/111461/?time=277)). The UIKit header for `windowScene(_:didUpdateEffectiveGeometry:)` (iOS 26) says it is always called when a window scene moves between screens. Use that callback, or plain trait and size changes, to react. Read the screen from the scene when you need it.
 
 ```swift
 import UIKit

@@ -22,10 +22,10 @@ extension View {
     func auditTarget(_ name: String) -> some View {
         onGeometryChange(for: TargetReport.self) { proxy in
             let bounds = CGRect(origin: .zero, size: proxy.size)
-            // Default query: active folds only. Frames come in this view's own coordinates.
+            // Frames come in this view's own coordinates. Check isActive yourself (see Limits).
             let folds = proxy.reservedRegions(kind: .division)
             return TargetReport(size: proxy.size,
-                                touchesFold: folds.contains { $0.frame.intersects(bounds) })
+                                touchesFold: folds.contains { $0.isActive && $0.frame.intersects(bounds) })
         } action: { report in
             #if DEBUG
             if report.size.width < 44 || report.size.height < 44 {
@@ -77,6 +77,7 @@ TARGET centre: 103 x 34 pt, under 44 pt
 
 - The fold line is *unverified*. We could not change poses in this run, so we never saw a control on an active fold. The closed phone has no fold.
 - On the closed phone, the region query on a 382 × 562 pt view also returned the two camera and status bar regions in the bar strip, outside the view's frame. Apple's doc says the query returns regions that intersect the view. That is why the code tests `intersects(bounds)` itself instead of trusting a non-empty result.
+- Apple's doc also says the default query returns regions whether or not they are active. `duo-layout` measured the opposite on the open phone: inactive regions came back only with `.includeInactive` ([API index](https://github.com/Kimeur/duology/blob/main/reference/api-index.md#reserved-regions-and-margins) marks this unverified). The code tests `isActive` itself, so it is right either way.
 - The audit measures the view it is attached to. Attach it to the button, not to a stack around several buttons.
 - Remove the calls, or keep them inside `#if DEBUG`, before you ship. The geometry callback still runs in release builds.
 

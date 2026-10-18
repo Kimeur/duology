@@ -43,13 +43,9 @@
 
 <div align="center">
 <br />
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.png" />
-  <source media="(prefers-color-scheme: light)" srcset="docs/assets/hero-light.png" />
-  <img src="docs/assets/hero-light.png" alt="The gallery app's two-page screen on the iPhone Duo simulator: one page on the closed 5.4-inch outer display, two facing pages on the open 7.6-inch inner display" width="100%" />
-</picture>
+<a href="docs/assets/demo/duology-demo.mp4"><img src="docs/assets/demo/duology-demo.gif" alt="Demo: Claude Code runs duo-lint on an app built before iPhone Duo, fixes the four findings until duo-lint reports zero, then the gallery app is shown closed, open, half folded like a book and propped up in tabletop on the iPhone Duo simulator" width="100%" /></a>
 <br />
-<sub>Real screenshots of the <a href="samples/DuologyGallery">gallery app</a> on the iPhone Duo simulator (iOS 27.1), drawn at the same scale.</sub>
+<sub>25-second demo, silent. <a href="docs/assets/demo/duology-demo.mp4">Watch the MP4</a>. Lint output and screenshots are real.</sub>
 <br /><br />
 </div>
 
@@ -260,6 +256,18 @@ With `duology-ship` installed, Claude Code runs it as `duo-lint`. If you install
 </details>
 
 ## Layout patterns
+
+<div align="center">
+<br />
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/hero-dark.png" />
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/hero-light.png" />
+  <img src="docs/assets/hero-light.png" alt="The gallery app's two-page screen on the iPhone Duo simulator: one page on the closed 5.4-inch outer display, two facing pages on the open 7.6-inch inner display" width="100%" />
+</picture>
+<br />
+<sub>Real screenshots of the <a href="samples/DuologyGallery">gallery app</a> on the iPhone Duo simulator (iOS 27.1), drawn at the same scale.</sub>
+<br /><br />
+</div>
 
 Every pattern in `duo-patterns` comes with a SwiftUI recipe and a screen in the gallery app ([`samples/DuologyGallery`](samples/DuologyGallery)).
 

@@ -180,10 +180,14 @@ struct HingeZoomArtwork: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
-        image
-            .resizable()
-            .scaledToFill()
-            .scaleEffect(reduceMotion ? 1 : zoom)
+        // Color.clear takes the space offered; the image fills it and is clipped to it.
+        Color.clear
+            .overlay {
+                image
+                    .resizable()
+                    .scaledToFill()
+                    .scaleEffect(reduceMotion ? 1 : zoom)
+            }
             .clipped()
             .accessibilityHidden(true)
             .onHingeChange(isEnabled: !reduceMotion) { _, context in
@@ -204,17 +208,17 @@ Hinge input with an on-screen alternative, UIKit, and testing angles: [reference
 
 iOS 27.1 iPhone Duo simulator, read from the reserved regions with the gallery app's region overlay (16 and 18 October 2026). Frames are in a view that fills the window. Full detail: [`duo-patterns` two-page measurements](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/two-page.md#what-we-measured) and [references/measurements.md](references/measurements.md).
 
-| Pose | Window | `.division` region | Inner camera (`.occlusion`) |
+| Pose | Window | `.division` region | Camera (`.occlusion`, our reading) |
 |---|---|---|---|
-| Closed | 466 × 678 pt (derived) | none | the outer camera, always active |
-| Open, flat, held wide | 951 × 669 pt | inactive, 40 × 669 pt at (455, 0) | inactive, 58 × 37 pt, top of the trailing half |
-| Book | 951 × 669 pt | active, 40 × 669 pt at (455, 0) | inactive, 58 × 37 pt, top of the trailing half |
-| Tabletop | 669 × 951 pt | active, 669 × 40 pt at (0, 455) | inactive, 37 × 58 pt at (611, 677), right edge of the bottom half |
+| Closed | 466 × 678 pt | none | outer camera, active, 37 × 37 pt at (399, 29) |
+| Open, flat, held wide | 951 × 669 pt | inactive, 40 × 669 pt at (455, 0) | inner camera, inactive, 58 × 37 pt at (677, 21) |
+| Book | 951 × 669 pt | active, 40 × 669 pt at (455, 0) | inner camera, inactive, 58 × 37 pt at (677, 21) |
+| Tabletop | 669 × 951 pt | active, 669 × 40 pt at (0, 455) | inner camera, inactive, 37 × 58 pt at (611, 677): right edge, bottom half |
 
 - Folding flips `isActive`; the frame stays put. Read it with `.includeInactive` and a split lands in the same place flat and folded.
 - The 40 pt is a zero-width fold line plus 20 pt of margins on each side. Keep controls out of the whole frame.
 - The default query returned only active regions, and the first layout pass returned none. React with `onGeometryChange`; don't read once in `onAppear`.
-- Not yet measured: size classes and the hinge angle in book and tabletop, the closed window, and the fold width at other angles.
+- Not yet measured: size classes and the hinge angle in book and tabletop, and the fold width at other angles.
 
 ## UIKit
 

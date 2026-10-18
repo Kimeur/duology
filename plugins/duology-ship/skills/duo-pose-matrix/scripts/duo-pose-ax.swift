@@ -161,9 +161,12 @@ let buttons = findButtons(in: window)
 
 switch command {
 case "buttons":
+    // "value" and "selected" are reported as Device Hub sets them (often empty),
+    // so a newer Device Hub that marks the current pose shows up here.
     let list = knownLabels.compactMap { label -> [String: Any]? in
         guard let button = buttons[label] else { return nil }
-        return ["label": label, "enabled": text(button, kAXEnabledAttribute) != "0"]
+        return ["label": label, "enabled": text(button, kAXEnabledAttribute) != "0",
+                "value": text(button, kAXValueAttribute), "selected": text(button, kAXSelectedAttribute)]
     }
     var out: [String: Any] = ["trusted": true, "window": windowTitle, "match": match, "buttons": list]
     if buttons.isEmpty { out["otherButtons"] = otherButtonLabels(in: window) }

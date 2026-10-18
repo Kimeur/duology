@@ -18,7 +18,7 @@ What follows from it:
 
 - On rotation, layout you change inside the alongside block rides the system's animation. That is the classic UIKit pattern, and it still works.
 - On open and close, the same block runs with no animation. Your layout takes its new place at once, the same frame as the resize. That is a good default: see "Should open and close animate?" in [SKILL.md](../SKILL.md).
-- The trait change and the size transition don't arrive in a fixed order. In all three closes we logged, the `registerForTraitChanges(_:handler:)` handler for the horizontal size class ran 24 to 58 ms before `viewWillTransition(to:with:)`. In two of three opens it ran just after. Decide layout from the size you are handed, or from the trait collection when the trait handler runs. Never assume one comes first.
+- The trait change and the size transition don't arrive in a fixed order. In both closes we logged with a `registerForTraitChanges(_:handler:)` handler for the horizontal size class, it ran about 25 ms before `viewWillTransition(to:with:)`. In the two opens, it ran 2 ms after once and 19 ms before once. Decide layout from the size you are handed, or from the trait collection when the trait handler runs. Never assume one comes first.
 - A partial fold sends no size transition. Only the fold's reserved region changes.
 
 ## Join the system's animation
@@ -218,7 +218,7 @@ final class RecorderViewController: UIViewController {
 }
 ```
 
-- [`UIHingeInteraction`](https://developer.apple.com/documentation/uikit/uihingeinteraction) and [`reservedRegions(kind:options:)`](https://developer.apple.com/documentation/uikit/uiview/reservedregions(kind:options:)) are iOS 27.1. *Measured in SwiftUI:* the fold read as active about 1 s after Partially Open was pressed, once the hinge stopped at 127°. The UIKit timing is *unverified*.
+- [`UIHingeInteraction`](https://developer.apple.com/documentation/uikit/uihingeinteraction) and [`reservedRegions(kind:options:)`](https://developer.apple.com/documentation/uikit/uiview/reservedregions(kind:options:)) are iOS 27.1. *Measured in SwiftUI:* the fold read as active about 1 s after the hinge started to fold, once it stopped at 127°. The UIKit timing is *unverified*.
 - The hinge reports updates while it moves. [`setNeedsLayout()`](https://developer.apple.com/documentation/uikit/uiview/setneedslayout()) only marks the view; UIKit lays it out once in the next update cycle, and the frame check skips passes where the fold didn't move.
 - Keep the move small and keep the control's edge: bottom stays bottom (`duo-patterns`, displacement).
 

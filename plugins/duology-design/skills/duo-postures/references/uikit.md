@@ -68,9 +68,16 @@ final class FoldRegionsView: UIView {
             second = CGRect(x: area.minX, y: fold.maxY, width: area.width, height: area.maxY - fold.maxY)
         }
         contentView.frame = first
-        controlsView.frame = CGRect(x: second.midX - controlsSize.width / 2,
-                                    y: second.midY - controlsSize.height / 2,
-                                    width: controlsSize.width, height: controlsSize.height)
+        let size = controlsSize(width: second.width)
+        controlsView.frame = CGRect(x: second.midX - size.width / 2, y: second.midY - size.height / 2,
+                                    width: size.width, height: size.height)
+    }
+
+    /// The controls' own size, never wider than the space they get.
+    private func controlsSize(width: CGFloat) -> CGSize {
+        let size = controlsView.systemLayoutSizeFitting(
+            CGSize(width: width, height: UIView.layoutFittingCompressedSize.height))
+        return CGSize(width: min(size.width, width), height: size.height)
     }
 }
 ```

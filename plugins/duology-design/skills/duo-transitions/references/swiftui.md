@@ -19,7 +19,7 @@ Apple's model, from [WWDC23 Explore SwiftUI animation](https://developer.apple.c
 
 - Open, close and a quarter-turn rotation all reached SwiftUI with no animation. A probe with no opt-in took its new value in one step every time.
 - During a rotation, `body` ran inside UIKit's 0.3 s rotation animation (`UIView.inheritedAnimationDuration` read 0.3). No SwiftUI value interpolated anyway: in our probe, UIKit's animation context did not become a SwiftUI animation.
-- `.animation(.linear(duration: 0.5), value: horizontalSizeClass)` interpolated: 27 to 30 in-between values over 0.5 s. The first one came 60 to 80 ms after a real open or close, and 25 to 40 ms after a size-class flip made from code. That is simulator timing; a device will differ.
+- `.animation(.linear(duration: 0.5), value: horizontalSizeClass)` interpolated: 27 to 30 in-between values over 0.5 s. The first one came about 60 to 80 ms after a real open or close, and 25 to 40 ms after a size-class flip made from code. That is simulator timing; a device will differ.
 - Under that opt-in, `.transaction { $0.animation = nil }` on a leaf and `.animation(nil, value:)` both gave one step.
 - On open, the size class and the new size arrived in the same update. On close, the size class flipped 25 to 70 ms before the window shrank, in an update of its own. A spring started by the size class is still running when the size changes, and springs keep their velocity when the target moves ([WWDC23 Animate with springs](https://developer.apple.com/videos/play/wwdc2023/10158/?time=900)).
 
@@ -35,7 +35,8 @@ import SwiftUI
 struct AnimationProbe: ViewModifier, Animatable {
     let label: String
     var progress: Double
-    var animatableData: Double {
+    // nonisolated: Animatable isn't main-actor isolated, and Swift 6 mode checks that.
+    nonisolated var animatableData: Double {
         get { progress }
         set { progress = newValue }
     }
@@ -163,7 +164,7 @@ Playback state lives in a model above this view, as `duo-continuity` shows. The 
 
 ## Grid columns that move with the resize
 
-Read the column count from the size class in `body`. The count then changes in the same update as the size, and the tiles move to their new cells because `ForEach` gives them stable IDs.
+Read the column count from the size class in `body`. The count then changes in the same update as the size class, and the tiles move to their new cells because `ForEach` gives them stable IDs.
 
 ```swift
 import SwiftUI
@@ -178,7 +179,7 @@ struct PhotoGrid: View {
     let photos: [Photo]
 
     var body: some View {
-        // From the size class, in body: the count changes in the same update as the size.
+        // From the size class, in body: the count changes in the update that brings the size class.
         let columns = widthClass == .regular ? 4 : 2
         ScrollView {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: columns), spacing: 8) {
@@ -235,7 +236,7 @@ struct ShelfGrid: View {
 ```
 
 - *Measured:* on Open, the geometry action and the size-class update ran in the same millisecond in our probe. Whether a frame with the old count reaches the screen first is *unverified*; check a recording.
-- *Measured:* on Open, a full-width view's width went 382 → 466 → 951 → 867 pt in about 250 ms, as the safe area insets changed around the resize. The transform runs for each.
+- *Measured:* on Open, a full-width view's width went 382 → 466 → 951 → 867 pt within 50 to 250 ms, as the safe area insets changed around the resize. The transform runs for each.
 
 - Return the column count from the transform, not the width. The action then runs only when the count changes, and the animation key stays discrete.
 - `duo-patterns`' feed reflow doesn't animate. If you add an animation to it, key it on the column count it derives, not on `FeedGridInput`, which holds the width and would retarget the animation at every one of those passes.
@@ -287,7 +288,7 @@ struct ResizeMotion {
     let prefersCrossFade: Bool
 
     /// Layout changes: a spring, or nothing under Reduce Motion.
-    var layout: Animation? { reduceMotion ? nil : .smooth(duration: 0.35) }
+    var layout: Animation? { reduceMotion ? nil : .smooth(duration: 0.3) }
     /// Views that appear or disappear: a short fade under Reduce Motion, a fade and a slide otherwise.
     var insertion: AnyTransition {
         prefersCrossFade || reduceMotion
@@ -354,4 +355,5 @@ struct MessageBubble: View {
 
 - [WWDC23 Explore SwiftUI animation](https://developer.apple.com/videos/play/wwdc2023/10156/): updates, transactions, animatable attributes, scoped animations.
 - [WWDC21 Demystify SwiftUI](https://developer.apple.com/videos/play/wwdc2021/10022/): view identity, and why a branch creates new views.
+- [WWDC23 Animate with springs](https://developer.apple.com/videos/play/wwdc2023/10158/): springs keep their velocity when the target changes mid-flight.
 - Apple pages linked inline: `Transaction`, `animation(_:value:)`, `transaction(_:)`, `transaction(value:_:)`, `disablesAnimations`, `geometryGroup()`, `matchedGeometryEffect`, `ContentTransition`, `accessibilityPrefersCrossFadeTransitions`.

@@ -25,12 +25,12 @@ Labels: a link means Apple says it. *Measured* means we ran it on the iPhone Duo
 | Two hands, open tall | Inner display, held tall, flat | Both hands, low on the sides | Horizontal bars come back, because there is room ([talk 111466, 5:27](https://developer.apple.com/videos/play/tech-talks/111466/?time=327)) |
 | Split View | Inner display, two apps side by side | A hand on each side edge | Each app puts its bar on its own outer edge, so the left app's controls are near the left thumb and away from the fold ([talk 111466, 3:07](https://developer.apple.com/videos/play/tech-talks/111466/?time=187)) |
 
-*Judgement:* the Hands column is Duology's reading. Apple says only that people hold an iPhone in one or both hands ([HIG, Designing for iOS](https://developer.apple.com/design/human-interface-guidelines/designing-for-ios)), and describes poses, not hands. *Derived* from Apple's specs ([A2](https://github.com/Kimeur/duology/blob/main/reference/sources.md#a2)): the closed phone is 84.1 mm wide; open, it is 164.6 × 117.8 mm. The centre of the open display is about 82 mm from either side edge, as far as the whole closed phone is wide. *Judgement:* a thumb resting on a side edge does not reach the centre without changing grip.
+*Judgement:* the Hands column is Duology's reading. Apple names a thumb only for the closed phone and Split View; otherwise it says people hold an iPhone in one or both hands ([HIG, Designing for iOS](https://developer.apple.com/design/human-interface-guidelines/designing-for-ios)) and describes poses, not hands. *Derived* from Apple's specs ([A2](https://github.com/Kimeur/duology/blob/main/reference/sources.md#a2)): the closed phone is 84.1 mm wide; open, it is 164.6 × 117.8 mm. The centre of the open display is about 82 mm from either side edge, as far as the whole closed phone is wide. *Judgement:* a thumb resting on a side edge does not reach the centre without changing grip.
 
 ## Why the bars sit on the side
 
 Apple gives these reasons ([HIG, Vertical controls](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls), [talk 111462, 0:41 to 1:02](https://developer.apple.com/videos/play/tech-talks/111462/?time=41), [talk 111466, 1:10](https://developer.apple.com/videos/play/tech-talks/111466/?time=70)):
-- The outer display is wider and shorter than other iPhones. Bars on the side leave more height for content.
+- Closed, the screen is wide and short for an iPhone. Bars on the side leave more height for content.
 - On the side, controls are easier to reach; closed, the right thumb reaches them.
 - They stay on the same edge when the phone opens held wide, so nothing jumps between displays.
 - They line up with the hardware: same spot next to the outer camera, same edge in right-to-left languages.
@@ -181,7 +181,7 @@ struct MapScreen: View {
 }
 ```
 
-- *Measured*, closed: with `.automatic` the button sat bottom right, beside the bar's foot, in both directions. Right to left, `toolbarVerticalEdge` read `.leading` and the bar stayed on the right. `.left` moved it bottom left. Frames: [references/measured.md](references/measured.md).
+- *Measured*, closed only (open and folded are *unverified*): with `.automatic` the button sat bottom right, beside the bar's foot, in both directions. Right to left, `toolbarVerticalEdge` read `.leading` and the bar stayed on the right. `.left` moved it bottom left. Frames: [references/measured.md](references/measured.md).
 - Apple's own `toolbarVerticalEdge` example aligns a floating palette with the bar's edge, and `.automatic` does the same. Where the system never places a vertical bar, the value is `nil` ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/toolbarverticaledge)) and the button goes trailing.
 - Why 16 pt: *measured*, the container margin next to the bar is 0 pt and the far side keeps 20 pt. Without padding the button touches the bar's items.
 - Tabletop and book need nothing extra: the button stays at the bottom and against a side edge, so it is near the person and off the fold (*judgement*).
@@ -231,7 +231,7 @@ struct PlayerControls: View {
 ```
 
 - *Measured*, closed: the primary filled the whole content area, and the bottom alignment kept the controls at the bottom centre. Without it, `duo-patterns` measured a short primary at the top edge, out of thumb reach.
-- `overlayArrangementEdge(_:)` picks the side the primary takes when the arrangement goes side by side ([doc](https://developer.apple.com/documentation/swiftui/view/overlayarrangementedge(_:))). Pinning it to the bar's edge keeps controls on the bar's half in right-to-left languages too. That choice is *judgement*, and *unverified* folded: we could not change poses in this run.
+- `overlayArrangementEdge(_:)` picks the side the primary takes when the arrangement goes side by side ([doc](https://developer.apple.com/documentation/swiftui/view/overlayarrangementedge(_:))). Pinning it to the bar's edge keeps controls on the bar's half in right-to-left languages too. That choice is *judgement*, and *unverified* folded: Device Hub's pose buttons were out of reach in both of our runs ([references/measured.md](references/measured.md#not-measured)).
 
 ## 4. Touch targets
 
@@ -265,7 +265,7 @@ struct TargetButton: View {
 
 ## 5. Left-handed people and right-to-left languages
 
-- The vertical bar is aligned with the hardware. It stays on the same edge in right-to-left languages, and the content flows around it ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls), [talk 111462, 4:18](https://developer.apple.com/videos/play/tech-talks/111462/?time=258)).
+- The vertical bar follows the hardware, not the reading direction. In right-to-left languages it keeps its physical edge, and content flows around it ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls), [talk 111462, 4:18](https://developer.apple.com/videos/play/tech-talks/111462/?time=258)).
 - *Measured* with right to left forced on the closed phone: the bar stayed on the right, `toolbarVerticalEdge` read `.leading`, the safe-area inset moved to the leading side (84 pt) and the container margins swapped. So `.trailing` does not mean "right". Read the edge; never assume it.
 - Apple's doc says the system picks the edge from the locale and the device ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/toolbarverticaledge)). The bar can also sit on the left: in Split View for the left app, and in some landscape layouts ([talk 111461, 7:12](https://developer.apple.com/videos/play/tech-talks/111461/?time=432)).
 - iOS has no handedness setting to read: the iOS 27.1 SwiftUI and UIKit interfaces have none, and Apple's iPhone Duo pages and talks say nothing about left-handed use. So leave system bars alone. Offer a hand preference for your own floating controls only, as in section 2 (*judgement*). On the open display, keep controls in the bottom band where either thumb can get to them.
@@ -287,7 +287,7 @@ Run the app on the iPhone Duo simulator. In Device Hub, try Closed, Open (held w
 ## Checklist
 
 - [ ] Actions live in system bars; Back or Close first, the prominent action second, frequent items ranked `.high`.
-- [ ] Actions people repeat sit in `.bottomBar`, not only at the top.
+- [ ] Actions people repeat sit in `.bottomBar`, ranked `.high` so they don't overflow first.
 - [ ] No code moves, mirrors or disables the vertical bar to suit one hand.
 - [ ] At most one floating control per screen, in a bottom corner, placed from `toolbarVerticalEdge` or `verticalBarEdge`, at least 16 pt from the bar. A hand preference moves only your own floating controls.
 - [ ] No frequent action at the top centre of the open display.

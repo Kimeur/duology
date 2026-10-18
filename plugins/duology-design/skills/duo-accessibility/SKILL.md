@@ -111,10 +111,9 @@ struct MessageScreen: View {
     enum Spot: Hashable { case row(Int), title }
     @AccessibilityFocusState private var spot: Spot?
     @State private var lastSpot: Spot?
-    @State private var selection: Int? = 2
     @Environment(\.horizontalSizeClass) private var widthClass
 
-    var body: some View {
+    var body: some View {    // accessibilityPane: section 1
         HStack(alignment: .top) {
             if widthClass == .regular {
                 List(1...4, id: \.self) { row in
@@ -141,14 +140,14 @@ struct MessageScreen: View {
 ```
 
 - The task runs on first appear too. With nothing focused yet, `lastSpot` is nil and it does nothing.
-- Don't announce the change and don't move focus on every resize. People rely on focus staying put ([HIG, Focus](https://developer.apple.com/design/human-interface-guidelines/focus-and-selection#Best-practices)).
+- Move focus only to keep the person's place. Apple allows a move to a nearby item when the focused one disappears ([HIG, Focus](https://developer.apple.com/design/human-interface-guidelines/focus-and-selection#Best-practices)). Don't announce it.
 - 0.3 s worked in our run. We use 0.5 s for slower devices; not tested on hardware (*unverified*).
 - Unfold (closed to open) was not measured: Device Hub had no window during our second run (*unverified*). Test it the same way.
 - UIKit (`UIAccessibility.post(notification: .layoutChanged, argument:)`), `@FocusState` for text fields, and the full measurements: [references/focus-after-fold.md](references/focus-after-fold.md).
 
 ## 3. Dynamic Type at both display sizes
 
-One text size meets two very different widths. The closed outer display is the hard case: 382 pt of safe-area width at AX5 (*measured* by `duo-design-system`). Apple asks you to show as much text at the largest accessibility size as at the largest standard size, and to stack items when they crowd ([HIG, Typography](https://developer.apple.com/design/human-interface-guidelines/typography#Supporting-Dynamic-Type)).
+One text size meets two very different widths. The closed outer display is the hard case: 382 pt of safe-area width (*measured* by `duo-design-system`). Apple asks you to show as much text at the largest accessibility size as at the largest standard size, and to stack items when they crowd ([HIG, Typography](https://developer.apple.com/design/human-interface-guidelines/typography#Supporting-Dynamic-Type)).
 
 ```swift
 import SwiftUI
@@ -242,7 +241,7 @@ struct ReplyControls: View {
 ```
 
 - Use Command shortcuts and don't take over standard ones ([HIG, Keyboards](https://developer.apple.com/design/human-interface-guidelines/keyboards#Best-practices)).
-- *Measured* on the closed display: `UIFocusSystem.focusSystem(for:)` returned nil, and Tab did not move focus between `focusable()` views. Without Full Keyboard Access, only text fields and shortcuts react. The inner display was not measured (*unverified*).
+- *Measured* closed, in UI tests: `UIFocusSystem.focusSystem(for:)` was nil in every run and Tab never reached `focusable()` views. Tab moved between two text fields in one run, not in another. Command shortcuts worked. Inner display: *unverified*.
 - `focusSection()` is unavailable on iOS (iOS 27.1 SDK). Use `@FocusState`, `focused(_:equals:)` and `defaultFocus(_:_:priority:)`.
 - `accessibilityInputLabels` gives Voice Control and Full Keyboard Access other names, most important first ([doc](https://developer.apple.com/documentation/swiftui/view/accessibilityinputlabels(_:))).
 - Switch Control and Voice Control need a tap path for every drag: a button or `accessibilityAction(named:_:)`.
@@ -267,7 +266,7 @@ struct Target: View {
                 .accessibilityElement()
                 .accessibilityLabel("Target")
                 .accessibilityAddTraits(.isButton)
-                .accessibilityAction(perform: hit) // VoiceOver and Switch Control activate
+                .accessibilityAction { hit() }     // VoiceOver and Switch Control activate
                 .position(x: proxy.size.width / 2, y: proxy.size.height / 2) // last
         }
     }

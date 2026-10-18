@@ -25,7 +25,7 @@ Apple gives four reasons. Each one matters for where your own controls go.
 
 | Reason | Source |
 |---|---|
-| The outer display is wider and shorter than other iPhone displays, so bars on the side leave more height for content. | HIG Duo (Best practices); [111466, 1:10](https://developer.apple.com/videos/play/tech-talks/111466/?time=70); [111462, 0:41](https://developer.apple.com/videos/play/tech-talks/111462/?time=41) |
+| Closed, the screen is wide and short for an iPhone, so bars on the side leave more height for content. | HIG Duo (Best practices); [111466, 1:10](https://developer.apple.com/videos/play/tech-talks/111466/?time=70); [111462, 0:41](https://developer.apple.com/videos/play/tech-talks/111462/?time=41) |
 | On the side, controls are easier to reach. The closed-phone example names the right thumb. | [111466, 1:10](https://developer.apple.com/videos/play/tech-talks/111466/?time=70); [111462, 0:47](https://developer.apple.com/videos/play/tech-talks/111462/?time=47); HIG Duo (Vertical controls) |
 | The bars keep the same place when you open the phone held wide, so nothing jumps between displays. | HIG Duo (Anatomy); [111462, 1:02](https://developer.apple.com/videos/play/tech-talks/111462/?time=62) |
 | The bar lines up with the hardware: the same spot next to the outer camera, and the same edge in right-to-left languages. | HIG Duo (Vertical controls); [111462, 4:18](https://developer.apple.com/videos/play/tech-talks/111462/?time=258) |
@@ -78,8 +78,8 @@ Apple's Podcasts example: with the transcript hidden, the Now Playing view stays
 
 **Apple:**
 
-- iPhone Duo is good for hands-free use on a table. Media can sit at the top, tappable controls on a stable base at the bottom ([111466, 4:24 and 4:48](https://developer.apple.com/videos/play/tech-talks/111466/?time=264)).
-- Partly folded in portrait, interactive elements move to the bottom half, easier to reach while the phone stays steady on the surface ([111466, 2:32](https://developer.apple.com/videos/play/tech-talks/111466/?time=152)).
+- iPhone Duo is good for hands-free use on a table. Media can sit at the top, tappable controls on the steady lower half ([111466, 4:24 and 4:48](https://developer.apple.com/videos/play/tech-talks/111466/?time=264)).
+- Partly folded in portrait, the system shifts controls into the lower half, easier to reach while the phone stays steady on the surface ([111466, 2:32](https://developer.apple.com/videos/play/tech-talks/111466/?time=152)).
 - The top region suits content seen from a distance; the bottom region suits controls, a more stable surface for touch ([111463, 4:23 to 4:43](https://developer.apple.com/videos/play/tech-talks/111463/?time=263)).
 - A special layout for this pose is optional. If you make one, keep all the same controls and the same hierarchy ([111466, 4:55 and 5:03](https://developer.apple.com/videos/play/tech-talks/111466/?time=295)).
 
@@ -100,6 +100,16 @@ Apple's Podcasts example: with the transcript hidden, the Now Playing view stays
 **Apple:** two apps share the inner display 50/50. Each app's controls sit on its outer edge, within reach of the thumb and away from the fold ([111466, 3:07](https://developer.apple.com/videos/play/tech-talks/111466/?time=187)). Safe areas are asymmetric: the bar can be on the left in Split View and in landscape, so handle each side on its own ([111461, 7:12 and 7:25](https://developer.apple.com/videos/play/tech-talks/111461/?time=432)).
 
 **Judgement:** in the left app, your floating control belongs bottom left. `ThumbCorner` with `.automatic` does this when `toolbarVerticalEdge` reports that edge. *Unverified:* we did not measure Split View.
+
+## Which side for a floating control
+
+Apple gives no rule for your own floating controls. The evidence points to the bar's side:
+
+- Apple put the bars on the side partly so the thumb reaches them ([111466, 1:10](https://developer.apple.com/videos/play/tech-talks/111466/?time=70); [111462, 0:47](https://developer.apple.com/videos/play/tech-talks/111462/?time=47)).
+- The example on Apple's `toolbarVerticalEdge` page aligns a floating palette to the trailing edge when the bar is trailing, and to the leading edge otherwise ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/toolbarverticaledge)).
+- In Split View, Apple moves each app's controls to its outer edge to keep them near the thumb ([111466, 3:07](https://developer.apple.com/videos/play/tech-talks/111466/?time=187)).
+
+**Judgement:** default to the bar's side, 16 pt clear of its items. The case for the far side is a left hand holding the closed phone, with the bar on the right. Apple offers no handedness setting, so give people an in-app choice (`HandPreference` in `SKILL.md`) instead of guessing.
 
 ## What Apple doesn't say
 

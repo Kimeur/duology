@@ -1,6 +1,6 @@
 ---
 name: duo-scenes
-description: "Scenes and windows on iPhone Duo, Apple's foldable. Use when an app opens a second window (openWindow, WindowGroup(for:), activateSceneSession, UISceneSessionActivationRequest, UIWindowScene.ActivationAction), handles new-window requests on the outer display and their errors, runs in 50/50 Split View, shows content on the outer display while the camera runs on the inner display (sceneAccessory, CameraCaptureAccessory, onAvailabilityChange, UISceneAccessory, registerSceneAccessory, UISceneAccessoryRegistration, windowCameraCaptureAccessory, ExternalNonInteractiveAccessory), restores state per window (@SceneStorage, stateRestorationActivity), or reacts to the UIScene lifecycle when the phone folds or unfolds (scenePhase, didUpdateEffectiveGeometry, UIWindowScene.screen)."
+description: "Scenes and windows on iPhone Duo, Apple's foldable. Use when an app opens a second window (openWindow, WindowGroup(for:), activateSceneSession, UISceneSessionActivationRequest, UIWindowScene.ActivationAction), handles new-window requests on the outer display and their errors, asks before a window closes (closureConfirmation), runs in 50/50 Split View, shows content on the outer display while the camera runs on the inner display (sceneAccessory, CameraCaptureAccessory, onAvailabilityChange, UISceneAccessory, registerSceneAccessory, UISceneAccessoryRegistration, windowCameraCaptureAccessory, ExternalNonInteractiveAccessory), restores state per window (@SceneStorage, stateRestorationActivity), or reacts to the UIScene lifecycle when the phone folds or unfolds (scenePhase, didUpdateEffectiveGeometry, UIWindowScene.screen)."
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
   sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
@@ -265,7 +265,7 @@ So:
 
 ## UIKit
 
-Scene delegate code for new windows, restoration, geometry updates, the accessory registration and the accessory's own scene delegate: [references/multiple-windows.md](references/multiple-windows.md), [references/scene-accessories.md](references/scene-accessories.md#uikit), [references/restoration-and-lifecycle.md](references/restoration-and-lifecycle.md).
+Scene delegate code for new windows, a close confirmation for windows with unsaved work (`closureConfirmation`, iOS 27), restoration, geometry updates, the accessory registration and the accessory's own scene delegate: [references/multiple-windows.md](references/multiple-windows.md), [references/scene-accessories.md](references/scene-accessories.md#uikit), [references/restoration-and-lifecycle.md](references/restoration-and-lifecycle.md).
 
 ## Test it
 

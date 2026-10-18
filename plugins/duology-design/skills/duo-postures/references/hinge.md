@@ -15,7 +15,7 @@ iPhone Duo reports its hinge to apps: a status (closed, partially open, fully op
 
 Facts from the SDK headers and Apple's pages:
 
-- `hinge` is `nil` on a device without a hinge. In UIKit it is also `nil` when the interaction leaves a hierarchy that reports the hinge ([`UIHingeInteraction`](https://developer.apple.com/documentation/uikit/uihingeinteraction)).
+- `hinge` is `nil` on a device without a hinge ([talk 111464](https://developer.apple.com/videos/play/tech-talks/111464/?time=113)). In UIKit it is also `nil` when the interaction leaves a hierarchy that reports the hinge ([`UIHingeInteraction`](https://developer.apple.com/documentation/uikit/uihingeinteraction)).
 - The angle's update rate and precision are system policy and can change. Use `status` when you only need closed, partly open or open (`UIHinge.h`).
 - The system decides the status from the angle and the device orientation ([`DeviceHinge`](https://developer.apple.com/documentation/swiftui/devicehinge)).
 - *Measured:* fully open, the probe read `fullyOpen` at 180°. Partly open angles are not yet measured.

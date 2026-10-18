@@ -1,6 +1,6 @@
 # Book pose: two regions
 
-"Book" is Duology's word for what Apple describes as the phone partially folded like a book: held wide, the fold running top to bottom through the inner display. The display curves through the centre, so Apple moves text, images and buttons away from it, and the curve becomes a natural divider for the layout ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=123)).
+"Book" is Duology's word for what Apple describes as the phone partially folded like a book: held wide, the fold running top to bottom through the inner display. The display curves through the centre, so Apple moves text, images and buttons away from it and lets the curve split the layout in two ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=123)).
 
 Use this recipe for a screen with one thing to read and one set of controls: a timer, a recipe step and its buttons, a photo and its edit tools, a question and its answer pad. For two equal panes of content (list and detail, a document and its preview), use a system split view or an arrangement instead (`duo-patterns`). For pages, use the two-page pattern in `duo-patterns`.
 

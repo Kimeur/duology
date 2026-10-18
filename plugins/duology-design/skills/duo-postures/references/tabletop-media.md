@@ -210,7 +210,7 @@ struct ArrangedPlayer: View {
 
     var body: some View {
         ArrangementView {
-            // Our flat probe put a short primary at the top edge. Align it to the bottom.
+            // Closed and flat, a short primary sat at the top edge. Align it to the bottom.
             PlayerControls(player: player)
                 .frame(maxHeight: .infinity, alignment: .bottom)
         } secondary: {
@@ -223,12 +223,14 @@ struct ArrangedPlayer: View {
 }
 ```
 
+To choose which side the primary takes when the overlay splits side by side, add [`overlayArrangementEdge(_:)`](https://developer.apple.com/documentation/swiftui/view/overlayarrangementedge(_:)) to it, for example `.trailing`.
+
 Choose between them:
 
 | | `ArrangementView` `.overlay` | `FoldRegionsLayout` |
 |---|---|---|
 | Fold code | None | Reads `.division` |
-| Tells you which state it is in | Apple documents `overlayArrangementZIndex` for this; it read `0` in our flat probes and is not yet checked folded | You hold `fold` |
+| Tells you which state it is in | Apple documents `overlayArrangementZIndex` for this. Closed, our probe read `1` in the primary and `0` in the secondary; `duo-patterns` read `0` everywhere open and flat. Not yet checked folded | You hold `fold` |
 | Placement inside a region | System | Yours (centred) |
 | Checked folded on the simulator | No (unverified) | Uses region frames measured folded; the layout itself not yet run folded (unverified) |
 | Where it can't go | Not inside a `List`, `ScrollView` or `NavigationSplitView` | Anywhere |

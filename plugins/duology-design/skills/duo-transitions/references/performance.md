@@ -17,7 +17,7 @@ SwiftUI animations, UIKit animations and Core Animation already run at the rate 
 
 A fold runs `body` for every view that reads the size class or the size, then lays out the window.
 
-- *Measured:* on Open, a full-width view saw three widths in about 250 ms: 382 → 466 → 951 → 867 pt (the safe area insets change around the resize). Every `onGeometryChange` action and `GeometryReader` that reads the width runs for each of them. Return a small value from the transform, such as a column count, so the action runs only when that value changes.
+- *Measured:* on Open, a full-width view went through three new widths within 50 to 250 ms: 382 → 466 → 951 → 867 pt (the safe area insets change around the resize). Every `onGeometryChange` action and `GeometryReader` that reads the width runs for each of them. Return a small value from the transform, such as a column count, so the action runs only when that value changes.
 - No sorting, filtering, date or number formatting, or image decoding in `body`. Do it once when the data changes.
 - Use `LazyVStack`, `LazyVGrid` or `List` for long content, so a fold lays out only what is on screen.
 - Don't put a `GeometryReader` in every row. Read the size once, high up, and pass a value down.

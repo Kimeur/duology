@@ -18,7 +18,7 @@ Apple calls these "device poses" and describes them with comparisons: "partially
 
 ## Rules
 
-1. **Design two layouts, not six.** A compact-width layout for the outer display and a regular-width layout for the inner display cover every pose. Let the layout grow; don't design one per pose ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Device-poses), [talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=230)).
+1. **Design two layouts, not six.** Build one for compact width (the outer display) and one for regular width (the inner display). Together they cover every pose. Let the layout grow; don't design one per pose ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Device-poses), [talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=230)).
 2. **There is no posture API.** Read the size class, the view's own size and the `.division` reserved region. Active division means partly folded. Its shape tells you which way the fold runs ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=433), [api-index](https://github.com/Kimeur/duology/blob/main/reference/api-index.md#not-in-the-sdk)).
 3. **Same controls and hierarchy in every pose.** Tabletop is the one optional special layout Apple suggests, and it keeps every control ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=276)).
 4. **Nothing interactive in the fold** when it is active. Scrolling content may cross it ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=568)).
@@ -33,7 +33,7 @@ Add `FoldGeometry` and `FoldRegionsLayout` from [references/fold-regions.md](ref
 | Pose (Duology word) | Apple's words | Your app is on | Size classes (width, height) | `.division` region | `FoldGeometry` |
 |---|---|---|---|---|---|
 | Closed | closed | Outer display | compact, regular in portrait; compact, compact in landscape ([111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=187)) | none | `frame == nil` |
-| Tent | "folded like a tent", "standing on its edges" | Outer display, held sideways (our reading of Apple's drawing; unverified) | compact, compact | none | `frame == nil` |
+| Tent | "folded like a tent", "standing on its edges" | Outer display, held sideways (our reading of Apple's drawing and talk 111461; unverified) | compact, compact | none | `frame == nil` |
 | Open, flat | "open in a wide layout", "open in a tall layout" | Inner display | regular, regular (*measured* held wide) | inactive | `frame != nil && !isActive` |
 | Book | "partially folded, like a book" | Inner display, held wide | regular width expected (unverified) | active, top to bottom | `isActive && isVertical` |
 | Tabletop | "seated on a table like a laptop" | Inner display, held tall | regular width expected (unverified) | active, side to side | `isActive && !isVertical` |

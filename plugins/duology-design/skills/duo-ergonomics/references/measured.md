@@ -1,6 +1,6 @@
 # What we measured
 
-Depth for [`../SKILL.md`](../SKILL.md). Every *measured* claim in this skill comes from the runs below.
+Depth for [`../SKILL.md`](../SKILL.md). Every claim this skill marks *measured* comes from the runs below, unless it names another Duology skill (`duo-layout`, `duo-patterns`) as the source.
 
 ## Setup
 
@@ -72,7 +72,7 @@ TARGET centre: 103 x 34 pt, under 44 pt
 
 ## Not measured
 
-We planned the same runs open, in book and in tabletop poses, by pressing Device Hub's pose buttons through the macOS Accessibility API (see `duo-setup`). Device Hub had a window on screen, but its accessibility tree came back empty: the window had no children and the app returned "attribute unsupported" for its children. No pose button could be pressed, so the pose never changed and every run above is closed. Still to check:
+We tried twice on 18 October 2026 to repeat these runs open, in book and in tabletop poses, by pressing Device Hub's pose buttons through the macOS Accessibility API (see `duo-setup`). Our process was trusted both times. The first time, Device Hub's window was on screen but exposed no children. The second time, its main window had been closed, so the tree held only the menu bar, and `open -g` did not bring a window back. We did not script Device Hub any further. No pose button was pressed, so every run above is closed. We also waited out UI tests that other sessions were running on the same simulator. Still to check:
 
 - `toolbarVerticalEdge` and the floating button on the inner display, held wide and held tall, in both directions.
 - The overlay arrangement folded: controls in the bottom half in tabletop, and on the bar's half in book with `overlayArrangementEdge(_:)`.

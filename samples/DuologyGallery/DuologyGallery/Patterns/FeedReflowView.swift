@@ -20,7 +20,13 @@ struct FeedReflowView: View {
     private let spacing: CGFloat = 12
 
     private var columns: [GridItem] {
-        feedColumns(for: input, minTileWidth: minTileWidth, spacing: spacing)
+        // Top-aligned: partly folded, a vertical bar can make one half narrower,
+        // so its square tiles are shorter. Centred, its rows would sit lower.
+        feedColumns(for: input, minTileWidth: minTileWidth, spacing: spacing).map { item in
+            var item = item
+            item.alignment = .top
+            return item
+        }
     }
 
     private var products: [Product] {

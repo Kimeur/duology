@@ -17,7 +17,7 @@ Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1) on 16 
 1. Build with Xcode 27.1 through `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer`. Never run `sudo` or `xcode-select -s`. Don't change the Mac's default Xcode.
 2. Detect first, then route. Don't guess the stack from the README.
 3. Never pick a layout by device model, `userInterfaceIdiom`, orientation or screen size. Use size classes and the space the view has ([Apple's prepare page](https://developer.apple.com/iphone-duo/prepare/)).
-4. You can't change the simulator's pose from the command line. *Measured:* `simctl` in Xcode 27.1 has no pose command. Ask the user to click the pose buttons in Device Hub.
+4. `simctl` and `devicectl` in Xcode 27.1 have no pose command (*measured*). Ask the user to click the pose buttons in Device Hub. A tool can press those buttons through the macOS Accessibility API, but only after the user gives the app that runs you Accessibility permission. See `duo-setup`.
 5. Let Apple's App Resizability skill do the generic resizing fixes. Use Duology for the fold, the two displays and the design. Don't redo one with the other.
 6. If the deployment target is below iOS 27.1, wrap every iOS 27.1 API in `if #available(iOS 27.1, *)`.
 

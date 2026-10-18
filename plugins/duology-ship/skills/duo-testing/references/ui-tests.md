@@ -229,7 +229,7 @@ What a shipped two-player Duo app's suite found, most likely with the phone open
 - `XCUIDevice.shared.orientation` exists for UI tests ([Apple](https://developer.apple.com/documentation/xcuiautomation/xcuidevice/orientation)).
 - *Measured:* on the closed Duo simulator it did not rotate the app. After setting `.landscapeLeft` and `.landscapeRight`, the app's frame stayed 466 × 678 pt, the screenshot stayed portrait, and the app's own size readout didn't change within 8 s; only `XCUIDevice.shared.orientation` read back the new value. On an iPhone 17 Pro simulator (iOS 27.0) the same test rotated the app to 874 × 402 pt. The probe allowed portrait and both landscape orientations.
 - So, on the Duo, rotate with Device Hub's rotate button (Option-click rotates the other way), as described in [Interacting with your app in Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub). Open pose not measured.
-- There is no fold API. `XCUIDevice` has no hinge, pose or display property, and `simctl` has no pose command in Xcode 27.1. A test that needs a fold waits for a person; `duo-continuity`'s `references/testing.md` has the pattern (skipped unless an environment variable asks for it).
+- There is no fold API. `XCUIDevice` has no hinge, pose or display property, and `simctl` and `devicectl` have no pose command in Xcode 27.1. Outside the test, a Mac tool can press Device Hub's pose buttons through the Accessibility API, but only with the user's Accessibility permission (see `duo-setup`), and Duology ships none yet. So a test that needs a fold waits for a person; `duo-continuity`'s `references/testing.md` has the pattern (skipped unless an environment variable asks for it).
 
 ## Patterns worth keeping
 

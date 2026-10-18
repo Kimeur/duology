@@ -11,7 +11,7 @@ Three layers, from cheapest to closest to a real fold:
 | Action | From code? | How |
 |---|---|---|
 | Rotate | Not on the closed Duo | Device Hub's rotate button. *Measured:* on the closed Duo simulator, setting [`XCUIDevice.shared.orientation`](https://developer.apple.com/documentation/xcuiautomation/xcuidevice/orientation) to landscape changed the device orientation but not the app's 466 × 678 pt window (this skill's run and `duo-testing`'s). Open: *unverified*. From inside the app, *measured:* `requestGeometryUpdate(_:errorHandler:)` on the open inner display failed with "The current windowing mode does not allow for programmatic changes to interface orientation." |
-| Close, open, partially open | No | Device Hub buttons only. `XCUIDevice` has no fold or hinge property, and `simctl` has no pose command (checked in Xcode 27.1). |
+| Close, open, partially open | Not from a test | Device Hub buttons only. `XCUIDevice` has no fold or hinge property, and `simctl` and `devicectl` have no pose command (checked in Xcode 27.1). A Mac tool outside the test can press the buttons through the Accessibility API, with the user's Accessibility permission (see `duo-setup`). |
 | Any hinge angle | No | Hold Option and drag the slider under the bezel |
 | Split View | No | Drag the app by its home indicator to one side ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)) |
 | Size class change | Yes, inside your app | The debug flip below |

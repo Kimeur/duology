@@ -275,7 +275,7 @@ final class FeedViewController: UICollectionViewController {
 
 1. **By hand in Device Hub.** Run on the iPhone Duo simulator. Build up state: scroll halfway, select an item, push a screen, type and select text, start playback, start an upload, open a sheet. Then press Closed, Open and Partially Open under the bezel, rotate, and try the combinations ([Interacting with your app in Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)). Check every row of the table above after each step.
 2. **Automatic UI test.** A debug-only launch switch adds a button that flips the size class at the root and hidden labels that report a state summary. The test records the summary, flips there and back, and compares. *Measured:* it passed on the closed Duo simulator. Don't rotate in it: *measured*, setting `XCUIDevice.shared.orientation` on the closed Duo did not resize the app (open: *unverified*).
-3. **Real fold and rotation in a UI test.** Xcode 27.1 can't fold the simulator from code: `XCUIDevice` has no fold control and `simctl` has no pose command. So a test, skipped by default, waits while you press the pose buttons and the rotate button in Device Hub, then compares the summary. Steps, matrix and full test code: [references/testing.md](references/testing.md).
+3. **Real fold and rotation in a UI test.** A test can't fold the simulator: `XCUIDevice` has no fold control, and `simctl` and `devicectl` have no pose command. So a test, skipped by default, waits while you press the pose buttons and the rotate button in Device Hub, then compares the summary. Steps, matrix and full test code: [references/testing.md](references/testing.md).
 
 ## Red flags in review
 

@@ -48,7 +48,8 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 ### Rules that apply everywhere
 
 - Build with Xcode 27.1 through `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer`. Never run `sudo` or `xcode-select`.
-- Run the app on the "iPhone Duo" simulator. You can't change its pose from the command line; ask the user to press Closed, Partially Open or Open in Device Hub.
+- Run the app on the "iPhone Duo" simulator.
+- Poses change only in Device Hub. `simctl` and `devicectl` have no pose command. A small Mac program can press Device Hub's buttons through the macOS Accessibility API: find the `AXButton` whose description is `Closed`, `Partially Open`, `Open` or `Rotate Right`, then call `AXUIElementPerformAction` with `kAXPressAction`. It works only after the user gives Accessibility permission to the app that runs you, and only the user can give it; never change that setting. It drives Device Hub's window, so Device Hub must be open on the iPhone Duo, and an Xcode update can break it. The pose applies to everything running on that simulator. Duology ships no tool for this yet; `duo-pose-matrix` (v0.2) will build on it. Until then, ask the user to press the pose in Device Hub, unless they ask you to script it. Details: `duo-setup`'s [`references/simulator-and-device-hub.md`](plugins/duology/skills/duo-setup/references/simulator-and-device-hub.md#script-the-pose-buttons).
 - Pick layouts by size class and the space the view has. Never by `UIScreen.main`, device model, `userInterfaceIdiom` or orientation.
 - Keep buttons and text out of the fold. Scrolling content may cross it.
 - Before you use an iPhone Duo API, find it in [`reference/api-index.md`](reference/api-index.md). Its [Not in the SDK](reference/api-index.md#not-in-the-sdk) section lists names that sound right but don't exist in the SDK.

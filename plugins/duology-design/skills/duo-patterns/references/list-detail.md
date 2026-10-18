@@ -67,7 +67,6 @@ Run the rule again when the shape changes and when the selection changes. The re
 
 - **Swapping views on size class.** `if sizeClass == .compact { ListScreen() } else { SplitScreen() }` builds a new view tree when the phone opens. You lose the scroll position and the selection. Use one `NavigationSplitView` for both.
 - **Losing the detail on close.** Android's guidance is a good test: if the detail is showing when the window narrows, keep showing the detail, not the list ([canonical layouts](https://developer.android.com/develop/ui/compose/layouts/adaptive/canonical-layouts)). Check that your app does this when you close the phone.
-- **Automatic column visibility.** `NavigationSplitView(preferredCompactColumn:)` alone leaves the columns to the system. In the gallery the open phone then showed the message alone, across the fold. Pass `columnVisibility` too.
 - **Fixed widths.** `frame(width: 320)` on the list fights the fold split and Split View. Use the split view's own sizing.
 - **An arrangement inside the detail column.** Apple's hub says to avoid an `ArrangementView` inside a navigation split view, a list or a scroll view ([hub, Arrange views in different poses](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo)). The HIG is looser about split views; Duology follows the hub. To add a side pane next to the detail, use `inspector(isPresented:content:)` on the detail column: see Combining patterns in SKILL.md.
 

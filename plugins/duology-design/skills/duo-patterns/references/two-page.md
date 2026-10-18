@@ -18,7 +18,8 @@ Don't use it for a continuous article or feed. Those scroll, and scrolling conte
 | Closed (outer display) | One page. Page turns move one page. |
 | Open, flat, held wide | Two pages. The gap between them sits on the fold line. Page turns move two pages. |
 | Open, partly folded like a book | Two pages, each in its own region. The gap is the fold's whole reserved frame. |
-| Open, held tall | One tall page. The fold runs across the screen, so a top and bottom "spread" would not read like a book. |
+| Open, flat, held tall | One tall page. The fold runs across the screen, so a top and bottom "spread" would not read like a book. |
+| Open, partly folded across (tabletop) | The gallery shows one page above the fold and a contents list below it, so no line of text sits in the fold. The recipe keeps one tall page that scrolls. That is allowed: scrolling content may cross the fold. |
 | Split View, or a narrow window | One page. |
 
 The reader keeps its place in every change. A spread always starts on an even page, so pages don't jump sides when you fold.
@@ -54,7 +55,17 @@ iOS 27.1 iPhone Duo simulator, open, flat, held wide (951 × 669 pt window):
 - With `.includeInactive` it returned one inactive division: a 40 pt wide frame across the full height, centred on the window, with 20 pt margins on each side. So the fold line itself has zero width, and the 40 pt is the margin Apple adds for interactive content.
 - On the first `onAppear` the query returned nothing at all; the values came with the next geometry update. Read regions with `onGeometryChange`, not once in `onAppear`.
 
-Not measured: the frame while partly folded. `simctl` in Xcode 27.1 has no pose command, so poses change only in Device Hub's window.
+In every pose, 18 October 2026, on the gallery's two-page screen. We read the frames with the gallery's region overlay (launch argument `-showsRegions YES`):
+
+| Pose | `.division` region |
+|---|---|
+| Open, flat, held wide | Inactive, 40 × 669 pt at (455, 17) |
+| Partly folded like a book | Active, 40 × 669 pt at (455, 17) |
+| Partly folded across (tabletop) | Active, 669 × 40 pt at (0, 455) |
+
+- Folding changes `isActive`, not the frame. Read the frame with `.includeInactive` and the spread lands in the same place flat and folded.
+- The page gap matches it. In the [book screenshot](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/twoPage-book.png) each page card has 12 pt of padding: the left card ends at x = 443 and the right card starts at x = 507.
+- The overlay draws in the window's space, which read 951 × 686 pt in book pose. So y = 17 is in that space. The band covers the display from top to bottom.
 
 ## Recipe
 
@@ -159,7 +170,8 @@ Put `TwoPageReader` inside a `NavigationStack` so the bottom bar has a toolbar t
 3. Partially Open: no text or button in the fold.
 4. Go to page 5 open (pages 4 and 5 show), close (page 4 shows), open again (4 and 5).
 5. Open, held tall: one page.
-6. Run in a right-to-left language: the first page should sit on the right and the gap should stay on the fold. SwiftUI mirrors region frames by default ([`ReservedRegion`](https://developer.apple.com/documentation/swiftui/reservedregion)); we have not tested this screen in right-to-left. (unverified)
+6. Partially Open, then Rotate Right once (tabletop): no button sits in the fold.
+7. Run in a right-to-left language: the first page should sit on the right and the gap should stay on the fold. SwiftUI mirrors region frames by default ([`ReservedRegion`](https://developer.apple.com/documentation/swiftui/reservedregion)); we have not tested this screen in right-to-left. (unverified)
 
 ## Gallery screen
 

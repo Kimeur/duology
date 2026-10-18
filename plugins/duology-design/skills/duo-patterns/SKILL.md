@@ -55,7 +55,7 @@ Answer in order. The first yes is the screen's main pattern. If a later question
 
 | Pattern | Closed (outer) | Open, flat | Partly folded | Build with | Reference | Gallery screen |
 |---|---|---|---|---|---|---|
-| List-detail | List, then detail | Both, list narrower | 50/50 at the fold, by the system | `NavigationSplitView` | [list-detail.md](references/list-detail.md) | [ListDetailView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/ListDetailView.swift) |
+| List-detail | List, then detail | Both, list narrower | 50/50 at the fold, by the system, while `columnVisibility` is `.all` | `NavigationSplitView` with `columnVisibility` | [list-detail.md](references/list-detail.md) | [ListDetailView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/ListDetailView.swift) |
 | Supporting pane | Main content; pane in a sheet | Main plus a narrower pane | One per side | `ArrangementView`, `.split.axes(.horizontal)` | [supporting-pane.md](references/supporting-pane.md) | [SupportingPaneView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/SupportingPaneView.swift) |
 | Two-page | One page | Two pages, gap on the fold line | One page per side | Custom split from the `.division` region | [two-page.md](references/two-page.md) | [TwoPageView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/TwoPageView.swift) |
 | Dual view | One view and a switch | Both views, in sync | One per side | `ArrangementView` split, shared model | [dual-view.md](references/dual-view.md) | [DualView](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/DualView.swift) |
@@ -88,9 +88,12 @@ struct NotesWithSummary: View {
     let notes: [Note]
     @SceneStorage("notes.selection") private var selection: Note.ID?
     @SceneStorage("notes.showsSummary") private var showsSummary = false
+    // Same rule as list-detail.md: both columns when wide, the note alone when tall.
+    @State private var columnVisibility = NavigationSplitViewVisibility.all
+    @State private var isWide = true
 
     var body: some View {
-        NavigationSplitView {
+        NavigationSplitView(columnVisibility: $columnVisibility) {
             List(notes, selection: $selection) { Text($0.title) }
                 .navigationTitle("Notes")
         } detail: {
@@ -109,6 +112,13 @@ struct NotesWithSummary: View {
             } else {
                 ContentUnavailableView("No Note Selected", systemImage: "note.text")
             }
+        }
+        .onGeometryChange(for: Bool.self) { $0.size.width > $0.size.height } action: {
+            isWide = $0
+            columnVisibility = isWide || selection == nil ? .all : .detailOnly
+        }
+        .onChange(of: selection) {
+            columnVisibility = isWide || selection == nil ? .all : .detailOnly
         }
     }
 }
@@ -176,7 +186,7 @@ iOS 27.1 iPhone Duo simulator, open, flat, held wide (951 × 669 pt), Xcode 27.1
 - The default `.division` query returned nothing. With `.includeInactive` it returned one inactive fold: a 40 pt frame, centred, full height, with 20 pt margins each side. Talk 111463 says the default is "active only"; Apple's `ReservedRegion` page says the opposite. The simulator agrees with the talk.
 - The default `.occlusion` query returned one active 84 × 124 pt region in the top trailing corner, where the status bar sits. `.includeInactive` added a 58 × 37 pt inactive one, likely the inner camera (our reading).
 - The first read in `onAppear` was empty. Values came with the next geometry update.
-- Not measured: anything while partly folded. `simctl` has no pose command in Xcode 27.1; poses change only in Device Hub's window ([Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)).
+- Partly folded like a book (18 Oct 2026, read with the gallery's region overlay): the same `.division` region turned active, 40 × 669 pt at (455, 17). Flat, the same overlay gave the same frame, inactive. Partly folded and held tall (tabletop), it ran across: active, 669 × 40 pt at (0, 455). Details in [two-page.md](references/two-page.md#what-we-measured).
 
 ## Arrangement facts
 

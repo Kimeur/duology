@@ -56,7 +56,7 @@ Or, in Xcode, choose Manage Devices from the run destination menu, or Xcode > Op
 
 ## Poses: only in Device Hub
 
-`xcrun simctl help` in Xcode 27.1 lists no pose, hinge or fold subcommand. The pose controls sit under the bezel in Device Hub ([Apple: interacting in Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)):
+`xcrun simctl help` and `xcrun devicectl help device` in Xcode 27.1 list no pose, hinge or fold subcommand. The pose controls sit under the bezel in Device Hub ([Apple: interacting in Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)):
 
 - **Closed**: the button to the right of Rotate Right. The app moves to the outer display.
 - **Partially Open**: the middle of the three pose buttons. The fold becomes a division region.
@@ -66,9 +66,35 @@ Or, in Xcode, choose Manage Devices from the run destination menu, or Xcode > Op
 
 Words like "book" or "tabletop" are not Apple names. Apple's controls say Closed, Partially Open and Open. In code, the hinge status is `closed`, `partiallyOpen` or `fullyOpen` (see [`reference/device-facts.md`](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md)).
 
-`simctl io <device> screenConfig` can power a screen off or change its geometry. It is not a pose control, and we did not test it. Don't use it to fake a pose.
+`simctl io <device> screenConfig` can power a screen off or change its geometry. It is not a pose control. We tried `power on` on the inner display: its backlight came on, but it stayed inactive and the outer display stayed active. Don't use it to fake a pose.
 
 When a task needs several poses, list them for the user, ask them to click each one, and take a screenshot after each click.
+
+### Script the pose buttons
+
+A small Mac program can press Device Hub's pose buttons through the macOS Accessibility API. We set all four poses this way with no one at the keyboard (Xcode 27.1, macOS 27.0.1, 17 and 18 October 2026). Duology ships no tool for it yet; `duo-pose-matrix` (v0.2) will build on it. Until then, ask the user to press the pose, unless they ask you to script it.
+
+How it works:
+
+1. Device Hub is open, with the iPhone Duo selected. Get its process ID with `pgrep -x DeviceHub`.
+2. Check trust without a prompt: call `AXIsProcessTrustedWithOptions` with `kAXTrustedCheckOptionPrompt` set to false. If it returns false, stop and ask the user to press the button.
+3. Walk the accessibility tree from `AXUIElementCreateApplication(pid)`. Find the `AXButton` whose description (`kAXDescriptionAttribute`) is `Closed`, `Partially Open`, `Open` or `Rotate Right`. The pose buttons have no identifier.
+4. Call `AXUIElementPerformAction(button, kAXPressAction)`. Then wait: Open and Partially Open settled in 4 to 6 seconds. Closed once took between 5 and 9.
+
+| Pose | Press |
+|---|---|
+| Closed | Closed |
+| Open | Open |
+| Partly folded like a book | Partially Open |
+| Partly folded across (tabletop) | Partially Open, then Rotate Right once. Three more Rotate Right presses bring it back to portrait. |
+
+Limits:
+
+- It needs Accessibility permission for the app that runs you (Terminal, iTerm, the Claude app). Only the user can give it, in System Settings > Privacy & Security > Accessibility. Never try to change it.
+- It is UI scripting. It drives Device Hub's window, depends on its English labels and its layout, and can break in any Xcode update. When the buttons aren't found, fall back to asking the user.
+- The pose belongs to the whole simulator. On a shared simulator it changes the screen for every agent and UI test using it. Check that nothing else is running first, and leave the simulator Closed, in portrait, when you finish.
+- Device Hub doesn't report the pose. Its sidebar image still said Closed after we pressed Open. `xcrun devicectl device info displays -d <UDID>` marks the active display: LCD when closed, LCD-1 when open or partly open. Only the app can tell open, book and tabletop apart: read `reservedRegions(kind: .division, options: .includeInactive)` and check `isActive` and the region's shape.
+- We found no other route: no pose command in `simctl` or `devicectl`, no AppleScript dictionary, no URL route and no Darwin notification. `devicectl device orientation set` printed a new orientation, but the partly open phone didn't rotate.
 
 ### Split View
 

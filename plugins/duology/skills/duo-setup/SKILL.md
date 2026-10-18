@@ -19,7 +19,7 @@ If the Duology plugin is installed, run `/duo-doctor` first. It runs the plugin'
 - Ask before you run `xcodebuild -runFirstLaunch` (its help says it agrees to the license) or `xcodebuild -downloadPlatform` (a multi-gigabyte download).
 - Reuse the iPhone Duo simulator the Mac already has. Run `xcrun simctl create` only when none is listed, and only after the user agrees: each simulator takes about 4-6 GB of disk. Never create a second one, and never clone one (`xcodebuild test` can clone it unless you pass `-parallel-testing-enabled NO`).
 - Ask before you run `claude mcp add` / `claude mcp remove` (they change the user's Claude Code configuration). Show the exact command first.
-- You can't change the pose from the command line. `simctl` in Xcode 27.1 has no pose command. Ask the user to click in Device Hub.
+- `simctl` and `devicectl` in Xcode 27.1 have no pose command. A tool can press Device Hub's pose buttons through the macOS Accessibility API, but only after the user gives Accessibility permission to the app that runs you. Never change that permission yourself. By default, ask the user to click the pose in Device Hub. See [Script the pose buttons](references/simulator-and-device-hub.md#script-the-pose-buttons).
 - Don't turn on Xcode's external-agent setting for the user. They do it in Xcode's settings.
 - Build Duo work with Xcode 27.1 only. An older Xcode builds with an older SDK, and the SDK decides how the app looks on iPhone Duo ([Apple: Three steps](https://developer.apple.com/iphone-duo/prepare/)).
 
@@ -78,6 +78,8 @@ Poses change only in Device Hub's window ([Apple: interacting in Device Hub](htt
 | Fully open (inner display) | Click **Open**, on the far right |
 | Any fold angle | Hold Option and drag the slider below the bezel |
 | Split View | On the inner display, drag the app by its home indicator to one side ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)) |
+
+With the user's Accessibility permission, a tool can press Closed, Partially Open, Open and Rotate Right instead. It drives Device Hub's window and can break in an Xcode update ([references/simulator-and-device-hub.md](references/simulator-and-device-hub.md#script-the-pose-buttons)).
 
 Save each display from the command line. These commands only read the screen:
 
@@ -267,7 +269,7 @@ Pass, with the phone fully open and held wide: the inner display shows `regular`
 | `claude mcp list` shows `xcode` failing | The registered command is wrong; the bridge answers even with Xcode closed. Read `claude mcp get xcode`, then remove and re-register it as in step 5, after the user agrees. |
 | `xcode` shows Connected, but Xcode's tools fail | The project isn't open in Xcode 27.1, the Intelligence setting is off, or the bridge found another Xcode. See step 5. |
 | `bootstatus` takes minutes | A first launch can take several minutes (Xcode 27.1 known issue). Run it in the background and poll. |
-| A script needs to change the pose | Not possible with `simctl`. Ask the user to click the pose in Device Hub, then continue. |
+| A script needs to change the pose | `simctl` and `devicectl` can't. Ask the user to click the pose in Device Hub, then continue. With the user's Accessibility permission, a tool can press the buttons instead ([references/simulator-and-device-hub.md](references/simulator-and-device-hub.md#script-the-pose-buttons)). |
 
 ## Checklist
 

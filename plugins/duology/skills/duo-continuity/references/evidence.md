@@ -8,7 +8,7 @@ Every *measured* line in this skill comes from the runs below. Read the limits b
 
 ## The method, and its limits
 
-Xcode 27.1 can't fold the simulator from code (see [testing.md](testing.md)). So each SwiftUI probe flips a `wide` flag on a timer. The flag switches `if`/`else` branches, `AnyLayout` axes, grid column counts and a frame width, and it overrides `horizontalSizeClass` for the whole tree. That is the code path a fold takes through your views. The UIKit probe does the same with `traitOverrides.horizontalSizeClass`.
+A probe can't fold the simulator itself (see [testing.md](testing.md)). So each SwiftUI probe flips a `wide` flag on a timer. The flag switches `if`/`else` branches, `AnyLayout` axes, grid column counts and a frame width, and it overrides `horizontalSizeClass` for the whole tree. That is the code path a fold takes through your views. The UIKit probe does the same with `traitOverrides.horizontalSizeClass`.
 
 What the flip does not do: move content to the other display, resize the window, change the scene phase, or touch the software keyboard. Those parts of a real fold are *unverified* here. Run the Device Hub pass in [testing.md](testing.md) for them.
 

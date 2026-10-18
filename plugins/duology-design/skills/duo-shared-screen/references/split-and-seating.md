@@ -154,7 +154,7 @@ struct FoldedSharedSplit<First: View, Second: View>: View {
 
 - `FoldSplitLayout` decides side by side or stacked from its bounds the same way, so the turns match its placement.
 - The fold's frame includes margins for interactive content, and `FoldSplitLayout` uses the whole frame as the gap ([ReservedRegion](https://developer.apple.com/documentation/swiftui/reservedregion)).
-- We could not fold the simulator from a script; `simctl` has no pose command. Not run while partly folded. (unverified)
+- We did not fold the simulator for this test (`simctl` has no pose command). Not run while partly folded. (unverified)
 
 ## Small halves
 

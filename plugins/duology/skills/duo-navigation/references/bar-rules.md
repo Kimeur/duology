@@ -1,6 +1,6 @@
 # Bar rules on iPhone Duo
 
-Depth for [`../SKILL.md`](../SKILL.md). Each rule names its source. *Measured* means we ran a probe app on the iPhone Duo simulator (Xcode 27.1, iOS 27.1) on 16 October 2026, inner display, fully open, held wide. We could not change poses from the command line, so the outer display, portrait, partially folded and Split View were not measured.
+Depth for [`../SKILL.md`](../SKILL.md). Each rule names its source. *Measured* means we ran a probe app on the iPhone Duo simulator (Xcode 27.1, iOS 27.1) on 16 October 2026, inner display, fully open, held wide. We did not change poses in that run, so the outer display, portrait, partially folded and Split View were not measured.
 
 ## Sources
 

@@ -3,6 +3,8 @@
 # and the pull request was opened by the repository owner from a branch of this repo.
 # Needs one repository secret: CLAUDE_CODE_OAUTH_TOKEN (from `claude setup-token`)
 # or ANTHROPIC_API_KEY. Without it, the review is skipped and nothing merges on its own.
+# Also make "Claude review" a required status check on main. The job fails on a
+# blocker, so a required check stops any merge until the latest commit passes review.
 name: Claude review
 
 on:
@@ -17,18 +19,60 @@ permissions:
   contents: read
 
 jobs:
+  # Each new commit turns auto-merge off first. Otherwise auto-merge set up for an
+  # earlier commit stays on and merges this one before its own review finishes.
+  disarm:
+    name: Turn off auto-merge
+    # Fork pull requests get a read-only token, and GitHub already turns
+    # auto-merge off when someone without write access pushes.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Turning auto-merge off needs write access to the repository:
+    # https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/incorporating-changes-from-a-pull-request/automatically-merging-a-pull-request
+    # This job checks out nothing and runs no code from the pull request.
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Turn off auto-merge until this commit is reviewed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: |
+          auto_on() { gh pr view "$PR" --repo "$REPO" --json autoMergeRequest --jq '.autoMergeRequest != null'; }
+          on=$(auto_on)
+          if [ "$on" = "true" ]; then
+            gh pr merge "$PR" --repo "$REPO" --disable-auto || true
+            on=$(auto_on)
+          fi
+          # Fail closed: anything but a clear "off" stops the review.
+          if [ "$on" != "false" ]; then
+            echo "::error::Could not turn off auto-merge on pull request #$PR."
+            exit 1
+          fi
+
   review:
     name: Claude review
-    if: github.event.pull_request.draft == false
+    needs: disarm
+    # !cancelled() keeps this job running when disarm fails, so the check fails.
+    # A skipped job would count as a passed check.
+    if: ${{ !cancelled() && github.event.pull_request.draft == false }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
       contents: read
       pull-requests: write
-      id-token: write
     outputs:
       verdict: ${{ steps.verdict.outputs.verdict }}
     steps:
+      - name: Stop if auto-merge is still on
+        if: needs.disarm.result != 'success' && needs.disarm.result != 'skipped'
+        run: |
+          echo "::error::Auto-merge could not be turned off for this commit, so it can't be reviewed. See the 'Turn off auto-merge' job."
+          exit 1
+
       - name: Check for a Claude credential
         id: cred
         env:
@@ -107,6 +151,12 @@ jobs:
             gh pr comment "$PR" --repo "$REPO" --body-file review.md
           fi
 
+      - name: Fail on a blocker
+        if: steps.cred.outputs.ok == 'true' && steps.verdict.outputs.verdict != 'merge'
+        run: |
+          echo "::error::The review found merge blockers or gave no result. See the Claude review comment on the pull request."
+          exit 1
+
   merge:
     name: Merge when green
     needs: review
@@ -121,6 +171,11 @@ jobs:
       pull-requests: write
     steps:
       - name: Turn on auto-merge (waits for required checks)
+        # --match-head-commit: merge only the commit that was reviewed. If a new
+        # commit landed meanwhile, GitHub refuses and that commit's own run decides.
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh pr merge "${{ github.event.pull_request.number }}" --repo "${{ github.repository }}" --squash --auto --delete-branch
+          PR: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ github.event.pull_request.head.sha }}
+        run: gh pr merge "$PR" --repo "$REPO" --squash --auto --delete-branch --match-head-commit "$SHA"

@@ -6,20 +6,9 @@ Each release says which Xcode and iOS versions it was checked on.
 
 ## [Unreleased]
 
-### Added
+Nothing yet. v0.2 work happens on the `v0.2` branch.
 
-- `scripts/validate-skills.py`: checks every `SKILL.md` for valid front matter, a `name` that matches its folder, a description of 1 to 1024 characters, a `metadata.verified` line, 300 lines or fewer, and relative links that resolve and stay inside their plugin folder, since `/plugin install` copies only that folder. It also checks the front matter of commands and agents. Standard library only.
-- `scripts/check-manifests.py`: checks that every JSON file parses and that the marketplace, plugin manifests and hooks point at files that exist.
-- `scripts/check-sources.py`: checks that the web pages Duology cites still answer. A redirect up to a parent page or an index counts as broken, because that is how Apple answers an unknown WWDC or Tech Talk ID. Links into this repo are checked against the local checkout, so they also work offline.
-- Unit tests for the three scripts in `scripts/tests/`.
-- GitHub Actions workflow `.github/workflows/validate.yml`: skills, manifests, duo-lint tests, duo-lint on Duology's own Swift, and the script tests on every push to `main` and every pull request. A weekly job checks the web links.
-- Issue forms for bugs, API corrections, new layout patterns and showcases, and a pull request template.
-- `AGENTS.md` for Codex, Cursor, GitHub Copilot, Gemini CLI and other agents, and `llms.txt`.
-- `SECURITY.md`, `CODE_OF_CONDUCT.md` and this changelog.
-
-## [0.1.0] - TBD
-
-Planned. Target: by 30 October 2026 (see the [roadmap](ROADMAP.md)). When v0.1.0 is tagged, this section becomes the release notes and the items above move into it.
+## [0.1.0] - 2026-10-18
 
 Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not yet checked on a real iPhone Duo; that is planned for v0.2.
 
@@ -42,9 +31,16 @@ Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not ye
 - `duo-lint` with nine rules (`DUO001` to `DUO009`), text, JSON and GitHub output, and an opt-in Claude Code hook (`DUOLOGY_LINT_HOOK=1`) that never blocks.
 - Gallery app in `samples/DuologyGallery` with a screen for each layout pattern.
 - Reference files: `reference/api-index.md`, `reference/device-facts.md` and `reference/sources.md`.
-- First test tasks and results in `evals/`.
+- First test tasks in `evals/`: a with/without harness with scoped permissions. Published results come with v0.2.
 - French README.
+- `scripts/validate-skills.py`: checks every `SKILL.md` for valid front matter, a `name` that matches its folder, a description of 1 to 1024 characters, a `metadata.verified` line, 300 lines or fewer, and relative links that resolve and stay inside their plugin folder, since `/plugin install` copies only that folder. It also checks the front matter of commands and agents. Standard library only.
+- `scripts/check-manifests.py`: checks that every JSON file parses and that the marketplace, plugin manifests and hooks point at files that exist.
+- `scripts/check-sources.py`: checks that the web pages Duology cites still answer. A redirect up to a parent page or an index counts as broken, because that is how Apple answers an unknown WWDC or Tech Talk ID. Links into this repo are checked against the local checkout, so they also work offline.
+- Unit tests for the three scripts in `scripts/tests/`.
+- GitHub Actions workflow `.github/workflows/validate.yml`: skills, manifests, duo-lint tests, duo-lint on Duology's own Swift, and the script tests on every push to `main` and every pull request. A weekly job checks the web links.
+- Issue forms for bugs, API corrections, new layout patterns and showcases, and a pull request template.
+- `AGENTS.md` for Codex, Cursor, GitHub Copilot, Gemini CLI and other agents, and `llms.txt`.
+- `SECURITY.md`, `CODE_OF_CONDUCT.md` and this changelog.
 
-<!-- When v0.1.0 is tagged: point Unreleased at https://github.com/Kimeur/duology/compare/v0.1.0...HEAD
-     and add "[0.1.0]: https://github.com/Kimeur/duology/releases/tag/v0.1.0". -->
-[Unreleased]: https://github.com/Kimeur/duology/commits/main
+[Unreleased]: https://github.com/Kimeur/duology/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Kimeur/duology/releases/tag/v0.1.0

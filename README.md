@@ -15,12 +15,14 @@
 **Your agent learned iOS before the iPhone Duo existed. Duology teaches it the rest.**
 
 [![GitHub stars](https://img.shields.io/github/stars/Kimeur/duology?style=flat-square&color=f4c430)](https://github.com/Kimeur/duology/stargazers)
-[![Status](https://img.shields.io/badge/status-v0.1_in_progress-9a5a00?style=flat-square)](ROADMAP.md)
+[![Release](https://img.shields.io/github/v/release/Kimeur/duology?style=flat-square&color=1d7a4b)](https://github.com/Kimeur/duology/releases)
 [![Skills](https://img.shields.io/badge/skills-11_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
 [![Recipes](https://img.shields.io/badge/app_recipes-1_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
 [![Built for Xcode 27.1](https://img.shields.io/badge/built_for-Xcode_27.1_·_iOS_27.1-1d7a4b?style=flat-square)](#verified-on)
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-d97757?style=flat-square)](#quick-start)
+<!-- skills.sh badge: add once the repo is listed
 [![skills.sh](https://skills.sh/b/Kimeur/duology?style=flat-square)](https://skills.sh/Kimeur/duology)
+-->
 [![Last commit](https://img.shields.io/github/last-commit/Kimeur/duology?style=flat-square)](https://github.com/Kimeur/duology/commits)
 [![MIT license](https://img.shields.io/badge/license-MIT-blue?style=flat-square)](LICENSE)
 
@@ -35,7 +37,7 @@
 </div>
 
 > [!IMPORTANT]
-> **Duology is being built in the open.** v0.1 (11 skills, `/duo-doctor`, `/duo-new`, `/duo-audit`) lands by 30 October 2026. The full pack of 36 skills is planned for v1.0 in January 2027. Until v0.1 is tagged, the install commands below won't work yet. Star or watch the repo to get the release. See the [roadmap](ROADMAP.md).
+> **v0.1 is out** (18 October 2026): 11 skills, `/duo-doctor`, `/duo-new` and `/duo-audit`, checked on Xcode 27.1 and the iPhone Duo simulator. Duology is built in the open: v0.2 (design skills and the pose check) is next, and the full pack of 36 skills is planned for v1.0 in January 2027. Star or watch the repo to follow along. See the [roadmap](ROADMAP.md) and the [release notes](CHANGELOG.md).
 
 > [!NOTE]
 > Duology is a community project. It is not affiliated with, endorsed by or sponsored by Apple Inc.

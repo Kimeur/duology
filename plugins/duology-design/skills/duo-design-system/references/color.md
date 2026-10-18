@@ -34,6 +34,8 @@ Colours don't change between the two displays. They change with the appearance (
 | Separator | `DuoColor.separator` | `.separator` |
 | Tint, links, selected state | `.tint`, `Color.accentColor` | `tintColor`, `.link` |
 
+Put `DuoCard` (`DuoColor.card`) on `DuoColor.groupedBackground`, never on `DuoColor.background`. *Measured* on the iOS 27.1 simulator runtime in light mode: `secondarySystemGroupedBackground` and `systemBackground` are both pure white, so a card on a plain background has no visible edge. `systemGroupedBackground` is a light grey (0.949, 0.949, 0.969). In dark mode the card is the lighter one (0.110 grey on black).
+
 ## Measured contrast of system colours
 
 We resolved each colour for light, dark and Increase Contrast with `UIColor.resolvedColor(with:)`, composited translucent colours over the background, and computed the WCAG ratio, on the iOS 27.1 simulator runtime (the check below, run with `xcrun simctl spawn`):

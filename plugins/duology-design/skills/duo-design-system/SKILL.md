@@ -33,8 +33,8 @@ Labels: *measured* means we ran it on the iOS 27.1 simulator runtime (offscreen 
 | Window, portrait or held wide | 466 × 678 pt (*derived*) | 951 × 669 pt (*measured*) |
 | Safe area | 382 × 644 pt (*measured*) | 867 × 635 pt (*measured*, bar on the right) |
 | Layout columns | 4 | 8 |
-| Gutter | 12 pt | 16 pt; partly folded, the fold's frame in the middle (40 pt, *measured*) |
-| Margins | system: 16 to 20 pt on iPhone ([doc](https://developer.apple.com/documentation/swiftui/contentmarginguide/container)); not measured on Duo | same, and asymmetric next to the vertical bar |
+| Gutter | 12 pt | 16 pt, the middle one on the fold line; partly folded, the fold's frame (40 pt, *measured*) |
+| Margins | system, per side: 16 to 20 pt on iPhone ([doc](https://developer.apple.com/documentation/swiftui/contentmarginguide/container)), asymmetric next to the status bar column (gallery app: 20 pt leading, 0 pt trailing) | system, per side; asymmetric next to the vertical bar |
 | Card padding, radius | 16 pt, 24 pt | 20 pt, 28 pt |
 | Section spacing | 24 pt | 32 pt |
 | Text | system text styles | the same sizes; lines capped at `readableWidth` |
@@ -116,20 +116,23 @@ import SwiftUI
 
 // requires: DuoTokens.swift (references/tokens.md)
 
-struct AccountSection: View {
+struct AccountScreen: View {
     @DuoMetrics private var tokens
 
     var body: some View {
-        VStack(alignment: .leading, spacing: tokens.sectionSpacing) {
-            Text("Account").font(DuoType.sectionTitle)
-            DuoCard {
-                VStack(alignment: .leading, spacing: DuoSpace.x2) {
-                    Text("Signed in").font(DuoType.itemTitle)
-                    Text("Sync is on.").font(DuoType.secondary).foregroundStyle(.secondary)
+        ScrollView {
+            VStack(alignment: .leading, spacing: tokens.sectionSpacing) {
+                Text("Account").font(DuoType.sectionTitle)
+                DuoCard {
+                    VStack(alignment: .leading, spacing: DuoSpace.x2) {
+                        Text("Signed in").font(DuoType.itemTitle)
+                        Text("Sync is on.").font(DuoType.secondary).foregroundStyle(.secondary)
+                    }
                 }
             }
+            .duoContainerMargins()
         }
-        .duoContainerMargins()
+        .background(DuoColor.groupedBackground) // cards are white in light mode
     }
 }
 ```
@@ -141,7 +144,7 @@ Every value, its source and how to change it safely: [references/tokens.md](refe
 - `@DuoMetrics` reads the size class where the view sits. Inside an `ArrangementView` half on the inner display it returns compact tokens, because that half reports compact width (*measured* in `duo-layout`).
 - A custom split keeps the window's size class in each half (*measured* for `EvenSplit` in `duo-layout`: regular on the inner display). Give each half compact tokens with `.environment(\.horizontalSizeClass, .compact)` on the half.
 - *Measured* offscreen: `@DuoMetrics` followed the size class and the Dynamic Type size set in the environment, and `readableWidth` scaled from 518 pt (xSmall) to 1691 pt (AX5).
-- Change structure with `AnyLayout` or `ViewThatFits`, so views keep their state.
+- Change structure with `AnyLayout`, so views keep their state. `ViewThatFits` swaps children and resets their `@State` (*measured*); use it only for stateless labels and icons (see `duo-continuity`).
 
 | Don't | Do |
 |---|---|
@@ -156,22 +159,25 @@ Every value, its source and how to change it safely: [references/tokens.md](refe
 - Spacing comes from `DuoSpace`: steps of 4 pt. Apple's padding advice (about 12 pt around controls with a bezel, about 24 pt around those without) sits on it ([HIG, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Mobility)).
 - Margins come from the system: `.duoContainerMargins()` uses `contentMargins(for: .container)` on iOS 27.1, which can differ on each side next to a vertical bar.
 - Gutters: `tokens.gutter`, 12 pt compact and 16 pt regular (Duology default).
-- The fold: flat, the middle gutter is a normal gutter. Partly folded, it becomes the fold's frame, which includes the system's margin on each side of the curve (*measured*: 40 pt flat in `duo-layout`, and 40 pt partly folded in the gallery app's region overlay). Apple's Fitness example keeps the outer margins and widens only the middle ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=350)).
+- The fold: flat, the middle gutter is a normal gutter centred on the fold line. Partly folded, it becomes the fold's frame, which includes the system's margin on each side of the curve (*measured*: 40 pt flat in `duo-layout`, and 40 pt partly folded in the gallery app's region overlay). Apple's Fitness example keeps the outer margins and widens only the middle ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=350)).
 
 ## 4. Even-column grids
 
 Lay designed screens out on `tokens.columns` (4 or 8) and give content a span, not a width: `tokens.span(1)` for thumbnails, `span(2)` for cards, `span(4)` for wide cards. Spans double at accessibility text sizes, which gives fewer, wider columns, as Apple asks ([HIG, Typography](https://developer.apple.com/design/human-interface-guidelines/typography#Supporting-Dynamic-Type)).
 
-`DuoColumns` in [references/grid.md](references/grid.md#the-grid-helper) turns tokens and the fold into `LazyVGrid` columns. It rounds to an even count when a fold crosses the grid (active or not), puts half the columns on each side of an active fold, and never lets a span cross the middle:
+`DuoColumns` in [references/grid.md](references/grid.md#the-grid-helper) turns tokens and the fold into `LazyVGrid` columns. When a fold crosses the grid, flat or folded, it rounds to an even count, puts half the columns on each side of the fold and never lets a span cross it. If one side is too narrow (in a half of an `EvenSplit`), every column goes on the other side:
 
 ```swift
 let columns = DuoColumns(width: geometry.width, count: tokens.columns,
                          gutter: tokens.gutter, fold: geometry.fold)
     .grouped(by: tokens.span(2))
 // LazyVGrid(columns: columns.gridItems, spacing: tokens.gutter) { ... }
+//     .padding(.leading, columns.leadingInset)
+//     .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
+//     .onGeometryChange(for: DuoGridGeometry.self) { DuoGridGeometry($0) } action: { ... }
 ```
 
-The full `CardGrid` view, the version for apps below iOS 27.1, and worked numbers for both displays are in [references/grid.md](references/grid.md). For an endless feed that should fit as many tiles as possible, use feed reflow from `duo-patterns`.
+Measure the grid's width on that frame, never on the `LazyVGrid` itself: with fixed columns it reports their sum, so it never shrinks when the phone closes or enters Split View (*measured*). The full `CardGrid` view, the version for apps below iOS 27.1, and worked numbers for both displays are in [references/grid.md](references/grid.md). For an endless feed that should fit as many tiles as possible, use feed reflow from `duo-patterns`.
 
 ## 5. Type on both displays
 
@@ -237,6 +243,7 @@ Button { isFavorite.toggle() } label: {
 ## 9. Colour and contrast
 
 - Use `DuoColor` backgrounds and `.primary` / `.secondary` text styles. They adapt to light, dark and Increase Contrast.
+- Put `DuoCard` on `DuoColor.groupedBackground`, never on `DuoColor.background`: in light mode the card and `systemBackground` are the same white (*measured*).
 - *Measured* on the iOS 27.1 runtime: `label` on `systemBackground` is 21:1. `secondaryLabel` is 3.44:1 in light mode (5.97:1 with Increase Contrast) and `systemBlue`, the default tint, 3.52:1. Use those for 18 pt and up, bold text, symbols and controls; use `label` for small text people must read.
 - Custom colours: `DuoColor.dynamic(light:dark:lightHighContrast:darkHighContrast:)` or an asset catalog colour with Dark and High Contrast variants.
 - Check pairs in a unit test with `duoWorstContrast(text:on:)` from [references/color.md](references/color.md#check-contrast-in-code).
@@ -264,11 +271,11 @@ The token module builds for iOS 17. Glass, `ConcentricRectangle` and `scrollEdge
 - [ ] No token depends on the device, display, idiom, orientation or `UIScreen.main`.
 - [ ] Custom split halves set a compact size class; arrangement halves read their own.
 - [ ] Margins come from `duoContainerMargins()` (or `layoutMarginsGuide`), per side.
-- [ ] Grids use 4 or 8 columns; partly folded, the fold's frame is the middle gutter and no item crosses it.
+- [ ] Grids use 4 or 8 columns split at the fold, flat and folded; no item crosses it; the width is read from a frame that fills the offered width.
 - [ ] Text uses `DuoType` roles or `Font.custom(_:size:relativeTo:)`; sizes are the same on both displays.
 - [ ] Long text is capped with `duoReadableWidth`; AX5 works on the closed outer display.
 - [ ] Glass is on controls only, grouped in `GlassEffectContainer`, regular unless over media; one tinted action at most.
 - [ ] Corners near an edge or inside a container are concentric; `containerShape` comes before `background(_:in:)`.
 - [ ] Every tappable element has a 44 × 44 pt hit region, also in the smallest half.
-- [ ] Custom colours have light, dark and high-contrast variants; text pairs meet 4.5:1 (3:1 at 18 pt or bold).
+- [ ] Custom colours have light, dark and high-contrast variants; text pairs meet 4.5:1 (3:1 at 18 pt or bold); cards sit on `DuoColor.groupedBackground`.
 - [ ] Checked closed, open, partly folded, Split View, AX5, dark, Increase Contrast and Reduce Transparency.

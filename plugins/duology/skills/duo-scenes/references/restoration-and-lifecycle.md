@@ -15,7 +15,7 @@ Fold and unfold inside one window (scroll position, playback, typed text) is `du
 
 - A new window started with its own `@SceneStorage` value (0) while the first window held 7.
 - After the app was terminated and relaunched, the system reconnected only the last window used (open sessions 2, connected 1).
-- Activating the other saved session with `UISceneSessionActivationRequest(session:)` brought it back with 7.
+- Activating the other saved session with [UISceneSessionActivationRequest(session:)](https://developer.apple.com/documentation/uikit/uiscenesessionactivationrequest-swift.struct) brought it back with 7.
 - SwiftUI saved its windows with its own activity type, `com.apple.SwiftUI.stateRestoration`. Treat it as private.
 
 ### Per-window navigation
@@ -58,6 +58,7 @@ struct NotesWindowRoot: View {
 ```
 
 - A window opened with `openWindow(value:)` already knows its note from the value. Use `@SceneStorage` for what changes after that.
+- The save runs when [scenePhase](https://developer.apple.com/documentation/swiftui/environmentvalues/scenephase) reaches `.background`, not on `.inactive`.
 - `duo-continuity` has the `NavigationPath` version and the rules for model ownership.
 
 ## UIKit
@@ -103,7 +104,7 @@ final class NotesListController: UITableViewController {
 ```
 
 - The system asks for the activity before it disconnects the scene and stores a copy in `session.stateRestorationActivity` ([doc](https://developer.apple.com/documentation/uikit/uiscenesession/staterestorationactivity)). That doc also says the value can be `nil` at connection time if the data is still locked, and is filled in later.
-- Small per-window values that aren't worth an activity can go in `session.userInfo`.
+- Small per-window values that aren't worth an activity can go in [session.userInfo](https://developer.apple.com/documentation/uikit/uiscenesession/userinfo).
 
 ### Bring back a window instead of duplicating it
 
@@ -131,7 +132,7 @@ func showNote(_ noteID: UUID, otherwise showHere: @escaping @MainActor @Sendable
 }
 ```
 
-`openSessions` includes windows whose scene isn't connected. *Measured:* re-activating such a session reconnected it with its saved state.
+[openSessions](https://developer.apple.com/documentation/uikit/uiapplication/opensessions) includes windows whose scene isn't connected. *Measured:* re-activating such a session reconnected it with its saved state.
 
 ### Clean up closed windows
 
@@ -160,7 +161,7 @@ enum WindowFiles {
 
 ## The lifecycle on fold and unfold
 
-Apple says opening and closing the phone work like resizing the app in iPhone Mirroring ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=135)), and that the app still resizes on open and close even with `UIRequiresFullScreen` ([same talk](https://developer.apple.com/videos/play/tech-talks/111461/?time=277)). The UIKit header for `windowScene(_:didUpdateEffectiveGeometry:)` (iOS 26) says it is always called when a window scene moves between screens. Use that callback, or plain trait and size changes, to react. Read the screen from the scene when you need it.
+Apple says opening and closing the phone work like resizing the app in iPhone Mirroring ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=135)), and that the app still resizes on open and close even with `UIRequiresFullScreen` ([same talk](https://developer.apple.com/videos/play/tech-talks/111461/?time=277)). Apple's page for [windowScene(_:didUpdateEffectiveGeometry:)](https://developer.apple.com/documentation/uikit/uiwindowscenedelegate/windowscene(_:didupdateeffectivegeometry:)) (iOS 26) and the UIKit header both say it is always called when a window scene moves between screens. Use that callback, or plain trait and size changes, to react. Read the screen from the scene when you need it.
 
 ```swift
 import UIKit
@@ -199,7 +200,7 @@ final class PlayerSceneDelegate: UIResponder, UIWindowSceneDelegate {
 }
 ```
 
-- `UIWindowScene.displayLink(target:selector:)` is iOS 27.0. Apple's doc says the link is retargeted when the scene moves between displays ([doc](https://developer.apple.com/documentation/uikit/uiwindowscene/displaylink(target:selector:))). `UIScreen`'s `displayLink(withTarget:selector:)` is deprecated in iOS 27.
+- `UIWindowScene.displayLink(target:selector:)` is iOS 27.0. Apple's doc says the link is retargeted when the scene moves between displays ([doc](https://developer.apple.com/documentation/uikit/uiwindowscene/displaylink(target:selector:))). `UIScreen`'s [displayLink(withTarget:selector:)](https://developer.apple.com/documentation/uikit/uiscreen/displaylink(withtarget:selector:)) is deprecated in iOS 27 (`UIScreen.h` points to the window scene's version).
 - `windowScene.screen` changes when the window moves. Never keep a `UIScreen` in a property. `duo-layout` has the wider rule.
 
 ### What we saw, and what we couldn't check
@@ -217,8 +218,8 @@ So a fold is a resize of the same scene, as Apple says. Your window code doesn't
 
 | Order | First window |
 |---|---|
-| 1 | `sceneWillResignActive`, SwiftUI phase `active` to `inactive` |
-| 2 | `sceneDidEnterBackground`, phase `inactive` to `background`; the scene stayed connected |
+| 1 | [sceneWillResignActive(_:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenewillresignactive(_:)), SwiftUI phase `active` to `inactive` |
+| 2 | [sceneDidEnterBackground(_:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenedidenterbackground(_:)), phase `inactive` to `background`; the scene stayed connected |
 | 3 | `didUpdateEffectiveGeometry` to 951 × 669 pt in landscape, then back to 466 × 678 pt, all while in the background |
 
 The new window, meanwhile, laid out first at 466 × 562 pt and then at 382 × 644 pt (its root view inside the safe area).
@@ -232,5 +233,5 @@ The new window, meanwhile, laid out first at 466 × 562 pt and then at 382 × 64
 Run the probe in [evidence.md](evidence.md#the-probe), set up Split View by hand, press the poses, and read the log. Meanwhile:
 
 - Save on `.background`. Never tear down (stop playback, clear drafts, release the UI) on `.inactive`.
-- Check `activationState` before doing work in a geometry callback.
-- Handle `sceneDidDisconnect(_:)` at any point: UIKit can disconnect a background scene to reclaim resources and keep its session ([Managing your app's life cycle](https://developer.apple.com/documentation/uikit/managing-your-app-s-life-cycle)).
+- Check [activationState](https://developer.apple.com/documentation/uikit/uiscene/activationstate-swift.property) before doing work in a geometry callback.
+- Handle [sceneDidDisconnect(_:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenediddisconnect(_:)) at any point: UIKit can disconnect a background scene to reclaim resources and keep its session ([Managing your app's life cycle](https://developer.apple.com/documentation/uikit/managing-your-app-s-life-cycle)).

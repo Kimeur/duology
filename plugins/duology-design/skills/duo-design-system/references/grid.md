@@ -1,6 +1,6 @@
 # Grids, margins and the gutter at the fold
 
-A layout grid for designed screens: dashboards, card collections, settings, product pages. It has an even number of columns in both size classes, the system margins on the outside, and the fold as its middle gutter when the phone is partly open.
+A layout grid for designed screens: dashboards, card collections, settings, product pages. It has an even number of columns in both size classes, the system margins on the outside, and the fold in its middle gutter: a normal gutter on the fold line when the phone is flat, the fold's frame when it is partly open.
 
 For an endless feed that should show "as many tiles as fit", use the feed reflow pattern in `duo-patterns` ([feed-reflow.md](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/feed-reflow.md)). Both follow the same fold rules.
 
@@ -29,13 +29,13 @@ Worked example. We ran `DuoColumns` (below) on these inputs on the iOS 27.1 simu
 - **Inner display, flat.** The safe area is 867 pt wide held wide, with the vertical bar on the right (*measured* in `duo-setup`). With 20 pt margins (*assumed*) the grid is 827 pt. `duo-layout` measured the flat fold's frame at x 455.5 to 495.5 in the window: a line at x 475.5 plus 20 pt on each side. In the grid's coordinates that is 435.5 to 475.5, with the line at 455.5. The middle gutter (16 pt) sits on that line, so the left half gets four 99.9 pt columns and the right half four 78.9 pt columns: cards of 215.8 and 173.8 pt.
 - **Inner display, partly folded.** The gallery app's region overlay reports the active fold as 40 × 669 pt at x 455 in a 951 pt window ([screenshot](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/regions-book.png)), so the frame keeps its width when the phone folds. The middle gap grows from 16 to 40 pt: the left columns narrow to 96.9 pt and the right ones to 75.9 pt (cards of 209.8 and 167.8 pt). No column edge moves more than 12 pt.
 - **Why the halves differ.** The vertical bar takes space on the right only, so the fold is 42 pt right of the grid's centre. That is the asymmetry Apple's Fitness example accepts: outer margins stay, the middle widens.
-- **A half of an `EvenSplit`** (`duo-layout`) with compact tokens. The right half starts at x 434.5; with 16 pt margins its grid is 400.5 pt wide and the fold runs through it at x 5 to 45, too close to its leading edge for two columns. All four columns go after the fold: flat from x 31 (83.4 pt each), partly folded from x 45 (79.9 pt each). The left half doesn't meet the fold at all.
+- **A half of an `EvenSplit(spacing: 2)`** (`duo-layout`) with compact tokens. The right half starts at x 434.5; with 16 pt margins its grid is 400.5 pt wide and the fold runs through it at x 5 to 45, too close to its leading edge for two columns. All four columns go after the fold: flat from x 31 (83.4 pt each), partly folded from x 45 (79.9 pt each). The left half doesn't meet the fold at all.
 
 Never put these numbers in code. They are here so you can check screenshots.
 
 ## The grid helper
 
-Copy this next to `DuoTokens.swift`. It typechecks against the iOS 27.1 simulator SDK in Swift 5, Swift 6 and main actor default isolation modes, and with an iOS 17 deployment target. The checks in the worked example above ran against it.
+Copy this next to `DuoTokens.swift`. It typechecks against the iOS 27.1 simulator SDK in Swift 5, Swift 6 and main actor default isolation modes, and with an iOS 17 deployment target. The worked example above and the resize check under [A card grid](#a-card-grid) ran against it.
 
 ```swift
 import SwiftUI
@@ -91,52 +91,73 @@ nonisolated struct DuoColumns: Equatable, Sendable {
     }
 
     private(set) var columns: [Column]
-    /// True when a fold crosses the grid, active or not. Groups never cross the middle then.
-    private(set) var hasFold: Bool
+    /// Index of the first column after the fold, or nil when the fold doesn't
+    /// split the grid. Groups never cross it.
+    private(set) var split: Int?
 
-    /// `count` is rounded down to even when a fold crosses the grid. While the
-    /// fold is active, its frame is the middle gutter and each half gets half the columns.
-    init(width: CGFloat, count: Int, gutter: CGFloat, fold: DuoFold? = nil) {
-        var count = max(1, count)
-        hasFold = fold != nil
-        if hasFold { count = max(2, count - count % 2) }
-
-        if let fold, fold.isActive {
-            let half = count / 2
-            let gaps = CGFloat(half - 1) * gutter
-            let left = max(0, (fold.minX - gaps) / CGFloat(half))
-            let right = max(0, (width - fold.maxX - gaps) / CGFloat(half))
-            columns = (0..<count).map { index in
-                index < half
-                    ? Column(x: CGFloat(index) * (left + gutter), width: left)
-                    : Column(x: fold.maxX + CGFloat(index - half) * (right + gutter), width: right)
-            }
+    /// With a fold, `count` is rounded down to even and each side of the fold gets
+    /// half the columns. Flat, the gap at the fold is one gutter centred on it;
+    /// partly folded, it is the fold's frame. If one side is too narrow for its
+    /// half at `minimumColumn`, every column goes on the other side and the fold
+    /// becomes the grid's edge.
+    init(width: CGFloat, count: Int, gutter: CGFloat, fold: DuoFold? = nil,
+         minimumColumn: CGFloat = 44) {
+        guard let fold else {
+            columns = Self.row(from: 0, to: width, count: max(1, count), gutter: gutter)
+            split = nil
+            return
+        }
+        let count = max(2, count - count % 2)
+        let half = count / 2
+        let gapStart = fold.isActive ? fold.minX : (fold.minX + fold.maxX - gutter) / 2
+        let gapEnd = fold.isActive ? fold.maxX : gapStart + gutter
+        // Decided on the fold's frame, which has the same size flat and folded,
+        // so the choice doesn't flip when the phone folds.
+        func holdsHalf(_ length: CGFloat) -> Bool {
+            length - CGFloat(half - 1) * gutter >= CGFloat(half) * minimumColumn
+        }
+        if holdsHalf(fold.minX), holdsHalf(width - fold.maxX) {
+            columns = Self.row(from: 0, to: gapStart, count: half, gutter: gutter)
+                + Self.row(from: gapEnd, to: width, count: half, gutter: gutter)
+            split = half
+        } else if fold.minX > width - fold.maxX {
+            columns = Self.row(from: 0, to: gapStart, count: count, gutter: gutter)
+            split = nil
         } else {
-            let each = max(0, (width - CGFloat(count - 1) * gutter) / CGFloat(count))
-            columns = (0..<count).map { Column(x: CGFloat($0) * (each + gutter), width: each) }
+            columns = Self.row(from: gapEnd, to: width, count: count, gutter: gutter)
+            split = nil
         }
     }
 
-    /// Merges every `span` columns into one. With a fold, each half is grouped
-    /// on its own, so no group crosses the middle gutter.
+    private static func row(from start: CGFloat, to end: CGFloat,
+                            count: Int, gutter: CGFloat) -> [Column] {
+        let each = max(0, (end - start - CGFloat(count - 1) * gutter) / CGFloat(count))
+        return (0..<count).map { Column(x: start + CGFloat($0) * (each + gutter), width: each) }
+    }
+
+    /// Merges every `span` columns into one. Each side of the fold is grouped
+    /// on its own, so no group crosses it.
     func grouped(by span: Int) -> DuoColumns {
         let span = max(1, span)
         guard span > 1, !columns.isEmpty else { return self }
-        let middle = columns.count / 2
-        let halves = hasFold ? [columns[..<middle], columns[middle...]] : [columns[...]]
-        var merged: [Column] = []
-        for half in halves {
-            var start = half.startIndex
-            while start < half.endIndex {
-                let last = min(start + span, half.endIndex) - 1
-                merged.append(Column(x: half[start].x, width: half[last].maxX - half[start].x))
+        let sides = split.map { [columns[..<$0], columns[$0...]] } ?? [columns[...]]
+        var result = self
+        result.columns = []
+        for (index, side) in sides.enumerated() {
+            if index == 1 { result.split = result.columns.count }
+            var start = side.startIndex
+            while start < side.endIndex {
+                let last = min(start + span, side.endIndex) - 1
+                result.columns.append(Column(x: side[start].x, width: side[last].maxX - side[start].x))
                 start += span
             }
         }
-        var result = self
-        result.columns = merged
         return result
     }
+
+    /// Empty space before the first column. Not zero only when the fold is the
+    /// grid's leading edge. Put it on the grid as leading padding.
+    var leadingInset: CGFloat { columns.first?.x ?? 0 }
 
     /// Items for `LazyVGrid`: fixed widths, and the real gap after each column.
     var gridItems: [GridItem] {
@@ -157,15 +178,20 @@ How it behaves:
 |---|---|---|
 | Outer display, any orientation | `nil` | `count` equal columns; groups may span the full width |
 | Inner display, held tall (fold runs across) | `nil` | equal columns; the fold falls between rows |
-| Inner display, flat, held wide | inactive | even count, equal columns; groups stay in their half |
-| Inner display, partly folded | active | even count; the fold's frame is the middle gap |
+| Inner display, flat, held wide | inactive | even count, half on each side; one normal gutter centred on the fold line; groups stay in their half |
+| Inner display, partly folded | active | even count, half on each side; the fold's frame is the middle gap |
+| A pane where one side of the fold can't hold half the columns at 44 pt (an `EvenSplit` half) | either | every column on the wider side; the fold becomes the grid's edge, and `leadingInset` says how far in the grid starts |
 | A pane that the fold misses, or that the fold only touches at its edge (Split View, not measured) | `nil` | `count` equal columns |
 
-Flat, the middle gutter is a normal gutter, not the fold's 40 pt frame. When the phone folds, only that one gap grows and the columns beside it narrow. Nothing changes row or order. That keeps the change small, as the HIG asks. If your screen must not move at all when it folds (a two-page spread, a board game), reserve the fold's frame even when flat: pass `DuoFold(minX:maxX:isActive: true)` built from the inactive frame. That is a Duology option, not an Apple rule.
+Flat, the gap at the fold is a normal gutter, centred on the fold line. When the phone folds, only that one gap grows, to the fold's frame, and the columns beside it narrow by a few points. Nothing changes row or order. That keeps the change small, as the HIG asks. The cost: flat, the two halves differ in width when a vertical bar sits on one side. If your screen must not move at all when it folds (a two-page spread, a board game), reserve the fold's frame even when flat: pass `DuoFold(minX:maxX:isActive: true)` built from the inactive frame. That is a Duology option, not an Apple rule.
 
 ## A card grid
 
-`DuoCard` comes from [tokens.md](tokens.md). The geometry reader sits on the grid, before the margins, so the fold comes back in the grid's own coordinates.
+`DuoCard` comes from [tokens.md](tokens.md). The geometry reader sits on a frame around the grid, before the margins, so the fold comes back in the grid's own coordinates. Three lines matter:
+
+- `.frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)` before `onGeometryChange`. A `LazyVGrid` with fixed columns is as wide as its columns, not as wide as the space it gets. Measured on it directly, the width never shrinks: the grid stayed 827 pt wide in a 350 pt window (*measured*). `.frame(maxWidth: .infinity)` alone kept the bug (*measured*); the `minWidth: 0` is what lets the frame shrink.
+- `.padding(.leading, columns.leadingInset)`, for the case where every column sits after the fold.
+- `.background(DuoColor.groupedBackground)`. `DuoCard` is white in light mode, the same white as `DuoColor.background`, so it needs the grouped grey behind it to show an edge.
 
 ```swift
 import SwiftUI
@@ -193,6 +219,10 @@ struct CardGrid: View {
                     DuoCard { Text(item.title).font(DuoType.itemTitle) }
                 }
             }
+            .padding(.leading, columns.leadingInset)
+            // Take the offered width, not the sum of the fixed columns,
+            // so the measured width also shrinks when the window does.
+            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
             .onGeometryChange(for: DuoGridGeometry.self) { proxy in
                 DuoGridGeometry(proxy)
             } action: { newValue in
@@ -200,6 +230,7 @@ struct CardGrid: View {
             }
             .duoContainerMargins()
         }
+        .background(DuoColor.groupedBackground)
     }
 }
 
@@ -219,12 +250,16 @@ struct CardGridAnyOS: View {
                     DuoCard { Text(item.title).font(DuoType.itemTitle) }
                 }
             }
+            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
             .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width = $0 }
             .duoContainerMargins()
         }
+        .background(DuoColor.groupedBackground)
     }
 }
 ```
+
+*Measured* headless on the iOS 27.1 simulator runtime: both views hosted in a window, resized 827 → 350 → 827 → 350 → 867 pt with the size class switched to match. The scroll view and its content followed every width in both directions. Before the frame line was added, both stayed at 827 pt after the first shrink and stuck out of the window. A `LazyVGrid` built from the worked example's columns (flat, folded, the `EvenSplit` half, and a fold near the trailing edge) put every item within 0.5 pt of its column.
 
 ## Spans
 
@@ -240,19 +275,21 @@ Give each kind of content a span, not a width:
 
 ## Pitfalls
 
+- **Reading the width from a grid with fixed columns.** It reports the sum of its columns, so it never shrinks when the phone closes, rotates or enters Split View. Measure a frame that fills the offered width, as `CardGrid` does.
 - **Odd column counts on the inner display.** A tile lands in the curve when the phone folds.
 - **Counting only active folds.** Flat, the default query returns nothing, so a grid picks 5 columns, then jumps to 4 when folded. `DuoFold` asks with `.includeInactive`.
-- **Centring the grid on the full window.** The vertical bar takes one side, so the fold is not at the centre of the safe area. `DuoColumns` places the middle gap at the fold's own x values.
+- **Centring the grid on the full window.** The vertical bar takes one side, so the fold is not at the centre of the safe area. `DuoColumns` places the middle gap at the fold's own x values, flat and folded.
 - **Equal halves when folded.** Forcing both halves to the same width moves the outer margins or pushes tiles into the fold. Let the halves differ.
 - **Fixed padding instead of margins.** `.padding(.horizontal, 20)` ignores the asymmetric margins next to a vertical bar.
-- **Using a custom split's size class.** An `EvenSplit` half from `duo-layout` keeps the window's regular width class even at a third of the width. Set `.environment(\.horizontalSizeClass, .compact)` on each half so it gets the 4-column grid.
+- **Using a custom split's size class.** An `EvenSplit` half from `duo-layout` keeps the window's regular width class even at a third of the width. Set `.environment(\.horizontalSizeClass, .compact)` on each half so it gets the 4-column grid. The fold can then cross a half near its edge; `DuoColumns` moves every column to the wider side instead of making 5 pt columns.
 
 ## Test it
 
-1. Closed: 4 columns, the same margins on both sides of the content.
-2. Open, flat, held wide: 8 columns, equal widths; in Split View on either side, 4 or 8 columns with the margins on the correct sides.
-3. Partially Open in Device Hub: the middle gap sits over the curve; outer margins unchanged; no card crosses the gap.
+1. Closed: 4 columns. The leading and trailing margins may differ next to the status bar column; both must come from `duoContainerMargins()`.
+2. Open, flat, held wide: 8 columns, four on each side of the fold line, with one normal gutter on the line. The halves can differ in width next to the vertical bar. In Split View on either side, 4 or 8 columns with the margins on the correct sides.
+3. Partially Open in Device Hub: the middle gap sits over the curve; outer margins unchanged; no card crosses the gap; columns narrow a little but keep their row and order.
 4. Open, held tall: the fold runs between rows; columns unchanged.
 5. AX5 text size: cards widen to the next span; still nothing in the fold.
+6. Close, open, close again, then enter and leave Split View: the grid follows the window both ways and nothing sticks out past the margins.
 
-`simctl` cannot change the pose. Use the pose buttons in Device Hub.
+`simctl` cannot change the pose. Use the pose buttons in Device Hub. Steps 1 to 5 have not run on the Duo simulator with this helper; step 6 ran headless only (above).

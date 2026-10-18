@@ -84,7 +84,7 @@ struct StatRow: View {
 }
 ```
 
-`AnyLayout` keeps view identity, so nothing resets when the text size changes. `ViewThatFits` works too when you would rather test the space than the setting. For grids, `tokens.span(_:)` already doubles at accessibility sizes ([grid.md](grid.md#spans)).
+`AnyLayout` keeps view identity, so nothing resets when the text size changes. `ViewThatFits` tests the space instead of the setting, but when it picks another child, that child's views start fresh: their `@State` resets and `onAppear` runs again (*measured*). Use it only for stateless labels and icons (see `duo-continuity`). For grids, `tokens.span(_:)` already doubles at accessibility sizes ([grid.md](grid.md#spans)).
 
 ## Custom fonts
 

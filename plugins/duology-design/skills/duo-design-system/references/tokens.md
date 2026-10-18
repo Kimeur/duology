@@ -5,6 +5,7 @@ One Swift file to copy into the app as `DuoTokens.swift`. It builds for iOS 17 a
 - The first three types (`DuoSpace`, `DuoTokens`, `DuoMetrics`) are the same code as in [SKILL.md](../SKILL.md#1-drop-in-the-token-module).
 - The grid helper (`DuoColumns`, `DuoFold`) is a second file: [grid.md](grid.md#the-grid-helper).
 - The colour contrast check is a third, optional file: [color.md](color.md#check-contrast-in-code).
+- Names it declares: `DuoSpace`, `DuoTokens`, `DuoMetrics`, `DuoType`, `DuoColor`, `DuoCard`, and the view modifiers `duoTouchTarget()`, `duoContainerMargins()`, `duoReadableWidth(_:)`, `duoContainerShape(_:)`. Search the app for them first. An app that kept `duo-start`'s v0.1 debug logger already has a `struct DuoSpace` there, and the build fails with "invalid redeclaration of 'DuoSpace'" (*checked*). That logger is temporary: delete it, or rename its struct, before you add this file.
 
 *Checked:* this file typechecks with no warnings against the iOS 27.1 simulator SDK in Swift 5 mode, Swift 6 mode, Swift 6 with main actor default isolation (what a new Xcode 27.1 app uses) and with an iOS 17 deployment target. *Measured:* we rendered views that read `@DuoMetrics` offscreen with `ImageRenderer` on the iOS 27.1 simulator runtime. The tokens followed the size class and Dynamic Type size set in the environment, and `readableWidth` scaled from 518 pt (xSmall) to 600 pt (Large), 791 pt (xxxLarge), 1309 pt (AX3) and 1691 pt (AX5).
 
@@ -171,7 +172,7 @@ If the app already has `duoContainerMargins()` from `duo-layout`, delete one of 
 | Margins | system container margins | system container margins | Apple: [`ContentMarginGuide.container`](https://developer.apple.com/documentation/swiftui/contentmarginguide/container) gives 16 to 20 pt on iPhone and can differ per side on iPhone Duo. Not measured on Duo yet. |
 | `columns` | 4 | 8 | Duology default. The rule (even counts where a fold can cross) is Apple's: [HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Reserved-regions), [111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=456). |
 | `gutter` | 12 | 16 | Duology default. |
-| Gutter at the fold | none | flat: `gutter`; partly folded: the fold's frame | Apple's Fitness example widens the gap at the hinge and keeps the outer margins ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=350)). |
+| Gutter at the fold | none | flat: `gutter`, centred on the fold line; partly folded: the fold's frame | Apple's Fitness example widens the gap at the hinge and keeps the outer margins ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=350)). |
 | `sectionSpacing` | 24 | 32 | Duology default. |
 | `cardPadding` | 16 | 20 | Duology default. |
 | `cardRadius` | 24 | 28 | Derived: `cardPadding + innerRadius`. *Measured:* a child inset 16 pt in a 24 pt container, or 20 pt in a 28 pt one, gets an 8 pt concentric radius. |

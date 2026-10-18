@@ -126,7 +126,7 @@ struct CameraScreen: View {
 ```
 
 - Attach it to the camera view. Attached at the app root, it would claim the outer display on screens that don't capture.
-- Watch the content's lifecycle with `onAppear`, `onDisappear` and `scenePhase` inside the accessory view, as Apple's [sceneAccessory(content:)](https://developer.apple.com/documentation/swiftui/view/sceneaccessory(content:)) page suggests.
+- Watch the content's lifecycle with `onAppear`, `onDisappear` and [scenePhase](https://developer.apple.com/documentation/swiftui/environmentvalues/scenephase) inside the accessory view, as Apple's [sceneAccessory(content:)](https://developer.apple.com/documentation/swiftui/view/sceneaccessory(content:)) page suggests.
 
 ### Both accessories at once
 
@@ -153,7 +153,7 @@ struct PresenterCamera: View {
 
 ## UIKit
 
-Register on the view controller that shows the camera, keep the registration, and read `isAvailable` in `updateProperties()` (iOS 26). Apple's guide says availability supports observation, and `UISceneAccessoryRegistration.h` says it is observable in `updateProperties` and `layoutSubviews`. So UIKit calls `updateProperties()` again when it changes. Mac Catalyst targets need the same `#if !targetEnvironment(macCatalyst)` guard as above around this code.
+Register on the view controller that shows the camera, keep the registration, and read `isAvailable` in [updateProperties()](https://developer.apple.com/documentation/uikit/uiviewcontroller/updateproperties()) (iOS 26). Call [setNeedsUpdateProperties()](https://developer.apple.com/documentation/uikit/uiviewcontroller/setneedsupdateproperties()) after you change `isEnabled` yourself. Apple's guide says availability supports observation, and `UISceneAccessoryRegistration.h` says it is observable in `updateProperties` and `layoutSubviews`. So UIKit calls `updateProperties()` again when it changes. Mac Catalyst targets need the same `#if !targetEnvironment(macCatalyst)` guard as above around this code.
 
 ```swift
 import UIKit
@@ -211,9 +211,9 @@ final class SubjectSceneDelegate: UIResponder, UIWindowSceneDelegate {
 ```
 
 - `userInfo` only identifies the object for the new scene. Keep your own strong reference to it, as `model` does here (Apple's guide).
-- Accessory scenes have no scene manifest entry; one would be ignored. The system sets the role.
-- If your app delegate implements `application(_:configurationForConnecting:options:)`, return `connectingSceneSession.configuration` for any role you don't handle, so you never replace the accessory's delegate. *Measured* in a SwiftUI app: UIKit didn't call it for the accessory scenes.
-- `application(_:didDiscardSceneSessions:)` reports accessory sessions too (*measured*: one each time the accessory went away). Skip sessions whose role is `windowCameraCaptureAccessory` when you clean up per-window data.
+- Accessory scenes have no scene manifest entry; one would be ignored. Build the [UISceneConfiguration](https://developer.apple.com/documentation/uikit/uisceneconfiguration) in code, as above. The system sets the role.
+- If your app delegate implements [application(_:configurationForConnecting:options:)](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/application(_:configurationforconnecting:options:)), return `connectingSceneSession.configuration` for any role you don't handle, so you never replace the accessory's delegate. *Measured* in a SwiftUI app: UIKit didn't call it for the accessory scenes.
+- [application(_:didDiscardSceneSessions:)](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/application(_:diddiscardscenesessions:)) reports accessory sessions too (*measured*: one each time the accessory went away). Skip sessions whose role is `windowCameraCaptureAccessory` when you clean up per-window data.
 - `isEnabled` hides the content and keeps the registration. `unregisterSceneAccessory(_:)` removes it and dismisses anything on screen ([doc](https://developer.apple.com/documentation/uikit/uiviewcontroller/unregistersceneaccessory(_:))).
 
 ## Camera direction on each display

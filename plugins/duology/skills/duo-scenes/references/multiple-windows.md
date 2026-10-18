@@ -41,7 +41,7 @@ import SwiftUI
 struct ComposeApp: App {                       // mark it @main in your app
     var body: some Scene {
         WindowGroup { InboxView() }
-        WindowGroup("New Message", id: "compose") { ComposeView() }
+        WindowGroup("New Message", id: "compose") { ComposeView(inWindow: true) }
     }
 }
 
@@ -60,37 +60,42 @@ struct InboxView: View {
                             }
                         }
                 }
-                .sheet(isPresented: $composing) { ComposeView() }   // the main way: works everywhere
+                .sheet(isPresented: $composing) { ComposeView(inWindow: false) }   // the main way: works everywhere
         }
     }
 }
 
 struct ComposeView: View {
+    let inWindow: Bool                         // true in its own window, false in the inbox's sheet
     @Environment(\.dismissWindow) private var dismissWindow
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         Button("Send") {
-            dismiss()                          // closes the sheet when shown as one
-            dismissWindow(id: "compose")       // closes the window when shown as one
+            if inWindow {
+                dismissWindow()                // closes only this window
+            } else {
+                dismiss()                      // closes only the sheet; the inbox window stays
+            }
         }
     }
 }
 ```
 
 - The button opens a sheet. The context menu offers a window as an extra.
-- `dismissWindow` is iOS 17 and later.
+- Close only the container you are in. Plain [dismissWindow()](https://developer.apple.com/documentation/swiftui/dismisswindowaction/callasfunction()) closes the current window. [dismissWindow(id:)](https://developer.apple.com/documentation/swiftui/dismisswindowaction/callasfunction(id:)) with a `WindowGroup` id closes every open window of that group, so one Send would throw away the other drafts. Don't call plain `dismissWindow()` from the sheet either: there the current window is the inbox.
+- [dismissWindow](https://developer.apple.com/documentation/swiftui/environmentvalues/dismisswindow) is iOS 17 and later.
 - *Measured:* `supportsMultipleWindows` was `true` on both displays, so it can't hide the window option on the outer display. SwiftUI has no built-in equivalent of the UIKit action that hides itself.
 
 ### When you need to know if it failed
 
-`openWindow` reports nothing back. If your flow depends on the result, call UIKit's request from SwiftUI and fall back in the error handler (next section). *Measured:* a bare `UISceneSessionActivationRequest()` from a SwiftUI app with one `WindowGroup` opened a new window of that group. *Unverified:* which group it picks when the app has several. Test that on the simulator before you rely on it.
+`openWindow` reports nothing back. If your flow depends on the result, call UIKit's request from SwiftUI and fall back in the error handler (next section). *Measured:* a bare [UISceneSessionActivationRequest()](https://developer.apple.com/documentation/uikit/uiscenesessionactivationrequest-swift.struct) from a SwiftUI app with one `WindowGroup` opened a new window of that group. *Unverified:* which group it picks when the app has several. Test that on the simulator before you rely on it.
 
 ## UIKit
 
 ### Ask, then fall back
 
-[activateSceneSession(for:errorHandler:)](https://developer.apple.com/documentation/uikit/uiapplication/activatescenesession(for:errorhandler:)) (iOS 17) replaces [requestSceneSessionActivation(_:userActivity:options:errorHandler:)](https://developer.apple.com/documentation/uikit/uiapplication/requestscenesessionactivation(_:useractivity:options:errorhandler:)). Both take an error handler. The errors are `UISceneError`:
+[activateSceneSession(for:errorHandler:)](https://developer.apple.com/documentation/uikit/uiapplication/activatescenesession(for:errorhandler:)) (iOS 17) replaces [requestSceneSessionActivation(_:userActivity:options:errorHandler:)](https://developer.apple.com/documentation/uikit/uiapplication/requestscenesessionactivation(_:useractivity:options:errorhandler:)). Both take an error handler. The errors are [UISceneError.Code](https://developer.apple.com/documentation/uikit/uisceneerror/code) values:
 
 | Code | Meaning |
 |---|---|
@@ -101,7 +106,7 @@ Apple doesn't say which code the outer display returns. Handle any error the sam
 
 ### Read the request in the new window
 
-The new scene gets the activity in its connection options. A restored scene gets its saved activity from the session instead.
+The new scene gets the activity in its connection options ([userActivities](https://developer.apple.com/documentation/uikit/uiscene/connectionoptions/useractivities)). A restored scene gets its saved activity from the session instead ([stateRestorationActivity](https://developer.apple.com/documentation/uikit/uiscenesession/staterestorationactivity)).
 
 ```swift
 import UIKit
@@ -142,10 +147,12 @@ final class NoteListController: UITableViewController {
 }
 ```
 
-- The activity's `targetContentIdentifier` is matched against these predicates. Set it on every activity you send (`NoteActivity.make(noteID:)` in SKILL.md does).
+- The activity's [targetContentIdentifier](https://developer.apple.com/documentation/foundation/nsuseractivity/targetcontentidentifier) is matched against these predicates. Set it on every activity you send (`NoteActivity.make(noteID:)` in SKILL.md does).
 - [UISceneActivationConditions](https://developer.apple.com/documentation/uikit/uisceneactivationconditions) dates from iOS 13. We did not test its routing on iPhone Duo.
 
 ### Menus: ActivationAction with an alternate
+
+The handler returns a [UIWindowScene.ActivationConfiguration](https://developer.apple.com/documentation/uikit/uiwindowscene/activationconfiguration) that carries the activity for the new window.
 
 ```swift
 import UIKit

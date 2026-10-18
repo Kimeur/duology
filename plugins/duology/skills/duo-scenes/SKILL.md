@@ -32,7 +32,7 @@ Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1) on 18 
 5. Write `UIWindowScene.ActivationAction(title:alternate:_:)` with the `alternate:` label, or an explicit `return`. The short form crashes (section 3).
 6. Register a camera capture accessory on the view that shows your camera. Keep every control in the main UI; the accessory can vanish at any time.
 7. Save per-window state on `.background`. Read `windowScene.screen` when you need it; never cache it.
-8. Test what the simulator can't show on a real iPhone Duo: the camera accessory, and windows on the inner display.
+8. Test what the simulator can't show on a real iPhone Duo: the camera accessory with capture running, and the outer display refusing new windows.
 
 ## 1. Turn on multiple windows
 
@@ -47,12 +47,12 @@ Add the scene manifest key to the app's Info.plist. Apps without it get one wind
 ```
 
 - Check the built app: `plutil -p <App>.app/Info.plist | grep -A2 SceneManifest`.
-- *Measured:* with the key, `UIApplication.shared.supportsMultipleScenes` and SwiftUI's `supportsMultipleWindows` were both `true` on the closed phone. Apple's `supportsMultipleWindows` page still says only iPadOS and macOS return `true`. Neither value tells you which display you're on.
+- *Measured:* with the key, [UIApplication.shared.supportsMultipleScenes](https://developer.apple.com/documentation/uikit/uiapplication/supportsmultiplescenes) and SwiftUI's `supportsMultipleWindows` were both `true` on the closed phone. Apple's `supportsMultipleWindows` page still says only iPadOS and macOS return `true`. Neither value tells you which display you're on.
 - Split View needs no key. Every app takes part, so every app must lay out at half the inner display. See `duo-layout`.
 
 ## 2. Open a window: SwiftUI
 
-Declare a `WindowGroup(for:)` per kind of content and open it with `openWindow(value:)`. If a window already shows that value, the system brings it forward ([OpenWindowAction](https://developer.apple.com/documentation/swiftui/openwindowaction)).
+Declare a [WindowGroup(for:)](https://developer.apple.com/documentation/swiftui/windowgroup) per kind of content and open it with `openWindow(value:)`. If a window already shows that value, the system brings it forward ([OpenWindowAction](https://developer.apple.com/documentation/swiftui/openwindowaction)).
 
 ```swift
 import SwiftUI
@@ -118,7 +118,7 @@ struct NoteDetail: View {
 
 ## 3. Open a window: UIKit
 
-Ask with [activateSceneSession(for:errorHandler:)](https://developer.apple.com/documentation/uikit/uiapplication/activatescenesession(for:errorhandler:)) (iOS 17). When it fails, show the content in the current window.
+Ask with [activateSceneSession(for:errorHandler:)](https://developer.apple.com/documentation/uikit/uiapplication/activatescenesession(for:errorhandler:)) and a [UISceneSessionActivationRequest](https://developer.apple.com/documentation/uikit/uiscenesessionactivationrequest-swift.struct) (both iOS 17). When it fails with a [UISceneError](https://developer.apple.com/documentation/uikit/uisceneerror/code), show the content in the current window.
 
 ```swift
 import UIKit
@@ -147,7 +147,7 @@ func openInNewWindow(noteID: UUID, otherwise showHere: @escaping @MainActor @Sen
 }
 ```
 
-In menus, use `UIWindowScene.ActivationAction`. Give it an `alternate:` action that opens the note in place, and don't list that action again. Apple's header says the alternate replaces the action where multiple windows aren't supported, and runs if the request fails.
+In menus, use `UIWindowScene.ActivationAction`; its handler returns a [UIWindowScene.ActivationConfiguration](https://developer.apple.com/documentation/uikit/uiwindowscene/activationconfiguration). Give it an `alternate:` action that opens the note in place, and don't list that action again. Apple's header says the alternate replaces the action where multiple windows aren't supported, and runs if the request fails.
 
 ```swift
 import UIKit
@@ -164,7 +164,7 @@ func openNoteMenu(noteID: UUID, showHere: @escaping @MainActor () -> Void) -> UI
 
 - *Measured:* the action showed on the open phone. On the closed phone, with `alternate: nil` it was missing, as Apple says, and with an alternate the alternate took its place. The raw requests still succeeded there (section 2), so the action is the more reliable signal.
 - *Measured:* `UIWindowScene.ActivationAction(title: "X") { _ in config }` compiles with only a warning ("result ... is unused"), because Swift picks `UIAction`'s handler initializer. At runtime it throws `NSInternalInconsistencyException` ("Initializer is unavailable"). Always write `alternate:` (even `alternate: nil`) or `return config`.
-- Read the activity when the new scene connects: `connectionOptions.userActivities.first`. Code: [references/multiple-windows.md](references/multiple-windows.md#read-the-request-in-the-new-window).
+- Read the activity when the new scene connects: `connectionOptions.userActivities.first` ([doc](https://developer.apple.com/documentation/uikit/uiscene/connectionoptions/useractivities)). Code: [references/multiple-windows.md](references/multiple-windows.md#read-the-request-in-the-new-window).
 
 ## 4. Scene accessories: content on the outer display
 
@@ -194,18 +194,20 @@ struct CaptureScreen: View {
     @State private var model = ShootModel()
 
     var body: some View {
-        CameraPreview()                 // your capture UI; it runs the capture session
-            .sceneAccessory {
-                CameraCaptureAccessory(isEnabled: $model.showsSubjectView) {
-                    SubjectView(model: model)
+        NavigationStack {               // toolbar items show only inside a navigation container
+            CameraPreview()             // your capture UI; it runs the capture session
+                .sceneAccessory {
+                    CameraCaptureAccessory(isEnabled: $model.showsSubjectView) {
+                        SubjectView(model: model)
+                    }
+                    .onAvailabilityChange { model.subjectViewAvailable = $0 }
                 }
-                .onAvailabilityChange { model.subjectViewAvailable = $0 }
-            }
-            .toolbar {
-                if model.subjectViewAvailable {
-                    Toggle("Subject View", systemImage: "person.crop.rectangle", isOn: $model.showsSubjectView)
+                .toolbar {
+                    if model.subjectViewAvailable {
+                        Toggle("Subject View", systemImage: "person.crop.rectangle", isOn: $model.showsSubjectView)
+                    }
                 }
-            }
+        }
     }
 }
 
@@ -237,10 +239,10 @@ Each window is its own scene session, with its own saved state.
 
 - SwiftUI: `@SceneStorage` is per window ([SceneStorage](https://developer.apple.com/documentation/swiftui/scenestorage)). *Measured:* a new window started at 0 while the first window held 7. After a relaunch the system reconnected only the last window used. Activating the other saved session brought back its 7.
 - UIKit: return an `NSUserActivity` from [stateRestorationActivity(for:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/staterestorationactivity(for:)) and read `session.stateRestorationActivity` when the scene connects.
-- Bring back an existing window with `UISceneSessionActivationRequest(session:)`, not a new request. Otherwise people collect duplicate windows.
+- Bring back an existing window with [UISceneSessionActivationRequest(session:)](https://developer.apple.com/documentation/uikit/uiscenesessionactivationrequest-swift.struct), not a new request. Otherwise people collect duplicate windows.
 - A fold doesn't need restoration: the window stays alive and resizes. `duo-continuity` covers that.
 - *Measured:* SwiftUI restores with its own activity type (`com.apple.SwiftUI.stateRestoration`). Don't read or replace it.
-- *Measured:* `application(_:didDiscardSceneSessions:)` also reports accessory sessions. Check `session.role` before deleting per-window data.
+- *Measured:* [application(_:didDiscardSceneSessions:)](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/application(_:diddiscardscenesessions:)) also reports accessory sessions. Check `session.role` before deleting per-window data.
 
 Code for both frameworks, and cleaning up discarded windows: [references/restoration-and-lifecycle.md](references/restoration-and-lifecycle.md).
 
@@ -250,22 +252,22 @@ Apple says opening and closing work like resizing the app in iPhone Mirroring ([
 
 | Event | What to expect | Source |
 |---|---|---|
-| Window moves between displays | `windowScene(_:didUpdateEffectiveGeometry:)` (iOS 26) always fires, and `windowScene.screen` changes. *Measured:* same scene and session, the size class flipped. | UIKit header `UIWindowScene.h`, [evidence](references/evidence.md#results-open-and-fold) |
-| Display link | `windowScene.displayLink(target:selector:)` (iOS 27) follows the scene to the new display. `UIScreen`'s version is deprecated in iOS 27. | [doc](https://developer.apple.com/documentation/uikit/uiwindowscene/displaylink(target:selector:)) |
-| Scene phase during a fold | *Measured:* stayed `active` through close and open. No `inactive`, no new `onAppear`. | [evidence](references/evidence.md#results-open-and-fold) |
+| Window moves between displays | `windowScene(_:didUpdateEffectiveGeometry:)` (iOS 26) always fires, and `windowScene.screen` changes. *Measured:* same scene and session, the size class flipped. | [doc](https://developer.apple.com/documentation/uikit/uiwindowscenedelegate/windowscene(_:didupdateeffectivegeometry:)), [evidence](references/evidence.md#results-open-and-fold) |
+| Display link | `windowScene.displayLink(target:selector:)` (iOS 27) follows the scene to the new display. `UIScreen`'s [version](https://developer.apple.com/documentation/uikit/uiscreen/displaylink(withtarget:selector:)) is deprecated in iOS 27 (`UIScreen.h`). | [doc](https://developer.apple.com/documentation/uikit/uiwindowscene/displaylink(target:selector:)) |
+| Scene phase during a fold | *Measured:* [scenePhase](https://developer.apple.com/documentation/swiftui/environmentvalues/scenephase) stayed `active` through close and open. No `inactive`, no new `onAppear`. | [evidence](references/evidence.md#results-open-and-fold) |
 | Two windows in Split View, then close | *Unverified* which one moves to the outer display | Split View needs a drag in Device Hub |
 | A window covered by another window | *Measured:* inactive, then background, still connected. It got two geometry updates while in the background (951 × 669 pt landscape, then back). | [evidence](references/evidence.md) |
 
 So:
 
-- Never tear down on `.inactive` or `sceneWillResignActive(_:)`. Save on `.background`.
-- Don't treat a geometry update as "the person is looking". Check `activationState` first.
-- Handle `sceneDidDisconnect(_:)` at any time. The system may release a background window's scene and keep its session.
+- Never tear down on `.inactive` or [sceneWillResignActive(_:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenewillresignactive(_:)). Save on `.background`.
+- Don't treat a geometry update as "the person is looking". Check [activationState](https://developer.apple.com/documentation/uikit/uiscene/activationstate-swift.property) first.
+- Handle [sceneDidDisconnect(_:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenediddisconnect(_:)) at any time. The system may release a background window's scene and keep its session.
 - Don't start work from a window's first `onAppear` size. *Measured:* a new window's first layout reported 466 × 562 pt, then 382 × 644 pt.
 
 ## UIKit
 
-Scene delegate code for new windows, a close confirmation for windows with unsaved work (`closureConfirmation`, iOS 27), restoration, geometry updates, the accessory registration and the accessory's own scene delegate: [references/multiple-windows.md](references/multiple-windows.md), [references/scene-accessories.md](references/scene-accessories.md#uikit), [references/restoration-and-lifecycle.md](references/restoration-and-lifecycle.md).
+Scene delegate code for new windows, a close confirmation for windows with unsaved work ([closureConfirmation](https://developer.apple.com/documentation/uikit/uiwindowscene/closureconfirmation), iOS 27), restoration, geometry updates, the accessory registration and the accessory's own scene delegate: [references/multiple-windows.md](references/multiple-windows.md), [references/scene-accessories.md](references/scene-accessories.md#uikit), [references/restoration-and-lifecycle.md](references/restoration-and-lifecycle.md).
 
 ## Test it
 

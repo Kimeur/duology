@@ -39,6 +39,8 @@ extension DuoTokens {
 final class CardCell: UICollectionViewCell {
     private let title = UILabel()
     private let thumbnail = UIView()
+    private var titleBeside: [NSLayoutConstraint] = []
+    private var titleBelow: [NSLayoutConstraint] = []
 
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -52,16 +54,28 @@ final class CardCell: UICollectionViewCell {
             $0.translatesAutoresizingMaskIntoConstraints = false
             contentView.addSubview($0)
         }
+        let margins = contentView.layoutMarginsGuide
         NSLayoutConstraint.activate([
-            thumbnail.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            thumbnail.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            thumbnail.leadingAnchor.constraint(equalTo: margins.leadingAnchor),
+            thumbnail.topAnchor.constraint(equalTo: margins.topAnchor),
             thumbnail.widthAnchor.constraint(equalToConstant: 64),
             thumbnail.heightAnchor.constraint(equalToConstant: 64),
-            title.leadingAnchor.constraint(equalTo: thumbnail.trailingAnchor, constant: DuoSpace.x3),
-            title.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-            title.centerYAnchor.constraint(equalTo: thumbnail.centerYAnchor),
-            thumbnail.bottomAnchor.constraint(lessThanOrEqualTo: contentView.layoutMarginsGuide.bottomAnchor),
+            thumbnail.bottomAnchor.constraint(lessThanOrEqualTo: margins.bottomAnchor),
+            title.trailingAnchor.constraint(equalTo: margins.trailingAnchor),
+            title.topAnchor.constraint(greaterThanOrEqualTo: margins.topAnchor),
+            title.bottomAnchor.constraint(lessThanOrEqualTo: margins.bottomAnchor),
         ])
+        // Centred on the thumbnail while it fits; a taller title grows the cell instead.
+        let centred = title.centerYAnchor.constraint(equalTo: thumbnail.centerYAnchor)
+        centred.priority = .defaultLow
+        titleBeside = [
+            title.leadingAnchor.constraint(equalTo: thumbnail.trailingAnchor, constant: DuoSpace.x3),
+            centred,
+        ]
+        titleBelow = [
+            title.leadingAnchor.constraint(equalTo: margins.leadingAnchor),
+            title.topAnchor.constraint(equalTo: thumbnail.bottomAnchor, constant: DuoSpace.x3),
+        ]
         apply(DuoTokens(traitCollection))
         registerForTraitChanges([UITraitHorizontalSizeClass.self, UITraitPreferredContentSizeCategory.self]) {
             (cell: Self, _: UITraitCollection) in
@@ -76,6 +90,9 @@ final class CardCell: UICollectionViewCell {
             top: tokens.cardPadding, leading: tokens.cardPadding,
             bottom: tokens.cardPadding, trailing: tokens.cardPadding)
         contentView.cornerConfiguration = .corners(radius: .fixed(tokens.cardRadius))
+        // At accessibility text sizes the title goes under the thumbnail and gets the full width.
+        NSLayoutConstraint.deactivate(tokens.isAccessibilitySize ? titleBeside : titleBelow)
+        NSLayoutConstraint.activate(tokens.isAccessibilitySize ? titleBelow : titleBeside)
     }
 }
 
@@ -99,6 +116,8 @@ func makeGlassControls() -> (UIButton, UIVisualEffectView) {
 ```
 
 `containerConcentric` makes a corner concentric with the view that contains it ([UICornerConfiguration](https://developer.apple.com/documentation/uikit/uicornerconfiguration-swift.struct)), here the content view with its fixed `cardRadius`. *Measured* headless on the iOS 27.1 simulator runtime with `effectiveRadius(corner:)` (iOS 26), the cell placed in a window: the content view resolved to 24 pt and the thumbnail, inset 16 pt, to 8 pt on every corner (concentric at the top leading corner, the minimum elsewhere). Outside a window the same thumbnail's top leading corner read 32 pt, so check radii only in a window.
+
+The title is centred on the thumbnail only at low priority, and pinned inside the margins at the top and bottom. At accessibility text sizes it moves under the thumbnail and gets the full width, the UIKit version of stacking rows in [typography.md](typography.md#stack-at-accessibility-sizes). *Measured* the same way at a 350 pt cell width with a 37-character title: at AX5 (53 pt) the cell grew to 357 pt and the title stayed inside it, with the thumbnail above. With the title only centred on the thumbnail, the cell stayed 96 pt tall and the 311 pt title started 108 pt above the cell's top edge. The same cell switched back and forth when only the text size changed.
 
 The play button needs its two constraints. *Measured* the same way: a symbol-only `prominentGlass()` button reported an intrinsic size of 34.3 × 34.3 pt, and laid out at 44 × 44 pt with the constraints.
 

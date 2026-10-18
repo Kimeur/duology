@@ -16,7 +16,7 @@ Every *measured* line in this skill comes from the runs below. Read the limits f
 
 ## The probe
 
-A SwiftUI app with one `WindowGroup`, `UIApplicationSupportsMultipleScenes` set to `YES`, and launch arguments that trigger actions on a timer (open a window, send a UIKit request, set a `@SceneStorage` value, present a menu). We couldn't tap, so the menu test presented an edit menu from code with `UIEditMenuInteraction.presentEditMenu(with:)` and listed the visible `UILabel` texts in every window. The core is below; it typechecks. Add it to a debug build of your own app to read the same events.
+A SwiftUI app with one `WindowGroup`, `UIApplicationSupportsMultipleScenes` set to `YES`, and launch arguments that trigger actions on a timer (open a window, send a UIKit request, set a `@SceneStorage` value, present a menu). We couldn't tap, so the menu test presented an edit menu from code with [UIEditMenuInteraction.presentEditMenu(with:)](https://developer.apple.com/documentation/uikit/uieditmenuinteraction/presenteditmenu(with:)) and listed the visible `UILabel` texts in every window. The core is below; it typechecks. It reads [connectedScenes](https://developer.apple.com/documentation/uikit/uiapplication/connectedscenes), [openSessions](https://developer.apple.com/documentation/uikit/uiapplication/opensessions), [effectiveGeometry](https://developer.apple.com/documentation/uikit/uiwindowscene/effectivegeometry) and [activationState](https://developer.apple.com/documentation/uikit/uiscene/activationstate-swift.property). Add it to a debug build of your own app to read the same events.
 
 ```swift
 import SwiftUI

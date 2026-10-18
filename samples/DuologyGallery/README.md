@@ -134,7 +134,7 @@ An earlier build ran every screen without a crash on an iPhone 17 Pro simulator 
 
 Not checked yet: open and held tall, Split View, right-to-left languages, dark mode on most screens, and a real iPhone Duo.
 
-## Add screenshots
+## Add screenshots of other poses
 
 1. Boot the iPhone Duo simulator and open it in Device Hub.
 2. Pick a pose with the buttons under the bezel (see [Try the poses](#try-the-poses)).

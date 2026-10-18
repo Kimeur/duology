@@ -1,0 +1,9 @@
+# GitHub's language bar: Duology's Swift lives in samples/ and the recipe
+# templates. The Python files are repo tooling (validators, linter, eval
+# harness), so they don't count toward the language stats.
+scripts/** linguist-vendored
+evals/** linguist-vendored
+plugins/**/scripts/** linguist-vendored
+plugins/**/tests/** linguist-vendored
+plugins/**/hooks/** linguist-vendored
+plugins/**/bin/** linguist-vendored

@@ -72,6 +72,8 @@ no_src 'cornerRadius: *[4-9][0-9]'
 # least 44 x 44 pt. At AX5: no clipped text. The audit also reports "contrast nearly
 # passed" for the system's secondary label colour, and clipped text with no element
 # for a ViewThatFits's rejected child (both measured in Xcode 27.1); neither counts.
+# If the log says the contrast audit didn't finish, that counts as a failure: it
+# happened on the untouched fixture every time, never on a fix in system colours.
 [ -d TripsUITests ] || { echo "the TripsUITests folder is gone"; exit 1; }
 cat > TripsUITests/TokensOracleTests.swift <<'SWIFT'
 import XCTest
@@ -88,15 +90,34 @@ final class TokensOracleTests: XCTestCase {
         if heart.frame.width < 43.5 || heart.frame.height < 43.5 {
             problems.append("the heart button is \(Int(heart.frame.width)) x \(Int(heart.frame.height)) pt")
         }
-        try app.performAccessibilityAudit(for: [.contrast, .dynamicType]) { issue in
-            if issue.auditType == .contrast && !issue.compactDescription.lowercased().contains("failed") {
-                return true
-            }
-            // Issues with no element come from SwiftUI nodes that aren't on screen.
+        // Issues with no element come from SwiftUI nodes that aren't on screen.
+        try app.performAccessibilityAudit(for: [.dynamicType]) { issue in
             guard let element = issue.element else { return true }
             problems.append("\(issue.compactDescription): \(element.label)")
             return true
         }
+        // The contrast audit can stop with "failed to complete in time". On the untouched
+        // fixture it did every time we tried; on a fix in system colours it took 1 to 3 s.
+        // So try twice, and count a second timeout as a failure.
+        var contrast: [String] = []
+        var finished = false
+        var lastError = ""
+        for _ in 1...2 where !finished {
+            contrast = []
+            do {
+                try app.performAccessibilityAudit(for: [.contrast]) { issue in
+                    // "Contrast nearly passed" is a warning; only a failure counts.
+                    guard issue.compactDescription.lowercased().contains("failed"),
+                          let element = issue.element else { return true }
+                    contrast.append("\(issue.compactDescription): \(element.label)")
+                    return true
+                }
+                finished = true
+            } catch {
+                lastError = error.localizedDescription
+            }
+        }
+        problems += finished ? contrast : ["the contrast audit didn't finish twice (\(lastError))"]
         XCTAssertTrue(problems.isEmpty, problems.joined(separator: "; "))
     }
 

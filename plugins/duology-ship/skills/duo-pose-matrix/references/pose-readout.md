@@ -92,6 +92,6 @@ A mismatch fails the shot with "the app says the hinge is ..., expected ...". No
 
 ## Not verified yet
 
-- *Unverified:* reading this element through Device Hub end to end. Our last live run couldn't reach Device Hub's window (see [limits.md](limits.md#the-window-must-be-visible)), so `--readout-id` is tested only against the fake simulator in `tests/`.
+- *Unverified:* reading this element through Device Hub end to end. Our live runs pressed the buttons in Device Hub's window, but the gallery app has no readout yet, so `--readout-id` is tested only against the fake simulator in `tests/`.
 - *Unverified:* whether the region reports `none` at the very first layout of a launch made while the phone is closed, before the system settles the scene. The gallery's overlay showed no fold when closed.
 - In Split View or a window that doesn't touch the fold, the region query can return nothing even when the phone is folded. The matrix captures full-screen apps only.

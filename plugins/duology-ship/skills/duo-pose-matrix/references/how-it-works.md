@@ -105,16 +105,19 @@ A `--manual` run in a folder that already has a `summary.json` for the same app 
 
 ## What we checked
 
-On 18 October 2026, on the shared iPhone Duo simulator:
+On 18 October 2026, on the shared iPhone Duo simulator, with other agents building, testing and taking screenshots on it at the same time:
 
 | Check | Result |
 |---|---|
 | Unit tests (`python3 -m unittest discover` on the `tests/` folder), Python 3.11 and Xcode's Python 3.9 | All pass; the Swift build test skips itself unless `DUO_POSE_SWIFT=1` |
 | Swift build test with `DUO_POSE_SWIFT=1` | Passes: the helper builds with Xcode 27.1 and answers `trust` |
-| `duo-pose status` | Read the simulator, the start pose (closed), Device Hub's process, trust (allowed) and the UI test check correctly |
-| `duo-pose-matrix --manual closed` on the gallery, two cases | Two screenshots, 1398 x 2034 px, both `ok`; the pictures show the list-detail and two-page screens on the outer display with no fold |
-| `--manual book` while the phone was closed | The shot `failed` with "the inner display should be active for book, but the outer one is"; exit 1 |
+| `duo-pose status` and `list` | Found the window "iPhone Duo – iOS 27.1" and the four buttons, which report no value or selected state; read trust (allowed), the pose and the UI test check |
+| Automatic run 1 (gallery, two cases, four poses) | The tool pressed Closed, Open, Partially Open, then Partially Open and Rotate Right, and restored closed. The overlay in the pictures confirmed every pose: no fold closed, "Fold, inactive" open, "Fold, active" down the middle in book and across in tabletop. Another agent was sweeping the same simulator at the same minute and relaunched the gallery three times: one frame came out blank and one showed the Home Screen, both marked `ok`, and one good frame was marked "not running". Those three mistakes led to the process, blank-frame and stale-job checks above. |
+| Automatic run 2 | The closed frames came out turned, 2034 x 1398: the device had been left turned while a portrait-only app showed the outer display upright. The tool flagged both shots `failed`; this led to judging the orientation by the device, not the display. Open and book were correct. The window left the desktop before tabletop (the user switched Spaces), so the run stopped and restored closed. |
+| Automatic run 3, final code | All four poses pressed and checked; closed, book and tabletop frames `ok`. Both open frames `failed` with "the pose changed during the capture": another agent's script pressed Closed during the capture, and the blank-frame check fired too. The start pose (open, set by someone else) was restored. |
+| `--manual closed`, two cases | Two correct 1398 x 2034 frames, both `ok` |
+| `--manual book` while the phone was closed | `failed`: "the inner display should be active for book, but the outer one is"; exit 1 |
 | An app that isn't installed | Exit 8, nothing written |
-| `duo-pose set` while another session ran `xcodebuild test-without-building` on the simulator | Refused with exit 6 and named both processes (xcodebuild and the runner app) |
-| `duo-pose set` with Device Hub's window off the current desktop and `--no-bring-forward` | Exit 4 with the manual instructions; nothing pressed |
-| Pressing the buttons with this tool | *Unverified*. While we could run it, Device Hub's window was off the current desktop: first behind Mission Control and a system dialog, then behind the user's full-screen app, and another session's UI tests were running. We didn't bring Device Hub forward over the user's work. The same Accessibility calls set all four poses in the 17 and 18 October research runs. |
+| `set` while another session ran `xcodebuild test-without-building` | Refused with exit 6 and named the xcodebuild process and the runner app |
+| `set` with Device Hub's window off the current desktop and `--no-bring-forward` | Exit 4 with the manual instructions; nothing pressed |
+| `--readout-id` against Device Hub | *Unverified*: tested only against the fake simulator |

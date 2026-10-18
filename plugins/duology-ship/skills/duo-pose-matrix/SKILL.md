@@ -59,8 +59,8 @@ duo-pose 0.2.0
   Pose now:       closed
   Device Hub:     running (pid 88720)
   Accessibility:  allowed for the app that runs this command
-  Window:         iPhone Duo
-  Buttons:        Rotate Right, Closed, Partially Open, Open
+  Window:         iPhone Duo – iOS 27.1
+  Buttons:        Closed, Partially Open, Open, Rotate Right
   Poses it can set: closed, open, book, tabletop
   UI tests:       none running
 Ready: `duo-pose set <closed|open|book|tabletop>` can press Device Hub's buttons.
@@ -119,8 +119,8 @@ Open `summary.md` first. It has one row per screenshot: case, pose, file, size, 
 | Status | Meaning |
 |---|---|
 | `ok` | The right display was active, the phone was turned the right way, the screenshot has the expected size, and the app was running. |
-| `check` | Taken, but another app started during the capture and may be on screen instead. Look at the picture; rerun if it isn't your app. |
-| `failed` | Wrong pose, wrong size, no file, or the app wasn't running (often a crash in that pose). |
+| `check` | Taken, but something may be wrong with the picture: another app started, someone else relaunched your app, or the frame is nearly blank. Look at it; rerun if it isn't your screen. |
+| `failed` | Wrong pose, the pose changed during the capture, wrong size, no file, or the app wasn't running (often a crash in that pose). |
 
 Expected sizes: closed 1398 x 2034 px (outer display); open and book 2853 x 2007 (inner, held wide); tabletop 2007 x 2853 (inner, held tall). `summary.json` has the same data per shot: `checks`, `fold`, `status`, `notes` and the `review` rules to apply.
 
@@ -179,6 +179,7 @@ Device Hub doesn't say which pose it is in, and the displays are the same in ope
 - It is UI scripting. It finds Device Hub's buttons by their English descriptions and its window layout. An Xcode update can break it; then `list` prints the buttons it can see, and the manual route still works.
 - Device Hub's window must be on the current desktop: not minimized, not behind Mission Control, not on another Space. `--bring-forward` (on by default for `set` and the matrix) runs `open -a` on Device Hub, which moves the user's focus to it.
 - The pose is global. Changing it moves the screen for every agent and test on that simulator. The tools check for UI tests before each pose change and wait up to `--busy-wait` seconds (default 120) when tests start mid-run, then stop without restoring.
+- Run one pose sweep per simulator at a time. Duology's tools share a lock; other scripts don't. Each shot is checked after the screenshot (pose, app process, blank frame), which catches another script pressing buttons or relaunching the app, but can't prevent it.
 - The start pose is restored as closed or open. Device Hub doesn't report book, so a phone that started in book is left open, and the summary says so.
 - Only the three button poses. Other hinge angles need Option-drag in Device Hub ([Interacting with your app in Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)).
 

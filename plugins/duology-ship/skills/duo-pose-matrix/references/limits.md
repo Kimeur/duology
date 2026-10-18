@@ -24,6 +24,18 @@ There is one hinge per simulator. When the tool presses Open, every app and ever
 - Launching your app takes the screen from whatever ran before. The matrix flags a shot `check` when another app starts during a capture, but it can't see which app is in front.
 - Our research runs saw this happen: another session's UI tests started in the pose we had left, and someone pressed Open in Device Hub in the middle of a book capture.
 
+## Other scripts that drive the same simulator
+
+Duology's tools take a lock per simulator, so two `duo-pose` or `duo-pose-matrix` runs never interleave. A script of your own that presses Device Hub's buttons or relaunches the app doesn't take that lock.
+
+On 18 October another agent ran its own pose sweep on the shared simulator at the same time as ours (*measured*). It relaunched our app and pressed Closed in the middle of our captures. Before the checks below existed, that produced a blank frame and a Home Screen frame marked `ok`. Now each shot is checked after the screenshot:
+
+- the displays and the device orientation still fit the pose, or the shot fails;
+- the app's process is the one we launched, or the shot is marked `check`;
+- the picture isn't nearly blank, or it is retaken once and then marked `check`.
+
+These checks find interference, but they can't prevent it. Run one pose sweep per simulator at a time, and use `duo-pose` in your own scripts so they share the lock.
+
 ## Permission is the user's decision
 
 macOS gives Accessibility access per app, in System Settings > Privacy & Security > Accessibility ([Apple](https://support.apple.com/guide/mac-help/allow-accessibility-apps-to-access-your-mac-mh43185/mac)). An app with that access can read and press anything on screen, in every app. That is a real grant of trust, and only the user should make it.

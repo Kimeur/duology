@@ -46,9 +46,11 @@ struct CountdownScreen: View {
         }
         .onFoldChange { fold = $0 }
         .task(id: isRunning) {
-            while isRunning, remaining > 0 {
-                try? await Task.sleep(for: .seconds(1))
-                if isRunning { remaining -= 1 }
+            guard isRunning else { return }
+            while remaining > 0 {
+                // Cancelled (paused, or the view went away): stop, keep the time.
+                do { try await Task.sleep(for: .seconds(1)) } catch { return }
+                remaining -= 1
             }
             isRunning = false
         }
@@ -109,6 +111,8 @@ What the recipe does on purpose:
 - The time scales down (`minimumScaleFactor`) instead of wrapping. On the closed phone, in portrait, each stacked half is about 382 × 314 pt (*derived*: the 382 × 644 pt safe area that `duo-layout` measured, minus the 16 pt spacing, halved).
 - The controls are the same three buttons in every pose. Nothing hides when the phone closes.
 - `.task(id:)` restarts the tick when `isRunning` changes. The layout never owns the timer state, so a fold can't reset it.
+- The tick stops when its task is cancelled. SwiftUI cancels `.task` when `isRunning` changes and when the view leaves the screen (another screen pushed, another tab). Never write `try? await Task.sleep` in this loop: it swallows the cancellation, and the loop then counts down to 0 in a burst. The time stays put while the view is away and the tick resumes when it comes back.
+- A shipping timer stores its end time as a `Date` and derives `remaining` from it, so it stays right while the screen is away or the app is in the background. The recipe keeps a plain counter to stay short.
 
 ## Other screens with the same shape
 

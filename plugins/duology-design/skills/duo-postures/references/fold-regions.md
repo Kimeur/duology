@@ -4,7 +4,9 @@ Every recipe in this skill reads the fold with `FoldGeometry` and places views w
 
 ## FoldGeometry
 
-This is the same helper as in `duo-patterns` ([SKILL.md](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/SKILL.md#shared-helper-foldgeometry)). If the app already has it, don't add a second copy. Keep `nonisolated`: a new Xcode 27.1 app makes types main-actor isolated by default, and `onGeometryChange` then rejects the `Equatable` conformance.
+This is the helper from `duo-patterns` ([SKILL.md](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/SKILL.md#shared-helper-foldgeometry)) plus one filter, `liesInside(_:of:)`, which the gallery app's copy also has ([FoldGeometry.swift](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Shared/FoldGeometry.swift)). If the app already has a `FoldGeometry`, don't add a second copy: check that its `init(_:)` filters with `liesInside`, and add the filter if it doesn't. Keep `nonisolated`: a new Xcode 27.1 app makes types main-actor isolated by default, and `onGeometryChange` then rejects the `Equatable` conformance.
+
+Why the filter: a reserved region query can return regions that lie wholly outside the view. *Measured* with `.occlusion` on the closed phone: a view 382 pt wide got the camera and status bar regions at x = 382 and x = 400 ([measurements](measurements.md#closed-outer-display-portrait)). We have not seen it for `.division`, but nothing rules it out. Without the filter, a pane or a Split View window beside the fold would read as book or tabletop.
 
 ```swift
 import SwiftUI
@@ -13,7 +15,8 @@ import SwiftUI
 /// Layout input only. Never drive layout from the hinge angle.
 @available(iOS 27.1, *)
 nonisolated struct FoldGeometry: Equatable, Sendable {
-    /// The fold's frame in this view's space, margins included. Nil when no fold crosses the view.
+    /// The fold's frame in this view's space, margins included. Nil when no fold
+    /// splits the view in two, including a fold that lies outside it or only touches an edge.
     var frame: CGRect?
     /// True while the phone is partly folded. False when it lies flat.
     var isActive = false
@@ -32,11 +35,23 @@ nonisolated struct FoldGeometry: Equatable, Sendable {
     init(_ proxy: GeometryProxy) {
         // The default query returns active regions only. Ask for inactive ones too,
         // so a flat inner display still tells you where its fold is.
+        // Keep only a fold with part of this view on each side of it.
+        let size = proxy.size
         let folds = proxy.reservedRegions(kind: .division, options: .includeInactive)
+            .filter { Self.liesInside($0.frame, of: size) }
         if let fold = folds.first(where: \.isActive) ?? folds.first {
             frame = fold.frame
             isActive = fold.isActive
         }
+    }
+
+    /// True when a fold frame splits a view of `size` into two non-empty parts:
+    /// view left and right of a top to bottom fold, or above and below a side to side one.
+    static func liesInside(_ frame: CGRect, of size: CGSize) -> Bool {
+        if frame.height > frame.width {
+            return frame.minX > 0 && frame.maxX < size.width
+        }
+        return frame.minY > 0 && frame.maxY < size.height
     }
 }
 

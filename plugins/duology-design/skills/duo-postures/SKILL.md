@@ -148,9 +148,11 @@ struct CountdownScreen: View {
         }
         .onFoldChange { fold = $0 }
         .task(id: isRunning) {
-            while isRunning, remaining > 0 {
-                try? await Task.sleep(for: .seconds(1))
-                if isRunning { remaining -= 1 }
+            guard isRunning else { return }
+            while remaining > 0 {
+                // Cancelled (paused, or the view went away): stop, keep the time.
+                do { try await Task.sleep(for: .seconds(1)) } catch { return }
+                remaining -= 1
             }
             isRunning = false
         }

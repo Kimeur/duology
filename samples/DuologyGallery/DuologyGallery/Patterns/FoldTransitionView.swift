@@ -275,19 +275,23 @@ private struct ArticleColumn: View {
                     }
                 }
                 .scrollTargetLayout()
+                // The width the text wraps to, inside every margin. The margins
+                // can change after the window has its new size (the vertical bar
+                // arrives later), so measure here, not on the scroll view.
+                .onGeometryChange(for: Int.self) { Int($0.size.width.rounded()) } action: { width in
+                    columnWidth = width
+                    proxy.scrollTo(model.anchorID, anchor: .top)
+                }
                 .padding(.leading, leadingInset)
                 .containerMargins(.horizontal)
                 .padding(.top, 8)
             }
             .scrollPosition($model.scroll, anchor: .top)
-            .onGeometryChange(for: Int.self) { Int($0.size.width.rounded()) } action: { width in
-                columnWidth = width
-                proxy.scrollTo(model.anchorID, anchor: .top)
-            }
-            // The width arrives in steps while the window resizes. Once it has
-            // settled, put the reader's paragraph back at the top again.
+            // The width arrives in steps while the window resizes, and the pane
+            // fades in over 0.3 s. Once both are done, put the reader's
+            // paragraph back at the top again.
             .task(id: columnWidth) {
-                try? await Task.sleep(for: .milliseconds(200))
+                try? await Task.sleep(for: .milliseconds(400))
                 guard !Task.isCancelled else { return }
                 proxy.scrollTo(model.anchorID, anchor: .top)
             }

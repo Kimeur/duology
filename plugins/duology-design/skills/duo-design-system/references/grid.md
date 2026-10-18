@@ -16,18 +16,20 @@ For an endless feed that should show "as many tiles as fit", use the feed reflow
 
 | | Outer display (compact) | Inner display, flat (regular) | Inner display, partly folded |
 |---|---|---|---|
-| Columns | 4 | 8 | 8, four per side |
+| Columns | 4 | 8, four per side of the fold | 8, four per side |
 | Gutter | 12 | 16 | 16, except the middle |
-| Middle gutter | 12 | 16 | the fold's frame |
-| Outer margins | system | system | system, unchanged |
-| Card (span 2) per row | 2 | 4 | 4, two per side |
-| Card at accessibility sizes (span 4) | 1 | 2 | 2, one per side |
+| Middle gutter | 12 | 16, centred on the fold line | the fold's frame |
+| Outer margins | system, per side | system, per side | system, unchanged |
+| Card (span 2) per row | 2 | 4, two per side | 4, two per side |
+| Card at accessibility sizes (span 4) | 1 | 2, one per side | 2, one per side |
 
-Worked example. We ran `DuoColumns` (below) on these inputs on the iOS 27.1 simulator runtime:
+Worked example. We ran `DuoColumns` (below) on these inputs on the iOS 27.1 simulator runtime, and checked that a `LazyVGrid` built from it puts every item on its column:
 
-- **Outer display.** The safe area is 382 pt wide in portrait (*measured* in `duo-setup`). With 16 pt margins on each side (*assumed*; Apple's range is 16 to 20 pt), the grid is 350 pt wide: four 78.5 pt columns, or two 169 pt cards.
-- **Inner display, flat.** The safe area is 867 pt wide held wide, with the vertical bar on the right (*measured* in `duo-setup`). With 20 pt margins (*assumed*) the grid is 827 pt: eight 89.4 pt columns, or four 194.8 pt cards.
-- **Inner display, partly folded.** `duo-layout` measured the fold's frame at x 455.5 to 495.5 in the window (flat, inactive). Partly folded, the gallery app's region overlay reports the active fold as 40 × 669 pt at x 455 in a 951 pt window ([screenshot](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/regions-book.png)), so the frame keeps its width when the phone folds. In the grid's coordinates that is 435.5 to 475.5. The left half gets four 96.9 pt columns and the right half four 75.9 pt columns. The halves differ because the vertical bar takes space on the right only. That is the asymmetry Apple's Fitness example accepts: outer margins stay, the middle widens.
+- **Outer display.** The safe area is 382 pt wide in portrait (*measured* in `duo-setup`). With 16 pt margins on each side (*assumed*; Apple's range is 16 to 20 pt, and the margin next to the status bar column can be smaller), the grid is 350 pt wide: four 78.5 pt columns, or two 169 pt cards.
+- **Inner display, flat.** The safe area is 867 pt wide held wide, with the vertical bar on the right (*measured* in `duo-setup`). With 20 pt margins (*assumed*) the grid is 827 pt. `duo-layout` measured the flat fold's frame at x 455.5 to 495.5 in the window: a line at x 475.5 plus 20 pt on each side. In the grid's coordinates that is 435.5 to 475.5, with the line at 455.5. The middle gutter (16 pt) sits on that line, so the left half gets four 99.9 pt columns and the right half four 78.9 pt columns: cards of 215.8 and 173.8 pt.
+- **Inner display, partly folded.** The gallery app's region overlay reports the active fold as 40 × 669 pt at x 455 in a 951 pt window ([screenshot](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/regions-book.png)), so the frame keeps its width when the phone folds. The middle gap grows from 16 to 40 pt: the left columns narrow to 96.9 pt and the right ones to 75.9 pt (cards of 209.8 and 167.8 pt). No column edge moves more than 12 pt.
+- **Why the halves differ.** The vertical bar takes space on the right only, so the fold is 42 pt right of the grid's centre. That is the asymmetry Apple's Fitness example accepts: outer margins stay, the middle widens.
+- **A half of an `EvenSplit`** (`duo-layout`) with compact tokens. The right half starts at x 434.5; with 16 pt margins its grid is 400.5 pt wide and the fold runs through it at x 5 to 45, too close to its leading edge for two columns. All four columns go after the fold: flat from x 31 (83.4 pt each), partly folded from x 45 (79.9 pt each). The left half doesn't meet the fold at all.
 
 Never put these numbers in code. They are here so you can check screenshots.
 

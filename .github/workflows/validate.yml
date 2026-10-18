@@ -1,0 +1,86 @@
+# Checks every push to main and every pull request.
+#
+# This workflow runs on Ubuntu and doesn't need Xcode. Everything it checks is
+# plain text or Python: skill front matter and links, JSON manifests, and the
+# duo-lint tests. That keeps it fast and free for forks.
+#
+# What it can't check, and why:
+# - Swift snippets and the sample apps need Xcode 27.1 and the iOS 27.1 SDK.
+#   Hosted macOS runners add new Xcode releases some time after Apple ships
+#   them, and the iPhone Duo simulator runtime is a large extra download.
+#   Contributors typecheck Swift locally instead (see the pull request template).
+# - duo-lint's own Swift typecheck test skips itself unless DUO_LINT_TYPECHECK=1
+#   and xcrun are present, so it skips here.
+#
+# Web links are checked by the `links` job, which runs weekly and on demand
+# only, so a slow or flaky website never blocks a pull request.
+
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "23 6 * * 1"  # Mondays 06:23 UTC: link check
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Skills, manifests and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Skill front matter, size and links
+        # --portable --strict: a link that leaves its skill folder fails, because
+        # `npx skills add --skill <name>` copies only that folder.
+        run: python3 scripts/validate-skills.py --portable --strict --format github
+
+      - name: JSON files and plugin manifests
+        run: python3 scripts/check-manifests.py --format github
+
+      - name: duo-lint unit tests
+        run: python3 -m unittest discover plugins/duology-ship/skills/duo-lint/tests -v
+
+      - name: duo-lint on the gallery app and recipe templates
+        # Duology's own Swift must pass its own linter.
+        run: |
+          python3 plugins/duology-ship/skills/duo-lint/scripts/duo-lint.py \
+            --strict --format github samples plugins/duology-recipes
+
+      - name: Script unit tests
+        # PyYAML is used only by the tests, to cross-check the front matter parser.
+        run: |
+          python3 -m pip install --disable-pip-version-check --quiet "pyyaml==6.0.2"
+          python3 -m unittest discover -s scripts/tests -v
+
+  links:
+    name: Web links
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Check cited URLs
+        # Set the repository variable DUOLOGY_OFFLINE to 1 to skip network requests.
+        env:
+          DUOLOGY_OFFLINE: ${{ vars.DUOLOGY_OFFLINE }}
+        run: python3 scripts/check-sources.py --all --method get --retries 2 --format github

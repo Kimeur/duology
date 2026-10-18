@@ -1,0 +1,504 @@
+#!/bin/bash
+# duo-doctor: checks that this Mac is ready to build, run and test apps for iPhone Duo.
+# Part of Duology (MIT license). https://github.com/Kimeur/duology
+#
+#   duo-doctor                  run every check
+#   duo-doctor --skip-claude    skip the Claude Code MCP check (for CI or plain terminals)
+#   duo-doctor --developer-dir  print the Xcode 27.1 developer folder, then exit
+#   duo-doctor --simulator      print the UDID of the iPhone Duo simulator to use, then exit
+#
+# Each line starts with [x] (pass), [ ] (fails, with a fix below it) or [-] (skipped).
+# Exit codes: 0 every required check passes, 1 a required check fails, 2 bad option.
+#
+# It installs, boots, registers and changes nothing. The only side effect: the Claude
+# Code check runs `claude mcp get xcode`, which starts Xcode's MCP bridge for a moment
+# to see if it answers.
+#
+# Works with the bash 3.2 that ships with macOS.
+
+set -u
+
+VERSION="0.1.0"
+MIN_MACOS="26.6"     # Xcode 27.1 needs macOS Tahoe 26.6 or later (Xcode 27.1 release notes)
+MIN_XCODE="27.1"
+MIN_IOS="27.1"
+MIN_PYTHON="3.9"     # duo-lint needs Python 3.9 or later
+DUO_TYPE="com.apple.CoreSimulator.SimDeviceType.iPhone-Duo"
+DEFAULT_DEV="/Applications/Xcode-27.1.app/Contents/Developer"
+
+usage() {
+  awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"
+}
+
+MODE="check"
+SKIP_CLAUDE=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --skip-claude) SKIP_CLAUDE=1 ;;
+    --developer-dir) MODE="developer-dir" ;;
+    --simulator) MODE="simulator" ;;
+    -h|--help) usage; exit 0 ;;
+    --version) echo "duo-doctor $VERSION"; exit 0 ;;
+    *) echo "duo-doctor: unknown option '$1'. Try duo-doctor --help." >&2; exit 2 ;;
+  esac
+  shift
+done
+
+# ---------------------------------------------------------------------------
+# Helpers
+
+# ver_ge A B: true when version A >= version B. Compares up to four numeric parts.
+ver_ge() {
+  local IFS=.
+  local -a a b
+  a=($1)
+  b=($2)
+  local i x y
+  for i in 0 1 2 3; do
+    x="${a[i]:-0}"; y="${b[i]:-0}"
+    x="${x%%[!0-9]*}"; y="${y%%[!0-9]*}"
+    x="${x:-0}"; y="${y:-0}"
+    if (( 10#$x > 10#$y )); then return 0; fi
+    if (( 10#$x < 10#$y )); then return 1; fi
+  done
+  return 0
+}
+
+# q PATH: quote a path for a copy-and-paste command when it contains a space.
+q() {
+  case "$1" in
+    *" "*) printf '"%s"' "$1" ;;
+    *) printf '%s' "$1" ;;
+  esac
+}
+
+# run_with_timeout SECONDS CMD...: perl's alarm, because macOS has no `timeout`.
+run_with_timeout() {
+  local secs="$1"; shift
+  perl -e 'alarm shift; exec @ARGV or exit 127' "$secs" "$@"
+}
+
+REQ_TOTAL=0
+REQ_FAIL=0
+OPT_OPEN=0
+
+# label KIND TEXT: adds " (optional)" to optional checks.
+label() { if [ "$1" = optional ]; then printf '%s (optional)' "$2"; else printf '%s' "$2"; fi; }
+
+ok() {   # ok required|optional LABEL [DETAIL]
+  [ "$1" = required ] && REQ_TOTAL=$((REQ_TOTAL + 1))
+  printf '[x] %s%s\n' "$(label "$1" "$2")" "${3:+: $3}"
+}
+
+bad() {  # bad required|optional LABEL DETAIL FIX [MORE FIX LINES...]   (DETAIL may be "")
+  local kind="$1" text="$2" detail="$3"; shift 3
+  if [ "$kind" = required ]; then
+    REQ_TOTAL=$((REQ_TOTAL + 1)); REQ_FAIL=$((REQ_FAIL + 1))
+  else
+    OPT_OPEN=$((OPT_OPEN + 1))
+  fi
+  printf '[ ] %s%s\n' "$(label "$kind" "$text")" "${detail:+: $detail}"
+  local first=1 line
+  for line in "$@"; do
+    if [ $first = 1 ]; then printf '    fix: %s\n' "$line"; first=0
+    else printf '         %s\n' "$line"; fi
+  done
+}
+
+skip() { # skip required|optional LABEL REASON   (a skipped required check counts as failed)
+  [ "$1" = required ] && { REQ_TOTAL=$((REQ_TOTAL + 1)); REQ_FAIL=$((REQ_FAIL + 1)); }
+  printf '[-] %s: skipped, %s\n' "$(label "$1" "$2")" "$3"
+}
+
+note() { printf '    note: %s\n' "$1"; }
+
+# ---------------------------------------------------------------------------
+# Find Xcode 27.1
+
+# dev_dir PATH: accept an Xcode.app path or its Contents/Developer folder.
+dev_dir() {
+  local p="${1%/}"
+  if [ -d "$p/Contents/Developer" ]; then printf '%s\n' "$p/Contents/Developer"
+  else printf '%s\n' "$p"; fi
+}
+
+xcode_version_of() {  # DEV -> "27.1 27A9275" on stdout; fails if it isn't a working Xcode
+  local dev="$1" out v b
+  [ -x "$dev/usr/bin/xcodebuild" ] || return 1
+  out=$(DEVELOPER_DIR="$dev" "$dev/usr/bin/xcodebuild" -version 2>/dev/null) || return 1
+  v=$(printf '%s\n' "$out" | sed -n 's/^Xcode \([0-9][0-9.]*\).*/\1/p' | head -n 1)
+  b=$(printf '%s\n' "$out" | sed -n 's/^Build version \(.*\)$/\1/p' | head -n 1)
+  [ -n "$v" ] || return 1
+  printf '%s %s\n' "$v" "${b:-unknown}"
+}
+
+ENV_DEV=""
+[ -n "${DEVELOPER_DIR:-}" ] && ENV_DEV=$(dev_dir "$DEVELOPER_DIR")
+SELECT_DEV=$(env -u DEVELOPER_DIR xcode-select -p 2>/dev/null || true)
+DEV=""; DEV_VER=""; DEV_BUILD=""
+OLD_LIST=""
+
+find_xcode() {
+  local cands=() c seen found v rest
+  [ -n "$ENV_DEV" ] && cands+=("$ENV_DEV")
+  cands+=("$DEFAULT_DEV")
+  [ -n "$SELECT_DEV" ] && cands+=("$SELECT_DEV")
+  for c in /Applications/Xcode*.app/Contents/Developer "$HOME"/Applications/Xcode*.app/Contents/Developer; do
+    [ -d "$c" ] && cands+=("$c")
+  done
+  # The first candidate that is new enough wins, so a good DEVELOPER_DIR always wins.
+  seen="|"
+  for c in "${cands[@]}"; do
+    case "$seen" in *"|$c|"*) continue ;; esac
+    seen="$seen$c|"
+    found=$(xcode_version_of "$c") || continue
+    v="${found%% *}"; rest="${found#* }"
+    if ver_ge "$v" "$MIN_XCODE"; then
+      if [ -z "$DEV" ]; then DEV="$c"; DEV_VER="$v"; DEV_BUILD="$rest"; fi
+    else
+      OLD_LIST="${OLD_LIST:+$OLD_LIST, }Xcode $v at ${c%/Contents/Developer}"
+    fi
+  done
+}
+
+# ---------------------------------------------------------------------------
+# Simulator data, read with JavaScript for Automation (ships with macOS; no Python
+# needed). Prints lines with fields separated by the ASCII unit separator (0x1F):
+#   R  version  build  identifier  available  supportsDuo
+#   D  name  udid  state  runtimeVersion  runtimeIdentifier
+
+SIM_JS='
+ObjC.import("Foundation");
+function run(argv) {
+  var data = $.NSFileHandle.fileHandleWithStandardInput.readDataToEndOfFile;
+  var text = $.NSString.alloc.initWithDataEncoding(data, $.NSUTF8StringEncoding).js;
+  var j = JSON.parse(text);
+  var duo = argv[0];
+  var out = [], versions = {};
+  (j.runtimes || []).forEach(function (r) {
+    if (r.platform !== "iOS") return;
+    versions[r.identifier] = r.version;
+    var supports = (r.supportedDeviceTypes || []).some(function (t) { return t.identifier === duo; });
+    out.push(["R", r.version, r.buildversion, r.identifier, r.isAvailable ? "1" : "0", supports ? "1" : "0"].join("\u001f"));
+  });
+  Object.keys(j.devices || {}).forEach(function (rid) {
+    (j.devices[rid] || []).forEach(function (d) {
+      if (d.deviceTypeIdentifier !== duo || !d.isAvailable) return;
+      out.push(["D", d.name, d.udid, d.state, versions[rid] || "0", rid].join("\u001f"));
+    });
+  });
+  return out.join("\n");
+}'
+
+SIM_LINES=""
+SIM_ERROR=""
+load_simulators() {
+  local json
+  json=$(DEVELOPER_DIR="$DEV" xcrun simctl list -j 2>&1) || { SIM_ERROR="$json"; return 1; }
+  SIM_LINES=$(printf '%s' "$json" | osascript -l JavaScript -e "$SIM_JS" "$DUO_TYPE" 2>&1) \
+    || { SIM_ERROR="$SIM_LINES"; SIM_LINES=""; return 1; }
+}
+
+# Picks the Duo simulator to use: "iPhone Duo" booted, then "iPhone Duo", then any
+# booted Duo, then the first Duo. Sets PICK_NAME, PICK_UDID, PICK_STATE, PICK_VER.
+PICK_NAME=""; PICK_UDID=""; PICK_STATE=""; PICK_VER=""
+DUO_COUNT=0; BOOTED_NAMES=""; BOOTED_COUNT=0
+pick_simulator() {
+  local kind name udid state ver rid score best=0 s
+  while IFS=$'\037' read -r kind name udid state ver rid; do
+    [ "$kind" = D ] || continue
+    ver_ge "$ver" "$MIN_IOS" || continue
+    DUO_COUNT=$((DUO_COUNT + 1))
+    if [ "$state" = Booted ]; then
+      BOOTED_COUNT=$((BOOTED_COUNT + 1))
+      BOOTED_NAMES="${BOOTED_NAMES:+$BOOTED_NAMES, }\"$name\" ($udid)"
+    fi
+    s=1
+    [ "$state" = Booted ] && s=$((s + 1))
+    [ "$name" = "iPhone Duo" ] && s=$((s + 2))
+    if [ $s -gt $best ]; then
+      best=$s; PICK_NAME="$name"; PICK_UDID="$udid"; PICK_STATE="$state"; PICK_VER="$ver"
+    fi
+  done <<EOF
+$SIM_LINES
+EOF
+}
+
+# ---------------------------------------------------------------------------
+# Quiet modes used by /duo-new and /duo-audit
+
+if [ "$MODE" = "developer-dir" ]; then
+  [ "$(uname -s)" = Darwin ] || { echo "duo-doctor: needs macOS" >&2; exit 1; }
+  find_xcode
+  [ -n "$DEV" ] || { echo "duo-doctor: no Xcode $MIN_XCODE or later found. Run duo-doctor for details." >&2; exit 1; }
+  printf '%s\n' "$DEV"
+  exit 0
+fi
+
+if [ "$MODE" = "simulator" ]; then
+  [ "$(uname -s)" = Darwin ] || { echo "duo-doctor: needs macOS" >&2; exit 1; }
+  find_xcode
+  [ -n "$DEV" ] || { echo "duo-doctor: no Xcode $MIN_XCODE or later found. Run duo-doctor for details." >&2; exit 1; }
+  load_simulators || { echo "duo-doctor: simctl failed: $SIM_ERROR" >&2; exit 1; }
+  pick_simulator
+  [ -n "$PICK_UDID" ] || { echo "duo-doctor: no iPhone Duo simulator on iOS $MIN_IOS or later. Run duo-doctor for the fix." >&2; exit 1; }
+  printf '%s\n' "$PICK_UDID"
+  exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# Full check
+
+echo "duo-doctor $VERSION (Duology): is this Mac ready for iPhone Duo work?"
+echo
+
+# 1. macOS on Apple silicon ----------------------------------------------------
+OS=$(uname -s)
+if [ "$OS" != Darwin ]; then
+  bad required "macOS on Apple silicon" "this is $OS" \
+    "iPhone Duo apps build with Xcode $MIN_XCODE, which runs only on macOS. Use a Mac with Apple silicon."
+  echo
+  echo "Not ready: Duology needs a Mac. Nothing else was checked."
+  exit 1
+fi
+MACOS=$(sw_vers -productVersion 2>/dev/null || echo 0)
+ARM=$(sysctl -n hw.optional.arm64 2>/dev/null || echo 0)
+if [ "$ARM" != 1 ]; then
+  bad required "macOS on Apple silicon" "macOS $MACOS on an Intel processor" \
+    "Duology supports Macs with Apple silicon only."
+elif ! ver_ge "$MACOS" "$MIN_MACOS"; then
+  bad required "macOS $MIN_MACOS or later on Apple silicon" "macOS $MACOS; Xcode $MIN_XCODE needs $MIN_MACOS or later" \
+    "Update macOS in System Settings > General > Software Update."
+else
+  ok required "macOS on Apple silicon" "macOS $MACOS"
+fi
+
+# 2. Xcode 27.1 ---------------------------------------------------------------
+find_xcode
+XP=""   # prefix for copy-and-paste commands; empty when the Mac-wide default is already right
+APP=""
+if [ -n "$DEV" ]; then
+  APP="${DEV%/Contents/Developer}"
+  ok required "Xcode $MIN_XCODE or later" "Xcode $DEV_VER ($DEV_BUILD) at $APP"
+  [ "$SELECT_DEV" != "$DEV" ] && XP="DEVELOPER_DIR=$(q "$DEV") "
+  if [ -n "$ENV_DEV" ] && [ "$ENV_DEV" != "$DEV" ]; then
+    env_ver=$(xcode_version_of "$ENV_DEV") || env_ver="not a working Xcode"
+    bad required "DEVELOPER_DIR picks Xcode $MIN_XCODE" "this shell sets it to $ENV_DEV (${env_ver%% *})" \
+      "export DEVELOPER_DIR=$(q "$DEV")"
+    XP="DEVELOPER_DIR=$(q "$DEV") "
+  elif [ "$SELECT_DEV" != "$DEV" ]; then
+    sel_ver=$(xcode_version_of "$SELECT_DEV") || sel_ver="not a working Xcode"
+    if [ -n "$ENV_DEV" ]; then
+      note "DEVELOPER_DIR picks Xcode $MIN_XCODE in this shell. Other shells use the Mac-wide default."
+    else
+      note "the Mac-wide default is another Xcode. Put DEVELOPER_DIR=$(q "$DEV") in front of xcrun and xcodebuild."
+    fi
+    note "xcode-select -p is ${SELECT_DEV:-not set} (Xcode ${sel_ver%% *}). Don't run sudo xcode-select unless the user wants every tool on this Mac to switch."
+  fi
+else
+  found_text=""
+  [ -n "$OLD_LIST" ] && found_text=" Found: $OLD_LIST."
+  bad required "Xcode $MIN_XCODE or later" "not found" \
+    "Install Xcode $MIN_XCODE (27A9275 or later) from https://developer.apple.com/download/applications/ or the Mac App Store.$found_text" \
+    "Keep it next to older Xcodes, for example at /Applications/Xcode-27.1.app, then open it once."
+fi
+
+if [ -z "$DEV" ]; then
+  skip required "iOS $MIN_IOS simulator SDK" "needs Xcode $MIN_XCODE"
+  skip required "iOS $MIN_IOS simulator runtime" "needs Xcode $MIN_XCODE"
+  skip required "iPhone Duo simulator" "needs Xcode $MIN_XCODE"
+  skip optional "iPhone Duo simulator booted" "needs Xcode $MIN_XCODE"
+  skip optional "Xcode's MCP bridge" "needs Xcode $MIN_XCODE"
+  skip optional "Claude Code \"xcode\" MCP server" "needs Xcode $MIN_XCODE"
+else
+  # 3. iOS simulator SDK ------------------------------------------------------
+  SDK_VER=$(DEVELOPER_DIR="$DEV" xcrun --sdk iphonesimulator --show-sdk-version 2>/dev/null || true)
+  if [ -n "$SDK_VER" ] && ver_ge "$SDK_VER" "$MIN_IOS"; then
+    ok required "iOS $MIN_IOS simulator SDK" "iOS $SDK_VER"
+  else
+    bad required "iOS $MIN_IOS simulator SDK" "found ${SDK_VER:-none}" \
+      "The SDK ships inside Xcode $MIN_XCODE. Reinstall Xcode, then check: ${XP}xcodebuild -showsdks"
+  fi
+
+  # 4. Simulator runtime, 5. iPhone Duo simulator, 6. booted -------------------
+  if load_simulators; then
+    RT_OK=""; RT_ID=""; RT_OFF=""
+    while IFS=$'\037' read -r kind ver build rid avail duo; do
+      [ "$kind" = R ] || continue
+      ver_ge "$ver" "$MIN_IOS" || continue
+      if [ "$avail" = 1 ] && [ "$duo" = 1 ]; then
+        RT_OK="${RT_OK:+$RT_OK, }iOS $ver ($build)"
+        [ -z "$RT_ID" ] && RT_ID="$rid"
+      else
+        RT_OFF="${RT_OFF:+$RT_OFF, }iOS $ver"
+      fi
+    done <<EOF
+$SIM_LINES
+EOF
+    if [ -n "$RT_OK" ]; then
+      ok required "iOS $MIN_IOS simulator runtime with the iPhone Duo device" "$RT_OK"
+    else
+      extra=""
+      [ -n "$RT_OFF" ] && extra=" Installed but not usable for iPhone Duo: $RT_OFF."
+      bad required "iOS $MIN_IOS simulator runtime with the iPhone Duo device" "not installed" \
+        "Install it in Xcode > Settings > Components.$extra" \
+        "Or, after the user agrees (it downloads several GB): ${XP}xcodebuild -downloadPlatform iOS"
+    fi
+
+    pick_simulator
+    if [ -n "$PICK_UDID" ]; then
+      more=""
+      [ "$DUO_COUNT" -gt 1 ] && more=" (and $((DUO_COUNT - 1)) more)"
+      ok required "iPhone Duo simulator" "\"$PICK_NAME\" $PICK_UDID, iOS $PICK_VER$more"
+    else
+      rid_text="${RT_ID:-com.apple.CoreSimulator.SimRuntime.iOS-27-1}"
+      bad required "iPhone Duo simulator" "none on iOS $MIN_IOS or later" \
+        "After the user agrees (a simulator takes about 4-6 GB of disk): ${XP}xcrun simctl create \"iPhone Duo\" $DUO_TYPE $rid_text" \
+        "Create only this one. Every Duology step reuses it."
+    fi
+
+    # Optional: xcodebuild boots the simulator when a build or test needs it.
+    if [ -z "$PICK_UDID" ]; then
+      skip optional "iPhone Duo simulator booted" "no iPhone Duo simulator yet"
+    elif [ "$BOOTED_COUNT" -gt 0 ]; then
+      ok optional "iPhone Duo simulator booted" "$BOOTED_NAMES"
+      if [ "$BOOTED_COUNT" -gt 1 ]; then
+        note "$BOOTED_COUNT Duo simulators are booted, so \"booted\" in simctl commands is ambiguous. Use the UDID."
+      fi
+    else
+      bad optional "iPhone Duo simulator booted" "\"$PICK_NAME\" is $PICK_STATE" \
+        "${XP}xcrun simctl bootstatus $PICK_UDID -b" \
+        "open $(q "$APP/Contents/Applications/DeviceHub.app")   # shows it, and its pose buttons"
+    fi
+  else
+    bad required "iOS $MIN_IOS simulator runtime with the iPhone Duo device" \
+      "simctl failed: $(printf '%s' "$SIM_ERROR" | head -n 1)" \
+      "Open Xcode $MIN_XCODE once so it can finish installing its components, then run duo-doctor again."
+    skip required "iPhone Duo simulator" "simctl failed"
+    skip optional "iPhone Duo simulator booted" "simctl failed"
+  fi
+
+  # 7. Xcode's MCP bridge (optional: xcodebuild and simctl work without it) ----
+  BRIDGE=$(DEVELOPER_DIR="$DEV" xcrun --find mcpbridge 2>/dev/null || true)
+  if [ -n "$BRIDGE" ]; then
+    ok optional "Xcode's MCP bridge" "$BRIDGE"
+  else
+    bad optional "Xcode's MCP bridge" "xcrun --find mcpbridge found nothing" \
+      "It ships with Xcode 27. Reinstall Xcode $MIN_XCODE, then check: ${XP}xcrun --find mcpbridge"
+  fi
+
+  # 8. Claude Code's "xcode" MCP server (optional) -----------------------------
+  ADD_CMD="claude mcp add --transport stdio xcode -- xcrun mcpbridge"
+  [ -n "$XP" ] && ADD_CMD="claude mcp add --transport stdio xcode -e DEVELOPER_DIR=$(q "$DEV") -- xcrun mcpbridge"
+  SETTING="In Xcode $MIN_XCODE, the user turns on Xcode > Settings > Intelligence > \"Allow external agents to use Xcode tools\"."
+  MCP_LABEL="Claude Code \"xcode\" MCP server"
+  if [ "$SKIP_CLAUDE" = 1 ]; then
+    skip optional "$MCP_LABEL" "--skip-claude"
+  elif ! command -v claude >/dev/null 2>&1; then
+    skip optional "$MCP_LABEL" "the claude command is not on PATH (check by hand: claude mcp get xcode)"
+  elif [ -z "$BRIDGE" ]; then
+    skip optional "$MCP_LABEL" "no mcpbridge"
+  else
+    MCP_OUT=$(run_with_timeout 30 claude mcp get xcode 2>&1)
+    MCP_RC=$?
+    if [ $MCP_RC = 0 ] && printf '%s\n' "$MCP_OUT" | grep -q '^xcode:'; then
+      scope=$(printf '%s\n' "$MCP_OUT" | sed -n 's/^ *Scope: *\(.*\)$/\1/p' | head -n 1)
+      scope_flag=$(printf '%s' "$scope" | awk '{print tolower($1)}')
+      RM_CMD="claude mcp remove xcode${scope_flag:+ -s $scope_flag}"
+      issue=$(printf '%s\n' "$MCP_OUT" | sed -n 's/^ *Issue: *\(.*\)$/\1/p' | head -n 1)
+      # Drop the status icon (a check mark, "!", a cross, a pause sign) and the
+      # middle dot, so "! Connected · tools fetch failed" becomes
+      # "Connected tools fetch failed".
+      status=$(printf '%s\n' "$MCP_OUT" | sed -n 's/^ *Status: *\(.*\)$/\1/p' | head -n 1 | LC_ALL=C tr -cd '[:print:]' | sed 's/^[^A-Za-z]*//; s/  */ /g')
+      # Registered without DEVELOPER_DIR while xcode-select picks another Xcode.
+      wrong_xcode=0
+      if [ -n "$XP" ] && ! printf '%s\n' "$MCP_OUT" | grep -q 'DEVELOPER_DIR'; then wrong_xcode=1; fi
+      case "$status" in
+        Connected*[Ff]etch*[Ff]ailed*)
+          # The bridge started, but Claude Code gave up waiting for its tool list
+          # (it waits a few seconds). It happens on a cold start. The registered
+          # command is fine, so don't suggest a re-register for this.
+          if [ "$wrong_xcode" = 1 ]; then
+            bad optional "$MCP_LABEL" "connected, but its tools didn't load${issue:+ ($issue)}, ${scope:-unknown scope}" \
+              "The bridge connects to the Xcode that xcode-select picks, which isn't Xcode $MIN_XCODE here. Re-register it (ask the user first):" \
+              "$RM_CMD && $ADD_CMD"
+          else
+            bad optional "$MCP_LABEL" "connected, but its tools didn't load${issue:+ ($issue)}, ${scope:-unknown scope}" \
+              "The bridge answered, so its command is right. Don't re-register it. A cold start can be slow: run duo-doctor again." \
+              "If it fails every time, open the project in Xcode $MIN_XCODE with its Intelligence setting on, then run duo-doctor again."
+          fi
+          ;;
+        Connected*)
+          ok optional "$MCP_LABEL" "$status, ${scope:-unknown scope}"
+          note "the bridge answers even while Xcode is closed, so this doesn't prove Xcode is reachable."
+          note "before you use Xcode's tools, open the project in Xcode $MIN_XCODE with its Intelligence setting on."
+          if [ "$wrong_xcode" = 1 ]; then
+            note "the bridge connects to the Xcode that xcode-select picks, which isn't Xcode $MIN_XCODE here. Re-register it:"
+            note "$RM_CMD && $ADD_CMD"
+          fi
+          ;;
+        *[Pp]ending*|*[Nn]eeds*[Aa]uth*)
+          bad optional "$MCP_LABEL" "$status, ${scope:-unknown scope}" \
+            "Start Claude Code in this project, then approve the server or sign in to it with /mcp."
+          ;;
+        *)
+          # "Failed to connect" or "Connection error": the bridge didn't start or
+          # didn't speak MCP. It starts even with Xcode closed, so the usual cause
+          # is the registered command (a typo, or a path that doesn't exist).
+          cmd=$(printf '%s\n' "$MCP_OUT" | sed -n 's/^ *Command: *\(.*\)$/\1/p' | head -n 1)
+          args=$(printf '%s\n' "$MCP_OUT" | sed -n 's/^ *Args: *\(.*\)$/\1/p' | head -n 1)
+          bad optional "$MCP_LABEL" "${status:-unknown status}${issue:+ ($issue)}, ${scope:-unknown scope}" \
+            "It runs \"$cmd${args:+ $args}\". Re-register it with Xcode's bridge (ask the user first):" \
+            "$RM_CMD && $ADD_CMD" \
+            "Then check again: claude mcp get xcode"
+          ;;
+      esac
+    elif printf '%s\n' "$MCP_OUT" | grep -q 'No MCP server named'; then
+      bad optional "$MCP_LABEL" "not registered" \
+        "$ADD_CMD" \
+        "Ask the user first: it changes Claude Code's configuration." \
+        "$SETTING"
+    elif [ $MCP_RC = 142 ]; then
+      skip optional "$MCP_LABEL" "claude mcp get xcode took longer than 30 seconds"
+    else
+      skip optional "$MCP_LABEL" "claude mcp get xcode failed: $(printf '%s' "$MCP_OUT" | head -n 1)"
+    fi
+  fi
+fi
+
+# 9. python3 for duo-lint -----------------------------------------------------
+PY_LABEL="python3 $MIN_PYTHON or later, for duo-lint"
+PY=$(command -v python3 2>/dev/null || true)
+if [ -z "$PY" ]; then
+  bad required "$PY_LABEL" "not found" \
+    "Install Xcode $MIN_XCODE (it brings /usr/bin/python3) or Python from https://www.python.org/downloads/macos/"
+elif [ "$PY" = /usr/bin/python3 ] && [ -z "$DEV" ] && [ -z "$SELECT_DEV" ]; then
+  # Without a developer folder, /usr/bin/python3 is a stub that opens an install
+  # dialog. Don't start it.
+  bad required "$PY_LABEL" "/usr/bin/python3 needs Xcode or the command line tools" \
+    "Install Xcode $MIN_XCODE first."
+else
+  if [ -n "$DEV" ]; then
+    PY_VER=$(DEVELOPER_DIR="$DEV" "$PY" -c 'import sys; print("%d.%d.%d" % sys.version_info[:3])' 2>/dev/null || true)
+  else
+    PY_VER=$("$PY" -c 'import sys; print("%d.%d.%d" % sys.version_info[:3])' 2>/dev/null || true)
+  fi
+  if [ -n "$PY_VER" ] && ver_ge "$PY_VER" "$MIN_PYTHON"; then
+    ok required "$PY_LABEL" "$PY_VER at $PY"
+  else
+    bad required "$PY_LABEL" "found ${PY_VER:-no working version} at $PY" \
+      "Put Python $MIN_PYTHON or later first on PATH. Xcode's /usr/bin/python3 is new enough."
+  fi
+fi
+
+# Summary ---------------------------------------------------------------------
+echo
+REQ_PASS=$((REQ_TOTAL - REQ_FAIL))
+if [ "$OPT_OPEN" = 1 ]; then opt_text="1 optional item is open"; else opt_text="$OPT_OPEN optional items are open"; fi
+if [ "$REQ_FAIL" = 0 ]; then
+  echo "Ready: all $REQ_TOTAL required checks pass. $opt_text."
+  exit 0
+fi
+echo "Not ready: $REQ_PASS of $REQ_TOTAL required checks pass. $opt_text."
+echo "Fix the [ ] lines that aren't marked (optional), then run duo-doctor again. The duo-setup skill has the details."
+exit 1

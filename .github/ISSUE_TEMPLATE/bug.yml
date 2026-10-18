@@ -1,0 +1,119 @@
+name: Bug report
+description: A skill, duo-lint, a recipe or a command did the wrong thing.
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. Two quick notes:
+        - If Duology states an API name, signature, iOS version or behaviour that doesn't match Apple's docs or the SDK, use the **API correction** form instead.
+        - Don't paste private code, keys, tokens or customer data. A short excerpt that shows the problem is enough.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where is the problem?
+      options:
+        - A skill
+        - duo-lint or the lint hook
+        - A recipe or /duo-new
+        - A command (/duo-doctor, /duo-audit)
+        - The gallery app (samples/DuologyGallery)
+        - Installing the plugins or skills
+        - Docs or reference files
+        - Something else
+    validations:
+      required: true
+
+  - type: input
+    id: component
+    attributes:
+      label: Skill, command or file
+      description: Name it, or give the path.
+      placeholder: duo-layout, or plugins/duology/skills/duo-layout/SKILL.md
+
+  - type: textarea
+    id: asked
+    attributes:
+      label: What did you ask the agent to do?
+      description: Paste the prompt, or describe the task in a sentence or two.
+      placeholder: Make the settings screen work on iPhone Duo.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happened?
+      description: What the agent wrote or did. Include the code it produced if it's short.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What should have happened?
+      description: If an Apple page or Tech Talk says so, link it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Install duology and duology-ship
+        2. Ask "..."
+        3. Fold the phone in Device Hub
+        4. See ...
+
+  - type: dropdown
+    id: agent
+    attributes:
+      label: Agent
+      options:
+        - Claude Code
+        - Codex
+        - Cursor
+        - GitHub Copilot
+        - Gemini CLI
+        - Other
+    validations:
+      required: true
+
+  - type: dropdown
+    id: device
+    attributes:
+      label: Where did you run the app?
+      options:
+        - iPhone Duo simulator
+        - iPhone Duo device
+        - Another simulator or device
+        - I didn't run it
+    validations:
+      required: true
+
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Xcode (run `xcodebuild -version`), iOS on the simulator or device, and the Duology release or commit.
+      placeholder: Xcode 27.1 (27A9275), iOS 27.1 simulator, Duology 0.1.0
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Output
+      description: duo-lint output, build errors or the agent's log. It's shown as code.
+      render: text
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you send
+      options:
+        - label: I searched the existing issues.
+          required: true
+        - label: I removed private code, keys and personal data.
+          required: true

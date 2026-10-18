@@ -1,0 +1,12 @@
+#!/usr/bin/env python3
+"""duo-lint launcher. The linter lives in duo-lint.py next to this file.
+
+Run `duo-lint --help`, or `python3 duo-lint.py --help` where this file can't be executed.
+"""
+import os
+import runpy
+import sys
+
+here = os.path.dirname(os.path.realpath(__file__))
+sys.argv[0] = "duo-lint"
+runpy.run_path(os.path.join(here, "duo-lint.py"), run_name="__main__")

@@ -1,0 +1,14 @@
+{
+  "name": "duology-recipes",
+  "version": "0.1.0",
+  "description": "App recipes for iPhone Duo. /duo-new creates a project that builds and runs on the iPhone Duo simulator. v0.1 has one recipe: a two-player game.",
+  "author": {
+    "name": "Kimeur",
+    "url": "https://github.com/Kimeur"
+  },
+  "homepage": "https://github.com/Kimeur/duology",
+  "repository": "https://github.com/Kimeur/duology",
+  "license": "MIT",
+  "keywords": ["iphone-duo", "foldable", "ios", "swiftui", "templates", "recipes", "games", "xcode"],
+  "dependencies": ["duology"]
+}

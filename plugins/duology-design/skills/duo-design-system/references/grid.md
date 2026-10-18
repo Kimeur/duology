@@ -183,7 +183,7 @@ How it behaves:
 | A pane where one side of the fold can't hold half the columns at 44 pt (an `EvenSplit` half) | either | every column on the wider side; the fold becomes the grid's edge, and `leadingInset` says how far in the grid starts |
 | A pane that the fold misses, or that the fold only touches at its edge (Split View, not measured) | `nil` | `count` equal columns |
 
-Flat, the gap at the fold is a normal gutter, centred on the fold line. When the phone folds, only that one gap grows, to the fold's frame, and the columns beside it narrow by a few points. Nothing changes row or order. That keeps the change small, as the HIG asks. The cost: flat, the two halves differ in width when a vertical bar sits on one side. If your screen must not move at all when it folds (a two-page spread, a board game), reserve the fold's frame even when flat: pass `DuoFold(minX:maxX:isActive: true)` built from the inactive frame. That is a Duology option, not an Apple rule.
+Flat, the gap at the fold is a normal gutter, centred on the fold line. When the phone folds, only that one gap grows, to the fold's frame, and the columns on each side narrow by a few points (3 pt each in the worked example). Nothing changes row or order. That keeps the change small, as the HIG asks. The cost: flat, the two halves differ in width when a vertical bar sits on one side. If your screen must not move at all when it folds (a two-page spread, a board game), reserve the fold's frame even when flat: pass `DuoFold(minX:maxX:isActive: true)` built from the inactive frame. That is a Duology option, not an Apple rule.
 
 ## A card grid
 

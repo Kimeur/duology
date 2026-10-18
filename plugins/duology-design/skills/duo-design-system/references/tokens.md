@@ -42,7 +42,7 @@ nonisolated struct DuoTokens: Equatable, Sendable {
         self.readableWidth = readableWidth
     }
 
-    /// Layout grid columns. Even in both size classes, so a fold lands in a gutter.
+    /// Layout grid columns. Even in both size classes, so a fold never lands inside a column.
     var columns: Int { isRegularWidth ? 8 : 4 }
     var gutter: CGFloat { isRegularWidth ? DuoSpace.x4 : DuoSpace.x3 }
     var sectionSpacing: CGFloat { isRegularWidth ? DuoSpace.x8 : DuoSpace.x6 }

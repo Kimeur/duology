@@ -43,7 +43,7 @@ Never copy these numbers into code. The tokens produce them.
 
 ## 1. Drop in the token module
 
-Copy the complete file from [references/tokens.md](references/tokens.md) into the app as `DuoTokens.swift`. It adds text roles (`DuoType`), colours (`DuoColor`), `DuoCard` and the modifiers used below. This is its core:
+Copy the complete file from [references/tokens.md](references/tokens.md) into the app as `DuoTokens.swift`. It adds text roles (`DuoType`), colours (`DuoColor`), `DuoCard` and the modifiers used below. If the app still has `duo-start`'s debug logger, delete it first: it also declares a `DuoSpace`, and the build fails. This is its core:
 
 ```swift
 import SwiftUI
@@ -76,7 +76,7 @@ nonisolated struct DuoTokens: Equatable, Sendable {
         self.readableWidth = readableWidth
     }
 
-    /// Layout grid columns. Even in both size classes, so a fold lands in a gutter.
+    /// Layout grid columns. Even in both size classes, so a fold never lands inside a column.
     var columns: Int { isRegularWidth ? 8 : 4 }
     var gutter: CGFloat { isRegularWidth ? DuoSpace.x4 : DuoSpace.x3 }
     var sectionSpacing: CGFloat { isRegularWidth ? DuoSpace.x8 : DuoSpace.x6 }

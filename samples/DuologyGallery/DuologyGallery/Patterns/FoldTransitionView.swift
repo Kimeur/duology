@@ -29,6 +29,11 @@ struct FoldTransitionView: View {
         ReadingLayout.regions(in: CGRect(origin: .zero, size: size), fold: fold, widthClass: widthClass) != nil
     }
 
+    /// The pane sits to the leading side: a fold top to bottom, or a sidebar with no fold.
+    private var articleBesidePane: Bool {
+        showsContents && (fold.frame == nil || fold.isVertical)
+    }
+
     var body: some View {
         NavigationStack {
             ReadingLayout(fold: fold, widthClass: widthClass) {
@@ -37,7 +42,9 @@ struct FoldTransitionView: View {
                         .transition(.opacity)
                 }
                 // Always the last child, so it keeps its identity when the pane comes and goes.
-                ArticleColumn(model: model)
+                // Beside a pane, its leading edge is inside the window, where the
+                // system's container margin is zero, so it gets a margin of its own.
+                ArticleColumn(model: model, leadingInset: articleBesidePane ? DuoSpace.x5 : 0)
             }
             // Read the fold on the layout itself, so its frame is in the layout's space.
             .onFoldChange { fold = $0 }
@@ -158,8 +165,9 @@ final class ReadingModel {
     var bookmark: Int?
     /// The reader's own text size step, on top of the system Dynamic Type size.
     var textStep = 2
-    /// Where to start, once: the section that holds a paragraph passed with `-select`.
-    @ObservationIgnored private var startID: Int?
+    /// The block the reader is on. Set when a scroll comes to rest or a jump
+    /// lands, never by a resize, so a fold can put it back at the top.
+    var anchorID = 0
 
     static let textScales: [CGFloat] = [0.84, 0.92, 1, 1.1, 1.22, 1.36]
 
@@ -170,18 +178,25 @@ final class ReadingModel {
         highlights = guide.sampleHighlights
         bookmark = guide.sampleBookmark
         scroll = ScrollPosition(idType: Int.self)
+        // With `-select`, start at the section that holds the paragraph.
         if let valid, let heading = guide.headingID(containing: valid) {
-            startID = heading
+            anchorID = heading
             visible = [heading]
         }
     }
 
-    /// Scrolls to the start position the first time the article appears. The
-    /// model outlives every fold, so this never runs again.
-    func scrollToStart() {
-        guard let startID else { return }
-        self.startID = nil
-        scroll.scrollTo(id: startID, anchor: .top)
+    /// Puts the reader's block back at the top. Called when the article first
+    /// appears and whenever its width changes: open, close, fold or rotate.
+    /// The scroll view alone kept the offset, not the paragraph, when the
+    /// column narrowed at launch on the open phone (measured), so the screen
+    /// asks for the paragraph by ID itself.
+    func keepPlace() {
+        scroll.scrollTo(id: anchorID, anchor: .top)
+    }
+
+    /// A scroll came to rest: remember where the reader is.
+    func scrollDidSettle() {
+        anchorID = topID
     }
 
     /// The topmost block on screen.
@@ -219,6 +234,7 @@ final class ReadingModel {
     }
 
     func jump(to id: Int) {
+        anchorID = id
         withAnimation(.smooth) { scroll.scrollTo(id: id, anchor: .top) }
     }
 
@@ -238,6 +254,7 @@ final class ReadingModel {
 
 private struct ArticleColumn: View {
     @Bindable var model: ReadingModel
+    var leadingInset: CGFloat = 0
     @ScaledMetric(relativeTo: .body) private var bodySize = 19.0
 
     var body: some View {
@@ -259,19 +276,26 @@ private struct ArticleColumn: View {
                 }
             }
             .scrollTargetLayout()
+            .padding(.leading, leadingInset)
             .containerMargins(.horizontal)
             .padding(.top, 8)
         }
         .scrollPosition($model.scroll, anchor: .top)
-        .task { model.scrollToStart() }
-        .scrollEdgeEffectStyle(.hard, for: .bottom)
+        .task { model.keepPlace() }
+        .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { _ in
+            model.keepPlace()
+        }
+        .onScrollPhaseChange { oldPhase, newPhase in
+            if newPhase == .idle, oldPhase != .idle { model.scrollDidSettle() }
+        }
+        .scrollEdgeEffectStyle(.hard, for: [.top, .bottom])
         .onScrollTargetVisibilityChange(idType: Int.self) { ids in
             if !ids.isEmpty { model.visible = ids }
         }
         // Bars of our own with the system's scroll edge effect (iOS 26): text
         // fades under them, and the scroll view makes room for them.
         .safeAreaBar(edge: .top, spacing: 0) {
-            ReadingProgress(model: model)
+            ReadingProgress(model: model, leadingInset: leadingInset)
         }
         .safeAreaBar(edge: .bottom) {
             ReadingTools(model: model)
@@ -365,6 +389,7 @@ private struct BlockView: View {
 /// Where you are: a thin progress bar, the section and the time left.
 private struct ReadingProgress: View {
     let model: ReadingModel
+    var leadingInset: CGFloat = 0
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -381,6 +406,7 @@ private struct ReadingProgress: View {
                 .tint(FieldGuide.tint)
                 .accessibilityHidden(true)
         }
+        .padding(.leading, leadingInset)
         .containerMargins(.horizontal)
         .padding(.vertical, 8)
         .accessibilityElement(children: .combine)

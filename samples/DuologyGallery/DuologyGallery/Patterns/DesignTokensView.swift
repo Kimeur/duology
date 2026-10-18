@@ -67,7 +67,7 @@ private struct EnergyDashboard: View {
                 Legend(columns: columns, gutter: tokens.gutter, fold: grid.fold)
 
                 section("Today") {
-                    LazyVGrid(columns: columns.grouped(by: tokens.span(2)).gridItems,
+                    LazyVGrid(columns: columns.grouped(by: tokens.span(2)).gridItems.topAligned,
                               alignment: .leading, spacing: tokens.gutter) {
                         ForEach(EnergyStat.today) { stat in
                             StatCard(stat: stat)
@@ -76,7 +76,7 @@ private struct EnergyDashboard: View {
                 }
 
                 section("Last 7 days") {
-                    LazyVGrid(columns: columns.grouped(by: tokens.span(4)).gridItems,
+                    LazyVGrid(columns: columns.grouped(by: tokens.span(4)).gridItems.topAligned,
                               alignment: .leading, spacing: tokens.gutter) {
                         ChartCard(range: $range)
                         TariffCard()
@@ -84,7 +84,7 @@ private struct EnergyDashboard: View {
                 }
 
                 section("Devices") {
-                    LazyVGrid(columns: columns.grouped(by: tokens.span(2)).gridItems,
+                    LazyVGrid(columns: columns.grouped(by: tokens.span(2)).gridItems.topAligned,
                               alignment: .leading, spacing: tokens.gutter) {
                         ForEach($devices) { $device in
                             DeviceCard(device: $device)
@@ -93,7 +93,7 @@ private struct EnergyDashboard: View {
                 }
 
                 section("Tokens in use") {
-                    LazyVGrid(columns: columns.grouped(by: tokens.span(4)).gridItems,
+                    LazyVGrid(columns: columns.grouped(by: tokens.span(4)).gridItems.topAligned,
                               alignment: .leading, spacing: tokens.gutter) {
                         TokensCard(tokens: tokens, columns: columns, gridFold: grid.fold,
                                    margins: margins, smallestTarget: smallestTarget, typeSize: typeSize)
@@ -140,6 +140,17 @@ private struct EnergyDashboard: View {
                 .font(DuoType.sectionTitle)
                 .accessibilityAddTraits(.isHeader)
             content()
+        }
+    }
+}
+
+private extension [GridItem] {
+    /// Cards in a row line up at the top when their heights differ.
+    var topAligned: [GridItem] {
+        map { item in
+            var item = item
+            item.alignment = .top
+            return item
         }
     }
 }

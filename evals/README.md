@@ -32,7 +32,7 @@ For each task, each *arm* (`with`, `without`) and each trial:
      --max-budget-usd 5 --append-system-prompt "<preamble>" < prompt.txt
    ```
 
-   The `with` arm adds two things: `--plugin-dir <trial>/plugins`, which loads all four Duology plugins for that session, and allow rules for the plugins' own scripts (duo-lint, the recipe's `new-project.sh`, `duo-doctor`), each by its exact path in that copy. Every trial's exact command is in its `command.txt`, with the sign-in value redacted.
+   The `with` arm adds two things: `--plugin-dir <trial>/plugins`, which loads all four Duology plugins for that session, and allow rules for the plugins' own scripts (duo-lint, the recipe's `new-project.sh`, `duo-doctor`), each by its exact path in that copy, plus the bare `duo-doctor` and `duo-lint` commands that the plugins put on PATH. Every trial's exact command is in its `command.txt`, with the sign-in value redacted.
 4. **Preamble.** Both arms get the same short system-prompt addition. It says to run headless without asking questions, that `DEVELOPER_DIR` already points at Xcode 27.1, which simulator UDID to build for (and to reuse it, not create or clone another), and which shell commands are allowed. Tasks marked `preamble: minimal` (the Mac check) leave out the Xcode facts, because finding them is the task.
 5. **Score.** Build, duo-lint and the task's checks run on the work folder, under `env -i` with a fresh scoring `HOME`. A checklist template is written for the human review.
 

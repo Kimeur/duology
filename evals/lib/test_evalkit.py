@@ -56,7 +56,7 @@ class RuleGate(unittest.TestCase):
         "Bash(xcode-select -p)", "Bash(swift test:*)", "Bash(defaults read *)",
         "Bash(python3 /tmp/x/plugins/duology-ship/skills/duo-lint/scripts/duo-lint.py:*)",
         'Bash("/tmp/x/plugins/duology-ship/skills/duo-lint/scripts/duo-lint" *)',
-        "Bash(/tmp/x/plugins/duology/bin/duo-doctor:*)", "Bash(duo-doctor:*)",
+        "Bash(/tmp/x/plugins/duology/bin/duo-doctor:*)", "Bash(duo-doctor:*)", "Bash(duo-lint:*)",
         "Bash(git log:*)", "Bash(git show:*)", "Bash(Tools/run-logic-tests.sh:*)",
         "Bash(./Tools/run-logic-tests.sh:*)", "Bash(mdfind:*)", "Bash(chmod +x *)",
     ]
@@ -126,7 +126,9 @@ class TaskFiles(unittest.TestCase):
         without = evalkit.allowed_rules(meta, XCODE)
         with_ = evalkit.allowed_rules(meta, XCODE, plugins)
         self.assertEqual(with_[:len(without)], without)
-        self.assertTrue(all(plugins in r or r == "Bash(duo-doctor:*)" for r in with_[len(without):]))
+        bare = {"Bash(duo-doctor:*)", "Bash(duo-lint:*)"}
+        self.assertTrue(all(plugins in r or r in bare for r in with_[len(without):]))
+        self.assertTrue(bare <= set(with_))
 
     def test_mac_check_starts_without_developer_dir(self):
         meta, _, _ = evalkit.parse_task(os.path.join(EVALS, "tasks", "duo-setup", "mac-check.md"))

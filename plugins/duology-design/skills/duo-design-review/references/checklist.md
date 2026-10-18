@@ -68,7 +68,7 @@ Coordinates are in points. Screenshot pixels are points × 3. The fold band and 
 
 **Severity.** Major. Blocker when content or a control becomes unreachable.
 
-**Fix.** [fixes.md, R3](fixes.md#r3-no-size-from-the-main-screen). For code, run `duo-lint`.
+**Fix.** [fixes.md, R3](fixes.md#r3-no-size-from-the-main-screen). For code, run `duo-lint` (it comes with the `duology-ship` plugin; with the skill alone, run `scripts/duo-lint` from the `duo-lint` skill folder).
 
 ---
 

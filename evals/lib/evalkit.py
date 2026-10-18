@@ -215,8 +215,11 @@ def plugin_rules(plugin_root):
         path = os.path.join(plugin_root, rel)
         if os.path.exists(path):
             rules += ["Bash(python3 %s:*)" % path, 'Bash(python3 "%s" *)' % path]
-    if os.path.exists(os.path.join(plugin_root, "duology/bin/duo-doctor")):
-        rules.append("Bash(duo-doctor:*)")  # the plugin puts its bin/ on PATH
+    # Each plugin puts its bin/ on PATH, and the skills offer the bare command.
+    for rel, rule in (("duology/bin/duo-doctor", "Bash(duo-doctor:*)"),
+                      ("duology-ship/bin/duo-lint", "Bash(duo-lint:*)")):
+        if os.path.exists(os.path.join(plugin_root, rel)):
+            rules.append(rule)
     return rules
 
 

@@ -57,7 +57,7 @@ Every task must fail on its untouched fixture. `run.sh --selftest` proves that.
 
 ## Checklist
 
-The reviewer runs the app on the iPhone Duo simulator, sets each pose in Device Hub, and judges only the rules the task lists. The pose can't be changed from the command line in Xcode 27.1, so this part can't be automated yet.
+The reviewer runs the app on the iPhone Duo simulator, sets each pose in Device Hub, and judges only the rules the task lists. `simctl` has no pose command in Xcode 27.1, and Duology ships no tool that presses Device Hub's pose buttons yet, so this part stays manual.
 
 ### Verdicts
 

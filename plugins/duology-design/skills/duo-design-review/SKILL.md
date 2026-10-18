@@ -117,8 +117,9 @@ Draw these on each frame before you judge it. Numbers are in points; multiply by
 |---|---|---|---|
 | Outer, portrait | None | Camera x 400–437, y 29–66 (37 × 37 pt). Region 84 × 174 pt at the top of the trailing column, where the status bar sits (our reading). Safe area insets: trailing 84, bottom 34. | *Measured* on the simulator |
 | Inner, held wide, flat | Line at x 475.5. Inactive region x 455–495 (the line plus 20 pt each side). | Region x 867–951, y 0–124, at the status bar corner. Inactive region x 677–735, y 21–58, likely the inner camera (our reading of both). | *Measured*, see `duo-layout` [reserved regions](https://github.com/Kimeur/duology/blob/main/plugins/duology/skills/duo-layout/references/reserved-regions.md) |
-| Inner, partly folded | Same place; width not measured. Treat x 455–495 as the smallest no-go band for controls. | As above; the inner camera region is active only while the camera runs | *Unverified* width |
-| Inner, held tall | Runs side to side near y 475 | Not measured | *Derived* by symmetry |
+| Inner, partly folded like a book | Same place, now active: x 455–495, top to bottom. Keep controls out of it. | As above; the inner camera region is active only while the camera runs | *Measured* in the gallery, see `duo-patterns` [two-page](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/two-page.md#what-we-measured) |
+| Inner, held tall, partly folded (tabletop) | Runs side to side, active: y 455–495, full width | Region x 525–669, y 0–82, at the status bar corner. Inactive region x 611–648, y 677–735, likely the inner camera (our reading). | *Measured* in the gallery |
+| Inner, held tall, flat | Same band as tabletop, inactive | Not measured | *Derived*: held wide, folding changed only `isActive` |
 
 The outer camera always covers content. The inner camera covers it only while active ([hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo)).
 

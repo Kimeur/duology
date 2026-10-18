@@ -12,7 +12,7 @@ Apple says your app resizes when someone opens or closes iPhone Duo ([Tech Talk 
 
 Load other skills for neighbouring work: `duo-layout` (size classes, `ArrangementView`, the even split), `duo-navigation` (bars, sidebars, sheets), `duo-testing` (test setup on the Duo simulator).
 
-Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1). Fold results come from flipping the size class from code, the change a fold makes to your views, because Xcode can't fold the simulator from code; see [references/evidence.md](references/evidence.md). *Unverified* means we could not confirm it. Everything else comes from Apple's pages, linked inline. Full source list: [reference/sources.md](https://github.com/Kimeur/duology/blob/main/reference/sources.md).
+Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1). Fold results come from flipping the size class from code, the change a fold makes to your views, because our probes can't fold the simulator themselves; see [references/evidence.md](references/evidence.md). *Unverified* means we could not confirm it. Everything else comes from Apple's pages, linked inline. Full source list: [reference/sources.md](https://github.com/Kimeur/duology/blob/main/reference/sources.md).
 
 ## Apple has no continuity API
 

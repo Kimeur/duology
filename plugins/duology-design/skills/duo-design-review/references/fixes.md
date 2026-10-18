@@ -43,7 +43,7 @@ For hero images and backgrounds that should run under a vertical bar, use [`back
 
 ## R2 State survives fold and unfold
 
-Keep the same views alive when the layout changes, and keep state outside views that come and go. For a list and its detail, use one [`NavigationSplitView`](https://developer.apple.com/documentation/swiftui/navigationsplitview) for every size, with the selection stored above it. Don't build list-detail from stacks: closed, they pile the list on top of the detail. Full recipe: `duo-patterns`, [list-detail](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/list-detail.md).
+Keep the same views alive when the layout changes, and keep state outside views that come and go. For a list and its detail, use one [`NavigationSplitView`](https://developer.apple.com/documentation/swiftui/navigationsplitview) for every size, with the selection stored above it. Don't build list-detail from stacks: closed, they pile the list on top of the detail. Set the column visibility yourself. Left at `.automatic`, the gallery's open phone showed a stored selection alone, full width, and in book pose its lines ran across the fold. Full recipe: `duo-patterns`, [list-detail](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/list-detail.md#column-visibility).
 
 ```swift
 import SwiftUI
@@ -52,18 +52,34 @@ struct LibraryScreen: View {
     // The selection lives above the split view, in scene storage, so fold,
     // unfold and a relaunch by the system all keep it.
     @SceneStorage("library.selectedID") private var selectedID: String?
+    // Set by updateColumns(). Never left at .automatic.
+    @State private var columns = NavigationSplitViewVisibility.all
+    @State private var isWide = true
 
     var body: some View {
         // One container for every size. Closed, it collapses to one stack:
-        // the list, then the reader. Open, it shows both side by side.
-        // Swapping in another screen on a size class change would rebuild
-        // the views and reset their state.
-        NavigationSplitView {
+        // the list, then the reader. Wide, .all keeps both columns, one on
+        // each side of the fold. Swapping in another screen on a size class
+        // change would rebuild the views and reset their state.
+        NavigationSplitView(columnVisibility: $columns) {
             // ItemList is a List(selection: $selectedID).
             ItemList(selectedID: $selectedID)
         } detail: {
             Reader(itemID: selectedID)
         }
+        // The split view's own shape, never the pose or the orientation.
+        .onGeometryChange(for: Bool.self) { proxy in
+            proxy.size.width > proxy.size.height
+        } action: { wide in
+            isWide = wide
+            updateColumns()
+        }
+        .onChange(of: selectedID) { updateColumns() }
+    }
+
+    /// Wide: both columns. Tall: the reader alone once there is something to read.
+    private func updateColumns() {
+        columns = isWide || selectedID == nil ? .all : .detailOnly
     }
 }
 ```

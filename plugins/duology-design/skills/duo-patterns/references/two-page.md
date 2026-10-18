@@ -55,17 +55,17 @@ iOS 27.1 iPhone Duo simulator, open, flat, held wide (951 × 669 pt window):
 - With `.includeInactive` it returned one inactive division: a 40 pt wide frame across the full height, centred on the window, with 20 pt margins on each side. So the fold line itself has zero width, and the 40 pt is the margin Apple adds for interactive content.
 - On the first `onAppear` the query returned nothing at all; the values came with the next geometry update. Read regions with `onGeometryChange`, not once in `onAppear`.
 
-In every pose, 18 October 2026, on the gallery's two-page screen. We read the frames with the gallery's region overlay (launch argument `-showsRegions YES`):
+In every pose, 18 October 2026, on the gallery's two-page screen. We read the frames with the gallery's region overlay (launch argument `-showsRegions YES`) and checked where it drew them in the screenshots. Frames are in display points, the same space as a view that fills the window:
 
 | Pose | `.division` region |
 |---|---|
-| Open, flat, held wide | Inactive, 40 × 669 pt at (455, 17) |
-| Partly folded like a book | Active, 40 × 669 pt at (455, 17) |
+| Open, flat, held wide | Inactive, 40 × 669 pt at (455, 0) |
+| Partly folded like a book | Active, 40 × 669 pt at (455, 0) |
 | Partly folded across (tabletop) | Active, 669 × 40 pt at (0, 455) |
 
 - Folding changes `isActive`, not the frame. Read the frame with `.includeInactive` and the spread lands in the same place flat and folded.
 - The page gap matches it. In the [book screenshot](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/twoPage-book.png) each page card has 12 pt of padding: the left card ends at x = 443 and the right card starts at x = 507.
-- The overlay draws in the window's space, which read 951 × 686 pt in book pose. So y = 17 is in that space. The band covers the display from top to bottom.
+- Held wide, the overlay prints y = 17, not 0. Its own view reported 951 × 686 pt, flat and in book pose: 17 pt taller than the 669 pt display. In the screenshots the band runs from the display's top edge to its bottom edge, so the overlay's top 17 pt sit above the display. The table subtracts them. The 16 October probe, in a 951 × 669 pt view, read y = 0 directly. Why the overlay's view is taller, we don't know. (unverified)
 
 ## Recipe
 

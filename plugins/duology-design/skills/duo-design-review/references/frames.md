@@ -28,11 +28,11 @@ Sources: [HIG](https://developer.apple.com/design/human-interface-guidelines/des
 | Closed, portrait | 1398 × 2034 | 466 × 678 (*measured*: window) | compact width, regular height | Vertical, trailing edge |
 | Closed, landscape | 2034 × 1398 | 678 × 466 (*derived*) | compact, compact | Vertical, on the side |
 | Open, held wide | 2853 × 2007 | 951 × 669 (*measured*) | regular, regular | Vertical, on the side |
-| Open, held tall | 2007 × 2853 | 669 × 951 (*derived*) | regular, regular | Horizontal |
+| Open, held tall | 2007 × 2853 | 669 × 951 (*measured* in tabletop, gallery overlay) | regular, regular | Horizontal |
 
 - Screenshot sizes match Apple's App Store sizes ([screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications)). Apple's specs page gives 1878 × 2670 for the inner panel; screenshots and the simulator still come out at 2007 × 2853. See [`device-facts.md`](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md#two-inner-display-resolutions).
 - Size classes per display: [talk 111461, 2:59](https://developer.apple.com/videos/play/tech-talks/111461/?time=179). Bars: [HIG, Vertical controls](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls).
-- Not measured yet: Split View halves, the space under a pinned PiP video, and any partly folded window. Don't quote a number for them.
+- Not measured yet: Split View halves, the space under a pinned PiP video, and the window while folded like a book. Don't quote a number for them. The gallery's region overlay reads 951 × 686 pt held wide, but that is its own view, 17 pt taller than the display, not the window (see [Partly folded](#partly-folded)).
 
 ## Where the fold and cameras are
 
@@ -64,11 +64,23 @@ The trailing 84 pt column holds the status bar and Dynamic Island at the top and
 
 ### Partly folded
 
-The fold sits in the same place. Its width while folded is *unverified*. Treat x 455–495 pt (1365–1485 px) held wide as the smallest band that must stay free of controls. When in doubt, flag a control within the band and mark the finding "confirm folded".
+*Measured* with the gallery's region overlay, 18 October 2026, and checked against where it drew the regions in the screenshots ([`duo-patterns` two-page](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/two-page.md#what-we-measured)). Folding changed only `isActive`, never the frame.
+
+| Item | Points | Pixels |
+|---|---|---|
+| Book: fold region (active) | x 455–495, full height | x 1365–1485 |
+| Book: occlusions | same as open, held wide | |
+| Tabletop: fold region (active) | y 455–495, full width | y 1365–1485 |
+| Tabletop, occlusion, active: status bar corner | x 525–669, y 0–82 | x 1575–2007, y 0–246 |
+| Tabletop, occlusion, inactive: likely the inner camera | x 611–648, y 677–735 | x 1833–1944, y 2031–2205 |
+
+Held wide, the overlay adds 17 to every y: its own view reads 951 × 686 pt and starts 17 pt above the display. The table gives display points, which match the flat probe above (status bar corner at y 0, camera at y 21). Why its view is taller is *unverified*.
+
+Flag any control inside the fold band. Content above the tabletop band is the part to look at when the phone sits on a table; below it is the part to touch.
 
 ### Open, held tall
 
-*Derived* by symmetry, not measured: the fold runs side to side near y 475.5 pt (1426.5 px), band y 455–495 pt. Content above it is the part to look at when the phone sits on a table; below it is the part to touch.
+*Derived*, not measured: the same band as tabletop, y 455–495 pt (1365–1485 px), inactive. Held wide, folding changed only `isActive`.
 
 ## Recognise the SDK an app was built with
 

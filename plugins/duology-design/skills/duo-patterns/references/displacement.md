@@ -145,7 +145,7 @@ What the recipe does on purpose:
 4. Right-to-left language: the group moves to the left region (the trailing side). (unverified)
 5. VoiceOver: the order is list, then controls, in every state.
 
-Duology has not run steps 2 to 4: the folded poses can only be set by hand in Device Hub (`simctl` has no pose command in Xcode 27.1).
+Duology has checked steps 2 and 3 only in still screenshots. The gallery's [book](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/displacement-book.png) and [tabletop](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/displacement-tabletop.png) shots (18 October 2026) show the group in the trailing region and in the bottom region. Step 4 has not run. `simctl` has no pose command in Xcode 27.1, so set the poses in Device Hub.
 
 ## Gallery screen
 

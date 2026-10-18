@@ -122,7 +122,7 @@ On the iOS 27.1 iPhone Duo simulator. The table comes from the region overlay (w
 | Tabletop | 669 × 951 pt | active, 669 × 40 at (0, 455) | active 144 × 82 at (525, 0); inactive 37 × 58 at (611, 677) |
 
 - Which hardware each occlusion stands for is our reading: the status bar corner, the outer front camera (closed) and the inner front camera (open). The inner camera's region was inactive in every shot, with no camera in use.
-- Held wide, the overlay reports a window 17 pt taller than the 669 pt display, and every region starts at y = 17. We have not found out why. (unverified)
+- Held wide, the overlay reports a window 17 pt taller than the 669 pt display, and every region starts at y = 17. In the screenshots the fold band and the status bar region start at the display's top edge, so the overlay's view starts 17 pt above the display. Subtract 17 from y for display points: the fold is at (455, 0), as `duo-layout`'s probe measured in a 951 × 669 pt view. We have not found out why the overlay's view is taller. (unverified)
 - The fold frame is 40 pt across in every pose, centred on the display.
 - Symbol toolbar items, the tab bar and the Close button went into a vertical bar on the trailing side, under the status bar. Close sat at the top of the bar; bottom-bar items (the book's page buttons) sat at the bottom. Held tall (tabletop), there was no vertical bar: items stayed in the top bar.
 - The text-only Edit button (voice memos) and the dual view's segmented List/Map switch stayed in the top bar, as the [duo-navigation bar rules](../../plugins/duology/skills/duo-navigation/references/bar-rules.md) describe.

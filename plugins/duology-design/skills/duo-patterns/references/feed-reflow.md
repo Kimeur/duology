@@ -152,7 +152,7 @@ Why `onGeometryChange` sits on the grid, before the margins: the proxy then desc
 5. Largest Dynamic Type size: fewer, larger columns, still even when open.
 6. Split View: as many columns as fit, odd is fine.
 
-Steps 3 and 4 are untested by Duology: the folded pose can only be set by hand in Device Hub.
+Duology has checked step 3 only in a still screenshot: in the gallery's [book shot](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/feedReflow-book.png) (18 October 2026) the middle gap runs from x 456 to 495.5 pt, over the fold region. Step 4 has not run. `simctl` has no pose command in Xcode 27.1, so set the pose in Device Hub.
 
 ## Gallery screen
 

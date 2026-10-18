@@ -186,7 +186,7 @@ iOS 27.1 iPhone Duo simulator, open, flat, held wide (951 × 669 pt), Xcode 27.1
 - The default `.division` query returned nothing. With `.includeInactive` it returned one inactive fold: a 40 pt frame, centred, full height, with 20 pt margins each side. Talk 111463 says the default is "active only"; Apple's `ReservedRegion` page says the opposite. The simulator agrees with the talk.
 - The default `.occlusion` query returned one active 84 × 124 pt region in the top trailing corner, where the status bar sits. `.includeInactive` added a 58 × 37 pt inactive one, likely the inner camera (our reading).
 - The first read in `onAppear` was empty. Values came with the next geometry update.
-- Partly folded like a book (18 Oct 2026, read with the gallery's region overlay): the same `.division` region turned active, 40 × 669 pt at (455, 17). Flat, the same overlay gave the same frame, inactive. Partly folded and held tall (tabletop), it ran across: active, 669 × 40 pt at (0, 455). Details in [two-page.md](references/two-page.md#what-we-measured).
+- Partly folded like a book (18 Oct 2026, gallery screenshots with the region overlay): the same `.division` region turned active and stayed in place, 40 × 669 pt at (455, 0), top to bottom. Partly folded and held tall (tabletop), it ran across: active, 669 × 40 pt at (0, 455). The overlay prints y = 17 held wide because its own view starts 17 pt above the display. Details in [two-page.md](references/two-page.md#what-we-measured).
 
 ## Arrangement facts
 

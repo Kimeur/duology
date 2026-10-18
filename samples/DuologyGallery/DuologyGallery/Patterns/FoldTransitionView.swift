@@ -46,7 +46,7 @@ struct FoldTransitionView: View {
             .animation(reduceMotion ? nil : .smooth(duration: 0.3),
                        value: ReadingLayoutKey(fold: fold, showsContents: showsContents))
             .background(Color(.systemGroupedBackground))
-            .navigationTitle(model.guide.title)
+            .navigationTitle("Field Guide")
             .navigationBarTitleDisplayMode(.inline)
             .galleryCloseButton()
             .toolbar {
@@ -93,7 +93,7 @@ private struct ReadingLayout: Layout {
     var fold: FoldGeometry
     var widthClass: UserInterfaceSizeClass?
 
-    /// Contents width when there is no fold but room for a sidebar (iPad, Mac).
+    /// Contents width when no fold crosses the view but there is room for a sidebar.
     static let sidebarWidth: CGFloat = 320
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
@@ -134,7 +134,7 @@ private struct ReadingLayout: Layout {
             }
             return nil
         }
-        // No fold (iPad, Mac, systems before iOS 27.1): a sidebar when there is room for two columns.
+        // No fold in the view: a sidebar when the width is regular and two columns fit.
         guard widthClass == .regular, bounds.width >= sidebarWidth * 2.2 else { return nil }
         return (CGRect(x: 0, y: 0, width: sidebarWidth, height: bounds.height),
                 CGRect(x: sidebarWidth, y: 0, width: bounds.width - sidebarWidth, height: bounds.height))
@@ -158,20 +158,30 @@ final class ReadingModel {
     var bookmark: Int?
     /// The reader's own text size step, on top of the system Dynamic Type size.
     var textStep = 2
+    /// Where to start, once: the section that holds a paragraph passed with `-select`.
+    @ObservationIgnored private var startID: Int?
 
     static let textScales: [CGFloat] = [0.84, 0.92, 1, 1.1, 1.22, 1.36]
 
     init(guide: FieldGuide, selection: Int?) {
         self.guide = guide
-        selected = selection.flatMap { guide.block($0) == nil ? nil : $0 }
+        let valid = selection.flatMap { guide.block($0) == nil ? nil : $0 }
+        selected = valid
         highlights = guide.sampleHighlights
         bookmark = guide.sampleBookmark
-        if let selected, let heading = guide.headingID(containing: selected) {
-            scroll = ScrollPosition(id: heading, anchor: .top)
+        scroll = ScrollPosition(idType: Int.self)
+        if let valid, let heading = guide.headingID(containing: valid) {
+            startID = heading
             visible = [heading]
-        } else {
-            scroll = ScrollPosition(idType: Int.self)
         }
+    }
+
+    /// Scrolls to the start position the first time the article appears. The
+    /// model outlives every fold, so this never runs again.
+    func scrollToStart() {
+        guard let startID else { return }
+        self.startID = nil
+        scroll.scrollTo(id: startID, anchor: .top)
     }
 
     /// The topmost block on screen.
@@ -232,7 +242,9 @@ private struct ArticleColumn: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 16) {
+            // A plain stack: the guide is short, and every block has its real
+            // height, so a position by ID lands exactly where it should.
+            VStack(alignment: .leading, spacing: 16) {
                 ArticleHeader(guide: model.guide)
                     .id(0)
                 ForEach(model.guide.blocks) { block in
@@ -251,15 +263,17 @@ private struct ArticleColumn: View {
             .padding(.top, 8)
         }
         .scrollPosition($model.scroll, anchor: .top)
+        .task { model.scrollToStart() }
+        .scrollEdgeEffectStyle(.hard, for: .bottom)
         .onScrollTargetVisibilityChange(idType: Int.self) { ids in
-            model.visible = ids
+            if !ids.isEmpty { model.visible = ids }
         }
-        // Room under the last paragraph, so the tools never cover it.
-        .contentMargins(.bottom, 104, for: .scrollContent)
-        .safeAreaInset(edge: .top, spacing: 0) {
+        // Bars of our own with the system's scroll edge effect (iOS 26): text
+        // fades under them, and the scroll view makes room for them.
+        .safeAreaBar(edge: .top, spacing: 0) {
             ReadingProgress(model: model)
         }
-        .overlay(alignment: .bottom) {
+        .safeAreaBar(edge: .bottom) {
             ReadingTools(model: model)
         }
         .background { Color(.systemBackground).ignoresSafeArea() }
@@ -355,7 +369,7 @@ private struct ReadingProgress: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(model.currentSection?.title ?? model.guide.title)
+                Text(model.currentSection?.title ?? "Start of the guide")
                     .font(.footnote.weight(.semibold))
                 Spacer()
                 Text("\(model.minutesLeft) min left")
@@ -369,7 +383,6 @@ private struct ReadingProgress: View {
         }
         .containerMargins(.horizontal)
         .padding(.vertical, 8)
-        .background(Color(.systemBackground))
         .accessibilityElement(children: .combine)
     }
 }

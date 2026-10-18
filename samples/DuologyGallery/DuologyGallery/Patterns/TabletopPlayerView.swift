@@ -128,7 +128,7 @@ private struct FilmFrame: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let picture = Self.fit(aspect: 16 / 9, in: proxy.size)
+            let picture = Self.place(aspect: 16 / 9, in: proxy.size, above: bottomInset)
             ZStack(alignment: .topLeading) {
                 Canvas { context, _ in
                     KelpForestPainter(time: player.position).draw(in: &context, rect: picture)
@@ -151,6 +151,15 @@ private struct FilmFrame: View {
                 }
             }
         }
+    }
+
+    /// The picture's frame: centred in the space above floating controls when it
+    /// fits there whole (the closed phone, held upright), else centred in the view.
+    static func place(aspect: CGFloat, in size: CGSize, above bottomInset: CGFloat) -> CGRect {
+        let picture = fit(aspect: aspect, in: size)
+        let free = size.height - bottomInset
+        guard bottomInset > 0, picture.height <= free else { return picture }
+        return picture.offsetBy(dx: 0, dy: (free - picture.height) / 2 - picture.minY)
     }
 
     /// The largest rectangle of `aspect` (width over height) that fits, centred.

@@ -1,0 +1,98 @@
+# How duo-pose and duo-pose-matrix work
+
+Labels: *measured* means we ran it on the shared iPhone Duo simulator (iOS 27.1, Xcode 27.1 27A9275, macOS 27.0.1) on 17 or 18 October 2026. *Unverified* means we could not run it yet.
+
+## The pieces
+
+| File | Language | Job |
+|---|---|---|
+| `scripts/duo-pose`, `scripts/duo_pose.py` | Python 3.9+ | Finds the simulator, reads its displays, decides which buttons to press, checks the result. |
+| `scripts/duo-pose-matrix`, `scripts/duo_pose_matrix.py` | Python 3.9+ | Loops over poses and cases, launches the app, takes screenshots, writes the summary. |
+| `scripts/duo-pose-ax.swift` | Swift (macOS) | Talks to Device Hub through the Accessibility API: `trust`, `buttons`, `press`, `readout`. Prints one JSON object per call. |
+
+The Python side builds the Swift file on first use with `xcrun --sdk macosx swiftc -O` into `~/Library/Caches/duology/duo-pose-ax-<hash>/` (or `$DUOLOGY_CACHE_DIR`). The hash comes from the Swift source, so an update builds a fresh copy. No binary is committed. To clear it, delete that cache folder by hand.
+
+Every command the tools run goes through one `System` object, so the unit tests in `tests/` replace the Mac with a fake phone and run on Linux.
+
+## Accessibility, step by step
+
+1. **Trust check, no prompt.** `AXIsProcessTrustedWithOptions` with `kAXTrustedCheckOptionPrompt` set to false. It returns whether macOS lets this process (and the app that started it) use Accessibility, and never shows a dialog ([AXIsProcessTrustedWithOptions](https://developer.apple.com/documentation/applicationservices/1459186-axisprocesstrustedwithoptions), [kAXTrustedCheckOptionPrompt](https://developer.apple.com/documentation/applicationservices/kaxtrustedcheckoptionprompt)). The permission belongs to the app that runs the agent: a helper started from a trusted Terminal or Claude app is trusted too (*measured*: `{"trusted":true}` from a helper built and run by the agent).
+2. **Find Device Hub.** `pgrep -x DeviceHub` gives its process ID. Device Hub lives in `Xcode-27.1.app/Contents/Applications/DeviceHub.app` (bundle ID `com.apple.dt.Devices`).
+3. **Find the window for this simulator.** The helper walks each window's tree. A window whose selected sidebar row has the identifier `TableRow.Device.<UDID>` wins. Otherwise a window whose title starts with the simulator's name. A window that shows another device is skipped.
+4. **Find the buttons.** It looks for `AXButton` elements whose description is `Closed`, `Partially Open`, `Open` or `Rotate Right`, and whose help text is the same word. Device Hub's own toolbar buttons have both; buttons mirrored from the app on screen don't, so an app button labelled "Open" is never pressed. It prefers the group that holds all three pose buttons.
+5. **Press.** `AXUIElementPerformAction(button, kAXPressAction)` ([AXUIElementPerformAction](https://developer.apple.com/documentation/applicationservices/1462091-axuielementperformaction)).
+
+The button list came from a tree dump on 17 October (*measured*):
+
+```text
+AXButton desc="Rotate Right"    help="Rotate Right"
+AXButton desc="Closed"          help="Closed"
+AXButton desc="Partially Open"  help="Partially Open"
+AXButton desc="Open"            help="Open"
+```
+
+They have no accessibility identifier. Apple's Device Hub article describes the same three pose buttons and the Option-drag slider ([Interacting with your app in Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)).
+
+## Poses and buttons
+
+| Pose | Buttons | Active display | Rotation | Screenshot |
+|---|---|---|---|---|
+| closed | Closed | outer (`LCD`, primary) | `rot0` | `--display=primary`, 1398 x 2034 px |
+| open | Open | inner (`LCD-1`) | `rot90` (held wide) | `--display=primary-1`, 2853 x 2007 px |
+| book | Partially Open | inner | `rot90` | `--display=primary-1`, 2853 x 2007 px |
+| tabletop | Partially Open, then Rotate Right once | inner | `rot180` (held tall) | `--display=primary-1`, 2007 x 2853 px |
+
+*Measured* on 17 and 18 October with the gallery app. Three more Rotate Right presses bring the phone back to portrait.
+
+`duo-pose` counts rotation as "turns": Rotate Right presses away from portrait. Portrait shows the outer display at `rot0` and the inner one at `rot90`. One turn moves the inner display to `rot180`. It presses Rotate Right one at a time and reads the displays after each press, at most four times, so it never depends on which way the button turns.
+
+When it closes a turned phone, it turns it back to portrait first, while the inner display still shows, then presses Closed.
+
+## Checking the pose
+
+Device Hub doesn't report the pose. Its sidebar image kept saying Closed after Open was pressed (*measured*). So the tools check from the outside:
+
+1. **Active display and rotation**, from `xcrun devicectl device info displays -d <UDID> --json-output <file>`. Each display has `active`, `primary`, `currentOrientation` (`rot0` to `rot270`) and `nativeSize`. The tools expect the outer display for closed, the inner one for the others, and the turns listed above.
+2. **Screenshot size.** The expected size is the active display's `nativeSize`, swapped at `rot90` and `rot270`. `duo-pose set` takes a test screenshot into a temporary folder and deletes it; the matrix checks each real screenshot.
+3. **The app is running**, from `xcrun simctl spawn <UDID> launchctl list` (the `UIKitApplication:<bundle id>` job has a process ID). A missing process usually means a crash in that pose.
+4. **No other app started** during the capture. A third-party app job that appears or restarts between the snapshots before and after the screenshot marks the shot `check`.
+5. **The fold**, only with `--readout-id`. See [pose-readout.md](pose-readout.md).
+
+Open and book pass checks 1 and 2 the same way. That is why the summary marks their fold "not checked" without a readout.
+
+## Timing
+
+| Wait | Default | Why |
+|---|---|---|
+| After a fold button | 5 s (`--wait` on `duo-pose set`) | Open and Partially Open settled in 4 to 6 s (*measured*). Open to book changes no display, so the tool can't poll for it. |
+| For the displays to switch | up to 20 s (`--timeout`) | Closed once took between 5 and 9 s (*measured*). The tool polls `devicectl` every second. |
+| After Rotate Right | 1.5 s, then poll | |
+| Before the check | 1.5 s | Lets the app finish its layout. |
+| Launch to screenshot (matrix) | 4 s (`--wait`) | A first launch after install can be slower. |
+
+## Files the matrix writes
+
+In `--out` (default `$TMPDIR/duo-poses/<bundle id>-<time>/`):
+
+- `<case>-<pose>.png`, one per case and pose. Case names keep only letters, digits, dot, dash and underscore.
+- `summary.json`: `bundleId`, `simulator`, `mode` (`automatic`, `manual` or `mixed`), `startPose`, `endPose`, `restoreNote`, `cases`, `skipped`, `stopped`, and `shots`. Each shot has `case`, `args`, `pose`, `file`, `display`, `size`, `expectedSize`, `checks` (`pose`, `size`, `appRunning`), `fold`, `foldNote`, `status`, `notes`, `review` and `takenAt`.
+- `summary.md`: the same as a table, plus the rules to review.
+
+A `--manual` run in a folder that already has a `summary.json` for the same app adds to it, replacing an earlier shot of the same case and pose.
+
+## Order of a run
+
+1. Pick the simulator: the UDID you pass, else the booted one named "iPhone Duo", else any booted iPhone Duo. Stop if it isn't booted.
+2. Stop if UI tests run (unless `--force`) or the app isn't installed.
+3. Read the start pose. Connect to Device Hub (bringing it forward if needed).
+4. For each pose: check for UI tests again, press the buttons, check the pose; then for each case launch the app with `simctl launch --terminate-running-process`, wait, take the screenshot and check it. With `--no-relaunch` the loops swap: each case launches once and stays running through every pose.
+5. Restore the start pose, quit the app (`simctl terminate`), read the end pose, write the summary.
+
+## What we checked
+
+| Check | Result |
+|---|---|
+| Unit tests (`python3 -m unittest discover` on the `tests/` folder), Python 3.11 and the Xcode Python 3.9 | 70 pass, 1 skipped (the Swift build test, which runs with `DUO_POSE_SWIFT=1`) |
+| Swift build test with `DUO_POSE_SWIFT=1` | Passes: the helper builds and answers `trust` |
+| `duo-pose status` on the shared simulator | Simulator, start pose (closed), Device Hub, trust (allowed) and UI test check all read correctly |
+| Pressing the buttons with this tool | *Unverified* in our last run: Device Hub's window was not on the current desktop (Mission Control was open over a system dialog), so the Accessibility tree listed no windows. The same Accessibility calls set all four poses in the 17 and 18 October research runs. |

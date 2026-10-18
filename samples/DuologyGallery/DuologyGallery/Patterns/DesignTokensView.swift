@@ -249,7 +249,7 @@ private struct GridOverlay: View {
             }
             for column in columns.columns {
                 let rect = CGRect(x: gridFrame.minX + column.x, y: 0, width: column.width, height: size.height)
-                context.fill(Path(rect), with: .color(Self.columnColor.opacity(0.07)))
+                context.fill(Path(rect), with: .color(Self.columnColor.opacity(0.05)))
                 var edges = Path()
                 edges.move(to: CGPoint(x: rect.minX + 0.5, y: 0))
                 edges.addLine(to: CGPoint(x: rect.minX + 0.5, y: size.height))
@@ -356,10 +356,11 @@ private struct StatCard: View {
                         .font(DuoType.secondary)
                         .foregroundStyle(.secondary)
                 }
+                // Two lines reserved, so cards in a row share one height.
                 Text(stat.detail)
                     .font(DuoType.meta)
                     .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2, reservesSpace: true)
             }
         }
         .accessibilityElement(children: .combine)
@@ -520,7 +521,7 @@ private struct DeviceCard: View {
                 Text(device.isOn ? device.onStatus : "Off")
                     .font(DuoType.meta)
                     .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .lineLimit(2, reservesSpace: true)
             }
         }
     }

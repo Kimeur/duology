@@ -503,11 +503,16 @@ def run_matrix(system, args, log=lambda text: None):
                     merge_shot(summary, shot)
                     log("  %s-%s: %s" % (case["name"], pose, shot["status"]))
     except StopRun as stop:
+        # UI tests started: don't move the pose under them again.
         summary["stopped"] = str(stop)
+        restore = False
     except dp.PoseError as exc:
         summary["stopped"] = "%s. %s" % (exc.message, exc.hint)
+        restore = hub is not None
+    else:
+        restore = True
 
-    if not args.manual and not args.no_restore and not summary.get("stopped"):
+    if restore and not args.manual and not args.no_restore:
         fold_label, want_active, turns, note = dp.restore_plan(start)
         try:
             log("restoring: pressing %s" % fold_label)
@@ -568,8 +573,9 @@ def main(argv=None, system=None, out=None, err=None):
         out.write(json.dumps(summary, sort_keys=True) + "\n")
     else:
         shots = summary["shots"]
-        out.write("Saved %d screenshots, summary.md and summary.json in %s\n" % (
-            sum(1 for s in shots if s.get("file")), args.out))
+        saved = sum(1 for s in shots if s.get("file"))
+        out.write("Saved %d screenshot%s, summary.md and summary.json in %s\n" % (
+            saved, "" if saved == 1 else "s", args.out))
         for s in ordered_shots(summary):
             out.write("  %-28s %-7s %s\n" % (s["file"] or "%s-%s (none)" % (s["case"], s["pose"]), s["status"],
                                              "; ".join(s["notes"])))

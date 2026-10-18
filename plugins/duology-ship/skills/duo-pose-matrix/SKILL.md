@@ -55,7 +55,7 @@ duo-pose status
 
 ```text
 duo-pose 0.2.0
-  Simulator:      iPhone Duo (9E6E...), iOS 27.1, booted
+  Simulator:      iPhone Duo (<UDID>), iOS 27.1, booted
   Pose now:       closed
   Device Hub:     running (pid 88720)
   Accessibility:  allowed for the app that runs this command

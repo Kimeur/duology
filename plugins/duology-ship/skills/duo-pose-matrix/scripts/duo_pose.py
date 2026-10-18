@@ -660,7 +660,10 @@ def check_fold(hub, target, readout_id):
     if not readout_id:
         return {"status": "not checked",
                 "note": "open and book look the same from outside the app; use --readout-id or look at the screenshot"}
-    data = hub.readout(readout_id) if hub else None
+    if hub is None:
+        return {"status": "not checked", "note": "the readout needs Device Hub and Accessibility access; "
+                                                 "a --manual run can't read it"}
+    data = hub.readout(readout_id)
     if data is None:
         return {"status": "not checked", "note": "no element with identifier %s in Device Hub's window" % readout_id}
     value = data.get("value") or data.get("label") or ""

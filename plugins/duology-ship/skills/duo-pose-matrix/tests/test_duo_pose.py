@@ -121,46 +121,63 @@ class SimulatorTests(unittest.TestCase):
 
 class DisplayStateTests(unittest.TestCase):
     def test_real_closed_capture(self):
-        state = dp.DisplayState.from_devicectl(fakes.fixture_json("devicectl-displays-closed.json"))
+        state = dp.DisplayState.from_devicectl(fakes.fixture_json("devicectl-displays-closed.json"),
+                                               fakes.fixture_json("devicectl-orientation-portrait.json"))
         self.assertEqual(state.active, "outer")
-        self.assertEqual(state.turns, 0)
+        self.assertEqual(state.orientation, "portrait")
+        self.assertEqual(state.held, "portrait")
         self.assertEqual(state.shot_display(), "primary")
         self.assertEqual(state.shot_size(), (1398, 2034))
         self.assertEqual(state.pose_guess(), "closed")
 
     def test_open_held_wide(self):
-        state = dp.DisplayState.from_devicectl(fakes.displays_json("inner", 0))
-        self.assertEqual((state.active, state.turns, state.shot_display()), ("inner", 0, "primary-1"))
+        state = dp.DisplayState.from_devicectl(fakes.displays_json("inner", 0), fakes.orientation_json(0))
+        self.assertEqual((state.active, state.held, state.shot_display()), ("inner", "portrait", "primary-1"))
         self.assertEqual(state.shot_size(), (2853, 2007))
         self.assertEqual(state.pose_guess(), "open or book")
 
     def test_tabletop_held_tall(self):
-        state = dp.DisplayState.from_devicectl(fakes.displays_json("inner", 1))
-        self.assertEqual(state.turns, 1)
+        state = dp.DisplayState.from_devicectl(fakes.displays_json("inner", 1), fakes.orientation_json(1))
+        self.assertEqual(state.held, "landscape")
         self.assertEqual(state.shot_size(), (2007, 2853))
         self.assertTrue(state.pose_guess().startswith("tabletop"))
 
+    def test_device_orientation_wins_over_the_screen(self):
+        # A portrait-only app keeps the outer display at rot0 while the device is turned (seen on 18 October).
+        state = dp.DisplayState.from_devicectl(fakes.displays_json("outer", 0), fakes.orientation_json(1))
+        self.assertEqual(state.display_turns, 0)
+        self.assertEqual(state.held, "landscape")
+        self.assertEqual(state.pose_guess(), "closed, turned")
+        self.assertTrue(dp.check_pose(state, "closed"))
+
+    def test_falls_back_to_the_screen_without_device_orientation(self):
+        state = dp.DisplayState.from_devicectl(fakes.displays_json("inner", 1), None)
+        self.assertIsNone(state.orientation)
+        self.assertEqual(state.held, "landscape")
+
     def test_mid_switch(self):
-        state = dp.DisplayState.from_devicectl(fakes.displays_json(None, 0))
+        state = dp.DisplayState.from_devicectl(fakes.displays_json(None, 0), fakes.orientation_json(0))
         self.assertIsNone(state.active)
-        self.assertIsNone(state.turns)
         self.assertIsNone(state.shot_size())
+        self.assertTrue(dp.check_pose(state, "open"))
 
     def test_no_displays_is_an_error(self):
         with self.assertRaises(dp.PoseError):
             dp.DisplayState.from_devicectl({"result": {}})
 
     def test_check_pose(self):
-        closed = dp.DisplayState(fakes.displays_json("outer", 0)["result"]["displays"])
-        wide = dp.DisplayState(fakes.displays_json("inner", 0)["result"]["displays"])
-        tall = dp.DisplayState(fakes.displays_json("inner", 1)["result"]["displays"])
+        def st(active, turns):
+            return dp.DisplayState.from_devicectl(fakes.displays_json(active, turns), fakes.orientation_json(turns))
+        closed, wide, tall = st("outer", 0), st("inner", 0), st("inner", 1)
         self.assertEqual(dp.check_pose(closed, "closed"), [])
         self.assertEqual(dp.check_pose(wide, "open"), [])
         self.assertEqual(dp.check_pose(wide, "book"), [])  # the same from outside the app
         self.assertEqual(dp.check_pose(tall, "tabletop"), [])
+        self.assertEqual(dp.check_pose(st("inner", 3), "tabletop"), [])  # the other landscape is held tall too
         self.assertTrue(dp.check_pose(closed, "book"))
         self.assertTrue(dp.check_pose(wide, "tabletop"))
         self.assertTrue(dp.check_pose(tall, "closed"))
+        self.assertTrue(dp.check_pose(st("inner", 2), "open"))
 
     def test_png_size(self):
         folder = tempfile.mkdtemp()
@@ -264,12 +281,25 @@ class SetPoseTests(unittest.TestCase):
         self.assertEqual(ctx.exception.code, dp.EXIT_DEVICE_HUB)
 
     def test_restore_plan(self):
-        closed = dp.DisplayState(fakes.displays_json("outer", 0)["result"]["displays"])
-        wide = dp.DisplayState(fakes.displays_json("inner", 0)["result"]["displays"])
-        self.assertEqual(dp.restore_plan(closed)[:3], ("Closed", "outer", 0))
-        fold, active, turns, note = dp.restore_plan(wide)
-        self.assertEqual((fold, active, turns), ("Open", "inner", 0))
+        closed = dp.DisplayState.from_devicectl(fakes.displays_json("outer", 0), fakes.orientation_json(0))
+        wide = dp.DisplayState.from_devicectl(fakes.displays_json("inner", 0), fakes.orientation_json(0))
+        turned = dp.DisplayState.from_devicectl(fakes.displays_json("outer", 0), fakes.orientation_json(3))
+        fold, active, ok, note = dp.restore_plan(closed)
+        self.assertEqual((fold, active, note), ("Closed", "outer", ""))
+        self.assertTrue(ok(closed))
+        fold, active, ok, note = dp.restore_plan(wide)
+        self.assertEqual((fold, active), ("Open", "inner"))
         self.assertIn("doesn't say which", note)
+        _, _, ok, _ = dp.restore_plan(turned)
+        self.assertTrue(ok(turned))
+        self.assertFalse(ok(closed))
+
+    def test_turns_back_a_device_hidden_by_a_portrait_only_app(self):
+        mac = fakes.FakeMac(turns=1, portrait_front=True)
+        result = dp.set_pose(mac, SIM, "closed", self.hub(mac), timing=dp.Timing(**FAST))
+        self.assertTrue(result["ok"], result["problems"])
+        self.assertEqual(result["pressed"], ["Closed", "Rotate Right", "Rotate Right", "Rotate Right"])
+        self.assertEqual(result["after"]["orientation"], "portrait")
 
 
 class CommandLineTests(unittest.TestCase):

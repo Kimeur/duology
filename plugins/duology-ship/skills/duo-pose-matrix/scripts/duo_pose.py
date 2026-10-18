@@ -47,8 +47,10 @@ PREFERRED_NAME = "iPhone Duo"
 
 POSES = ("closed", "open", "book", "tabletop")
 FOLD_BUTTON = {"closed": "Closed", "open": "Open", "book": "Partially Open", "tabletop": "Partially Open"}
-# Rotate Right presses away from portrait. Tabletop is partly open and turned once.
-TARGET_TURNS = {"closed": 0, "open": 0, "book": 0, "tabletop": 1}
+# How the phone must be turned for each pose, by the device's own orientation
+# (`devicectl device orientation get`), not by what the app on screen shows.
+# Tabletop is partly open and turned once with Rotate Right.
+TARGET_ORIENTATION = {"closed": "portrait", "open": "portrait", "book": "portrait", "tabletop": "landscape"}
 # What a pose readout in the app should say for each pose (DeviceHinge.Status names).
 HINGE_FOR_POSE = {"closed": "closed", "open": "fullyOpen", "book": "partiallyOpen", "tabletop": "partiallyOpen"}
 ROTATE_RIGHT = "Rotate Right"
@@ -341,6 +343,17 @@ def rotation_degrees(text):
     return int(m.group(1)) % 360 if m else None
 
 
+def orientation_class(name):
+    """portrait, landscape or upside down, from a UIDeviceOrientation-style name."""
+    if name == "portrait":
+        return "portrait"
+    if name in ("landscapeLeft", "landscapeRight"):
+        return "landscape"
+    if name == "portraitUpsideDown":
+        return "upside down"
+    return None
+
+
 def _size(display):
     native = display.get("nativeSize") or [0, 0]
     try:
@@ -350,18 +363,26 @@ def _size(display):
 
 
 class DisplayState:
-    """The simulator's displays as devicectl reports them.
+    """The simulator's displays and the device's orientation, as devicectl reports them.
 
     outer: the display marked primary (named LCD). Closed, it is active.
     inner: the other built-in display (LCD-1). Open or partly open, it is active.
-    turns: Rotate Right presses away from portrait. Measured on Xcode 27.1:
-    portrait shows the outer display at rot0 and the inner one at rot90 (held
-    wide); one Rotate Right moves the inner display to rot180 (held tall).
+    orientation: the device's orientation from `devicectl device orientation get`.
+    It follows Device Hub's Rotate Right, whatever app is on screen.
+
+    A display's currentOrientation follows the app on screen instead: a
+    portrait-only app (or the Home Screen) keeps the outer display at rot0 while
+    the device is turned (measured on Xcode 27.1). So the tools judge how the
+    phone is turned by `orientation`, and use the display's rotation only to
+    know the screenshot's size. With the gallery on screen, portrait showed the
+    outer display at rot0 and the inner one at rot90 (held wide); one Rotate
+    Right moved the inner one to rot180 (held tall).
     """
 
-    def __init__(self, displays):
+    def __init__(self, displays, orientation=None):
         self.outer = None
         self.inner = None
+        self.orientation = orientation
         for d in displays or []:
             if d.get("primary") and self.outer is None:
                 self.outer = d
@@ -374,11 +395,13 @@ class DisplayState:
             self.active = "inner"
 
     @classmethod
-    def from_devicectl(cls, data):
+    def from_devicectl(cls, data, orientation_data=None):
         displays = ((data or {}).get("result") or {}).get("displays")
         if not displays:
             raise PoseError(EXIT_FAILED, "devicectl returned no displays for the simulator")
-        return cls(displays)
+        result = (orientation_data or {}).get("result") or {}
+        orientation = result.get("deviceOrientationNonFlat") or result.get("deviceOrientation")
+        return cls(displays, orientation if orientation_class(orientation) else None)
 
     def _display(self):
         return self.outer if self.active == "outer" else self.inner if self.active == "inner" else None
@@ -389,11 +412,19 @@ class DisplayState:
         return rotation_degrees(d.get("currentOrientation")) if d else None
 
     @property
-    def turns(self):
+    def display_turns(self):
+        """Quarter turns of the active display away from its portrait-phone rotation."""
         rot = self.rotation
         if rot is None:
             return None
         return (rot // 90) % 4 if self.active == "outer" else ((rot - 90) // 90) % 4
+
+    @property
+    def held(self):
+        """portrait, landscape or upside down: the device's orientation, else the display's."""
+        if self.orientation:
+            return orientation_class(self.orientation)
+        return {0: "portrait", 1: "landscape", 2: "upside down", 3: "landscape"}.get(self.display_turns)
 
     def shot_display(self):
         """The simctl screenshot --display value for the active display."""
@@ -409,25 +440,26 @@ class DisplayState:
 
     def pose_guess(self):
         if self.active == "outer":
-            return "closed" if self.turns == 0 else "closed, turned"
+            return "closed" if self.held == "portrait" else "closed, turned"
         if self.active == "inner":
-            return {0: "open or book", 1: "tabletop (or open, held tall)"}.get(self.turns, "open, turned")
+            return {"portrait": "open or book", "landscape": "tabletop (or open, held tall)"}.get(
+                self.held, "open, turned")
         return "changing (no display is active)"
 
     def describe(self):
         if self.active is None:
             return "no display is active (the phone may be moving)"
-        held = {0: "portrait", 1: "turned once", 2: "turned twice", 3: "turned three times"}.get(self.turns, "?")
+        held = self.held or "?"
         if self.active == "inner":
-            held = {0: "held wide", 1: "held tall"}.get(self.turns, held)
+            held = {"portrait": "held wide", "landscape": "held tall"}.get(self.held, held)
         size = self.shot_size()
         return "%s display active, %s, screenshots %d x %d px" % (
             self.active, held, size[0] if size else 0, size[1] if size else 0)
 
     def to_dict(self):
         size = self.shot_size()
-        return {"active": self.active, "rotation": self.rotation, "turns": self.turns,
-                "screenshotDisplay": self.shot_display() if self.active else None,
+        return {"active": self.active, "rotation": self.rotation, "orientation": self.orientation,
+                "held": self.held, "screenshotDisplay": self.shot_display() if self.active else None,
                 "screenshotSize": list(size) if size else None, "pose": self.pose_guess()}
 
 
@@ -436,7 +468,8 @@ def read_state(system, sim):
     if data is None:
         raise PoseError(EXIT_FAILED, "devicectl could not read the simulator's displays",
                         "Try: xcrun devicectl device info displays -d %s" % sim["udid"])
-    return DisplayState.from_devicectl(data)
+    orientation = system.devicectl_json(["device", "orientation", "get", "-d", sim["udid"]])
+    return DisplayState.from_devicectl(data, orientation)
 
 
 def check_pose(state, target):
@@ -449,9 +482,9 @@ def check_pose(state, target):
     if state.active != want_active:
         return ["the %s display should be active for %s, but %s" % (
             want_active, target, "the %s one is" % state.active if state.active else "none is")]
-    if state.turns != TARGET_TURNS[target]:
-        return ["%s needs %d Rotate Right press(es) from portrait, but the phone is at %s" % (
-            target, TARGET_TURNS[target], state.turns)]
+    want = TARGET_ORIENTATION[target]
+    if state.held != want:
+        return ["%s needs the phone in %s, but it is in %s" % (target, want, state.held or "an unknown orientation")]
     return []
 
 
@@ -582,7 +615,8 @@ class Hub:
     def reachable(self):
         """Poses whose buttons Device Hub shows."""
         have = set(self.labels)
-        return [p for p in POSES if FOLD_BUTTON[p] in have and (TARGET_TURNS[p] == 0 or ROTATE_RIGHT in have)]
+        return [p for p in POSES if FOLD_BUTTON[p] in have
+                and (TARGET_ORIENTATION[p] == "portrait" or ROTATE_RIGHT in have)]
 
     def press(self, label):
         code, data = ax(self.system, self.helper, "press", self.pid, self.sim["udid"], label, self.sim["name"])
@@ -664,37 +698,37 @@ def wait_for(system, sim, predicate, timeout, poll):
     return state
 
 
-def rotate_to(system, sim, hub, turns, timing, pressed):
-    """Press Rotate Right until the phone is `turns` presses from portrait (at most four presses)."""
+def _turn_key(state):
+    return state.orientation or (state.held, state.rotation)
+
+
+def rotate_until(system, sim, hub, orientation_ok, timing, pressed):
+    """Press Rotate Right until orientation_ok(state) (at most four presses)."""
     state = read_state(system, sim)
     for _ in range(4):
-        if state.turns == turns:
+        if orientation_ok(state):
             return state
-        if state.turns is None:
-            state = wait_for(system, sim, lambda s: s.turns is not None, timing.timeout, timing.poll)
-            continue
-        before = state.turns
+        before = _turn_key(state)
         hub.press(ROTATE_RIGHT)
         pressed.append(ROTATE_RIGHT)
         system.sleep(timing.rotate_wait)
-        state = wait_for(system, sim, lambda s, b=before: s.turns is not None and s.turns != b,
-                         timing.timeout / 2, timing.poll)
+        state = wait_for(system, sim, lambda s, b=before: _turn_key(s) != b, timing.timeout / 2, timing.poll)
     return state
 
 
-def drive(system, sim, hub, fold_label, want_active, turns, timing):
-    """Press `fold_label`, then turn the phone. Returns (state, buttons pressed)."""
+def drive(system, sim, hub, fold_label, want_active, orientation_ok, timing):
+    """Press `fold_label`, then turn the phone until orientation_ok. Returns (state, buttons pressed)."""
     pressed = []
     state = read_state(system, sim)
     # Closing a turned phone: turn it back first, while the inner display still shows.
-    if want_active == "outer" and state.active == "inner" and state.turns not in (None, turns):
-        state = rotate_to(system, sim, hub, turns, timing, pressed)
+    if want_active == "outer" and state.active == "inner" and not orientation_ok(state):
+        state = rotate_until(system, sim, hub, orientation_ok, timing, pressed)
     hub.press(fold_label)
     pressed.append(fold_label)
     system.sleep(timing.fold_wait)
     state = wait_for(system, sim, lambda s: s.active == want_active, timing.timeout, timing.poll)
-    if state.active == want_active and state.turns != turns:
-        state = rotate_to(system, sim, hub, turns, timing, pressed)
+    if state.active == want_active and not orientation_ok(state):
+        state = rotate_until(system, sim, hub, orientation_ok, timing, pressed)
     system.sleep(timing.settle)
     return read_state(system, sim), pressed
 
@@ -707,7 +741,8 @@ def set_pose(system, sim, target, hub, timing=None, readout_id=None, check_scree
                         "Buttons it shows: %s. %s" % (", ".join(hub.labels) or "none", MANUAL_HELP))
     before = read_state(system, sim)
     want_active = "outer" if target == "closed" else "inner"
-    state, pressed = drive(system, sim, hub, FOLD_BUTTON[target], want_active, TARGET_TURNS[target], timing)
+    want = TARGET_ORIENTATION[target]
+    state, pressed = drive(system, sim, hub, FOLD_BUTTON[target], want_active, lambda s: s.held == want, timing)
     problems = check_pose(state, target)
     verified = [] if problems else ["active display", "rotation"]
     shot = None
@@ -761,13 +796,24 @@ def check_fold(hub, target, readout_id):
 
 
 def restore_plan(state):
-    """How to put the simulator back where it started: (fold button, active display, turns, note)."""
+    """How to put the simulator back where it started.
+
+    Returns (fold button, active display, orientation_ok, note). The orientation
+    goes back to the device's exact start orientation when devicectl reported it.
+    """
+    if state.orientation:
+        start = state.orientation
+        orientation_ok = lambda s: s.orientation == start  # noqa: E731
+    else:
+        held = state.held or "portrait"
+        orientation_ok = lambda s: s.held == held  # noqa: E731
     if state.active == "outer":
-        return "Closed", "outer", state.turns or 0, ""
+        return "Closed", "outer", orientation_ok, ""
     if state.active == "inner":
-        return ("Open", "inner", state.turns or 0,
+        return ("Open", "inner", orientation_ok,
                 "It started open or partly open, and Device Hub doesn't say which, so it was left open (flat).")
-    return "Closed", "outer", 0, "No display was active at the start, so it was left closed, in portrait."
+    return ("Closed", "outer", lambda s: s.held == "portrait",
+            "No display was active at the start, so it was left closed, in portrait.")
 
 
 # --------------------------------------------------------------------------

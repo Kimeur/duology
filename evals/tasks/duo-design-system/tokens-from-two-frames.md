@@ -16,7 +16,7 @@ status: ready
 
 # A design system from a closed and an open frame
 
-Designers often hand over one frame for the closed phone and one for the open phone, and the easy translation is "if the screen is wide, use the big numbers". Apple asks for the opposite: size classes instead of screen sizes, the same text sizes on both displays with Dynamic Type, even column counts where a fold crosses a grid, corners that follow the display instead of a hard-coded radius, and 44 pt targets ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=230), [talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=456), [talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=258), [HIG, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Vision)).
+Designers often hand over one frame for the closed phone and one for the open phone, and the easy translation is "if the screen is wide, use the big numbers". Apple asks for size classes instead of screen sizes ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=230)), even column counts where a fold crosses a grid ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=456)), corners that follow the display instead of a hard-coded radius ([talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=258)), text that follows Dynamic Type, and enough contrast and 44 pt targets ([HIG, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Vision)). `duo-design-system` adds one type scale for both displays, from Apple's advice that games keep text sizes steady while they resize.
 
 ## Prompt
 

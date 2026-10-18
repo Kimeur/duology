@@ -31,8 +31,13 @@ def fixture_json(name):
     return json.loads(fixture(name))
 
 
+# Rotate Right presses from portrait -> the device orientation devicectl reports.
+# Which landscape comes first is a guess; duo-pose never depends on it.
+ORIENTATIONS = {0: "portrait", 1: "landscapeRight", 2: "portraitUpsideDown", 3: "landscapeLeft"}
+
+
 def displays_json(active, turns):
-    """devicectl output for a phone with `active` ("outer", "inner" or None) display, turned `turns` times."""
+    """devicectl output for a phone with `active` ("outer", "inner" or None) display, its screens turned `turns` times."""
     data = fixture_json("devicectl-displays-closed.json")
     for d in data["result"]["displays"]:
         if d["primary"]:
@@ -41,6 +46,13 @@ def displays_json(active, turns):
         else:
             d["active"] = active == "inner"
             d["currentOrientation"] = "rot%d" % ((90 + turns * 90) % 360)
+    return data
+
+
+def orientation_json(turns):
+    """`devicectl device orientation get` output for a device turned `turns` times (real capture, edited)."""
+    data = fixture_json("devicectl-orientation-portrait.json")
+    data["result"]["deviceOrientation"] = data["result"]["deviceOrientationNonFlat"] = ORIENTATIONS[turns % 4]
     return data
 
 
@@ -65,7 +77,8 @@ class FakeMac:
 
     def __init__(self, fold="Closed", turns=0, trusted=True, window=True, buttons=None, busy="",
                  installed=True, switch_delay=2.0, broken_button=None, readout=None, crash_in=None,
-                 foreign_in=None, busy_after=0, runner=False, blank_in=None, steal_in=None, move_in=None):
+                 foreign_in=None, busy_after=0, runner=False, blank_in=None, steal_in=None, move_in=None,
+                 portrait_front=False):
         self.fold = fold                  # "Closed", "Open" or "Partially Open"
         self.turns = turns
         self.shown_fold = fold            # what the displays show (lags after a press)
@@ -80,6 +93,7 @@ class FakeMac:
         self.steal_in = steal_in             # fold in which someone else relaunches the app mid-capture
         self.move_in = move_in               # fold in which someone else presses Rotate Right mid-capture
         self.shots = 0
+        self.portrait_front = portrait_front  # until our app launches, a portrait-only app is on screen
         self.installed = installed
         self.switch_delay = switch_delay
         self.broken_button = broken_button   # a button whose press reports success but does nothing
@@ -139,9 +153,15 @@ class FakeMac:
             return 0, "", ""
         return 127, "", "unexpected command: %s" % argv
 
+    def screen_turns(self):
+        """How far the screens are turned: with the device, unless a portrait-only app is on screen."""
+        return 0 if self.portrait_front and self.app_pid is None else self.turns
+
     def devicectl_json(self, args, timeout=60):
         self.calls.append(["xcrun", "devicectl"] + list(args))
-        return displays_json(self.active(), self.turns)
+        if list(args[:2]) == ["device", "orientation"]:
+            return orientation_json(self.turns)
+        return displays_json(self.active(), self.screen_turns())
 
     def sleep(self, seconds):
         self.time += max(seconds, 0)
@@ -200,7 +220,8 @@ class FakeMac:
         display = argv[5].split("=", 1)[1]
         path = argv[6]
         native = (1398, 2034) if display == "primary" else (2007, 2853)
-        rot = (self.turns * 90) % 360 if display == "primary" else (90 + self.turns * 90) % 360
+        turns = self.screen_turns()
+        rot = (turns * 90) % 360 if display == "primary" else (90 + turns * 90) % 360
         w, h = (native[1], native[0]) if rot in (90, 270) else native
         self.shots += 1
         write_png_header(path, w, h, None if self.fold == self.blank_in else 0.2)

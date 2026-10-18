@@ -16,7 +16,7 @@ status: ready
 
 # Open and close without a reload flash
 
-Opening or closing iPhone Duo resizes the app, and the system adds no motion of its own. Whatever the person sees during that change comes from the app: views that keep their identity move to their new place, views that are rebuilt start over ([talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=142), [AnyLayout](https://developer.apple.com/documentation/swiftui/anylayout)).
+Opening or closing iPhone Duo resizes the app ([talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=142)). `duo-transitions` measured on the simulator that the system adds no motion of its own to the app's layout. So whatever the person sees during that change comes from the app: views that keep their identity move to their new place, and views that are rebuilt start over ([AnyLayout](https://developer.apple.com/documentation/swiftui/anylayout)).
 
 ## Prompt
 

@@ -218,6 +218,16 @@ class RunTests(unittest.TestCase):
         md = run.markdown()
         self.assertIn("8 screenshots: 8 ok", md)
 
+    def test_restores_a_turned_start_that_a_portrait_only_app_hid(self):
+        # 18 October: the device was turned but a portrait-only app showed the outer display upright.
+        run, mac = Run(self), fakes.FakeMac(turns=3, portrait_front=True)
+        code = run(["--poses", "closed,tabletop"], mac)
+        self.assertEqual(code, 0, run.stderr)
+        status = {x["pose"]: (x["status"], x["size"]) for x in run.summary()["shots"]}
+        self.assertEqual(status, {"closed": ("ok", [1398, 2034]), "tabletop": ("ok", [2007, 2853])})
+        self.assertEqual(mac.turns, 3)  # back to the start orientation
+        self.assertEqual(run.summary()["startPose"], "closed, turned")
+
     def test_no_relaunch_keeps_the_app_running(self):
         run, mac = Run(self), fakes.FakeMac()
         code = run(CASES + ["--no-relaunch", "--poses", "closed,open"], mac)

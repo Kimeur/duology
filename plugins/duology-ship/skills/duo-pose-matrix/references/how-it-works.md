@@ -35,30 +35,45 @@ They have no accessibility identifier. Apple's Device Hub article describes the 
 
 ## Poses and buttons
 
-| Pose | Buttons | Active display | Rotation | Screenshot |
-|---|---|---|---|---|
-| closed | Closed | outer (`LCD`, primary) | `rot0` | `--display=primary`, 1398 x 2034 px |
-| open | Open | inner (`LCD-1`) | `rot90` (held wide) | `--display=primary-1`, 2853 x 2007 px |
-| book | Partially Open | inner | `rot90` | `--display=primary-1`, 2853 x 2007 px |
-| tabletop | Partially Open, then Rotate Right once | inner | `rot180` (held tall) | `--display=primary-1`, 2007 x 2853 px |
+| Pose | Buttons | Active display | Device orientation | Display rotation (gallery on screen) | Screenshot |
+|---|---|---|---|---|---|
+| closed | Closed | outer (`LCD`, primary) | `portrait` | `rot0` | `--display=primary`, 1398 x 2034 px |
+| open | Open | inner (`LCD-1`) | `portrait` | `rot90` (held wide) | `--display=primary-1`, 2853 x 2007 px |
+| book | Partially Open | inner | `portrait` | `rot90` | `--display=primary-1`, 2853 x 2007 px |
+| tabletop | Partially Open, then Rotate Right once | inner | a landscape value | `rot180` (held tall) | `--display=primary-1`, 2007 x 2853 px |
 
 *Measured* on 17 and 18 October with the gallery app. Three more Rotate Right presses bring the phone back to portrait.
 
-`duo-pose` counts rotation as "turns": Rotate Right presses away from portrait. Portrait shows the outer display at `rot0` and the inner one at `rot90`. One turn moves the inner display to `rot180`. It presses Rotate Right one at a time and reads the displays after each press, at most four times, so it never depends on which way the button turns.
+### How it knows which way the phone is turned
 
-When it closes a turned phone, it turns it back to portrait first, while the inner display still shows, then presses Closed.
+Two readings exist, and they can disagree:
+
+- **The device's orientation**, from `xcrun devicectl device orientation get -d <UDID>` (`deviceOrientation`: `portrait`, `landscapeLeft`, `landscapeRight`, `portraitUpsideDown`). It follows Device Hub's Rotate Right whatever app is on screen.
+- **Each display's `currentOrientation`** (`rot0` to `rot270`) in `devicectl device info displays`. It follows the app on screen. A portrait-only app, or the Home Screen, keeps the outer display at `rot0` while the device is turned.
+
+*Measured* on 18 October: the outer display read `rot0` with another app on screen, then our gallery launched, turned to landscape, and the screenshot came out 2034 x 1398. The device had been left turned, probably by another session's UI test.
+
+So the tools judge "portrait" or "turned" by the device's orientation, and use the display's rotation only for the screenshot's expected size, read right after the screenshot. They press Rotate Right one at a time, read the orientation after each press, and stop after four presses, so they never depend on which landscape comes first. Tabletop accepts either landscape value: both hold the inner display tall with the fold across.
+
+When it closes a turned phone, it turns it back to portrait first, while the inner display still shows, then presses Closed. When it restores the start pose, it turns the device back to its exact start orientation.
 
 ## Checking the pose
 
-Device Hub doesn't report the pose. Its sidebar image kept saying Closed after Open was pressed (*measured*). So the tools check from the outside:
+Device Hub doesn't report the pose. Its sidebar image kept saying Closed after Open was pressed, and its pose buttons report no value or selected state (*measured*). So the tools check from the outside:
 
-1. **Active display and rotation**, from `xcrun devicectl device info displays -d <UDID> --json-output <file>`. Each display has `active`, `primary`, `currentOrientation` (`rot0` to `rot270`) and `nativeSize`. The tools expect the outer display for closed, the inner one for the others, and the turns listed above.
-2. **Screenshot size.** The expected size is the active display's `nativeSize`, swapped at `rot90` and `rot270`. `duo-pose set` takes a test screenshot into a temporary folder and deletes it; the matrix checks each real screenshot.
-3. **The app is running**, from `xcrun simctl spawn <UDID> launchctl list` (the `UIKitApplication:<bundle id>` job has a process ID). A missing process usually means a crash in that pose.
-4. **No other app started** during the capture. A third-party app job that appears or restarts between the snapshots before and after the screenshot marks the shot `check`.
-5. **The fold**, only with `--readout-id`. See [pose-readout.md](pose-readout.md).
+1. **Active display and orientation.** The active display comes from `xcrun devicectl device info displays -d <UDID> --json-output <file>` (each display has `active`, `primary`, `currentOrientation` and `nativeSize`); the orientation from `devicectl device orientation get`. The tools expect the outer display for closed and the inner one for the others, in the orientation listed above.
+2. **Screenshot size.** The expected size is the active display's `nativeSize`, swapped at `rot90` and `rot270`, read just after the screenshot. `duo-pose set` takes a test screenshot into a temporary folder and deletes it; the matrix checks each real screenshot.
+3. **Nothing moved during the capture.** The matrix reads the displays and orientation again after each screenshot. If the pose no longer fits, the shot fails: someone else pressed Device Hub's buttons or a UI test turned the device.
+4. **The app is running, and it is the copy we launched**, from `xcrun simctl spawn <UDID> launchctl list` (the `UIKitApplication:<bundle id>` job and its process ID). A missing process usually means a crash in that pose. A different process ID than the one `simctl launch` printed means someone else relaunched or reinstalled the app, so the shot is marked `check`. A relaunch leaves the old job listed with no process next to the new one; the tools read the running one.
+5. **No other app started** during the capture. A third-party app job that appears or restarts between the snapshots before and after the screenshot marks the shot `check`.
+6. **Not blank.** A PNG under 0.03 bytes per pixel is nearly one colour, usually an app that hasn't drawn yet. The matrix waits `--wait` seconds once more and retakes it; if it is still nearly blank, the shot is marked `check`. *Measured*: a blank launch frame with only the status bar was 0.026 bytes per pixel; real gallery screens were 0.09 to 0.19.
+7. **The fold**, only with `--readout-id`. See [pose-readout.md](pose-readout.md).
 
 Open and book pass checks 1 and 2 the same way. That is why the summary marks their fold "not checked" without a readout.
+
+## One run per simulator
+
+`duo-pose set` and `duo-pose-matrix` hold a lock file per simulator (`<cache>/locks/<UDID>.lock`, with `flock`) for the whole run. A second run on the same simulator exits 6 at once instead of waiting. The lock only keeps Duology's tools apart. Other scripts that press Device Hub's buttons don't take it; checks 3 and 4 catch them.
 
 ## Timing
 

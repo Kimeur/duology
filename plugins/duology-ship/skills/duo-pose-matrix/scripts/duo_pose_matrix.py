@@ -209,7 +209,7 @@ def launch(system, sim, bundle_id, args):
 
 # A screenshot whose PNG takes fewer bytes per pixel than this is nearly one colour:
 # usually an app that hasn't drawn yet. Measured on 18 October: a blank launch frame
-# with only the status bar was 0.026 bytes per pixel; real gallery screens were 0.09 to 0.43.
+# with only the status bar was 0.026 bytes per pixel; real gallery screens were 0.09 to 0.19.
 BLANK_BYTES_PER_PIXEL = 0.03
 
 
@@ -247,12 +247,13 @@ def capture(system, sim, args, case, pose, state, hub, relaunch=True):
         size = dp.png_size(path) if ok else None
         if size and looks_blank(path, size):
             flags.append("the screenshot looks almost blank (the app may not have drawn yet; raise --wait)")
-    expected = state.shot_size()
     after = running_apps(system, sim)
     try:
         state_after = dp.read_state(system, sim)
     except dp.PoseError:
         state_after = None
+    # The display turns with the app on screen, so take the size from the state after the shot.
+    expected = (state_after or state).shot_size()
 
     checks = {}
     problems = dp.check_pose(state, pose)
@@ -543,10 +544,10 @@ def _run_matrix(system, args, log, sim):
         restore = True
 
     if restore and not args.manual and not args.no_restore:
-        fold_label, want_active, turns, note = dp.restore_plan(start)
+        fold_label, want_active, orientation_ok, note = dp.restore_plan(start)
         try:
             log("restoring: pressing %s" % fold_label)
-            dp.drive(system, sim, hub, fold_label, want_active, turns, dp.Timing())
+            dp.drive(system, sim, hub, fold_label, want_active, orientation_ok, dp.Timing())
             summary["restoreNote"] = note
         except dp.PoseError as exc:
             summary["restoreNote"] = "Could not put it back: %s." % exc.message

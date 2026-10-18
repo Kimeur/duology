@@ -6,7 +6,9 @@ Each release says which Xcode and iOS versions it was checked on.
 
 ## [Unreleased]
 
-Nothing yet. v0.2 work happens on the `v0.2` branch.
+### Removed
+
+- The French README. The README is English only.
 
 ## [0.1.0] - 2026-10-18
 

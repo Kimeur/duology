@@ -1006,8 +1006,7 @@ class DocsTests(unittest.TestCase):
                            stdout=subprocess.PIPE, universal_newlines=True)
         real = r.stdout.rstrip("\n").split("\n")
         self.assertEqual(r.returncode, 1)
-        docs = [os.path.join(SKILL, "SKILL.md"), os.path.join(REPO, "README.md"),
-                os.path.join(REPO, "docs", "readme", "README_fr.md")]
+        docs = [os.path.join(SKILL, "SKILL.md"), os.path.join(REPO, "README.md")]
         checked = 0
         for doc in docs:
             if not os.path.isfile(doc):

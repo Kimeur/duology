@@ -174,8 +174,10 @@ private struct PageSheet: View {
             }
         }
         .background {
+            // The card colour for a grouped background: white in light mode, and
+            // a raised grey in dark mode, where the page would vanish on black.
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .fill(Color(.systemBackground))
+                .fill(Color(.secondarySystemGroupedBackground))
                 .shadow(color: .black.opacity(0.08), radius: 8, y: 2)
         }
         .padding(12)

@@ -27,7 +27,7 @@ Not security issues:
 
 ## How to report
 
-Security contact: gazouzimarouane@gmail.com. Duology is also enrolled for Anthropic's OSS Scanner (pending review), which emails findings to this address.
+Security contact: gazouzimarouane@gmail.com. Duology has applied to Anthropic's OSS Scanner (application pending); if accepted, its findings go to this address.
 
 Please don't open a public issue, discussion or pull request for a security problem.
 

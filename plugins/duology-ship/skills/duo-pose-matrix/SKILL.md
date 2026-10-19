@@ -71,10 +71,10 @@ Ready: `duo-pose set <closed|open|book|tabletop>` can press Device Hub's buttons
 | Exit | Meaning | What to do |
 |---|---|---|
 | 0 | Done, or ready | Go on. |
-| 1 | The pose did not take, or a screenshot failed its checks | Read the problems it printed. Look at Device Hub. |
+| 1 | The pose did not take, a screenshot failed its checks, or the matrix stopped early | Read the problems it printed. Look at Device Hub. |
 | 2 | Bad arguments | Read `--help`. |
 | 3 | The app that runs the agent may not use Accessibility | Tell the user how to allow it (below). Offer the manual route. |
-| 4 | Device Hub isn't running, has no window for the phone on this desktop, or shows no pose buttons | Ask the user to open Device Hub on the iPhone Duo, or pass `--bring-forward`. Otherwise use the manual route. |
+| 4 | Device Hub isn't running, has no window for the phone on this desktop, or shows no pose buttons | Ask the user to open Device Hub on the iPhone Duo. `set` and the matrix bring it forward themselves unless you passed `--no-bring-forward`; `status` and `list` do only with `--bring-forward`. Otherwise use the manual route. |
 | 5 | No booted iPhone Duo simulator | Boot the existing one. Never create one; run `duo-doctor` or follow `duo-setup`. |
 | 6 | UI tests are running | Wait. Use `--force` only if the user says the tests use another simulator. |
 | 7 | The Swift helper could not be built | Check that Xcode 27.1 is installed. |
@@ -104,10 +104,12 @@ duo-pose-matrix com.example.notes --no-relaunch --poses closed,open,book -- -uiT
 | `--poses LIST` | Poses in order. Default `closed,open,book,tabletop`. |
 | `--out DIR` | Output folder. Default: a new folder under `$TMPDIR/duo-poses/`. Tell the user where it is. |
 | `--wait SECONDS` | Time between launch and screenshot. Default 4. Raise it for slow first screens. |
+| `--pose-wait SECONDS`, `--timeout SECONDS` | Wait after a fold button (default 5) and the longest wait for the displays to switch (default 20). Raise both when a pose fails with "the inner display should be active" on a slow Mac. |
 | `--no-relaunch` | Launch each case once and keep it running across poses. |
 | `--readout-id ID` | Read the app's fold readout to tell open from book. |
 | `--manual POSE` | Press nothing; capture one pose someone set by hand. |
 | `--force` | Run even while UI tests run. |
+| `--busy-wait SECONDS` | How long to wait when UI tests start mid-run, before the next pose or the restore. Default 120. |
 | `--no-restore`, `--keep-running`, `--no-bring-forward`, `--json` | Leave the last pose; leave the app running; fail instead of bringing Device Hub forward; print the summary as JSON. |
 
 From the default waits, setting a pose takes about 7 to 20 seconds. Each screenshot takes about 6 to 7 seconds more (*measured*: two cases in one pose took 13 seconds). Four poses and two cases take about two minutes.
@@ -177,8 +179,8 @@ Device Hub doesn't say which pose it is in, and the displays are the same in ope
 ## Limits
 
 - It is UI scripting. It finds Device Hub's buttons by their English descriptions and its window layout. An Xcode update can break it; then `list` prints the buttons it can see, and the manual route still works.
-- Device Hub's window must be on the current desktop: not minimized, not behind Mission Control, not on another Space. `--bring-forward` (on by default for `set` and the matrix) runs `open -a` on Device Hub, which moves the user's focus to it.
-- The pose is global. Changing it moves the screen for every agent and test on that simulator. The tools check for UI tests before each pose change and wait up to `--busy-wait` seconds (default 120) when tests start mid-run, then stop without restoring.
+- Device Hub's window must be on the current desktop: not minimized, not behind Mission Control, not on another Space. When it can't see the window, `set` and the matrix run `open -a` on Device Hub, which moves the user's focus to it; `--no-bring-forward` turns that off. `status` and `list` do it only with `--bring-forward`.
+- The pose is global. Changing it moves the screen for every agent and test on that simulator. The matrix checks for UI tests before each pose change and before the restore. When tests start mid-run, it waits up to `--busy-wait` seconds (default 120), then stops, leaves the pose as it is and exits 1. The summary's restore note names the pose it left.
 - Run one pose sweep per simulator at a time. Duology's tools share a lock; other scripts don't. Each shot is checked after the screenshot (pose, app process, blank frame), which catches another script pressing buttons or relaunching the app, but can't prevent it.
 - The start pose is restored as closed or open. Device Hub doesn't report book, so a phone that started in book is left open, and the summary says so.
 - Only the three button poses. Other hinge angles need Option-drag in Device Hub ([Interacting with your app in Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)).

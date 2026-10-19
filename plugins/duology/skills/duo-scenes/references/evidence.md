@@ -53,6 +53,7 @@ final class SceneCensus {
 final class ProbeAppDelegate: NSObject, UIApplicationDelegate {
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions options: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
+        setvbuf(stdout, nil, _IOLBF, 0)   // write each line now; a log file stays empty without this
         SceneCensus.shared.start()
         return true
     }
@@ -86,11 +87,13 @@ struct ProbeApp: App {                       // mark it @main in a probe target
 }
 ```
 
-Run it with output in a file, change the pose in Device Hub, then read the file:
+Run it with output in a file, change the pose, then read the file while the app runs. To change the pose, ask the user to press it in Device Hub, or run `duo-pose set open` / `duo-pose set closed` from [duo-pose-matrix](https://github.com/Kimeur/duology/blob/main/plugins/duology-ship/skills/duo-pose-matrix/SKILL.md) if they want it scripted.
 
 ```bash
 xcrun simctl launch --terminate-running-process --stdout="$PWD/scenes.log" booted com.example.probe
 ```
+
+Keep the `setvbuf` line. When stdout goes to a file, the C library holds output in a block buffer until the process exits, and the next `--terminate-running-process` launch kills the app before it writes. Without the line, `scenes.log` stays at 0 bytes while the app runs, and the lines are lost (*measured*, on the simulator and on the Mac). To watch live instead, launch with `--console-pty` in place of `--stdout=...`.
 
 ## Results: closed phone
 
@@ -100,6 +103,7 @@ xcrun simctl launch --terminate-running-process --stdout="$PWD/scenes.log" boote
 | `openWindow(id:)` from the first window | No error. A second scene connected on the outer screen (1398 × 2034 px native, window 466 × 678 pt) and became active. The first went `inactive`, then `background`, and stayed connected. |
 | `activateSceneSession(for: UISceneSessionActivationRequest())` | Same: a third scene, no error handler call |
 | The covered window, while in the background | Two geometry updates: 466 × 678 to 951 × 669 pt (`effectiveGeometry.interfaceOrientation` raw value 4, `landscapeLeft`), then back to 466 × 678 pt, on the outer screen |
+| One window, the whole app sent to the background (something else came to the front) | The same: resign, background, then 466 × 678 to 951 × 669 pt and back within 0.2 s, on the outer screen. Width class stayed `compact` (trait raw value 1) at both sizes. Seen twice (run 6 at 156.8-159.7 s, the open-and-fold session at 136.9-140.1 s after its last Closed). |
 | The new window's first layout | Root view 466 × 562 pt, then 382 × 644 pt |
 | Edit menu with `UIWindowScene.ActivationAction` (no alternate) and a plain `UIAction` | Only the plain action appeared |
 | The same menu, with an `alternate:` action given | The alternate appeared where the window action would be, next to the plain action |
@@ -132,6 +136,8 @@ One session, run between another session's UI tests: Open, launch the probe with
 | Launch on the open phone | Window 951 × 669 pt on the inner screen (2007 × 2853 px native), regular width and height; root view 867 × 635 pt |
 | Camera capture accessory, no capture session | Availability `false` then `true`; a scene with role `UIWindowSceneSessionRoleCameraCaptureAccessory` on the outer screen at 466 × 678 pt. UIKit didn't call `configurationForConnecting` for it. |
 | `openWindow(id:)` | A second full-size window (951 × 669 pt) covered the first; the first went inactive, then background. The first window's accessory went unavailable and its session was discarded; the second window got its own. |
+| The covered first window, in the background | At 4.5 s, still on the inner screen: one geometry update to 466 × 678 pt, and SwiftUI's width class went `regular` to `compact`. At 4.6 s: back to 951 × 669 pt and `regular`. No fold happened. |
+| Another run (run 8): one window on the open phone, the whole app sent to the background | The same round trip at 236.1-236.2 s: 466 × 678 pt and `compact`, then 951 × 669 pt and `regular` |
 | Edit menu with `ActivationAction` (no alternate) | The window action showed, next to the plain action |
 | Closed | The front window's scene moved to the outer screen: one `didUpdateEffectiveGeometry` (951 × 669 to 466 × 678 pt), width class regular to compact, phase stayed `active`, no `onAppear`. The accessory went unavailable and its session was discarded. |
 | Open | The same scene moved back: one geometry update, width class compact to regular, phase stayed `active`. A new accessory scene appeared; its content's `onAppear` ran again. |
@@ -143,6 +149,10 @@ PROBE  0.3 [30A6] accessory availability -> true
   scene B28572 role=UIWindowSceneSessionRoleCameraCaptureAccessory state=0 screen=outer(1398x2034) window=466x678
 PROBE  3.5 willConnect scene EE5849 ... screen=inner(2007x2853) window=951x669 restoring=nil
 PROBE  4.3 didDiscardSceneSessions ["B28572"]
+PROBE  4.3 didEnterBackground scene 2D714B ... state=2 screen=inner(2007x2853) window=951x669
+PROBE  4.5 [30A6] widthClass regular -> compact
+PROBE  4.5 didUpdateEffectiveGeometry from 951x669 to scene 2D714B ... state=2 screen=inner(2007x2853) window=466x678
+PROBE  4.6 [30A6] widthClass compact -> regular
 PROBE  9.6 MENU labels=["Zeta New Window", "Zeta Plain"]
 PROBE 14.4 didUpdateEffectiveGeometry from 951x669 to scene EE5849 ... state=0 screen=outer(1398x2034) window=466x678
 PROBE 14.5 didDiscardSceneSessions ["7E34CB"]

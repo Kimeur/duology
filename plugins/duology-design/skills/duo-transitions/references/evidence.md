@@ -43,6 +43,7 @@ So a fold is a resize, as Apple says ([Tech Talk 111461](https://developer.apple
 
 - Pressing Rotate Right while closed and in landscape right turned the device to portrait upside down. The app doesn't list that orientation, so nothing happened. The next press (to landscape left) arrived as the 0.6 s half turn.
 - `willTransition(to:with:)` for the trait collection came with `isAnimated` `false` on open and close.
+- The root view's `layoutSubviews` ran with `UIView.inheritedAnimationDuration` 0.3 in the three quarter-turn rotations of run 2 (44.705, 53.983, 58.090), and 0 on every open and close. So a frame set in a layout pass during a rotation rides the rotation's animation.
 - Order of the trait handler and `viewWillTransition(to:with:)`:
 
 | Change | Trait handler | `viewWillTransition` | Gap |

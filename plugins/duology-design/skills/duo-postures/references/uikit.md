@@ -79,10 +79,10 @@ final class FoldRegionsView: UIView {
 Notes:
 
 - UIKit returns region frames in the view's own coordinates, with no mirroring for right-to-left that the headers mention. So the code picks the leading side itself. Not yet tested in a right-to-left language. (unverified)
-- *Measured* (iOS 27.1 iPhone Duo simulator, 19 Oct 2026, Partially Open and Open in Device Hub, held wide and held tall): a view that reads `reservedRegions` in `layoutSubviews` got a new pass within 1 ms of the region turning active, and again when it turned inactive. A sibling view that never read the regions got no pass. So read the regions in the view whose layout depends on them ([measurements](measurements.md#uikit-layout-passes-on-a-fold)).
-- Don't nudge layout from a `UIHingeInteraction`. The hinge status turned `partiallyOpen` 0.7 to 0.9 s before the region turned active, so a pass on a status change reads the old, inactive region. A pass on every hinge update ran about 30 times a second while folding, for nothing. Keep the hinge for effects.
+- *Measured* (iOS 27.1 iPhone Duo simulator, 19 Oct 2026, Partially Open and Open in Device Hub, held wide and held tall): a view that reads `reservedRegions` in `layoutSubviews` got a new pass in the frame the region turned active, and again when it turned inactive. A sibling view that never read the regions got no pass. So read the regions in the view whose layout depends on them ([measurements](measurements.md#uikit-layout-passes-on-a-fold)).
+- Don't nudge layout from a `UIHingeInteraction`. The hinge status turned `partiallyOpen` 0.7 to 0.9 s before the region turned active, so a pass on a status change reads the old, inactive region. A pass on every hinge update ran up to about 30 times a second while folding and added nothing. Keep the hinge for effects.
 - The layout reads only regions, never the hinge, so it stays right when the phone is flipped or in Split View.
-- Animate the change with `UIView.animate` around `layoutIfNeeded()` only when `UIAccessibility.isReduceMotionEnabled` is false.
+- The fold's pass comes from UIKit, so there is no call of yours to wrap in an animation. To animate the move, store whether the last pass saw an active fold, and when that changes, set the two frames inside `UIView.animate` in `layoutSubviews`. Skip the animation when `UIAccessibility.isReduceMotionEnabled` is true. Not yet run on the simulator. (unverified)
 - Unlike the SwiftUI recipe, this version doesn't check that the fold crosses the middle of the view. Add that check if the view can sit beside the fold, for example in one column of a split view.
 
 ## The system alternative

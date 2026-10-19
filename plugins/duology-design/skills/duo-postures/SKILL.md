@@ -28,7 +28,7 @@ Apple calls these "device poses" and describes them with comparisons: "partially
 
 ## Tell the poses apart from layout inputs
 
-Add `FoldGeometry` and `FoldRegionsLayout` from [references/fold-regions.md](references/fold-regions.md) once per app. If the app already has a `FoldGeometry` (`duo-patterns` adds one), keep a single copy, and make sure its `init(_:)` filters with `liesInside(_:of:)` as fold-regions.md shows. The `duo-patterns` copy has no filter yet; add it. Then read the fold with `.onFoldChange { fold = $0 }` on the view you lay out.
+Add `FoldGeometry` and `FoldRegionsLayout` from [references/fold-regions.md](references/fold-regions.md) once per app. If the app already has a `FoldGeometry` (`duo-patterns` adds one), keep a single copy, and make sure its `init(_:)` filters with `liesInside(_:of:)` as fold-regions.md shows. A copy taken from `duo-patterns` may lack the filter; add it. Then read the fold with `.onFoldChange { fold = $0 }` on the view you lay out.
 
 | Pose (Duology word) | Apple's words | Your app is on | Size classes (width, height) | `.division` region | `FoldGeometry` |
 |---|---|---|---|---|---|
@@ -226,7 +226,7 @@ iOS 27.1 iPhone Duo simulator, read from the reserved regions with the gallery a
 
 ## UIKit
 
-Read `traitCollection` size classes and query `view.reservedRegions(kind: .division, options: .includeInactive)` in `layoutSubviews`. That is enough: UIKit runs that view's `layoutSubviews` again when the fold turns active or inactive (*measured*). Don't trigger layout from `UIHingeInteraction`; the status changes about 0.7 s before the region does. Keep the hinge for effects. Code: [references/uikit.md](references/uikit.md) and [references/hinge.md](references/hinge.md#uikit).
+Read `traitCollection` size classes and query `reservedRegions(kind: .division, options: .includeInactive)` in the view's own `layoutSubviews`. That is enough: UIKit runs that `layoutSubviews` again when the fold turns active or inactive (*measured*; `viewDidLayoutSubviews` not yet checked). Don't trigger layout from `UIHingeInteraction`; when folding, the status changes 0.7 to 0.9 s before the region does. Keep the hinge for effects. Code: [references/uikit.md](references/uikit.md) and [references/hinge.md](references/hinge.md#uikit).
 
 ## Test every pose
 

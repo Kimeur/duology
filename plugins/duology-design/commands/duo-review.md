@@ -46,7 +46,8 @@ If you still have no frames, stop and say how to get them:
 
 Glob the folder for `*.png`, `*.PNG`, `*.jpg`, `*.jpeg`.
 
-- From a duo-pose-matrix run, read `summary.json`. Each shot has `file` (a name inside the run folder), `pose`, `display`, `size` (`[width, height]`), `status`, `fold` and `notes`. Keep that per file. Send shots with `status` `ok` or `check` as frames. Send `failed` shots under "Frames not reviewed" with their notes: a note that the app was not running is itself a finding.
+- From a duo-pose-matrix run, read `summary.json`. At the top, `mode` and `relaunch` say how it was taken. Each shot has `file` (a name inside the run folder), `pose`, `display`, `size` (`[width, height]`), `status`, `fold` and `notes`. Keep that per file. Send shots with `status` `ok` or `check` as frames. Send `failed` shots with their absolute paths under "Frames not reviewed", with their notes. The agent decides what a note that the app was not running means.
+- Work out the capture line for the agent. `mode` `automatic` with `relaunch` `false` is an automatic `--no-relaunch` run: each case's frames are one running session. Anything else (`relaunch` `true` or missing, `mode` `manual` or `mixed`) is a fresh launch per frame, so the frames can't show R2.
 - Otherwise get the pixel sizes in one call: `file -- <path> <path> ...`. It prints, for example, `PNG image data, 1398 x 2034`.
 - Note the pose a file name gives (`closed`, `open`, `book`, `tabletop`, `partially-open`). Never guess a pose from content alone.
 - Skip anything that isn't a PNG or JPEG, and say so. The agent can't read videos.
@@ -61,11 +62,16 @@ Launch the `duology-design:duo-design-reviewer` agent with the Agent tool. Give 
 Review these iPhone Duo frames and return your report.
 App: <name from summary.json bundleId, the notes, or "unknown">
 Focus: <the user's notes, or "the whole app">
+Summary: <absolute path to summary.json, or "none">
+Capture: <one of these three>
+  - duo-pose-matrix, --no-relaunch: each case's frames are one session, in the order taken; compare them for R2.
+  - duo-pose-matrix, fresh launch per frame: R2 can't be judged from these frames.
+  - not a duo-pose-matrix run: judge R2 only from Figma frames of one flow, or screenshots the user says show one moment.
 Frames (absolute path | pixel size | pose | display | matrix status and notes):
 - /abs/path/home-closed.png | 1398 x 2034 | closed | outer | ok
 - /abs/path/home-book.png | 2853 x 2007 | book | inner | ok, fold not checked
 ...
-Frames not reviewed: <failed shots with their notes, files you skipped>
+Frames not reviewed: <failed shots by absolute path, with pose, display and notes; files you skipped>
 ```
 
 Batch large sets. The agent reads at most 24 images. With more, group the files by screen (the part of the name before the pose) and give each agent call at most 24 frames, whole screens only. Launch the calls in parallel, in one message.

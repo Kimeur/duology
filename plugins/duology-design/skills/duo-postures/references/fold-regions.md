@@ -74,7 +74,7 @@ What each pose gives you (from the [measurements](measurements.md)):
 |---|---|---|---|
 | Closed, tent, flipped (outer display) | `nil` | `false` | `false` |
 | Open, flat, held wide | 40 pt wide, full height | `false` | `true` |
-| Open, flat, held tall | full width, 40 pt high (expected; not measured) | `false` | `false` |
+| Open, flat, held tall | full width, 40 pt high | `false` | `false` |
 | Book | 40 pt wide, full height | `true` | `true` |
 | Tabletop | full width, 40 pt high | `true` | `false` |
 

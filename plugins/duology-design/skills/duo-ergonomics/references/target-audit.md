@@ -60,6 +60,8 @@ struct RecorderControls: View {
 }
 ```
 
+Attach it straight to the `Button`, before any `.frame` or `.background` outside it. Those grow the layout, not the hit region, so an audit placed after them reports the wrong size. Size the target with a frame and `contentShape` on the label instead (`SKILL.md`, section 4).
+
 Keep `nonisolated` on `TargetReport`. In a new Xcode 27.1 app, `SWIFT_DEFAULT_ACTOR_ISOLATION` is `MainActor`, which makes the struct's `Equatable` conformance main-actor isolated, and `onGeometryChange` then rejects it (the same fix as `FoldGeometry` in `duo-patterns`).
 
 ### What it printed

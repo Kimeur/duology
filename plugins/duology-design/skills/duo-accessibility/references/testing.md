@@ -30,7 +30,7 @@ An audit with no issues does not prove the app is accessible. Apple also asks fo
 
 ## Audits
 
-`performAccessibilityAudit(for:_:)` runs the inspector's audit from a UI test and fails the test for each issue it finds. Return `true` from the handler to ignore an issue you have checked.
+[`performAccessibilityAudit(for:_:)`](https://developer.apple.com/documentation/xcuiautomation/xcuiapplication/performaccessibilityaudit(for:_:)) runs the inspector's audit from a UI test and fails the test for each issue it finds. Return `true` from the handler to ignore an issue you have checked.
 
 ```swift
 import XCTest
@@ -73,7 +73,9 @@ The audit named the 20 pt icon "Trash" from its symbol name. That label came for
 
 ## A VoiceOver walk
 
-Xcode 27 adds `XCUIDevice.shared.voiceOverService` (iOS 27): turn VoiceOver on, move through elements, and read what it says (iOS 27.1 platform headers: `XCUIVoiceOverService.h`).
+iOS 27 adds [`XCUIDevice.shared.voiceOverService`](https://developer.apple.com/documentation/xcuiautomation/xcuidevice/voiceoverservice): turn VoiceOver on, move through elements, and read what it says ([`XCUIVoiceOverService`](https://developer.apple.com/documentation/xcuiautomation/xcuivoiceoverservice); declared in `XCUIVoiceOverService.h` in the iOS 27.1 SDK).
+
+The test below walks the screen from section 2 of SKILL.md, open: a list pane with rows "Row 1" to "Row 4" and a message pane titled "Lunch on Friday". The app shows a debug marker, a text with identifier `layout.width` whose label is "wide" or "narrow"; gate it as `duo-testing` gates `testMarker`.
 
 ```swift
 import XCTest
@@ -98,13 +100,23 @@ final class ReadingOrderTests: XCTestCase {
         guard #available(iOS 27.0, *) else { throw XCTSkip("needs the iOS 27 VoiceOver service") }
         let app = XCUIApplication()
         app.launch()
-        let spoken = try walk(12)
-        let lastRow = spoken.lastIndex { $0.hasPrefix("Row") } ?? -1
-        let detail = spoken.firstIndex { $0.contains("Message pane") } ?? spoken.count
-        XCTAssertLessThan(lastRow, detail, spoken.joined(separator: " | "))
+        let marker = app.staticTexts["layout.width"]
+        XCTAssertTrue(marker.waitForExistence(timeout: 15))
+        try XCTSkipUnless(marker.label == "wide", "run it open: closed, the list pane is not on screen")
+
+        let spoken = try walk(12)                           // enough steps to reach the message pane
+        let log = spoken.joined(separator: " | ")
+        // Match text your screen shows: the rows, and the message pane's title.
+        let isRow = { (line: String) in line.contains("Row ") }
+        let detail = try XCTUnwrap(spoken.firstIndex { $0.contains("Lunch on Friday") }, "title never spoken: \(log)")
+        XCTAssertTrue(spoken[..<detail].contains(where: isRow), "no row before the message pane: \(log)")
+        XCTAssertFalse(spoken[detail...].contains(where: isRow), "a row after the message pane: \(log)")
     }
 }
 ```
+
+- The test fails when the title is never spoken, when no row comes before it, and when any row comes after it. Replayed on the orders we logged, the assertions passed only for the layout with containers (*derived*: not run as a UI test).
+- Match visible text, not the pane's label. VoiceOver did not speak the first pane's label at the start, and a layout without containers has no pane label to speak (*measured*). The probe's labels were "Inbox pane" and "Message pane"; VoiceOver speaks what you set and adds nothing.
 
 What we learned running walks like this (*measured*):
 
@@ -117,7 +129,7 @@ What we learned running walks like this (*measured*):
 
 ## Focus after a real fold
 
-No API changes the pose from a test ([`duo-testing`](https://github.com/Kimeur/duology/blob/main/plugins/duology-ship/skills/duo-testing/SKILL.md)). The test waits while the pose changes, by hand in Device Hub or with a Mac script (see `duo-setup`). The app shows a marker whose label says "wide" or "narrow".
+No API changes the pose from a test ([`duo-testing`](https://github.com/Kimeur/duology/blob/main/plugins/duology-ship/skills/duo-testing/SKILL.md)). The test waits while the pose changes: a person presses Closed in Device Hub, or you run `duo-pose set closed` from [`duo-pose-matrix`](https://github.com/Kimeur/duology/blob/main/plugins/duology-ship/skills/duo-pose-matrix/SKILL.md). It uses the same `layout.width` marker as the walk above.
 
 ```swift
 import XCTest
@@ -151,9 +163,17 @@ final class FoldFocusTests: XCTestCase {
 }
 ```
 
-- Run it alone (`-only-testing:`), watch the log for `READY`, then press the pose.
-- Check that no other test runs on a shared simulator before you change its pose, and put the pose back afterwards.
-- The marker is debug-only UI. Gate it as `duo-testing` gates `testMarker`.
+Run it alone, on the simulator the person sees:
+
+```bash
+xcodebuild test -scheme <App> -destination "id=<UDID>" -parallel-testing-enabled NO \
+  -only-testing:<UITestTarget>/FoldFocusTests/testVoiceOverKeepsItsPlaceWhenClosed
+```
+
+- `-parallel-testing-enabled NO` keeps the test on that simulator. Without it, xcodebuild can run it on a clone ("Clone 1 of iPhone Duo"), which nobody can fold from Device Hub: the test times out after 120 s, and the clone takes another 4-6 GB of disk (`duo-testing`).
+- Watch the log for `READY`, then change the pose.
+- `duo-pose` refuses while any UI test runs (exit 6), and this one is yours. First check that no other test runs on the simulator: `pgrep -fl "xctrunner|xcodebuild.*test"` must list only your run. Then, with the user's OK, run `duo-pose set closed --force`. Without that OK, ask the person to press Closed.
+- Put the pose back afterwards.
 
 ## Keyboard in UI tests
 

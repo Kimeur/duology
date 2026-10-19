@@ -94,6 +94,11 @@ class ArgumentTests(unittest.TestCase):
         self.assertTrue(os.path.isabs(args.out))
         self.assertIn("duo-poses", args.out)
         self.assertEqual(args.wait, 4.0)
+        self.assertEqual((args.pose_wait, args.timeout), (5.0, 20.0))
+
+    def test_pose_timing_flags(self):
+        args = dm.parse_args([fakes.BUNDLE, "--pose-wait", "8", "--timeout", "40"])
+        self.assertEqual((args.pose_wait, args.timeout), (8.0, 40.0))
 
     def test_cases_get_the_common_arguments(self):
         args = dm.parse_args([fakes.BUNDLE] + CASES + ["--", "-showsRegions", "YES"])
@@ -103,6 +108,9 @@ class ArgumentTests(unittest.TestCase):
         for argv in ([fakes.BUNDLE, "--manual", "book", "--poses", "open"],
                      [fakes.BUNDLE, "--case", "a=-x", "--case", "a=-y"],
                      [fakes.BUNDLE, "--wait", "-2"],
+                     [fakes.BUNDLE, "--pose-wait", "-1"],
+                     [fakes.BUNDLE, "--timeout", "0"],
+                     [fakes.BUNDLE, "--bring-forward"],
                      [fakes.BUNDLE, "--manual", "tent"],
                      []):
             with mock.patch("sys.stderr", io.StringIO()):
@@ -194,6 +202,13 @@ class SummaryTests(unittest.TestCase):
                               "-- -showsRegions YES")
         self.assertEqual(dm.parse_args(__import__("shlex").split(cmd)[1:]).cases, args.cases)
 
+    def test_manual_command_keeps_a_longer_wait(self):
+        args = dm.parse_args([fakes.BUNDLE, "--out", "/tmp/o", "--wait", "7.5", "--timeout", "40"])
+        cmd = dm.manual_command(args, "open")
+        self.assertIn("--wait 7.5", cmd)
+        self.assertNotIn("--timeout", cmd)  # a manual run presses nothing
+        self.assertEqual(dm.parse_args(__import__("shlex").split(cmd)[1:]).wait, 7.5)
+
 
 class RunTests(unittest.TestCase):
     def test_full_matrix(self):
@@ -265,6 +280,61 @@ class RunTests(unittest.TestCase):
         self.assertEqual(mac.pressed, ["Closed", "Open"])  # no restore press after the stop
         self.assertEqual(sorted(x["pose"] for x in s["shots"]), ["closed", "open"])
         self.assertIn("Stopped early", run.markdown())
+
+    # The default poses from closed take five presses: Closed, Open, Partially Open, Partially Open, Rotate Right.
+    LAST_POSE_PRESSES = ["Closed", "Open", "Partially Open", "Partially Open", "Rotate Right"]
+
+    def test_does_not_restore_when_tests_start_during_the_last_pose(self):
+        busy = "4242 /usr/bin/xcodebuild test -scheme Other\n"
+        run, mac = Run(self), fakes.FakeMac(busy=busy, busy_after=len(self.LAST_POSE_PRESSES))
+        self.assertEqual(run(["--busy-wait", "30"], mac), dp.EXIT_FAILED)
+        self.assertEqual(mac.pressed, self.LAST_POSE_PRESSES)  # nothing pressed after the tests appeared
+        s = run.summary()
+        self.assertEqual(len(s["shots"]), 4)
+        self.assertIn("stopped before putting the pose back", s["stopped"])
+        self.assertIn("pid 4242", s["stopped"])
+        self.assertIn("Not put back", s["restoreNote"])
+        self.assertEqual(s["endPose"], "tabletop (or open, held tall)")
+        self.assertIn("left in tabletop", s["restoreNote"])
+        self.assertIn("Stopped early", run.markdown())
+
+    def test_restores_once_the_tests_finish(self):
+        busy = "4242 /usr/bin/xcodebuild test -scheme Other\n"
+        run, mac = Run(self), fakes.FakeMac(busy=busy, busy_after=len(self.LAST_POSE_PRESSES), busy_until=5000)
+        self.assertEqual(run(["--busy-wait", "10000"], mac), 0, run.stderr)
+        self.assertEqual(mac.pressed, self.LAST_POSE_PRESSES + ["Rotate Right"] * 3 + ["Closed"])
+        self.assertGreaterEqual(mac.time, 5000)
+        s = run.summary()
+        self.assertIsNone(s["stopped"])
+        self.assertEqual(s["endPose"], "closed")
+
+    def test_force_restores_while_tests_run(self):
+        busy = "4242 /usr/bin/xcodebuild test -scheme Other\n"
+        run, mac = Run(self), fakes.FakeMac(busy=busy, busy_after=len(self.LAST_POSE_PRESSES))
+        self.assertEqual(run(["--force"], mac), 0, run.stderr)
+        self.assertEqual(mac.pressed[-1], "Closed")
+        self.assertEqual(run.summary()["endPose"], "closed")
+
+    def test_slow_display_switch_needs_a_longer_timeout(self):
+        # The displays take 40 s to switch: more than the default 5 s wait plus 20 s timeout.
+        run, mac = Run(self), fakes.FakeMac(switch_delay=40)
+        self.assertEqual(run(["--poses", "closed,open"], mac), dp.EXIT_FAILED)
+        status = {x["pose"]: x["status"] for x in run.summary()["shots"]}
+        self.assertEqual(status, {"closed": "ok", "open": "failed"})
+
+        run, mac = Run(self), fakes.FakeMac(switch_delay=40)
+        self.assertEqual(run(["--poses", "closed,open", "--pose-wait", "10", "--timeout", "45"], mac), 0, run.stderr)
+        s = run.summary()
+        self.assertTrue(all(x["status"] == "ok" for x in s["shots"]), s["shots"])
+        self.assertEqual(s["endPose"], "closed")  # the restore used the longer timeout too
+
+    def test_no_bring_forward_hint_names_the_matrix_flag(self):
+        run, mac = Run(self), fakes.FakeMac(window=False)
+        self.assertEqual(run(["--no-bring-forward"], mac), dp.EXIT_DEVICE_HUB)
+        self.assertIn("run it without --no-bring-forward", run.stderr)
+        self.assertNotIn("pass --bring-forward", run.stderr)
+        self.assertEqual(mac.opened, [])
+        self.assertIn("--manual closed", run.stderr)
 
     def test_app_not_installed(self):
         run, mac = Run(self), fakes.FakeMac(installed=False)

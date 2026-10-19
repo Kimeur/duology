@@ -10,7 +10,7 @@ metadata:
 
 iPhone Duo is the first iPhone that can show more than one window of the same app. It also runs two apps side by side on the inner display, and it can put a camera app's extra content on the outer display. All of this goes through scenes. This skill tells you how to open windows safely, how to use scene accessories, and how to keep each window's state.
 
-Load other skills for neighbouring work: `duo-layout` (size classes, half-width layouts in Split View), `duo-continuity` (state that survives a fold inside one window), `duo-navigation` (bars on the outer edge in Split View).
+Load other skills for neighbouring work: `duo-layout` (size classes, half-width layouts in Split View), `duo-continuity` (state that survives a fold inside one window), `duo-navigation` (bars on the outer edge in Split View), `duo-pose-matrix` (set the simulator's pose from a script), `duo-testing` (UI tests on the simulator).
 
 Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1) on 18 October 2026, closed and fully open, with no camera; see [references/evidence.md](references/evidence.md). *Unverified* means we could not confirm it. Everything else comes from Apple's pages, linked inline. Full source list: [reference/sources.md](https://github.com/Kimeur/duology/blob/main/reference/sources.md).
 
@@ -243,8 +243,7 @@ Each window is its own scene session, with its own saved state.
 - A fold doesn't need restoration: the window stays alive and resizes. `duo-continuity` covers that.
 - *Measured:* SwiftUI restores with its own activity type (`com.apple.SwiftUI.stateRestoration`). Don't read or replace it.
 - *Measured:* [application(_:didDiscardSceneSessions:)](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/application(_:diddiscardscenesessions:)) also reports accessory sessions. Check `session.role` before deleting per-window data.
-
-Code for both frameworks, and cleaning up discarded windows: [references/restoration-and-lifecycle.md](references/restoration-and-lifecycle.md).
+- Code for both frameworks, and cleaning up discarded windows: [references/restoration-and-lifecycle.md](references/restoration-and-lifecycle.md).
 
 ## 6. Scene lifecycle on fold and unfold
 
@@ -256,12 +255,13 @@ Apple says opening and closing work like resizing the app in iPhone Mirroring ([
 | Display link | `windowScene.displayLink(target:selector:)` (iOS 27) follows the scene to the new display. `UIScreen`'s [version](https://developer.apple.com/documentation/uikit/uiscreen/displaylink(withtarget:selector:)) is deprecated in iOS 27 (`UIScreen.h`). | [doc](https://developer.apple.com/documentation/uikit/uiwindowscene/displaylink(target:selector:)) |
 | Scene phase during a fold | *Measured:* [scenePhase](https://developer.apple.com/documentation/swiftui/environmentvalues/scenephase) stayed `active` through close and open. No `inactive`, no new `onAppear`. | [evidence](references/evidence.md#results-open-and-fold) |
 | Two windows in Split View, then close | *Unverified* which one moves to the outer display | Split View needs a drag in Device Hub |
-| A window covered by another window | *Measured:* inactive, then background, still connected. It got two geometry updates while in the background (951 × 669 pt landscape, then back). | [evidence](references/evidence.md) |
+| Any window going to the background (covered by another window, or the whole app) | *Measured:* inactive, then background, still connected. Then two geometry updates within 0.2 s, with no fold. Closed: 466 × 678 to 951 × 669 pt and back, width class unchanged. Open: 951 × 669 to 466 × 678 pt and back, width class `regular`, `compact`, `regular`. | [evidence](references/evidence.md#results-open-and-fold) |
 
 So:
 
 - Never tear down on `.inactive` or [sceneWillResignActive(_:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenewillresignactive(_:)). Save on `.background`.
-- Don't treat a geometry update as "the person is looking". Check [activationState](https://developer.apple.com/documentation/uikit/uiscene/activationstate-swift.property) first.
+- Don't treat a geometry update as "the person is looking". Check [activationState](https://developer.apple.com/documentation/uikit/uiscene/activationstate-swift.property) first. If the scene isn't active, skip the work and catch up in [sceneDidBecomeActive(_:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenedidbecomeactive(_:)).
+- SwiftUI: a size-class change alone is not a fold. Act on it only while `scenePhase == .active`, check again when the phase returns to `.active`, and keep one view tree for both widths so `@State` survives (`duo-continuity`). Code for both: [references/restoration-and-lifecycle.md](references/restoration-and-lifecycle.md#the-lifecycle-on-fold-and-unfold).
 - Handle [sceneDidDisconnect(_:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenediddisconnect(_:)) at any time. The system may release a background window's scene and keep its session.
 - Don't start work from a window's first `onAppear` size. *Measured:* a new window's first layout reported 466 × 562 pt, then 382 × 644 pt.
 

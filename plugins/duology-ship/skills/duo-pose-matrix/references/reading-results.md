@@ -6,10 +6,10 @@ The matrix proves that each screenshot shows the pose it claims. It does not jud
 
 Read `summary.md` from top to bottom before you look at any design.
 
-- **`failed` rows.** Fix the capture before you review. "the inner display should be active" means the pose didn't take: look at Device Hub, raise `--wait` or `--timeout`, and rerun that pose. "was not running" means the app quit in that pose: that is a finding in itself (a crash on fold), not a capture problem. Reproduce it in Xcode with the debugger attached.
+- **`failed` rows.** Fix the capture before you review. "the inner display should be active" means the pose didn't take: look at Device Hub, then rerun that pose with the matrix's `--pose-wait` and `--timeout` raised (defaults 5 and 20 seconds), for example `--poses book --pose-wait 10 --timeout 40`. "was not running" means the app quit in that pose: that is a finding in itself (a crash on fold), not a capture problem. Reproduce it in Xcode with the debugger attached.
 - **`check` rows.** Another app started during the capture. Open the PNG. If it shows another app, rerun the pose.
 - **Fold "not checked".** The picture is open or book, and the tool can't say which. Look for the fold in the image (an overlay helps), or rerun with a readout (see [pose-readout.md](pose-readout.md)). Until then, don't mark a book-only rule (R4, R7) as Pass from that frame.
-- **"Pose at the end".** It should match "Pose at the start", or the restore note should explain why not. Tell the user if the simulator was left in another pose.
+- **"Pose at the end".** It should match "Pose at the start", or the restore note should explain why not. Tell the user if the simulator was left in another pose. "Not put back: UI tests were running" means someone's tests started during the run: let them finish, then ask the user to set the pose they want in Device Hub.
 
 ## 2. Know what each frame is
 

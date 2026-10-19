@@ -630,12 +630,19 @@ class Hub:
         return data if code == 0 and data.get("found") else None
 
 
-def connect(system, sim, bring_forward=False, wait=10.0):
+FORWARD_HINT_STATUS = "pass --bring-forward"          # status and list: off unless asked
+FORWARD_HINT_DEFAULT_ON = "run it without --no-bring-forward"  # set and the matrix: on unless turned off
+
+
+def connect(system, sim, bring_forward=False, wait=10.0, forward_hint=FORWARD_HINT_STATUS):
     """Check trust, find Device Hub's window for `sim` and its pose buttons.
 
     With bring_forward, open Device Hub (`open -a`) when it isn't running or its
     window can't be seen. That brings its window to the front of your screen.
+    forward_hint is how the caller's user turns bringing forward on; it goes into
+    the error hint only when bring_forward is off.
     """
+    retry = "" if bring_forward else ", or " + forward_hint
     helper = ensure_helper(system)
     if not is_trusted(system, helper):
         raise PoseError(EXIT_NOT_TRUSTED, "the app that runs duo-pose is not allowed to use Accessibility",
@@ -645,7 +652,7 @@ def connect(system, sim, bring_forward=False, wait=10.0):
     if pid is None:
         if not bring_forward:
             raise PoseError(EXIT_DEVICE_HUB, "Device Hub is not running",
-                            "Open Device Hub on the iPhone Duo, or pass --bring-forward. " + MANUAL_HELP)
+                            "Open Device Hub on the iPhone Duo%s. %s" % (retry, MANUAL_HELP))
         system.run(["open", "-a", device_hub_app(system)])
         opened = True
         deadline = system.monotonic() + wait
@@ -668,7 +675,7 @@ def connect(system, sim, bring_forward=False, wait=10.0):
     if code == 5:
         raise PoseError(EXIT_DEVICE_HUB, "Device Hub has no window showing %s on this desktop" % sim["name"],
                         "Select the iPhone Duo in Device Hub and keep its window on the current desktop "
-                        "(not minimized, not behind Mission Control), or pass --bring-forward. " + MANUAL_HELP)
+                        "(not minimized, not behind Mission Control)%s. %s" % (retry, MANUAL_HELP))
     if code != 0 or not data.get("buttons"):
         seen = ", ".join(data.get("otherButtons") or []) or "none"
         raise PoseError(EXIT_DEVICE_HUB, "Device Hub's window shows no pose buttons",
@@ -967,7 +974,8 @@ def main(argv=None, system=None, out=None, err=None):
                 "or pass --force if you know they use another simulator.")
         lock = SimulatorLock(sim["udid"]).acquire(system)
         try:
-            hub = connect(system, sim, bring_forward=not args.no_bring_forward)
+            hub = connect(system, sim, bring_forward=not args.no_bring_forward,
+                          forward_hint=FORWARD_HINT_DEFAULT_ON)
             timing = Timing(fold_wait=args.wait, timeout=args.timeout)
             result = set_pose(system, sim, args.pose, hub, timing=timing, readout_id=args.readout_id)
         finally:

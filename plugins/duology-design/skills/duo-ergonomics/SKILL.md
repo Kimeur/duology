@@ -55,7 +55,7 @@ Apple's general iPhone guidance: controls in the middle or bottom of the display
 6. **Nothing interactive on the fold.** Apple found buttons hard to tap there. Sheets, alerts, menus and toolbar buttons move aside on their own; move your own controls with displacement ([talk 111466, 9:28](https://developer.apple.com/videos/play/tech-talks/111466/?time=568); `duo-patterns`). Scrolling content may cross the fold.
 7. **Tabletop: a layout of its own is optional; if you make one, controls go in the bottom half, with the same controls as every other pose** ([talk 111466, 4:36 to 5:03](https://developer.apple.com/videos/play/tech-talks/111466/?time=276)). If one doesn't fit the bottom half, put it in a menu; don't drop it. Use an overlay `ArrangementView`; see section 3.
 8. **Book: controls stay with their pane, toward the outer edge.** Apple keeps a pane's controls next to that pane, as Mail keeps list controls above the list ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls)).
-9. **Targets of at least 44 × 44 pt, with room around them** ([HIG, Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons#Best-practices), [HIG, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Mobility)). Give icon-only and plain buttons a 44 pt frame and `contentShape`: `.controlSize(.large)` grows only bordered styles (*measured*). On a phone that sits on a table, go bigger, such as 56 pt (*judgement*).
+9. **Targets of at least 44 × 44 pt, with room around them** ([HIG, Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons#Best-practices), [HIG, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Mobility)). Give icon-only and plain buttons a 44 pt frame and `contentShape` on the label (section 4); `.controlSize(.large)` grew bordered buttons but not default-style ones (*measured*, closed and open). On a phone that sits on a table, go bigger, such as 56 pt (*judgement*).
 10. **Small moves between poses.** Keep each control's position as similar as you can, so people don't relearn where things are ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls), [talk 111462, 5:41](https://developer.apple.com/videos/play/tech-talks/111462/?time=341)).
 
 ## 1. Let the system bar carry the actions
@@ -124,8 +124,8 @@ struct ThumbCorner<Control: View>: ViewModifier {
     func body(content: Content) -> some View {
         content.overlay(alignment: edge == .leading ? .bottomLeading : .bottomTrailing) {
             control()
-                .padding(.horizontal, 16)  // the margin next to a vertical bar is 0; keep clear of its items
-                .padding(.bottom, 16)
+                // Measured: the margin next to a vertical bar is 0 pt; 16 pt keeps clear of its items.
+                .padding([.horizontal, .bottom], 16)
         }
     }
 }
@@ -155,13 +155,12 @@ struct MapScreen: View {
             Color.teal.opacity(0.3)
                 .thumbCorner(hand) {
                     Button {} label: {
-                        // Frame, background and shape go on the label, so the whole circle takes taps.
                         Label("My Location", systemImage: "location.fill")
                             .labelStyle(.iconOnly)
                             .font(.title2)
                             .frame(width: 56, height: 56)
                             .background(.regularMaterial, in: .circle)
-                            .contentShape(.circle)
+                            .contentShape(.circle)  // on the label, so the whole circle takes taps
                     }
                 }
                 .toolbar {
@@ -180,7 +179,6 @@ struct MapScreen: View {
 
 - *Measured* closed: with `.automatic` the button sat bottom right, beside the bar's foot, in both directions; `.left` moved it bottom left. Open and flat, held wide, `toolbarVerticalEdge` read the same values, and section 3's controls, placed by the same edge logic, sat next to the bar in both directions. Folded is *unverified*. Frames: [references/measured.md](references/measured.md).
 - `.automatic` follows Apple's own `toolbarVerticalEdge` example, which aligns a floating palette with the bar's edge ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/toolbarverticaledge)). Where the system never places a vertical bar, the value is `nil` and the button goes trailing.
-- Why 16 pt: *measured*, the container margin next to the bar is 0 pt and the far side keeps 20 pt. Without padding the button touches the bar's items.
 - Tabletop and book need nothing extra: the button stays at the bottom and against a side edge, so it is near the person and off the fold (*judgement*).
 
 ## 3. Tabletop and book: controls go where the hands are
@@ -198,8 +196,7 @@ struct PlayerScreen: View {
         NavigationStack {
             ArrangementView {
                 PlayerControls()
-                    // Closed or flat, the primary fills the screen: bottom corner on the bar's side.
-                    // Partly folded, the same corner is the outer bottom of the controls' half.
+                    // Bottom corner on the bar's side: of the screen when flat, of the controls' half when folded.
                     .frame(maxWidth: .infinity, maxHeight: .infinity,
                            alignment: barEdge == .leading ? .bottomLeading : .bottomTrailing)
                     // Book: controls take the half with the bar (trailing unless right to left).
@@ -225,21 +222,19 @@ struct PlayerControls: View {
         .padding(16)  // the margin next to a vertical bar is 0
     }
 
-    /// An icon-only button is as small as its glyph; the label's frame sets the hit region.
     private func control(_ title: String, _ systemImage: String,
                          action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Label(title, systemImage: systemImage)
                 .labelStyle(.iconOnly)
                 .frame(minWidth: 56, minHeight: 56)  // over 44 pt: nobody holds a phone on a table
-                .contentShape(.rect)
+                .contentShape(.rect)  // the label's frame, not the glyph, sets the hit region
         }
     }
 }
 ```
 
-- *Measured*, open and flat, held wide: the primary filled the content area (867 × 635 pt) and the controls sat bottom right, next to the bar, x 655–847 pt, far from the fold at x 455–495. Right to left, they stayed bottom right with the bar. Each button measured 56 × 56 pt. Without `.frame`, `duo-patterns` measured a short primary at the top edge, out of thumb reach.
-- `.controlSize(.large)` is not a fix here. *Measured*: these icon-only buttons stayed 25–33 × 28–36 pt at `.large`, the same as at `.regular`.
+- *Measured* open and flat, held wide: the primary filled the content area (867 × 635 pt) and the buttons sat bottom right, next to the bar, at x 655–847 pt, far from the fold band at the centre. Right to left, they stayed bottom right with the bar. Each button was 56 × 56 pt. Without `.frame`, `duo-patterns` measured a short primary at the top edge, out of thumb reach. `.controlSize(.large)` is no substitute for the label's frame: icon-only buttons without it stayed 25–33 × 28–36 pt at `.large` (*measured*; [references/measured.md](references/measured.md#open-and-flat-held-wide)).
 - `overlayArrangementEdge(_:)` picks the side the primary takes when the arrangement goes side by side ([doc](https://developer.apple.com/documentation/swiftui/view/overlayarrangementedge(_:))). Pinning it to the bar's edge keeps controls on the bar's half. Left to right, that is the trailing half, the side `duo-postures` uses after Apple's alerts ([talk 111463, 4:09](https://developer.apple.com/videos/play/tech-talks/111463/?time=249)). Right to left, the bar's half is the physical right and trailing is the left. Both are *judgement*, and *unverified* folded: Device Hub's pose buttons were out of reach in our runs ([references/measured.md](references/measured.md#not-measured)).
 
 ## 4. Touch targets
@@ -253,8 +248,7 @@ struct TargetButton: View {
     let title: String
     let systemImage: String
     let action: () -> Void
-    // Grows with Dynamic Type, never below 44 pt.
-    @ScaledMetric(relativeTo: .body) private var side: CGFloat = 44
+    @ScaledMetric(relativeTo: .body) private var side: CGFloat = 44  // grows with Dynamic Type
 
     var body: some View {
         Button(action: action) {
@@ -267,16 +261,14 @@ struct TargetButton: View {
 }
 ```
 
-*Measured* layout heights on the closed simulator, default text size: a bordered prominent button is 34 pt tall at `.regular`, 50 pt at `.large` and 50 pt at `.extraLarge`. A plain text button is 21 pt tall; a plain icon-only button is 18 × 16 pt. Apple doesn't say whether system buttons take taps outside their frame, so size your own controls to 44 pt and use `.controlSize(.large)` where people tap without holding the phone.
+Put the frame and `contentShape` on the label, inside the Button. A frame or background added outside the Button grows what people see, not what takes taps (a click test in macOS SwiftUI showed this; iOS taps are *unverified*). `.controlSize(.large)` grows bordered buttons only: a bordered prominent button went from 34 to 50 pt tall, while default-style icon-only buttons kept their glyph size (*measured*, closed and open; [table](references/measured.md#control-sizes)). So on a phone that sits on a table, give icon-only and plain buttons a 56 pt frame on the label, and use `.controlSize(.large)` only on bordered buttons.
 
-- Keep targets inside the safe area (*measured* closed: a 34 pt bottom inset keeps them clear of the home indicator). Put more space between targets on a phone that sits on a table; a missed tap there costs more (*judgement*).
-- A debug check that logs targets under 44 pt or on the fold: [references/target-audit.md](references/target-audit.md).
+- Keep targets inside the safe area (*measured* closed: a 34 pt bottom inset keeps them clear of the home indicator). Put more space between targets on a phone that sits on a table; a missed tap there costs more (*judgement*). A debug check that logs targets under 44 pt or on the fold: [references/target-audit.md](references/target-audit.md).
 
 ## 5. Left-handed people and right-to-left languages
 
 - The vertical bar follows the hardware, not the reading direction. In right-to-left languages it keeps its physical edge, and content flows around it ([HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls), [talk 111462, 4:18](https://developer.apple.com/videos/play/tech-talks/111462/?time=258)).
-- *Measured* with right to left forced on the closed phone: the bar stayed on the right, `toolbarVerticalEdge` read `.leading`, the safe-area inset moved to the leading side (84 pt) and the container margins swapped. So `.trailing` does not mean "right". Read the edge; never assume it.
-- Apple's doc says the system picks the edge from the locale and the device ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/toolbarverticaledge)). The bar can also sit on the left: in Split View for the left app, and in some landscape layouts ([talk 111461, 7:12](https://developer.apple.com/videos/play/tech-talks/111461/?time=432)).
+- *Measured* with right to left forced, closed and open held wide: the bar stayed on the right, `toolbarVerticalEdge` read `.leading`, and the 84 pt safe-area inset moved to the leading side. So `.trailing` does not mean "right". Read the edge; never assume it. Apple's doc says the system picks it from the locale and the device ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/toolbarverticaledge)), and the bar can sit on the left: in Split View for the left app, and in some landscape layouts ([talk 111461, 7:12](https://developer.apple.com/videos/play/tech-talks/111461/?time=432)).
 - iOS has no handedness setting to read: the iOS 27.1 SwiftUI and UIKit interfaces have none, and Apple's iPhone Duo pages and talks say nothing about left-handed use. So leave system bars alone. Offer a hand preference for your own floating controls only, as in section 2 (*judgement*). On the open display, keep controls in the bottom band where either thumb can get to them.
 - Flip controls that show reading order (sliders, Back, Next). Keep controls that point at a real direction ([HIG, Right to left](https://developer.apple.com/design/human-interface-guidelines/right-to-left#Controls)).
 
@@ -295,14 +287,13 @@ Run the app on the iPhone Duo simulator. In Device Hub, try Closed, Open (held w
 
 ## Checklist
 
-- [ ] Actions live in system bars; Back or Close first, the prominent action second, frequent items ranked `.high`.
-- [ ] Actions people repeat sit in `.bottomBar`, ranked `.high` so they don't overflow first.
+- [ ] Actions live in system bars; Back or Close first, the prominent action second; actions people repeat sit in `.bottomBar`, ranked `.high` so they don't overflow first.
 - [ ] No code moves, mirrors or disables the vertical bar to suit one hand.
 - [ ] At most one floating control per screen, in a bottom corner, placed from `toolbarVerticalEdge` or `verticalBarEdge`, at least 16 pt from the bar. A hand preference moves only your own floating controls.
 - [ ] No frequent action at the top centre of the open display.
 - [ ] Nothing interactive on the fold when partly folded; scrolling content may cross it.
 - [ ] A tabletop layout, if you made one, puts controls in the bottom half and keeps every control from the other poses.
 - [ ] Book keeps each pane's controls with that pane, away from the fold.
-- [ ] Every target is at least 44 × 44 pt, with about 12 pt between bezeled targets.
+- [ ] Every target is at least 44 × 44 pt, with the frame and `contentShape` on the label, and about 12 pt between bezeled targets.
 - [ ] Right to left checked: the bar stays on the same hardware edge and floating controls follow it.
 - [ ] Checked in Device Hub: Closed, Open wide and tall, book, tabletop and Split View.

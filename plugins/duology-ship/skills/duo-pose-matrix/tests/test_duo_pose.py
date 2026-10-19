@@ -368,6 +368,16 @@ class CommandLineTests(unittest.TestCase):
         self.assertEqual(code, dp.EXIT_DEVICE_HUB)
         self.assertIn("no window", err)
         self.assertIn("by hand", err)
+        # set brings Device Hub forward by default, so the hint names the flag that turned it off.
+        self.assertIn("run it without --no-bring-forward", err)
+        self.assertNotIn("pass --bring-forward", err)
+
+    def test_status_hint_names_bring_forward(self):
+        # status changes nothing unless asked, so its hint names --bring-forward.
+        code, out, _ = run_main(["status"], fakes.FakeMac(window=False))
+        self.assertEqual(code, dp.EXIT_DEVICE_HUB)
+        self.assertIn("pass --bring-forward", out)
+        self.assertNotIn("--no-bring-forward", out)
 
     def test_no_pose_buttons_lists_what_it_sees(self):
         code, _, err = run_main(["list"], fakes.FakeMac(buttons=[]))

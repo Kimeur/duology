@@ -23,7 +23,7 @@ Labels: *measured* means we ran it in a probe app with UI tests on the shared iP
 5. Under Reduce Motion: no hinge effects, no moving or zooming resize animations. Fades only.
 6. Check every custom colour with Increase Contrast on, in light and dark. Never show state with colour alone.
 7. Give every main command a keyboard shortcut and a label. Every drag, swipe and hinge input needs a button or a named action.
-8. Use system controls. Give icon-only buttons a title (`Label`), because vertical bars hide it on screen and VoiceOver, Voice Control and the overflow menu still need it.
+8. Use system controls. Give icon-only buttons a title (`Label`), because vertical bars hide it on screen and VoiceOver, Voice Control and the overflow menu still need it. Give your own icon-only buttons a 44 pt frame inside the label.
 9. Put accessibility modifiers, `contentShape` and gestures before `.position`.
 10. Test closed, open and partly folded: Accessibility Inspector by hand, `performAccessibilityAudit` and a VoiceOver walk in UI tests.
 
@@ -35,8 +35,7 @@ VoiceOver reads top to bottom, then leading to trailing, the way people read the
 Inbox, Heading | Message, Heading | Left 1 | Right 1 | Left 2 | Right 2 | Left 3 | Right 3
 ```
 
-- Moving the right pane 20 pt lower did not help (*measured*).
-- `ArrangementView` with `.split` read row by row too, open (*measured*). Closed, it showed only the primary.
+- Moving the right pane 20 pt lower did not help. `ArrangementView` with `.split` read row by row too, open; closed, it showed only the primary (*measured*).
 - `NavigationSplitView` already reads the sidebar, then the detail (*measured* open). Leave it alone.
 
 Make each pane a container with `accessibilityElement(children: .contain)`. VoiceOver then visits all of one container's children before the next container ([doc](https://developer.apple.com/documentation/swiftui/accessibilitychildbehavior/contain)).
@@ -68,7 +67,7 @@ struct ArticleWithComments: View {
 }
 ```
 
-*Measured* with containers: `Inbox, Heading | Left 1 | Left 2 | Left 3 | Message pane, Message, Heading | Right 1 | ...`. VoiceOver says the pane's label as it enters it. With `accessibilitySortPriority(1)` on the right pane, VoiceOver read it first. Higher numbers go first; the default is 0 ([doc](https://developer.apple.com/documentation/swiftui/view/accessibilitysortpriority(_:))).
+*Measured* with containers labelled "Inbox pane" and "Message pane": `Inbox, Heading | Left 1 | Left 2 | Left 3 | Message pane, Message, Heading | Right 1 | ...`. VoiceOver spoke the second pane's label (the probe's own text; VoiceOver adds no "pane") as it entered it, but not the first pane's label at the start. With `accessibilitySortPriority(1)` on the right pane, VoiceOver read it first. Higher numbers go first; the default is 0 ([doc](https://developer.apple.com/documentation/swiftui/view/accessibilitysortpriority(_:))).
 
 - Add a heading trait (`.accessibilityAddTraits(.isHeader)`) to each pane's title so the rotor can jump between panes.
 - The fold is not an element. Content that crosses it needs nothing. In a two-page layout, make each page a container ("Page 12").
@@ -141,13 +140,12 @@ struct MessageScreen: View {
 
 - The task runs on first appear too. With nothing focused yet, `lastSpot` is nil and it does nothing.
 - Move focus only to keep the person's place. Apple allows a move to a nearby item when the focused one disappears ([HIG, Focus](https://developer.apple.com/design/human-interface-guidelines/focus-and-selection#Best-practices)). Don't announce it.
-- Our run used `onChange` and a 0.3 s sleep. This modifier does the same with `.task(id:)` and 0.5 s; not run on a real fold or on hardware (*unverified*).
-- Unfold (closed to open) was not measured: Device Hub had no window during our second run (*unverified*). Test it the same way.
+- Our run used `onChange` and a 0.3 s sleep. This modifier does the same with `.task(id:)` and 0.5 s; it was not run on a real fold or on hardware, and unfold (closed to open) was not measured (*unverified*). Test both the same way.
 - UIKit (`UIAccessibility.post(notification: .layoutChanged, argument:)`), `@FocusState` for text fields, and the full measurements: [references/focus-after-fold.md](references/focus-after-fold.md).
 
 ## 3. Dynamic Type at both display sizes
 
-One text size meets two very different widths. The closed outer display is the hard case: 382 pt of safe-area width (*measured* by `duo-design-system`). Apple asks you to show as much text at the largest accessibility size as at the largest standard size, and to stack items when they crowd ([HIG, Typography](https://developer.apple.com/design/human-interface-guidelines/typography#Supporting-Dynamic-Type)).
+One text size meets two very different widths. The narrow cases: the closed outer display, 382 pt of safe-area width (*measured* by `duo-design-system`), and, open, the pane beside the vertical bar, about 371 pt (*derived*, [references/dynamic-type.md](references/dynamic-type.md#two-panes-at-large-sizes)). Apple asks you to show as much text at the largest accessibility size as at the largest standard size, and to stack items when they crowd ([HIG, Typography](https://developer.apple.com/design/human-interface-guidelines/typography#Supporting-Dynamic-Type)).
 
 ```swift
 import SwiftUI
@@ -194,7 +192,6 @@ import SwiftUI
 @available(iOS 27.1, *)
 struct HingeParallax: ViewModifier {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.horizontalSizeClass) private var widthClass
     @State private var lift = 0.0
 
     func body(content: Content) -> some View {
@@ -204,12 +201,11 @@ struct HingeParallax: ViewModifier {
                 guard let hinge = new.hinge, hinge.status == .partiallyOpen else { lift = 0; return }
                 lift = (180 - hinge.angle.degrees) / 10  // decoration only, never layout
             }
-            .animation(reduceMotion ? nil : .smooth, value: widthClass)
     }
 }
 ```
 
-- Panes that appear on unfold: `.transition(reduceMotion ? .opacity : .move(edge: .trailing))`. iOS 26.4 adds `accessibilityPrefersCrossFadeTransitions` for apps that want the finer setting ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/accessibilityprefersCrossFadeTransitions)).
+- Resize, as in `duo-transitions`: `.animation(reduceMotion ? nil : .smooth(duration: 0.3), value: widthClass)` on the stack, so nothing moves or resizes under Reduce Motion. A pane that appears gets `.transition(reduceMotion ? .opacity.animation(.easeInOut(duration: 0.2)) : .opacity.combined(with: .move(edge: .trailing)))`: the fade carries its own animation, so it still fades (*measured* by `duo-transitions`). iOS 26.4 adds `accessibilityPrefersCrossFadeTransitions` for the finer setting ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/accessibilityprefersCrossFadeTransitions)).
 - No VoiceOver announcement and no haptic per hinge angle. Hinge input needs an on-screen control that does the same job (`duo-postures`).
 - Increase Contrast: read `colorSchemeContrast == .increased` and give custom colours high-contrast variants. Text needs 4.5:1, or 3:1 at 18 pt or bold ([HIG](https://developer.apple.com/design/human-interface-guidelines/accessibility#Vision)). *Measured:* the audit failed `Color(white: 0.85)` text on white and said "nearly passed" for `.secondary` text.
 - Reduce Transparency gives the vertical bar a background. Custom bar content must read on both ([talk 111462](https://developer.apple.com/videos/play/tech-talks/111462/?time=652)).
@@ -229,27 +225,33 @@ struct ReplyControls: View {
 
     var body: some View {
         HStack {
-            Button("Reply", systemImage: "arrowshape.turn.up.left", action: reply)
+            iconButton("Reply", "arrowshape.turn.up.left", reply)
                 .keyboardShortcut("r", modifiers: .command)
                 .accessibilityInputLabels(["Reply", "Answer"])
-            Button("Archive", systemImage: "archivebox", action: archive)
+            iconButton("Archive", "archivebox", archive)
                 .keyboardShortcut("e", modifiers: .command)
         }
-        .labelStyle(.iconOnly)       // the title stays for VoiceOver and Voice Control
+    }
+
+    /// Icon only; the title stays for VoiceOver and Voice Control. 44 pt hit area, as in duo-ergonomics.
+    private func iconButton(_ title: LocalizedStringKey, _ symbol: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: symbol).labelStyle(.iconOnly)
+                .frame(minWidth: 44, minHeight: 44).contentShape(.rect)  // inside the label, or taps miss
+        }
     }
 }
 ```
 
 - Use Command shortcuts and don't take over standard ones ([HIG, Keyboards](https://developer.apple.com/design/human-interface-guidelines/keyboards#Best-practices)).
-- *Measured* closed, in UI tests: `UIFocusSystem.focusSystem(for:)` was nil in every run and Tab never reached `focusable()` views. Tab moved between two text fields in one run, not in another. Command shortcuts worked. Inner display: *unverified*.
-- `focusSection()` is unavailable on iOS (iOS 27.1 SDK). Use `@FocusState`, `focused(_:equals:)` and `defaultFocus(_:_:priority:)`.
+- *Measured* closed, in UI tests: `UIFocusSystem.focusSystem(for:)` was nil in every run and Tab never reached `focusable()` views. Tab moved between two text fields in one run, not in another. Command shortcuts worked. Inner display: *unverified*. `focusSection()` is unavailable on iOS (iOS 27.1 SDK): use `@FocusState`, `focused(_:equals:)` and `defaultFocus(_:_:priority:)`.
 - `accessibilityInputLabels` gives Voice Control and Full Keyboard Access other names, most important first ([doc](https://developer.apple.com/documentation/swiftui/view/accessibilityinputlabels(_:))).
 - Switch Control and Voice Control need a tap path for every drag: a button or `accessibilityAction(named:_:)`.
 - Details, UIKit `UIKeyCommand`, and Full Keyboard Access checks: [references/keyboard-and-switch.md](references/keyboard-and-switch.md).
 
 ## 6. Accessibility modifiers before .position
 
-`.position` returns a view as large as its parent. A `contentShape` or gesture after it covers that whole area, and the accessibility element grows with it. *Measured*: a 60 pt circle with `contentShape(Rectangle())`, a tap gesture and its accessibility element after `.position` got a 382 × 103 pt element, and a tap at the far left of the area counted. With those modifiers before `.position`: 60 × 60 pt. An accessibility element alone after `.position` stayed 60 × 60 pt; keep the order anyway. A `contentShape` and tap on a container also stretched its child's element to the container (*measured*, as in `recipe-two-player-game`).
+`.position` returns a view as large as its parent. A `contentShape` or gesture after it covers that whole area, and the accessibility element grows with it. *Measured*: a 60 pt circle with `contentShape(Rectangle())`, a tap gesture and its accessibility element after `.position` got a 382 × 103 pt element, and a tap at the far left of the area counted. With those modifiers before `.position`: 60 × 60 pt. An accessibility element alone after `.position` stayed 60 × 60 pt; keep the order anyway. A `contentShape` and tap on a container also stretched its child's element to the container (*measured*, as in `recipe-two-player-game`). Prefer a `Button` when you can: placed with `.position`, it kept its own 51 × 20 pt frame (*measured*); give it a 44 pt label frame as in section 5.
 
 ```swift
 import SwiftUI
@@ -273,14 +275,12 @@ struct Target: View {
 }
 ```
 
-Prefer a `Button` when you can. *Measured:* a `Button` placed with `.position` kept its own 51 × 20 pt frame.
-
 ## 7. Test on the iPhone Duo simulator
 
 1. **Settings.** `xcrun simctl ui <UDID> content_size accessibility-extra-extra-extra-large` and `increase_contrast enabled`. Reduce Motion, Reduce Transparency, Bold Text and Full Keyboard Access: Accessibility Inspector's Settings pane or the Settings app. Put every setting back on a shared simulator.
 2. **Accessibility Inspector** (Xcode > Open Developer Tool). Pick the simulator and your app. Use the navigation play button to hear the reading order, then run an audit. Repeat closed, open and partly folded ([Inspecting screens](https://developer.apple.com/documentation/accessibility/inspecting-the-accessibility-of-screens)).
-3. **UI tests.** `performAccessibilityAudit(for:_:)` in each pose and text size, and a VoiceOver walk with `XCUIDevice.shared.voiceOverService` (iOS 27). The query order of XCUI elements is not VoiceOver's order (*measured* on a split view), so test order with the VoiceOver service.
-4. **Poses.** No test API changes the pose. Ask the person to press it in Device Hub, or see `duo-setup` for scripting Device Hub's buttons.
+3. **UI tests.** [`performAccessibilityAudit(for:_:)`](https://developer.apple.com/documentation/xcuiautomation/xcuiapplication/performaccessibilityaudit(for:_:)) in each pose and text size, and a VoiceOver walk with [`XCUIDevice.shared.voiceOverService`](https://developer.apple.com/documentation/xcuiautomation/xcuidevice/voiceoverservice) (iOS 27). The query order of XCUI elements is not VoiceOver's order (*measured* on a split view), so test order with the VoiceOver service.
+4. **Poses.** No test API changes the pose. Use `duo-pose set closed` from `duo-pose-matrix`, or ask the person to press the pose in Device Hub. `duo-pose` refuses while any UI test runs, your own fold-focus test included: check that the only test processes are yours (`pgrep -fl "xctrunner|xcodebuild.*test"`), then pass `--force` with the user's OK. Otherwise ask the person to press Closed.
 
 Test file, launch arguments, cleanup if VoiceOver stays on, and the audit results we got: [references/testing.md](references/testing.md).
 
@@ -293,7 +293,7 @@ Test file, launch arguments, cleanup if VoiceOver stays on, and the audit result
 - [ ] Icons and spacing use `@ScaledMetric`; custom bar items have a large content view.
 - [ ] Reduce Motion turns off hinge effects and moving resize animations; fades remain.
 - [ ] Custom colours pass 4.5:1 (3:1 at 18 pt or bold) in light, dark and Increase Contrast; state never relies on colour alone.
-- [ ] Main commands have Command shortcuts; icon-only buttons have titles; drags and hinge input have a button or named action.
+- [ ] Main commands have Command shortcuts; icon-only buttons have titles and a 44 pt hit area; drags and hinge input have a button or named action.
 - [ ] Accessibility modifiers, `contentShape` and gestures come before `.position`.
 - [ ] Accessibility Inspector order and audit checked closed, open and partly folded; UI tests run the audit and a VoiceOver walk.
 - [ ] VoiceOver, text size and contrast are back to their defaults on the shared simulator.

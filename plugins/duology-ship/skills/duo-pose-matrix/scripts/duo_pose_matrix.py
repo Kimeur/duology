@@ -11,7 +11,9 @@ summary.md to the output folder.
 
 It uses an existing iPhone Duo simulator and never creates one. The pose is
 shared by everything on that simulator, so it refuses to start while UI tests
-(xctrunner, xcodebuild test) run, unless you pass --force.
+(xctrunner, xcodebuild test) run, unless you pass --force. Before each later
+pose change and before putting the pose back, it checks again and waits up to
+--busy-wait seconds; if the tests still run, it stops and leaves the pose alone.
 
 When it can't press the buttons (no Accessibility permission, Device Hub not
 showing the phone), run it once per pose with --manual <pose> after someone
@@ -129,6 +131,10 @@ def build_parser():
                    help="one screen to capture, with its own launch arguments; repeat for more")
     p.add_argument("--wait", type=float, default=4.0, metavar="SECONDS",
                    help="seconds between launching the app and the screenshot (default 4)")
+    p.add_argument("--pose-wait", type=float, default=5.0, metavar="SECONDS",
+                   help="seconds to wait after pressing a fold button, as duo-pose set --wait (default 5)")
+    p.add_argument("--timeout", type=float, default=20.0, metavar="SECONDS",
+                   help="how long to wait for the displays to switch after a fold button (default 20)")
     p.add_argument("--no-relaunch", action="store_true",
                    help="launch each case once and keep it running while the poses change, "
                         "so the screenshots show what survives a fold")
@@ -138,7 +144,8 @@ def build_parser():
                    help="accessibility identifier of the app's pose readout, to tell open from book")
     p.add_argument("--force", action="store_true", help="go on even while UI tests run on this Mac")
     p.add_argument("--busy-wait", type=float, default=120.0, metavar="SECONDS",
-                   help="how long to wait between poses when UI tests start mid-run (default 120)")
+                   help="how long to wait between poses, and before putting the pose back, when UI tests "
+                        "start mid-run (default 120)")
     p.add_argument("--no-restore", action="store_true", help="leave the simulator in the last pose")
     p.add_argument("--no-bring-forward", action="store_true",
                    help="fail instead of bringing Device Hub's window to the front")
@@ -153,8 +160,10 @@ def parse_args(argv):
     args = parser.parse_args(own)
     if args.manual and args.poses and args.poses != [args.manual]:
         parser.error("--manual captures one pose; leave out --poses")
-    if args.wait < 0 or args.busy_wait < 0:
-        parser.error("--wait and --busy-wait must be 0 or more")
+    if args.wait < 0 or args.busy_wait < 0 or args.pose_wait < 0:
+        parser.error("--wait, --pose-wait and --busy-wait must be 0 or more")
+    if args.timeout <= 0:
+        parser.error("--timeout must be more than 0")
     args.poses = [args.manual] if args.manual else (args.poses or list(dp.POSES))
     args.launch_args = launch
     if args.cases:
@@ -429,6 +438,8 @@ def manual_command(args, pose):
         parts += ["--udid", args.udid]
     if args.readout_id:
         parts += ["--readout-id", args.readout_id]
+    if args.wait != 4.0:
+        parts += ["--wait", "%g" % args.wait]
     launch_only = args.launch_args
     for c in args.cases:
         own = c["args"][:len(c["args"]) - len(launch_only)] if launch_only else c["args"]
@@ -486,8 +497,10 @@ def _run_matrix(system, args, log, sim):
         summary["startPose"] = start.pose_guess()
 
     hub = None
+    timing = dp.Timing(fold_wait=args.pose_wait, timeout=args.timeout)
     if not args.manual:
-        hub = dp.connect(system, sim, bring_forward=not args.no_bring_forward)
+        hub = dp.connect(system, sim, bring_forward=not args.no_bring_forward,
+                         forward_hint=dp.FORWARD_HINT_DEFAULT_ON)
         reachable = hub.reachable()
     else:
         reachable = [args.manual]
@@ -509,7 +522,7 @@ def _run_matrix(system, args, log, sim):
             raise StopRun("UI tests started on this Mac (%s); stopped before changing the pose again"
                           % ", ".join("pid %d" % b["pid"] for b in busy_now))
         log("%s: pressing Device Hub's buttons" % pose)
-        dp.set_pose(system, sim, pose, hub, readout_id=None, check_screenshot=False)
+        dp.set_pose(system, sim, pose, hub, timing=timing, readout_id=None, check_screenshot=False)
         state = dp.read_state(system, sim)
         log("%s: %s" % (pose, state.describe()))
         return state
@@ -544,10 +557,24 @@ def _run_matrix(system, args, log, sim):
         restore = True
 
     if restore and not args.manual and not args.no_restore:
+        # UI tests may have started during the last captures: check again before moving the pose.
+        busy_now = wait_until_free(system, sim, args)
+        if busy_now:
+            try:
+                left = dp.read_state(system, sim).pose_guess()
+            except dp.PoseError:
+                left = "the last pose"
+            stop = ("UI tests started on this Mac (%s); stopped before putting the pose back"
+                    % ", ".join("pid %d" % b["pid"] for b in busy_now))
+            summary["stopped"] = "%s. %s" % (summary["stopped"], stop) if summary.get("stopped") else stop
+            summary["restoreNote"] = ("Not put back: UI tests were running, so the simulator was left in %s. "
+                                      "Put it back in Device Hub when they finish." % left)
+            restore = False
+    if restore and not args.manual and not args.no_restore:
         fold_label, want_active, orientation_ok, note = dp.restore_plan(start)
         try:
             log("restoring: pressing %s" % fold_label)
-            dp.drive(system, sim, hub, fold_label, want_active, orientation_ok, dp.Timing())
+            dp.drive(system, sim, hub, fold_label, want_active, orientation_ok, timing)
             summary["restoreNote"] = note
         except dp.PoseError as exc:
             summary["restoreNote"] = "Could not put it back: %s." % exc.message

@@ -78,7 +78,7 @@ class FakeMac:
     def __init__(self, fold="Closed", turns=0, trusted=True, window=True, buttons=None, busy="",
                  installed=True, switch_delay=2.0, broken_button=None, readout=None, crash_in=None,
                  foreign_in=None, busy_after=0, runner=False, blank_in=None, steal_in=None, move_in=None,
-                 portrait_front=False):
+                 portrait_front=False, busy_until=None):
         self.fold = fold                  # "Closed", "Open" or "Partially Open"
         self.turns = turns
         self.shown_fold = fold            # what the displays show (lags after a press)
@@ -88,6 +88,7 @@ class FakeMac:
         self.buttons = list(buttons) if buttons is not None else ["Rotate Right", "Closed", "Partially Open", "Open"]
         self.busy = busy                     # extra `ps -axo pid=,args=` lines
         self.busy_after = busy_after         # the busy lines appear after this many presses
+        self.busy_until = busy_until         # ...and go away at this fake time (None: they stay)
         self.runner = runner                 # a UI test runner app is running in the simulator
         self.blank_in = blank_in             # fold in which screenshots come out blank
         self.steal_in = steal_in             # fold in which someone else relaunches the app mid-capture
@@ -129,6 +130,8 @@ class FakeMac:
             return 0, fixture("simctl-devices.json"), ""
         if argv[:2] == ["ps", "-axo"]:
             busy = self.busy if len(self.pressed) >= self.busy_after else ""
+            if self.busy_until is not None and self.time >= self.busy_until:
+                busy = ""
             return 0, "    1 /sbin/launchd\n   57 /usr/libexec/logd\n" + busy, ""
         if argv[:2] == ["pgrep", "-x"]:
             return 0, "88720\n", ""

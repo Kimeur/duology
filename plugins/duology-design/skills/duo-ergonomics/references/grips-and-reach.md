@@ -56,6 +56,8 @@ The vertical bar holds, from top to bottom: the Dynamic Island, the status bar, 
 
 **Measured by Duology** (see `duo-layout` and `duo-patterns`): the fold is a 40 pt band, x 455–495, top to bottom. The status bar corner is an occlusion at x 867–951, y 0–124. An inactive occlusion at x 677–735, y 21–58 is likely the inner camera (our reading).
 
+**Measured by this skill** (flat, [measured.md](measured.md#open-and-flat-held-wide)): `toolbarVerticalEdge` read `.trailing`, or `.leading` with right to left forced, and the bar strip stayed on the right both times. The player controls from `SKILL.md` section 3 sat at x 655–847, y 559–615, next to the bar strip.
+
 **Judgement:**
 
 - Easy: the lower two thirds of the left and right bands, and the bar.
@@ -85,7 +87,7 @@ Apple's Podcasts example: with the transcript hidden, the Now Playing view stays
 
 **Judgement:**
 
-- People sit back from a phone on a table. Use larger type for content in the top half and `.controlSize(.large)` for controls in the bottom half.
+- People sit back from a phone on a table. Use larger type for content in the top half. Make controls in the bottom half bigger: give icon-only and plain buttons a 56 pt frame and `contentShape` on the label, as `PlayerControls` in `SKILL.md` does. `.controlSize(.large)` grows bordered buttons only (*measured*, [measured.md](measured.md#control-sizes)).
 - Avoid controls in the top half: a tap there pushes against the raised half. How firm the hinge feels is *unverified*; it needs a real device.
 - An overlay `ArrangementView` puts its primary view in the bottom part when the fold runs side to side ([Hub](https://developer.apple.com/documentation/technologyoverviews/preparing-your-app-for-iphone-duo#Arrange-views-in-different-poses)). Make the controls the primary.
 

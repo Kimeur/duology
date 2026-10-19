@@ -42,7 +42,7 @@ Details, container rules and probe results: [references/bar-rules.md](references
 - SwiftUI: attach `.toolbar` to content inside `NavigationStack`, `NavigationSplitView` or a `TabView` tab.
 - UIKit: set `navigationItem` and `toolbarItems` on a view controller inside `UINavigationController` or `UITabBarController`.
 - A hand-built bar never joins the vertical bar. In UIKit that is a `UIToolbar`, `UINavigationBar` or `UITabBar` you create yourself. In SwiftUI it is a row of buttons in `safeAreaInset(edge: .bottom)` (or `.top`) or in `.overlay(alignment: .bottom)`. That row is your own content, so the system never moves it.
-- Move each action of a SwiftUI row into `.toolbar`: a bottom row into `ToolbarItemGroup(placement: .bottomBar)`, a top row into `.primaryAction` items. Drop the `Spacer()`s. A lone floating button may stay; keep it away from the bar (see "Adapt custom views to the bar"). Recipe: [references/swiftui.md](references/swiftui.md#replace-a-hand-drawn-bar).
+- Move each action of a SwiftUI row into `.toolbar`: a bottom row into `ToolbarItemGroup(placement: .bottomBar)`, a top row into `.primaryAction` items. Drop the `Spacer()`s. A lone floating button may stay; put it on the bar's side, near the thumb and clear of the bar's items (see "Adapt custom views to the bar" and `duo-ergonomics`). Recipe: [references/swiftui.md](references/swiftui.md#replace-a-hand-drawn-bar).
 - Give icon-only labels a title, `Menu` labels included. Replace `label: { Image(systemName: "…") }` with `Button("Sort", systemImage: "…")`, `Menu("Sort", systemImage: "…") { … }` or a `Label("Sort", systemImage: "…")` label.
 
 Run both searches from the project root and review every hit. Keep the `--include` pattern quoted: unquoted, zsh stops with "no matches found" and exits 1, the same code grep gives for "no hits". No output and no error means no hits.
@@ -196,12 +196,14 @@ struct CanvasScreen: View {
     var body: some View {
         ZStack {
             Color.clear
-            // Keep a floating palette on the side away from the vertical bar.
+            // Keep a floating palette on the bar's side, near the thumb, as Apple's
+            // toolbarVerticalEdge example does. No vertical bar: trailing.
             Text("Palette")
                 .padding()
                 .background(.thinMaterial, in: .capsule)
+                .padding([.horizontal, .bottom], 16)  // the margin next to the bar is 0 pt
                 .frame(maxWidth: .infinity, maxHeight: .infinity,
-                       alignment: barEdge == .leading ? .bottomTrailing : .bottomLeading)
+                       alignment: barEdge == .leading ? .bottomLeading : .bottomTrailing)
                 .contentMargins(for: .container)
         }
     }

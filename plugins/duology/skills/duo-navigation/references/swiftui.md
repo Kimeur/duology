@@ -65,7 +65,7 @@ struct RecipeScreen: View {
 
 - `ShareLink` already carries a symbol and a title.
 - A text-only button such as "Start Timer" stays horizontal. Give it a symbol so it can move.
-- A lone floating button, such as an Add button, may stay in an overlay. Read `toolbarVerticalEdge` and keep it on the side away from the bar.
+- A lone floating button, such as an Add button, may stay in an overlay. Read `toolbarVerticalEdge` and put it on the bar's side, about 16 pt clear of the bar's items, as Apple's [toolbarVerticalEdge example](https://developer.apple.com/documentation/swiftui/environmentvalues/toolbarverticaledge) aligns its palette. `duo-ergonomics` has a `ThumbCorner` modifier for it.
 
 ## Split view: list actions on the list, item actions on the detail
 

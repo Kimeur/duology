@@ -1,7 +1,7 @@
 {
   "name": "duology",
   "version": "0.1.0",
-  "description": "Foundation for iPhone Duo apps: Xcode 27.1 and simulator setup, layout across the fold, vertical bars, and state that survives fold and unfold. Adds /duo-doctor.",
+  "description": "Foundation for iPhone Duo apps: Xcode 27.1 and simulator setup, layout across the fold, vertical bars, state that survives fold and unfold, and scenes and windows. Adds /duo-doctor.",
   "author": {
     "name": "Kimeur",
     "url": "https://github.com/Kimeur"
@@ -9,5 +9,5 @@
   "homepage": "https://github.com/Kimeur/duology",
   "repository": "https://github.com/Kimeur/duology",
   "license": "MIT",
-  "keywords": ["iphone-duo", "foldable", "ios", "ios-27", "swiftui", "uikit", "xcode", "layout"]
+  "keywords": ["iphone-duo", "foldable", "ios", "ios-27", "swiftui", "uikit", "xcode", "layout", "scenes", "multiple-windows"]
 }

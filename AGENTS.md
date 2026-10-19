@@ -28,28 +28,37 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 | `duo-layout` | [`plugins/duology/skills/duo-layout/`](plugins/duology/skills/duo-layout/) | Content lands in the fold, or a screen breaks on one display. |
 | `duo-navigation` | [`plugins/duology/skills/duo-navigation/`](plugins/duology/skills/duo-navigation/) | Toolbars, tab bars, split views or sheets look wrong. |
 | `duo-continuity` | [`plugins/duology/skills/duo-continuity/`](plugins/duology/skills/duo-continuity/) | Something resets when the phone folds, unfolds or rotates. |
+| `duo-scenes` | [`plugins/duology/skills/duo-scenes/`](plugins/duology/skills/duo-scenes/) | The app opens a second window, runs in Split View, or shows content on the outer display while the camera runs. |
 | `duo-patterns` | [`plugins/duology-design/skills/duo-patterns/`](plugins/duology-design/skills/duo-patterns/) | Choosing a layout for the outer and inner display. |
+| `duo-design-system` | [`plugins/duology-design/skills/duo-design-system/`](plugins/duology-design/skills/duo-design-system/) | Spacing, grids, type, Liquid Glass, corners, colours and touch targets for both displays. |
+| `duo-postures` | [`plugins/duology-design/skills/duo-postures/`](plugins/duology-design/skills/duo-postures/) | A screen must work half folded (book, tabletop), or you add a hinge effect. |
+| `duo-transitions` | [`plugins/duology-design/skills/duo-transitions/`](plugins/duology-design/skills/duo-transitions/) | Opening or closing the phone flashes, reloads or moves controls. |
+| `duo-ergonomics` | [`plugins/duology-design/skills/duo-ergonomics/`](plugins/duology-design/skills/duo-ergonomics/) | Placing primary actions and floating controls within reach. |
+| `duo-accessibility` | [`plugins/duology-design/skills/duo-accessibility/`](plugins/duology-design/skills/duo-accessibility/) | VoiceOver, Dynamic Type, Reduce Motion, keyboard and contrast on both displays. |
 | `duo-shared-screen` | [`plugins/duology-design/skills/duo-shared-screen/`](plugins/duology-design/skills/duo-shared-screen/) | Two people use the phone at the same time. |
 | `duo-design-review` | [`plugins/duology-design/skills/duo-design-review/`](plugins/duology-design/skills/duo-design-review/) | Reviewing screenshots or Figma frames. |
 | `duo-testing` | [`plugins/duology-ship/skills/duo-testing/`](plugins/duology-ship/skills/duo-testing/) | Writing logic tests or UI tests for the Duo simulator. |
+| `duo-pose-matrix` | [`plugins/duology-ship/skills/duo-pose-matrix/`](plugins/duology-ship/skills/duo-pose-matrix/) | Screenshots of the app closed, open, in book pose and in tabletop. |
 | `duo-lint` | [`plugins/duology-ship/skills/duo-lint/`](plugins/duology-ship/skills/duo-lint/) | Checking code before review, release or CI. |
 | `recipe-two-player-game` | [`plugins/duology-recipes/skills/recipe-two-player-game/`](plugins/duology-recipes/skills/recipe-two-player-game/) | Starting a new two-player game. |
 
 ### Commands, without Claude Code
 
-`/duo-doctor`, `/duo-audit` and `/duo-new` are Claude Code commands. Any agent can do the same work with the scripts they call. Paths are relative to this repo.
+`/duo-doctor`, `/duo-audit`, `/duo-new`, `/duo-poses` and `/duo-review` are Claude Code commands. Any agent can do the same work with the scripts or skills they use. Paths are relative to this repo.
 
 | Claude Code | Any agent |
 |---|---|
 | `/duo-doctor` | Run `plugins/duology/bin/duo-doctor --skip-claude`. It only reads, and it explains each failure. |
 | `/duo-audit` | Run `python3 plugins/duology-ship/skills/duo-lint/scripts/duo-lint.py <app-folder>`, then follow the checklist in `duo-design-review`. |
 | `/duo-new` | Follow `recipe-two-player-game/SKILL.md`. It runs `scripts/new-project.sh <AppName> <bundle-id> <folder>` from that skill. |
+| `/duo-poses` | Run `plugins/duology-ship/skills/duo-pose-matrix/scripts/duo-pose status`, then `duo-pose-matrix <bundle-id>` from the same folder. Read `duo-pose-matrix/SKILL.md` first: it changes the pose of the whole simulator and needs the user's Accessibility permission. |
+| `/duo-review` | Read the frames yourself and follow `duo-design-review/SKILL.md`, with the `duo-postures`, `duo-patterns`, `duo-ergonomics` and `duo-accessibility` rules. The `duo-design-reviewer` agent in `plugins/duology-design/agents/` describes the output. Don't edit files. |
 
 ### Rules that apply everywhere
 
 - Build with Xcode 27.1 through `DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer`. Never run `sudo` or `xcode-select`.
 - Run the app on the "iPhone Duo" simulator.
-- Poses change only in Device Hub. `simctl` and `devicectl` have no pose command. A small Mac program can press Device Hub's buttons through the macOS Accessibility API: find the `AXButton` whose description is `Closed`, `Partially Open`, `Open` or `Rotate Right`, then call `AXUIElementPerformAction` with `kAXPressAction`. It works only after the user gives Accessibility permission to the app that runs you, and only the user can give it; never change that setting. It drives Device Hub's window, so Device Hub must be open on the iPhone Duo, and an Xcode update can break it. The pose applies to everything running on that simulator. Duology ships no tool for this yet; `duo-pose-matrix` (v0.2) will build on it. Until then, ask the user to press the pose in Device Hub, unless they ask you to script it. Details: `duo-setup`'s [`references/simulator-and-device-hub.md`](plugins/duology/skills/duo-setup/references/simulator-and-device-hub.md#script-the-pose-buttons).
+- Poses change only in Device Hub. `simctl` and `devicectl` have no pose command. A small Mac program can press Device Hub's buttons through the macOS Accessibility API: find the `AXButton` whose description is `Closed`, `Partially Open`, `Open` or `Rotate Right`, then call `AXUIElementPerformAction` with `kAXPressAction`. It works only after the user gives Accessibility permission to the app that runs you, and only the user can give it; never change that setting. It drives Device Hub's window, so Device Hub must be open on the iPhone Duo, and an Xcode update can break it. The pose applies to everything running on that simulator. `duo-pose-matrix` ships `duo-pose` and `duo-pose-matrix`, which do this and refuse while UI tests share the simulator. Ask the user to press the pose in Device Hub unless they ask you to script it. Details: `duo-setup`'s [`references/simulator-and-device-hub.md`](plugins/duology/skills/duo-setup/references/simulator-and-device-hub.md#script-the-pose-buttons).
 - Pick layouts by size class and the space the view has. Never by `UIScreen.main`, device model, `userInterfaceIdiom` or orientation.
 - Keep buttons and text out of the fold. Scrolling content may cross it.
 - Before you use an iPhone Duo API, find it in [`reference/api-index.md`](reference/api-index.md). Its [Not in the SDK](reference/api-index.md#not-in-the-sdk) section lists names that sound right but don't exist in the SDK.
@@ -62,6 +71,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 |---|---|
 | `plugins/<plugin>/skills/<skill>/` | One skill: `SKILL.md`, `references/`, sometimes `scripts/` and `template/` |
 | `plugins/<plugin>/commands/` | Claude Code commands |
+| `plugins/<plugin>/agents/` | Claude Code agents (`duo-design-reviewer`) |
 | `plugins/<plugin>/.claude-plugin/plugin.json` | Plugin manifest |
 | `.claude-plugin/marketplace.json` | The marketplace that lists the plugins |
 | `reference/` | API index, device facts and sources, shared by every skill |
@@ -92,6 +102,7 @@ Run these. All but the last need only Python 3; the last one needs network.
 python3 scripts/validate-skills.py --portable --strict
 python3 scripts/check-manifests.py
 python3 -m unittest discover plugins/duology-ship/skills/duo-lint/tests
+python3 -m unittest discover plugins/duology-ship/skills/duo-pose-matrix/tests
 python3 -m unittest discover -s scripts/tests
 python3 scripts/check-sources.py
 ```

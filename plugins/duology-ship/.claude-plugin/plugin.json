@@ -1,7 +1,7 @@
 {
   "name": "duology-ship",
   "version": "0.1.0",
-  "description": "Test and ship for iPhone Duo: duo-lint (the fold linter), an opt-in lint hook, tests on the Duo simulator, and /duo-audit.",
+  "description": "Test and ship for iPhone Duo: duo-lint (the fold linter), an opt-in lint hook, tests on the Duo simulator, screenshots closed, open, in book pose and in tabletop (duo-pose-matrix), /duo-audit and /duo-poses.",
   "author": {
     "name": "Kimeur",
     "url": "https://github.com/Kimeur"
@@ -9,6 +9,6 @@
   "homepage": "https://github.com/Kimeur/duology",
   "repository": "https://github.com/Kimeur/duology",
   "license": "MIT",
-  "keywords": ["iphone-duo", "foldable", "ios", "lint", "testing", "audit", "xcode", "app-store"],
+  "keywords": ["iphone-duo", "foldable", "ios", "lint", "testing", "audit", "xcode", "app-store", "screenshots", "simulator"],
   "dependencies": ["duology"]
 }

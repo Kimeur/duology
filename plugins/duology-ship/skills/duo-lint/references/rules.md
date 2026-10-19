@@ -408,7 +408,7 @@ struct SettingsScreen: View {
 - `CGSize` or `CGRect` (and `CGSizeMake`, `CGRectMake`) with a device width and a device height;
 - native pixel sizes, such as `nativeBounds.height == 2436`, on lines that read `nativeBounds` or `nativeScale`. A line that only mentions pixels, such as `imagePixelWidth == 1920`, doesn't count.
 
-The device dimensions are the point widths and heights of iPhone and iPad models, plus iPhone Duo window sizes: 466 × 678 (outer display, derived) and 951 × 669 (inner display fully open, measured). See [device-facts.md](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md). `320`, `768` and `1024` are also common image sizes and breakpoints, so they count only when the line names the screen, window, view, bounds, scene, safe area, geometry or proxy. The full lists are at the top of `scripts/duo-lint.py`. Previews (`#Preview`, `PreviewProvider`) are skipped.
+The device dimensions are the point widths and heights of iPhone and iPad models, plus iPhone Duo window sizes: 466 × 678 (outer display, measured) and 951 × 669 (inner display fully open, measured). See [device-facts.md](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md). `320`, `768` and `1024` are also common image sizes and breakpoints, so they count only when the line names the screen, window, view, bounds, scene, safe area, geometry or proxy. The full lists are at the top of `scripts/duo-lint.py`. Previews (`#Preview`, `PreviewProvider`) are skipped.
 
 **Why:** Apple's [prepare page](https://developer.apple.com/iphone-duo/prepare/) says comparisons such as `bounds.height == 844`, and lists of known iPhone sizes, won't match iPhone Duo. Its windows change size with every fold, rotation and Split View.
 

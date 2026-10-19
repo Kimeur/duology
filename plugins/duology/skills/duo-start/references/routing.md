@@ -1,6 +1,6 @@
 # Routing map
 
-Which skill to load for which job. Duology v0.1 ships 11 skills in four plugins, plus three commands. The rest of the 36 are "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
+Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 adds seven skills, two commands and a review agent; it is on `main` and not yet released. The rest of the 36 are "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
 
 ## v0.1 skills
 
@@ -14,19 +14,35 @@ Which skill to load for which job. Duology v0.1 ships 11 skills in four plugins,
 | `duo-patterns` | `duology-design` | Choosing a layout for the inner display: list-detail, supporting pane, two-page, dual view, extended canvas, feed reflow, tabs to sidebar, displacement. | API details (`duo-layout`). |
 | `duo-shared-screen` | `duology-design` | Two people use one phone: games, teaching, showing a customer. | Single-user layouts. |
 | `duo-design-review` | `duology-design` | Reviewing screenshots or Figma frames against the Duo checklist. | Writing code. |
-| `duo-testing` | `duology-ship` | Unit and UI tests that must hold up on the Duo simulator: logic tested on the Mac, launch switches, UI tests that reach SwiftUI gestures. | Visual pose checks (coming: `duo-pose-matrix`). |
+| `duo-testing` | `duology-ship` | Unit and UI tests that must hold up on the Duo simulator: logic tested on the Mac, launch switches, UI tests that reach SwiftUI gestures. | Visual pose checks (`duo-pose-matrix`). |
 | `duo-lint` | `duology-ship` | Finding code Apple warns against (`UIScreen.main`, orientation and idiom checks, fixed sizes) before it ships. It reports each finding and explains the fix for its rule. | Checking screenshots; it reads code only. Use `/duo-audit` or `duo-design-review`. |
 | `recipe-two-player-game` | `duology-recipes` | Building a two-player game on one phone from scratch. Run it with `/duo-new recipe-two-player-game`. | Existing apps. |
 
+## v0.2 skills
+
+| Skill | Plugin | Load it when | Not for |
+|---|---|---|---|
+| `duo-scenes` | `duology` | A second window (`openWindow`, `activateSceneSession`, `UIWindowScene.ActivationAction`), errors from new-window requests on the outer display, Split View, a camera capture accessory on the outer display, state per window, the scene life cycle through fold and unfold. | Layout inside one window (`duo-layout`). |
+| `duo-design-system` | `duology-design` | Spacing, margins, even-column grids, one type scale for both displays, Liquid Glass, concentric corners, colours and contrast, a token module; a two-frame Figma design turned into code. | Choosing the layout pattern (`duo-patterns`). |
+| `duo-postures` | `duology-design` | Closed, open, book, tabletop, tent and flipped: what each pose needs; a tabletop media player or video call; a book layout with two regions; the hinge as an effect. | A posture API: there is none. |
+| `duo-transitions` | `duology-design` | Fold, unfold, partial fold or rotation flashes, reloads, jumps or moves controls; opting a resize into animation; Reduce Motion; 120 Hz. | Keeping the state itself (`duo-continuity`). |
+| `duo-ergonomics` | `duology-design` | Where primary actions, floating buttons and player controls go; thumb reach on the open display; left-handed people and right-to-left; small touch targets. | Bar placement rules (`duo-navigation`). |
+| `duo-accessibility` | `duology-design` | VoiceOver order across panes and after a fold, Dynamic Type on the outer display, Reduce Motion, Increase Contrast, hardware keyboard, Switch Control and Voice Control, accessibility audits. | Visual design review (`duo-design-review`). |
+| `duo-pose-matrix` | `duology-ship` | Screenshots of an installed app closed, open, in book pose and in tabletop, by pressing Device Hub's pose buttons (with the user's Accessibility permission), or poses set by hand. Run it with `/duo-poses`. | Split View, tent and flipped (Device Hub can't set them). |
+
 Install a missing plugin with `/plugin install <plugin>@duology`. On other agents, `npx skills add Kimeur/duology --skill <name>` adds one skill.
 
-## Commands (v0.1)
+## Commands and agent
 
 | Command | Use it for |
 |---|---|
 | `/duo-doctor` | Check Xcode 27.1, the Duo simulator and Xcode's agent connection. Run it first when anything in the build step fails. |
 | `/duo-new <recipe>` | Create a new app from a recipe and run it on the Duo simulator. Only `recipe-two-player-game` exists in v0.1. |
 | `/duo-audit` | Run `duo-lint` and the checklist and list what to fix, most serious first. Use it after the first pass. |
+| `/duo-poses <bundle-id>` | Screenshot the installed app in every pose with `duo-pose-matrix` and put the simulator back. (v0.2) |
+| `/duo-review [folder]` | Hand screenshots or Figma exports (default: the newest `/duo-poses` run) to the `duo-design-reviewer` agent for a design critique, most serious first. It reads only. (v0.2) |
+
+The `duo-design-reviewer` agent (`duology-design`, v0.2) applies the 15-point `duo-design-review` checklist plus the `duo-postures`, `duo-patterns`, `duo-ergonomics` and `duo-accessibility` rules to pictures. It never edits files.
 
 ## Symptom to skill
 
@@ -42,7 +58,14 @@ Install a missing plugin with `/plugin install <plugin>@duology`. On other agent
 | Scroll position, typing or video resets when the phone folds | `duo-continuity` |
 | One long column stretched across the inner display | `duo-patterns`, then `duo-layout` |
 | Two players or two people at once | `duo-shared-screen`, or `recipe-two-player-game` for a new game |
-| "Review these designs for Duo" | `duo-design-review` |
+| "Open in new window" fails or does nothing; content should appear on the outer display while the camera runs | `duo-scenes` |
+| The screen flashes, reloads or controls jump when the phone opens | `duo-transitions`, then `duo-continuity` |
+| Half folded: video should sit above the fold with controls below | `duo-postures` |
+| Buttons at the top centre of the open display, or out of thumb reach | `duo-ergonomics` |
+| Spacing, fonts or corners differ between screens; an odd number of columns open | `duo-design-system` |
+| VoiceOver reads two panes row by row, or text truncates at large sizes closed | `duo-accessibility` |
+| "Show me every pose" | `duo-pose-matrix` (`/duo-poses`), then `/duo-review` |
+| "Review these designs for Duo" | `duo-design-review`, or `/duo-review` for the agent |
 | UI tests pass on iPhone and fail on the Duo simulator | `duo-testing` |
 | `UIScreen.main`, `userInterfaceIdiom`, orientation checks in the code | `duo-lint` to list them with the fix for each rule; Apple's App Resizability skill for the generic fixes |
 | The agent can't reach Xcode, or the wrong Xcode builds | `duo-setup` |
@@ -53,14 +76,6 @@ Say "coming" when one of these fits, and work from the Apple source in the last 
 
 | Skill | Release | Covers | Until then |
 |---|---|---|---|
-| `duo-design-system` | v0.2 | Spacing, even grid columns, type on both displays, Liquid Glass, corners, touch targets | [HIG: Designing for iPhone Duo](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo), [Tech Talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/) |
-| `duo-postures` | v0.2 | Designing for each way people hold the phone; the hinge as an input | HIG (device poses), [Tech Talk 111464](https://developer.apple.com/videos/play/tech-talks/111464/) (hinge APIs) |
-| `duo-transitions` | v0.2 | Closed to open feels like one app | HIG, Tech Talk 111466; `duo-continuity` for state |
-| `duo-ergonomics` | v0.2 | Grip, thumb reach, controls on the side edge | Tech Talk 111466 |
-| `duo-accessibility` | v0.2 | VoiceOver order across panes, Dynamic Type on both displays, Reduce Motion | [Accessibility](https://developer.apple.com/documentation/accessibility) (no Duo-specific Apple page found) |
-| `duo-pose-matrix`, `/duo-poses` | v0.2 | Screenshots of every pose | The first pass in [first-pass.md](first-pass.md) and the [Device Hub article](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub) |
-| `duo-scenes` | v0.2 | Several windows, Split View, content on the outer display | Tech Talk 111464; [camera capture accessory guide](https://developer.apple.com/documentation/avfoundation/registering-a-camera-capture-accessory-on-iphone-duo) |
-| `/duo-review`, `duo-design-reviewer` | v0.2 | Design critique command and agent | `duo-design-review` |
 | `duo-intelligence` | v0.3 | Foundation Models: a pane when open, a summary when closed | [Foundation Models](https://developer.apple.com/documentation/foundationmodels) |
 | `duo-app-intents` | v0.3 | Siri, app actions, onscreen awareness | [App Intents](https://developer.apple.com/documentation/appintents) |
 | `duo-camera` | v0.3 | Each camera by the way it faces, the virtual front camera | [Choosing a camera by the direction it faces](https://developer.apple.com/documentation/avkit/choosing-a-camera-by-the-direction-it-faces), [Tech Talk 111465](https://developer.apple.com/videos/play/tech-talks/111465/) |

@@ -175,7 +175,7 @@ func duoLog(_ message: String) {
 }
 
 // `nonisolated` keeps this working in targets that default to MainActor isolation.
-nonisolated struct DuoSpace: Equatable, Sendable {
+nonisolated struct DuoFirstPassSize: Equatable, Sendable {
     var width: Int
     var height: Int
     var leading: Int
@@ -188,8 +188,8 @@ struct DuoFirstPassLog: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onGeometryChange(for: DuoSpace.self) { proxy in
-                DuoSpace(
+            .onGeometryChange(for: DuoFirstPassSize.self) { proxy in
+                DuoFirstPassSize(
                     width: Int(proxy.size.width),
                     height: Int(proxy.size.height),
                     leading: Int(proxy.safeAreaInsets.leading),
@@ -337,7 +337,7 @@ xcrun simctl io booted screenshot --display=primary-1 "$TMPDIR/duo-inner.png"   
 
 - *Measured:* with the phone open, the outer screenshot came out solid black and the inner one showed the app. We assume the reverse when closed (unverified).
 - *Measured:* screenshots follow the current orientation, so the sizes can swap (2853 × 2007 instead of 2007 × 2853).
-- `simctl` can't change the pose (*measured*). Ask the user to click the buttons under the bezel in Device Hub: **Closed**, **Partially Open**, **Open**. Option-drag the slider below the bezel for any angle ([Device Hub article](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)).
+- `simctl` can't change the pose (*measured*). Ask the user to click the buttons under the bezel in Device Hub: **Closed**, **Partially Open**, **Open**. Option-drag the slider below the bezel for any angle ([Device Hub article](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)). If the user asks you to script it and has given Accessibility permission to the app that runs you, `duo-pose set <closed|open|book|tabletop>` from [`duo-pose-matrix`](https://github.com/Kimeur/duology/blob/main/plugins/duology-ship/skills/duo-pose-matrix/SKILL.md) presses the same buttons. Check that no UI tests share the simulator first.
 - Device Hub can't send two-finger touches (Xcode 27 known issue). Leave pinch and rotate gestures for a real device.
 - When Xcode's agent connection is set up (`duo-setup`), Apple's `device-interaction` skill can read the UI tree, take screenshots and tap through Xcode after each pose change ([routing.md](routing.md#apples-skills-in-xcode-271)). We haven't run it in a first pass (unverified). Its text says nothing about poses, so the user still clicks in Device Hub.
 
@@ -358,7 +358,7 @@ What to look for:
 | Any change | Lost scroll position, typed text, selection, playback, or a jump back to the root screen | `duo-continuity` |
 | Any | A screen you'd design differently for the big display | `duo-patterns`, `duo-design-review` |
 
-For a check of every pose (partly folded like a book, propped on a table, standing on its edges) and Split View on each side, `duo-pose-matrix` and `/duo-poses` are coming in v0.2. Until then, Tech Talk [111461](https://developer.apple.com/videos/play/tech-talks/111461/) shows how to test Split View: drag the app by its home indicator to one side of the inner display, then to the other.
+For screenshots of every pose Device Hub can set (closed, open, partly folded like a book, propped on a table), use [`duo-pose-matrix`](https://github.com/Kimeur/duology/blob/main/plugins/duology-ship/skills/duo-pose-matrix/SKILL.md) or `/duo-poses` (`duology-ship`). It doesn't cover Split View or standing on its edges. For Split View, Tech Talk [111461](https://developer.apple.com/videos/play/tech-talks/111461/) shows how to test it: drag the app by its home indicator to one side of the inner display, then to the other.
 
 ## Report
 

@@ -18,7 +18,7 @@ What an agent needs to know about the hardware before it writes layout code. Eve
 | Panel resolution | 1398 × 2034 px at 460 ppi | 1878 × 2670 px at 430 ppi | [[A2]] |
 | App Store screenshot size | 1398 × 2034 px (or 2034 × 1398) | 2007 × 2853 px (or 2853 × 2007) | [[S1]] |
 | Simulator framebuffer | 1398 × 2034 px, scale 3 | 2007 × 2853 px, scale 3 | *measured*: `xcrun simctl io booted enumerate` and the simulator's device profile |
-| Window size in points | 466 × 678 pt in portrait (*derived*: 1398 × 2034 px ÷ 3; not yet measured in a window) | 951 × 669 pt, fully open, held wide (*measured*: probe app, scale 3.0, hinge `fullyOpen` at 180°) | see [How we measured](#how-we-measured) |
+| Window size in points | 466 × 678 pt in portrait, 678 × 466 pt held sideways (*measured* in the v0.2 probes, 18 and 19 Oct 2026: UIKit root view bounds and the XCUITest window frame; see [duo-transitions evidence](../plugins/duology-design/skills/duo-transitions/references/evidence.md)) | 951 × 669 pt, fully open, held wide (*measured*: probe app, scale 3.0, hinge `fullyOpen` at 180°) | see [How we measured](#how-we-measured) |
 | Size classes | Portrait: compact width, regular height. Landscape: compact width, compact height. | Regular width, regular height. *Measured* fully open and held wide. | [[V1]] |
 | Supported orientations | Honoured, like any iPhone | Not honoured; the app is scaled to fit, Split View included | [[V1]] |
 | Toolbars and tab bars | Vertical, on the side, in both orientations | Vertical on the side in landscape; horizontal in portrait | [[D2]][[V2]][[V6]] |
@@ -146,7 +146,7 @@ Apple's iPhone Duo pages and talks never say "tabletop", "posture", "book postur
 - Before you ship a 27.1 build, check that your content copes with vertical bars [[A4]].
 - `UIRequiresFullScreen` is still honoured, but the app still resizes when the phone opens or closes [[V1]].
 - All apps take part in Split View on the inner display. Two apps share it 50/50 [[V4]][[V6]].
-- Only the inner display can open a new window. Requests on the outer display fail, so handle the error [[V4]].
+- Only the inner display can open a new window. Requests on the outer display fail, so handle the error [[V4]]. *Measured* on the simulator (19 Oct 2026): `openWindow` and `activateSceneSession` on the closed phone did not fail, and a `UIWindowScene.ActivationAction` with no alternate was hidden there. What a real iPhone Duo does is unverified; keep the error handling ([duo-scenes evidence](../plugins/duology/skills/duo-scenes/references/evidence.md)).
 - From April 2027, uploads must be built with the iOS 27 SDK or later and target iOS 15 or later [[A9]][[S4]]. *Derived from the table above:* that floor gives you the iOS 27 behaviour, not the full 27.1 layout.
 
 ## App Store screenshots
@@ -211,8 +211,7 @@ Result, fully open and held wide: 951 × 669 pt, regular width, regular height, 
 
 ## Not yet verified
 
-- Window size in points when closed. 466 × 678 pt is derived, not measured.
-- Window sizes partially open, in the tall layout, and in Split View.
+- Window sizes in Split View. (Partially Open kept the open window size, and the open phone held tall measured 669 × 951 pt, in the v0.2 probes.)
 - How wide the fold's division region is at different angles.
 - Size classes partially open and in Split View. Apple says the inner display is regular/regular. We measured it only fully open.
 - Real-device behaviour: 120 Hz during the open and close animation, how the hinge feels, and how the front cameras hand over.

@@ -1,7 +1,7 @@
 {
   "name": "duology-design",
   "version": "0.1.0",
-  "description": "Design for iPhone Duo: eight layout patterns, two people on one screen, and a 15-point review of screenshots and Figma frames.",
+  "description": "Design for iPhone Duo: design tokens, eight layout patterns, every pose, fold transitions, ergonomics, accessibility, two people on one screen, and a 15-point review of screenshots and Figma frames. Adds the duo-design-reviewer agent and /duo-review.",
   "author": {
     "name": "Kimeur",
     "url": "https://github.com/Kimeur"
@@ -9,5 +9,5 @@
   "homepage": "https://github.com/Kimeur/duology",
   "repository": "https://github.com/Kimeur/duology",
   "license": "MIT",
-  "keywords": ["iphone-duo", "foldable", "design", "design-review", "figma", "hig", "layout-patterns", "swiftui"]
+  "keywords": ["iphone-duo", "foldable", "design", "design-review", "figma", "hig", "layout-patterns", "swiftui", "design-system", "liquid-glass", "accessibility", "postures"]
 }

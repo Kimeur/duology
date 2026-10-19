@@ -30,7 +30,7 @@ Labels: *measured* means we ran it on the iOS 27.1 simulator runtime (offscreen 
 | | Outer display, closed | Inner display, open |
 |---|---|---|
 | Size class | compact width ([111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=187)) | regular width |
-| Window, portrait or held wide | 466 × 678 pt (*derived*) | 951 × 669 pt (*measured*) |
+| Window, portrait or held wide | 466 × 678 pt (*measured*) | 951 × 669 pt (*measured*) |
 | Safe area | 382 × 644 pt (*measured*) | 867 × 635 pt (*measured*, bar on the right) |
 | Layout columns | 4 | 8 |
 | Gutter | 12 pt | 16 pt, the middle one on the fold line; partly folded, the fold's frame (40 pt, *measured*) |
@@ -43,7 +43,7 @@ Never copy these numbers into code. The tokens produce them.
 
 ## 1. Drop in the token module
 
-Copy the complete file from [references/tokens.md](references/tokens.md) into the app as `DuoTokens.swift`. It adds text roles (`DuoType`), colours (`DuoColor`), `DuoCard` and the modifiers used below. If the app still has `duo-start`'s debug logger, delete it first: it also declares a `DuoSpace`, and the build fails. This is its core:
+Copy the complete file from [references/tokens.md](references/tokens.md) into the app as `DuoTokens.swift`. It adds text roles (`DuoType`), colours (`DuoColor`), `DuoCard` and the modifiers used below. If the app still has the v0.1 version of `duo-start`'s debug logger, delete it first: it declares a `struct DuoSpace`, and the build fails (v0.2 renamed it `DuoFirstPassSize`). This is its core:
 
 ```swift
 import SwiftUI

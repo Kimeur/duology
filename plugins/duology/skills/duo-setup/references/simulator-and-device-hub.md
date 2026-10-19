@@ -72,7 +72,7 @@ When a task needs several poses, list them for the user, ask them to click each 
 
 ### Script the pose buttons
 
-A small Mac program can press Device Hub's pose buttons through the macOS Accessibility API. We set all four poses this way with no one at the keyboard (Xcode 27.1, macOS 27.0.1, 17 and 18 October 2026). Duology ships no tool for it yet; `duo-pose-matrix` (v0.2) will build on it. Until then, ask the user to press the pose, unless they ask you to script it.
+A small Mac program can press Device Hub's pose buttons through the macOS Accessibility API. We set all four poses this way with no one at the keyboard (Xcode 27.1, macOS 27.0.1, 17 and 18 October 2026). [`duo-pose-matrix`](https://github.com/Kimeur/duology/blob/main/plugins/duology-ship/skills/duo-pose-matrix/SKILL.md) (`duology-ship`, v0.2) ships this as `duo-pose` and `duo-pose-matrix`. Still ask the user to press the pose by default, unless they ask you to script it.
 
 How it works:
 

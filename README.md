@@ -36,7 +36,7 @@
 </div>
 
 > [!IMPORTANT]
-> **v0.1 is out** (18 October 2026): 11 skills, `/duo-doctor`, `/duo-new` and `/duo-audit`, checked on Xcode 27.1 and the iPhone Duo simulator. v0.2 work (seven more skills, `/duo-poses`, `/duo-review` and a design review agent) is on `main` and not released yet. Duology is built in the open: the full pack of 36 skills is planned for v1.0 in January 2027. Star or watch the repo to follow along. See the [roadmap](ROADMAP.md) and the [release notes](CHANGELOG.md).
+> **v0.2 is out** (19 October 2026): 18 skills, `/duo-doctor`, `/duo-new`, `/duo-audit`, `/duo-poses`, `/duo-review` and a design review agent, checked on Xcode 27.1 and the iPhone Duo simulator. Checks on a real iPhone Duo and published test results come next. Duology is built in the open: the full pack of 36 skills is planned for v1.0 in January 2027. Star or watch the repo to follow along. See the [roadmap](ROADMAP.md) and the [release notes](CHANGELOG.md).
 
 > [!NOTE]
 > Duology is a community project. It is not affiliated with, endorsed by or sponsored by Apple Inc.
@@ -151,7 +151,7 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 
 ## What's inside
 
-**v0.1 and v0.2: 18 skills in 4 plugins, 5 commands and 1 review agent.** Rows marked v0.2 are on `main` and not released yet. The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
+**v0.2: 18 skills in 4 plugins, 5 commands and 1 review agent.** The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
 
 <details open>
 <summary><strong>duology</strong> · foundation: setup, layout, continuity, scenes</summary>

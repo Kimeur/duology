@@ -1,6 +1,6 @@
 {
   "name": "duology-recipes",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "App recipes for iPhone Duo. /duo-new creates a project that builds and runs on the iPhone Duo simulator. v0.1 has one recipe: a two-player game.",
   "author": {
     "name": "Kimeur",

@@ -99,6 +99,6 @@ xcb_test -only-testing:TrailUITests/ReachOracleTests
 
 ## Checklist
 
-- **R13**: closed and open, each button is at least 44 pt and has room around it. The oracle skips the size of buttons in a system bar, because the system sizes them (XCUITest reports 38 pt in Xcode 27.1). Judge those here by hit region, as R13 says, and flag any bar item whose label the app shrank, such as a custom 30 pt circle inside it.
+- **R13**: closed and open, each button is at least 44 pt and has room around it. The oracle skips the size of buttons in a system bar, because the system sizes them (XCUITest reports 38 pt in Xcode 27.1). Judge those here by hit region, as R13 says, and flag any bar item whose label the app shrank: the fixture's 30 pt circles put inside a bar item measured 32 × 36 pt, against 38 × 38 pt for plain bar buttons (both open, held wide).
 - **R6**: closed upright, the buttons sit in the system's vertical bar or near its edge, in its lower part; open and held wide, near a side edge, not in the top centre. Icon-only buttons still have titles.
 - **R4**: Partially Open, held wide and held tall: no button touches the fold.

@@ -196,11 +196,9 @@ struct CanvasScreen: View {
     var body: some View {
         ZStack {
             Color.clear
-            // Keep a floating palette on the bar's side, near the thumb, as Apple's
-            // toolbarVerticalEdge example does. No vertical bar: trailing.
+            // On the bar's side, near the thumb (Apple's toolbarVerticalEdge example); no bar: trailing.
             Text("Palette")
-                .padding()
-                .background(.thinMaterial, in: .capsule)
+                .padding().background(.thinMaterial, in: .capsule)
                 .padding([.horizontal, .bottom], 16)  // the margin next to the bar is 0 pt
                 .frame(maxWidth: .infinity, maxHeight: .infinity,
                        alignment: barEdge == .leading ? .bottomLeading : .bottomTrailing)

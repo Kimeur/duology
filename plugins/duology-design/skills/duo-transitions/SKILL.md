@@ -95,7 +95,7 @@ struct NowPlayingScreenCopy: View {
 
 - *Measured:* the copy started animating in the same frame as `.animation(_:value:)`, so lateness is not the problem.
 - The problems: an app launched open shows the stacked layout until the next fold, because `onChange` without `initial: true` never ran; two values that can disagree; and a second `body` pass on every fold.
-- The same goes for `DispatchQueue.main.asyncAfter`, `Task.sleep` before a state change, or an animation started in `onAppear`: each animates *after* the resize, so people see the window change and then the content move.
+- The same goes for `DispatchQueue.main.asyncAfter`, `Task.sleep` before a state change, or an animation started in `onAppear`: each animates *after* the resize, so people see the window change and then the content move. One measured exception isn't an animation: long text that reflows while the margins arrive late needs a scroll back to its saved paragraph after the width settles (`duo-continuity` section 4, the gallery's fold transition screen).
 - When a value only exists after layout (the fold's frame, an exact width), use [`onGeometryChange(for:of:action:)`](https://developer.apple.com/documentation/swiftui/view/ongeometrychange(for:of:action:)). Return a small value (a column count, a fold flag), write it in one cheap action, and key the animation on it. *Measured:* on the two opens from closed portrait, its action ran in the same millisecond as the size-class update. On the open from the closed phone held sideways, it ran about 16 ms after it, once the width changed.
 
 ## Rules

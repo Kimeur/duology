@@ -86,7 +86,7 @@ From the gallery overlay ([screenshot](https://github.com/Kimeur/duology/blob/ma
 | Hinge angle while Option-dragging the slider | Effects scale with the angle | Same probe; then Option-drag the slider |
 | Fold width at other angles | Whether the 40 pt frame changes as the phone closes | Option-drag the slider and log `.division` |
 | Tent and flipped | Our reading says the outer display; Device Hub can't set either | A real iPhone Duo |
-| `FoldRegionsLayout` and `FoldRegionsView` folded | Both recipes rely on them | Run the recipes in book and tabletop |
+| `FoldRegionsView` folded, and this skill's recipes folded | Both recipes rely on them. `FoldRegionsLayout` itself ran in book and tabletop in the gallery's tabletop player (18 Oct 2026) | Run the recipes in book and tabletop |
 | Whether `viewDidLayoutSubviews` gets the same extra pass | A view controller that reads regions there may miss a fold | Log it in the UIKit probe below |
 | Right-to-left | Content should stay leading | Run with the Right-to-Left Pseudolanguage |
 

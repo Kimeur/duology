@@ -232,7 +232,7 @@ Choose between them:
 | Fold code | None | Reads `.division` |
 | Tells you which state it is in | Apple documents `overlayArrangementZIndex` for this. Closed, our probe read `1` in the primary and `0` in the secondary; `duo-patterns` read `0` everywhere open and flat. Not yet checked folded | You hold `fold` |
 | Placement inside a region | System | Yours (centred) |
-| Checked folded on the simulator | No (unverified) | Uses region frames measured folded; the layout itself not yet run folded (unverified) |
+| Checked folded on the simulator | No (unverified) | Yes: the gallery's tabletop player ran the same layout in book and tabletop on 18 Oct 2026 ([book](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/tabletopPlayer-book.png), [tabletop](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/tabletopPlayer-tabletop.png)) |
 | Where it can't go | Not inside a `List`, `ScrollView` or `NavigationSplitView` | Anywhere |
 
 Start with the arrangement when the screen is a plain "controls over content" stack and you don't need to know the state. Use `FoldRegionsLayout` when the controls change with the region (a compact bar over the video, a full panel below it) or when the screen sits somewhere an arrangement can't.
@@ -265,7 +265,7 @@ The system pins Picture in Picture video to the top of the screen, and stretches
 5. With Reduce Motion on (Settings > Accessibility > Motion), the controls move without sliding.
 6. VoiceOver: each control reads its title in every pose.
 
-Duology has not yet run this recipe folded on the simulator; the region frames it relies on were measured folded with the gallery app. (unverified)
+This AVPlayer recipe has not run folded on the simulator (unverified). The layout under it has: the gallery's [tabletop player](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/DuologyGallery/Patterns/TabletopPlayerView.swift) used `FoldRegionsLayout` in book and tabletop on 18 Oct 2026.
 
 ## Sources
 

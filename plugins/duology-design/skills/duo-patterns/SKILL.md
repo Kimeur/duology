@@ -155,12 +155,24 @@ nonisolated struct FoldGeometry: Equatable, Sendable {
 
     init(_ proxy: GeometryProxy) {
         // The default query returns active regions only. Ask for inactive ones too,
-        // so a flat inner display still tells you where its fold is.
+        // so a flat inner display still tells you where its fold is. Keep only a
+        // fold with part of this view on each side of it.
+        let size = proxy.size
         let folds = proxy.reservedRegions(kind: .division, options: .includeInactive)
+            .filter { Self.liesInside($0.frame, of: size) }
         if let fold = folds.first(where: \.isActive) ?? folds.first {
             frame = fold.frame
             isActive = fold.isActive
         }
+    }
+
+    /// True when a fold frame splits a view of `size` into two non-empty parts.
+    /// A region query can return regions that lie outside the view (`duo-postures`).
+    static func liesInside(_ frame: CGRect, of size: CGSize) -> Bool {
+        if frame.height > frame.width {
+            return frame.minX > 0 && frame.maxX < size.width
+        }
+        return frame.minY > 0 && frame.maxY < size.height
     }
 }
 

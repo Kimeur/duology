@@ -28,7 +28,7 @@ Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugin
 | `duo-transitions` | `duology-design` | Fold, unfold, partial fold or rotation flashes, reloads, jumps or moves controls; opting a resize into animation; Reduce Motion; 120 Hz. | Keeping the state itself (`duo-continuity`). |
 | `duo-ergonomics` | `duology-design` | Where primary actions, floating buttons and player controls go; thumb reach on the open display; left-handed people and right-to-left; small touch targets. | Bar placement rules (`duo-navigation`). |
 | `duo-accessibility` | `duology-design` | VoiceOver order across panes and after a fold, Dynamic Type on the outer display, Reduce Motion, Increase Contrast, hardware keyboard, Switch Control and Voice Control, accessibility audits. | Visual design review (`duo-design-review`). |
-| `duo-pose-matrix` | `duology-ship` | Screenshots of an installed app closed, open, in book pose and in tabletop, by pressing Device Hub's pose buttons (with the user's Accessibility permission), or poses set by hand. Run it with `/duo-poses`. | Split View, tent and flipped (Device Hub can't set them). |
+| `duo-pose-matrix` | `duology-ship` | Screenshots of an installed app closed, open, in book pose and in tabletop, by pressing Device Hub's pose buttons (with the user's Accessibility permission), or poses set by hand. Run it with `/duo-poses`. | Split View (a drag in Device Hub), tent and flipped (Device Hub can't set them). |
 
 Install a missing plugin with `/plugin install <plugin>@duology`. On other agents, `npx skills add Kimeur/duology --skill <name>` adds one skill.
 

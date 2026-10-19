@@ -28,7 +28,7 @@ Apple calls these "device poses" and describes them with comparisons: "partially
 
 ## Tell the poses apart from layout inputs
 
-Add `FoldGeometry` and `FoldRegionsLayout` from [references/fold-regions.md](references/fold-regions.md) once per app. If the app already has a `FoldGeometry` (`duo-patterns` adds one), keep a single copy, and make sure its `init(_:)` filters with `liesInside(_:of:)` as fold-regions.md shows. A copy taken from `duo-patterns` may lack the filter; add it. Then read the fold with `.onFoldChange { fold = $0 }` on the view you lay out.
+Add `FoldGeometry` and `FoldRegionsLayout` from [references/fold-regions.md](references/fold-regions.md) once per app. If the app already has a `FoldGeometry` (`duo-patterns` adds one), keep a single copy, and make sure its `init(_:)` filters with `liesInside(_:of:)` as fold-regions.md shows. A copy taken from `duo-patterns` before v0.2 may lack the filter; add it. Then read the fold with `.onFoldChange { fold = $0 }` on the view you lay out.
 
 | Pose (Duology word) | Apple's words | Your app is on | Size classes (width, height) | `.division` region | `FoldGeometry` |
 |---|---|---|---|---|---|

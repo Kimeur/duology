@@ -159,7 +159,7 @@ A screen often has toolbar items for the whole screen and controls for one regio
 5. Closed and rotated (tent): face and buttons side by side.
 6. Right-to-left language: the face sits on the right (leading) side. (unverified)
 
-The region frames this relies on were measured folded with the gallery app; this screen has not yet run folded on the simulator. (unverified)
+The region frames this relies on were measured folded with the gallery app, and `FoldRegionsLayout` itself ran in book and tabletop in the gallery's tabletop player (18 Oct 2026). This screen has not run folded on the simulator. (unverified)
 
 ## Sources
 

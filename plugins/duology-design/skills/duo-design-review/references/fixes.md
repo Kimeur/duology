@@ -215,7 +215,7 @@ func columnCount(width: Double, minColumnWidth: Double, foldCrossesGrid: Bool) -
 }
 ```
 
-The full grid, with the fold as the middle gap and uneven margins handled: `duo-patterns`, [feed reflow](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/feed-reflow.md).
+The full grid, with the fold as the middle gap when folded: `duo-patterns`, [feed reflow](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/feed-reflow.md). Flat, that recipe keeps equal tiles, so with uneven margins its middle gap can sit a few points off the fold line (Minor here). To keep a 16 pt gutter on the fold line flat as well, use `DuoColumns` from `duo-design-system` ([grid.md](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-design-system/references/grid.md)).
 
 ## R6 Side controls, symbols and titles
 

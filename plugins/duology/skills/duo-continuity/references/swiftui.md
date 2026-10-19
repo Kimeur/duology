@@ -153,7 +153,7 @@ struct RestoringRoot: View {
 - Apple's `SceneStorage` page says: keep the data small, don't store sensitive data, and expect the system to choose when it saves. Data goes away when the scene is destroyed.
 - Two `@SceneStorage` properties with the same key in one scene share a value. *Measured:* a value written in one size-class branch was read back by the view in the other branch.
 - `NavigationPath.codable` is `nil` if any pushed value isn't `Codable` ([codable](https://developer.apple.com/documentation/swiftui/navigationpath/codable)).
-- Save on `.background`, not `.inactive`. Whether a fold passes through `.inactive` is *unverified*.
+- Save on `.background`, not `.inactive`. *Measured* on the simulator (v0.2, `duo-scenes`): a fold kept the scene `active`, with no `.inactive`. A real device is unverified, so don't depend on it.
 
 ## Scroll position
 

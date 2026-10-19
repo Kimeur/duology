@@ -169,7 +169,7 @@ If the app already has `duoContainerMargins()` from `duo-layout`, delete one of 
 | Token | Compact width | Regular width | Source |
 |---|---|---|---|
 | `DuoSpace` steps | 4, 8, 12, 16, 20, 24, 32, 40, 48 | same | Duology default: a 4-point scale. Apple's own spacing numbers (12 and 24 pt of padding around controls, 16 to 20 pt margins, 44 pt targets) all sit on it. |
-| Margins | system container margins | system container margins | Apple: [`ContentMarginGuide.container`](https://developer.apple.com/documentation/swiftui/contentmarginguide/container) gives 16 to 20 pt on iPhone and can differ per side on iPhone Duo. Not measured on Duo yet. |
+| Margins | system container margins | system container margins | Apple: [`ContentMarginGuide.container`](https://developer.apple.com/documentation/swiftui/contentmarginguide/container) gives 16 to 20 pt on iPhone and can differ per side on iPhone Duo. *Measured* in the gallery app: 20 pt leading and 0 pt next to the vertical bar, closed and open ([grid.md](grid.md)). |
 | `columns` | 4 | 8 | Duology default. The rule (even counts where a fold can cross) is Apple's: [HIG](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Reserved-regions), [111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=456). |
 | `gutter` | 12 | 16 | Duology default. |
 | Gutter at the fold | none | flat: `gutter`, centred on the fold line; partly folded: the fold's frame | Apple's Fitness example widens the gap at the hinge and keeps the outer margins ([111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=350)). |

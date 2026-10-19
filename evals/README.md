@@ -2,7 +2,7 @@
 
 Does Duology make Claude Code better at iPhone Duo work? These evals answer that with a with/without comparison. Each task runs twice, once with the Duology plugins loaded and once without them. Both runs get the same starting project, the same prompt and the same permissions. Then both results are scored the same way.
 
-- **Tasks:** 20 tasks, one to three for each of the 11 v0.1 skills. They include the four tasks in the main README's [Proof table](../README.md#proof-not-promises). One of those, the tabletop video call, is filed under `duo-postures` and needs v0.2 skills to show its full gap. Each task is one file in [`tasks/`](tasks).
+- **Tasks:** 29 tasks for 18 skills: one to three for each of the 11 v0.1 skills, and one or two for each v0.2 skill. 28 are `status: ready`; `duo-pose-matrix/every-pose-screenshots` is `planned` until the eval account can run the pose tools (see [Known limits](#known-limits)). They include the four tasks in the main README's [Proof table](../README.md#proof-not-promises). One of those, the tabletop video call, is filed under `duo-postures`. Each task is one file in [`tasks/`](tasks).
 - **Fixtures:** small Xcode projects with typical pre-Duo mistakes, in [`fixtures/`](fixtures). Each one builds for the iPhone Duo simulator.
 - **Scoring:** [`rubric.md`](rubric.md). Build, duo-lint, task checks, and the 15-point checklist from `duo-design-review`.
 - **Runner:** [`run.sh`](run.sh). It runs Claude Code headless (`claude -p`) in a fresh throwaway copy of the fixture, with an empty environment and a short list of allowed commands. It collects everything, scores it and writes a summary.
@@ -175,7 +175,7 @@ The main README's [Proof table](../README.md#proof-not-promises) shows the four 
 4. Commit `summary.json` and `summary.md` as `evals/results/<version>/` (for example `evals/results/v0.1/`). Only `results/runs/` is ignored. Don't commit transcripts: they can hold paths from your Mac.
 5. Under the table, say which model, Claude Code version and Xcode build the numbers come from.
 
-Results for all 20 tasks go in `evals/results/<version>/` as well, linked from the README.
+Results for all ready tasks go in `evals/results/<version>/` as well, linked from the README.
 
 ## Task files
 
@@ -249,7 +249,7 @@ To test the harness itself: `python3 -B evals/lib/test_evalkit.py` (rule gate, t
 
   Run one trial per task first and read `permission_denial_samples` in each `result.json` before a full run.
 - **Not a sandbox.** The scoped allow list prevents accidents, not a determined agent. See [Permissions and isolation](#permissions-and-isolation).
-- **Poses are manual.** In Xcode 27.1, `simctl` has no pose command and XCTest can't fold the simulator. A Mac program can press Device Hub's pose buttons through the Accessibility API ([AGENTS.md](../AGENTS.md)), but Duology ships no such tool yet, so the checklist needs a person. Oracle tests run in whatever pose the simulator is in. In our test, a newly created iPhone Duo simulator started closed, on the outer display.
+- **Poses are manual.** In Xcode 27.1, `simctl` has no pose command and XCTest can't fold the simulator. `duo-pose-matrix` (v0.2) presses Device Hub's pose buttons through the Accessibility API, but `run.sh` doesn't allow its scripts yet, and the eval account would need Accessibility permission for the terminal app, which only its user can give. So the checklist still needs a person. Oracle tests run in whatever pose the simulator is in. In our test, a newly created iPhone Duo simulator started closed, on the outer display.
 - **Static checks are heuristics.** `single_owner.py` and the source helpers read Swift text, not a syntax tree. They skip `//` comments but not block comments. Read a check's message before you trust a failure.
 - **Agents vary.** One trial per arm proves little. Publish only with three or more.
 - **Another runner exists.** Claude Code 2.1.301 also has `claude plugin eval`. It runs a plugin's eval cases (`case.yaml`, or `prompt.md` plus `graders/*.md`) with and without the plugin, takes tool grants in the same `Tool(pattern:*)` form, and, per its help, confines shell tools in an OS sandbox. Our tasks need a fixture copy, an Xcode build and simulator tests, and we haven't checked whether `xcodebuild` and `simctl` work inside that sandbox, so we wrote `run.sh`. It may suit prompt-only tasks such as the design reviews. Our task files are named `<task>.md`, not `prompt.md`, so it shouldn't mistake them for its own cases.

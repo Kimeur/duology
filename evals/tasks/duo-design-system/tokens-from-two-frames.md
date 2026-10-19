@@ -65,15 +65,27 @@ no_src 'fixedSize:'
 no_src 'cornerRadius: *[4-9][0-9]'
 ```
 
+```sh check no-light-grey-text
+# The designer's dates are Color(white: 0.7) on a white card, about 2.1:1. A light grey
+# literal (white 0.5 to 0.89, or lightGray) fails anywhere in the app, also inside a
+# token: as text on a light background it is under 4.5:1, and it ignores dark mode and
+# Increase Contrast. The oracle audits contrast only on the closed phone (see below),
+# so this check is what catches the planted grey when the simulator is open.
+no_src '(Color|UIColor)\([^)]*white: *0?\.[5-8]|\blightGray\b'
+```
+
 ```sh check oracle-contrast-type-and-targets
 # A hidden UI test, written into the UI test folder after the run, in whatever pose
-# the simulator is in. At the default text size: no contrast failure and no text that
-# ignores Dynamic Type (Xcode's accessibility audit), and the first heart button is at
-# least 44 x 44 pt. At AX5: no clipped text. The audit also reports "contrast nearly
-# passed" for the system's secondary label colour, and clipped text with no element
-# for a ViewThatFits's rejected child (both measured in Xcode 27.1); neither counts.
-# If the log says the contrast audit didn't finish, that counts as a failure: it
-# happened on the untouched fixture every time, never on a fix in system colours.
+# the simulator is in. At the default text size: no text that ignores Dynamic Type
+# (Xcode's accessibility audit), and the first heart button is at least 44 x 44 pt.
+# Closed only: no contrast failure. In Xcode 27.1 the contrast audit works on the outer
+# display only. Open, it found nothing on a 2.1:1 grey that it fails closed, or it
+# didn't finish, so the test skips it when the window is larger than the outer display
+# (466 x 678 pt) and says so in the log. A contrast audit that doesn't finish twice is
+# logged, not counted: it says nothing about the colours. At AX5: no clipped text.
+# The audit also reports "contrast nearly passed" for the system's secondary label
+# colour, and clipped text with no element for a ViewThatFits's rejected child (both
+# measured in Xcode 27.1); neither counts.
 [ -d TripsUITests ] || { echo "the TripsUITests folder is gone"; exit 1; }
 cat > TripsUITests/TokensOracleTests.swift <<'SWIFT'
 import XCTest
@@ -96,28 +108,35 @@ final class TokensOracleTests: XCTestCase {
             problems.append("\(issue.compactDescription): \(element.label)")
             return true
         }
-        // The contrast audit can stop with "failed to complete in time". On the untouched
-        // fixture it did every time we tried; on a fix in system colours it took 1 to 3 s.
-        // So try twice, and count a second timeout as a failure.
-        var contrast: [String] = []
-        var finished = false
-        var lastError = ""
-        for _ in 1...2 where !finished {
-            contrast = []
-            do {
-                try app.performAccessibilityAudit(for: [.contrast]) { issue in
-                    // "Contrast nearly passed" is a warning; only a failure counts.
-                    guard issue.compactDescription.lowercased().contains("failed"),
-                          let element = issue.element else { return true }
-                    contrast.append("\(issue.compactDescription): \(element.label)")
-                    return true
+        // Contrast: closed only (see the check's comment). The outer display is 466 x 678 pt.
+        let window = app.windows.firstMatch.frame
+        if max(window.width, window.height) < 700 {
+            var contrast: [String] = []
+            var finished = false
+            var lastError = ""
+            for _ in 1...2 where !finished {
+                contrast = []
+                do {
+                    try app.performAccessibilityAudit(for: [.contrast]) { issue in
+                        // "Contrast nearly passed" is a warning; only a failure counts.
+                        guard issue.compactDescription.lowercased().contains("failed"),
+                              let element = issue.element else { return true }
+                        contrast.append("\(issue.compactDescription): \(element.label)")
+                        return true
+                    }
+                    finished = true
+                } catch {
+                    lastError = error.localizedDescription
                 }
-                finished = true
-            } catch {
-                lastError = error.localizedDescription
             }
+            if finished {
+                problems += contrast
+            } else {
+                print("ORACLE note: the contrast audit didn't finish twice (\(lastError)); not counted")
+            }
+        } else {
+            print("ORACLE note: contrast not audited; the window is \(Int(window.width)) x \(Int(window.height)) pt, so the app is on the inner display")
         }
-        problems += finished ? contrast : ["the contrast audit didn't finish twice (\(lastError))"]
         XCTAssertTrue(problems.isEmpty, problems.joined(separator: "; "))
     }
 
@@ -150,3 +169,5 @@ xcb_test -only-testing:TripsUITests/TokensOracleTests
 - **R13**: every heart button and the "Plan a trip" button are at least 44 pt, closed and open, also at AX5.
 
 Also note, outside the rule verdicts: whether the agent's final message says which parts of the frames it changed (three columns, fixed sizes, the grey, the 30 pt hearts, the radius), and whether card corners follow the display (`ConcentricRectangle`) or use a modest fixed radius.
+
+Contrast has no rule of its own in the checklist. Closed, in light and dark mode and with Increase Contrast on (`xcrun simctl ui <UDID> increase_contrast enabled`), check that the dates and the notes stay readable on the cards, and record what you saw in `notes`. Xcode 27.1's contrast audit finds nothing on the inner display, so the oracle covers contrast only when the simulator is closed.

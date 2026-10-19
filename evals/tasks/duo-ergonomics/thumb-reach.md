@@ -48,9 +48,13 @@ has_src '\.toolbar|ToolbarItem|reservedRegions\(kind: *\.division|ArrangementVie
 ```sh check oracle-reach
 # A hidden UI test, written into the UI test folder after the run. In whatever pose
 # the simulator is in (closed, unless someone changed it), each button must exist,
-# be tappable, measure at least 44 x 44 pt, and stay out of the top centre of the
-# window: the top 40 percent of its height inside the middle half of its width.
-# Buttons in a vertical side bar pass: Apple places that bar for the thumb.
+# be tappable, and stay out of the top centre of the window: the top 40 percent of
+# its height inside the middle half of its width. Buttons in a vertical side bar pass
+# that test: Apple places that bar for the thumb.
+# A custom button must also measure at least 44 x 44 pt. A button in a system bar
+# (a toolbar or a navigation bar) skips the size test: the system sizes it, XCUITest
+# reports 38 pt for it in Xcode 27.1, and duo-ergonomics' first rule is to put actions
+# there. R13 in the checklist judges those by hand.
 [ -d TrailUITests ] || { echo "the TrailUITests folder is gone"; exit 1; }
 cat > TrailUITests/ReachOracleTests.swift <<'SWIFT'
 import XCTest
@@ -72,8 +76,11 @@ final class ReachOracleTests: XCTestCase {
             }
             if !button.isHittable { problems.append("\(id) can't be tapped") }
             let frame = button.frame
+            let inSystemBar = [app.toolbars, app.navigationBars].contains { bars in
+                bars.descendants(matching: .any).matching(identifier: id).firstMatch.exists
+            }
             // 0.5 pt of slack: a 44 pt frame can come back as 43.99999.
-            if frame.width < 43.5 || frame.height < 43.5 {
+            if !inSystemBar && (frame.width < 43.5 || frame.height < 43.5) {
                 problems.append("\(id) is \(Int(frame.width)) x \(Int(frame.height)) pt")
             }
             let inTopCentre = frame.midY < bounds.minY + bounds.height * 0.4
@@ -92,6 +99,6 @@ xcb_test -only-testing:TrailUITests/ReachOracleTests
 
 ## Checklist
 
-- **R13**: closed and open, each button is at least 44 pt and has room around it.
+- **R13**: closed and open, each button is at least 44 pt and has room around it. The oracle skips the size of buttons in a system bar, because the system sizes them (XCUITest reports 38 pt in Xcode 27.1). Judge those here by hit region, as R13 says, and flag any bar item whose label the app shrank, such as a custom 30 pt circle inside it.
 - **R6**: closed upright, the buttons sit in the system's vertical bar or near its edge, in its lower part; open and held wide, near a side edge, not in the top centre. Icon-only buttons still have titles.
 - **R4**: Partially Open, held wide and held tall: no button touches the fold.

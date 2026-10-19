@@ -65,8 +65,49 @@ has_src 'NavigationLink|navigationDestination'
 ```
 
 ```sh check handles-no-window
-# The action hides where windows aren't supported, or the request has a fallback.
-has_src 'supportsMultipleWindows|supportsMultipleScenes|alternate:|errorHandler'
+# Nothing is lost when a new window can't open. Each way of asking for a window must
+# come with its fallback:
+# - a UIKit request (activateSceneSession, requestSceneSessionActivation) needs an
+#   error handler that isn't nil, as errorHandler: or a trailing closure;
+# - UIWindowScene.ActivationAction hides itself, or shows its alternate, where a new
+#   window isn't possible (measured by duo-scenes on the closed phone);
+# - SwiftUI's openWindow reports nothing back, so the fallback is the in-place route
+#   (NavigationLink, navigationDestination, a sheet) that still opens the note.
+# supportsMultipleWindows and supportsMultipleScenes don't count on their own:
+# duo-scenes measured both true on the closed phone, so they can't hide the action there.
+python3 - <<'PY'
+import os, re, sys
+code = ""
+for folder, dirs, names in os.walk("."):
+    dirs[:] = [d for d in dirs if d not in (".git", "DerivedData", "build", ".build")]
+    for f in names:
+        if f.endswith(".swift"):
+            text = open(os.path.join(folder, f), encoding="utf-8", errors="replace").read()
+            code += re.sub(r"/\*.*?\*/", "", re.sub(r"//[^\n]*", "", text), flags=re.S) + "\n"
+ways, problems = [], []
+for m in re.finditer(r"\b(activateSceneSession|requestSceneSessionActivation)\s*\(", code):
+    depth, j = 1, m.end()
+    while j < len(code) and depth:
+        depth += {"(": 1, ")": -1}.get(code[j], 0)
+        j += 1
+    args, after = code[m.end():j - 1], code[j:].lstrip()
+    handled = re.search(r"errorHandler:\s*(?!nil\b)\S", args) or after.startswith("{")
+    ways.append(m.group(1))
+    if not handled:
+        problems.append("%s has no error handler: %s" % (m.group(1), " ".join(args.split())[:80]))
+if re.search(r"\bActivationAction\s*\(", code):
+    ways.append("ActivationAction")
+if re.search(r"\bopenWindow\s*\(", code):
+    ways.append("openWindow")
+    if not re.search(r"\bNavigationLink\b|\.navigationDestination\(|\.sheet\(|\.fullScreenCover\(", code):
+        problems.append("openWindow is the only way to open a note: nothing opens it in the current window")
+if not ways:
+    problems.append("no window request found")
+print("ways to open a window:", ", ".join(sorted(set(ways))) or "none")
+if problems:
+    print("; ".join(problems))
+    sys.exit(1)
+PY
 ```
 
 ```sh check activation-action-has-alternate
@@ -91,5 +132,5 @@ launch_ok
 
 ## Checklist
 
-- **R11**: Open (inner display): long-press a note, choose Open in New Window; the note opens in a window, and the first window is still reachable. Edit the note in one window and check the other shows the change. Closed: the action is hidden or opens the note in place; nothing is lost.
+- **R11**: Open (inner display): long-press a note, choose Open in New Window; the note opens in a window, and the first window is still reachable. Edit the note in one window and check the other shows the change. Closed: if the menu shows the action, choose it. Nothing typed is lost, and the note still opens and saves in the first window. `duo-scenes` measured that the closed simulator opens the window over the first one instead of refusing, and that SwiftUI can't hide the action there, so don't fail a SwiftUI app for showing it. Whether the real outer display refuses needs a device.
 - **R10**: closed, every note opens and can be edited; nothing needs the open phone.

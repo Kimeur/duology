@@ -146,7 +146,7 @@ Apple's iPhone Duo pages and talks never say "tabletop", "posture", "book postur
 - Before you ship a 27.1 build, check that your content copes with vertical bars [[A4]].
 - `UIRequiresFullScreen` is still honoured, but the app still resizes when the phone opens or closes [[V1]].
 - All apps take part in Split View on the inner display. Two apps share it 50/50 [[V4]][[V6]].
-- Only the inner display can open a new window. Requests on the outer display fail, so handle the error [[V4]]. *Measured* on the simulator (19 Oct 2026): `openWindow` and `activateSceneSession` on the closed phone did not fail, and a `UIWindowScene.ActivationAction` with no alternate was hidden there. What a real iPhone Duo does is unverified; keep the error handling ([duo-scenes evidence](../plugins/duology/skills/duo-scenes/references/evidence.md)).
+- Only the inner display can open a new window. Requests on the outer display fail, so handle the error [[V4]]. *Measured* on the simulator (18 Oct 2026): `openWindow` and `activateSceneSession` on the closed phone did not fail, and a `UIWindowScene.ActivationAction` with no alternate was hidden there. What a real iPhone Duo does is unverified; keep the error handling ([duo-scenes evidence](../plugins/duology/skills/duo-scenes/references/evidence.md)).
 - From April 2027, uploads must be built with the iOS 27 SDK or later and target iOS 15 or later [[A9]][[S4]]. *Derived from the table above:* that floor gives you the iOS 27 behaviour, not the full 27.1 layout.
 
 ## App Store screenshots

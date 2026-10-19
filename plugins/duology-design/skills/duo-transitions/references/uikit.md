@@ -166,7 +166,7 @@ final class AlbumGridViewController: UICollectionViewController {
 
 ## A partial fold has no coordinator
 
-The fold's reserved region changes, the window doesn't. Re-read the region in a layout pass and animate the move yourself. A hinge interaction asks for that layout pass whenever the hinge reports a change, so you don't depend on something else invalidating layout.
+The fold's reserved region changes, the window doesn't. Read the region in the `layoutSubviews` of the view that lays out around the fold, and animate the move yourself. UIKit runs that pass again when the fold turns active or inactive, so you need no hinge observer. Make that view the controller's root view.
 
 ```swift
 import SwiftUI   // for UIView.animate(_:changes:completion:)
@@ -174,24 +174,30 @@ import UIKit
 
 @available(iOS 27.1, *)
 final class RecorderViewController: UIViewController {
-    private let recordGroup = UIStackView()
+    override func loadView() { view = RecorderView() }
+}
+
+@available(iOS 27.1, *)
+final class RecorderView: UIView {
+    let recordGroup = UIStackView()
     private var lastFold: CGRect?
     private var lastSize = CGSize.zero
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        view.addSubview(recordGroup)
-        // Each hinge update asks for a layout pass, where the fold is read again.
-        view.addInteraction(UIHingeInteraction { [weak self] _, _ in
-            self?.view.setNeedsLayout()
-        })
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        addSubview(recordGroup)
     }
 
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
+    required init?(coder: NSCoder) { fatalError("init(coder:) is not used") }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // Reading the regions here is enough: UIKit lays this view out again
+        // when the fold turns active or inactive. No hinge observer needed.
         // Work out the place on every pass: open, close, rotation and Split View move it too.
-        let fold = view.reservedRegions(kind: .division).first { $0.isActive }?.frame
-        let size = view.bounds.size
+        let fold = reservedRegions(kind: .division, options: .includeInactive)
+            .first(where: \.isActive)?.frame
+        let size = bounds.size
         let target = targetFrame(avoiding: fold)
         // Only the fold changed, in a window that kept its size: a partial fold.
         let foldOnly = fold != lastFold && size == lastSize
@@ -209,15 +215,15 @@ final class RecorderViewController: UIViewController {
 
     private func targetFrame(avoiding fold: CGRect?) -> CGRect {
         let size = recordGroup.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
-        let bounds = view.bounds.inset(by: view.safeAreaInsets)
+        let area = bounds.inset(by: safeAreaInsets)
         // Folded like a book: the trailing region. Otherwise: bottom centre.
         let region: CGRect
         if let fold, fold.height > fold.width {
-            region = CGRect(x: fold.maxX, y: bounds.minY, width: bounds.maxX - fold.maxX, height: bounds.height)
+            region = CGRect(x: fold.maxX, y: area.minY, width: area.maxX - fold.maxX, height: area.height)
         } else if let fold {
-            region = CGRect(x: bounds.minX, y: fold.maxY, width: bounds.width, height: bounds.maxY - fold.maxY)
+            region = CGRect(x: area.minX, y: fold.maxY, width: area.width, height: area.maxY - fold.maxY)
         } else {
-            region = bounds
+            region = area
         }
         return CGRect(x: region.midX - size.width / 2, y: region.maxY - size.height - 16,
                       width: size.width, height: size.height)
@@ -225,8 +231,9 @@ final class RecorderViewController: UIViewController {
 }
 ```
 
-- [`UIHingeInteraction`](https://developer.apple.com/documentation/uikit/uihingeinteraction) and [`reservedRegions(kind:options:)`](https://developer.apple.com/documentation/uikit/uiview/reservedregions(kind:options:)) are iOS 27.1. *Measured in SwiftUI:* the fold read as active about 1 s after the hinge started to fold, once it stopped at 127°. The UIKit timing is *unverified*.
-- The hinge reports updates while it moves. [`setNeedsLayout()`](https://developer.apple.com/documentation/uikit/uiview/setneedslayout()) only marks the view; UIKit lays it out once in the next update cycle. The guard skips passes where the target didn't change, so hinge updates that leave the fold where it was cost one cheap frame calculation.
+- [`reservedRegions(kind:options:)`](https://developer.apple.com/documentation/uikit/uiview/reservedregions(kind:options:)) is iOS 27.1. *Measured in SwiftUI:* the fold read as active about 1 s after the hinge started to fold, once it stopped at 127°. *Measured in UIKit* ([duo-postures measurements](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-postures/references/measurements.md#uikit-layout-passes-on-a-fold)): a view that reads the regions in its own `layoutSubviews` got a pass in the frame the region turned active, and another when it turned inactive. A view that never read them got no pass.
+- Don't nudge this pass from a [`UIHingeInteraction`](https://developer.apple.com/documentation/uikit/uihingeinteraction). When folding, the hinge status turned `partiallyOpen` 0.7 to 0.9 s before the region turned active, so a pass on a status change reads the old, inactive region. A pass on every hinge update ran up to about 30 times a second while folding and added nothing. Keep the hinge for effects.
+- The guard skips passes where the target didn't change, so other layout passes cost one cheap frame calculation.
 - Animate only when the fold changed and the window kept its size. Open and close bring no system motion, so after a resize the group takes its new place at once, like the rest of the layout. *Measured* ([evidence.md](evidence.md)): during a rotation, `layoutSubviews` ran with `UIView.inheritedAnimationDuration` 0.3, so the direct set rides the rotation's animation.
 - Don't compare only the fold. When the phone is closed there is no division, and when it is open and flat the division is inactive, so the fold reads `nil` before and after a resize. A guard on the fold alone leaves the group at its old place: below the bottom edge after a rotation, or near x = 233 pt in a 951 pt window after an open.
 - Keep the move small and keep the control's edge: bottom stays bottom (`duo-patterns`, displacement).

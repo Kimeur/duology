@@ -30,7 +30,7 @@ import os
 import re
 import sys
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 SKIP_DIRS = {".git", ".research", "build", "DerivedData", "node_modules", "__pycache__", ".build"}
 MARKETPLACE_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")

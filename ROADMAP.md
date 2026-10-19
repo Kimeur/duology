@@ -11,9 +11,9 @@ Duology is built in the open. Dates are targets, not promises. Each release says
 - Gallery app with every layout pattern
 - First test tasks in `evals/` (the with/without harness)
 
-## v0.2: design (by 20 November 2026)
+## v0.2: design (released 19 October 2026)
 
-Built on `main`, not released yet. Checked on Xcode 27.1 and the iPhone Duo simulator.
+Checked on Xcode 27.1 and the iPhone Duo simulator. Two items moved to v0.3 (below).
 
 - [x] `duo-design-system`, `duo-postures`, `duo-transitions`, `duo-ergonomics`, `duo-accessibility`
 - [x] `duo-pose-matrix` and `/duo-poses` (screenshots closed, open, in book pose and in tabletop; it doesn't cover Split View, tent or flipped)
@@ -21,11 +21,11 @@ Built on `main`, not released yet. Checked on Xcode 27.1 and the iPhone Duo simu
 - [x] `duo-scenes`
 - [x] Gallery screens for the tabletop player, the fold transition and the design tokens
 - [x] Test tasks for every v0.2 skill in `evals/` (29 tasks in all; the pose task waits until the eval account can run the pose tools)
-- [ ] First published test results (the harness runs in a separate macOS user account or a VM)
-- [ ] First checks on a real iPhone Duo: the hinge, 120 Hz transitions, the camera capture accessory, new windows on the outer display
 
 ## v0.3: iOS 27 features (by 18 December 2026)
 
+- Carried over from v0.2: first published test results (the harness runs in a separate macOS user account or a VM)
+- Carried over from v0.2: first checks on a real iPhone Duo (the hinge, 120 Hz transitions, the camera capture accessory, new windows on the outer display)
 - Plugin `duology-features`: `duo-intelligence`, `duo-app-intents`, `duo-camera`, `duo-media`, `duo-reading`, `duo-games`, `duo-swiftui-27`, `duo-system-surfaces`
 - Recipes: `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop`
 

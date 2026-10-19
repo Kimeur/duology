@@ -6,7 +6,11 @@ Each release says which Xcode and iOS versions it was checked on.
 
 ## [Unreleased]
 
-v0.2 work, on `main` and not released yet. Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not yet checked on a real iPhone Duo.
+Nothing yet.
+
+## [0.2.0] - 2026-10-19
+
+Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not yet checked on a real iPhone Duo, and the first published test results are not in yet; both are planned for v0.3.
 
 ### Added
 
@@ -37,7 +41,7 @@ v0.2 work, on `main` and not released yet. Checked on Xcode 27.1 (27A9275) and t
 - `reference/device-facts.md`: the closed window, 466 × 678 pt, is now measured. New-window requests on the closed simulator did not fail, unlike what Apple's talk describes for the device.
 - The how-it-works diagram shows the v0.2 pose screenshots as built.
 - `.gitattributes` marks the Python tooling as vendored, so GitHub lists the repo as Swift.
-- `README.md`, `AGENTS.md`, `llms.txt` and the plugin manifests list the v0.2 skills, commands and agent. Plugin versions stay 0.1.0 until the release.
+- `README.md`, `AGENTS.md`, `llms.txt` and the plugin manifests list the v0.2 skills, commands and agent. Plugin, marketplace and tool versions are 0.2.0.
 
 ### Removed
 
@@ -77,5 +81,6 @@ Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not ye
 - `AGENTS.md` for Codex, Cursor, GitHub Copilot, Gemini CLI and other agents, and `llms.txt`.
 - `SECURITY.md`, `CODE_OF_CONDUCT.md` and this changelog.
 
-[Unreleased]: https://github.com/Kimeur/duology/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Kimeur/duology/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/Kimeur/duology/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Kimeur/duology/releases/tag/v0.1.0

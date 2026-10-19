@@ -21,7 +21,7 @@ import re
 import shlex
 import sys
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 # Apple sources. See reference/sources.md in the Duology repo.
 PREPARE = "https://developer.apple.com/iphone-duo/prepare/"

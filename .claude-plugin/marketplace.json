@@ -11,18 +11,18 @@
     {
       "name": "duology",
       "source": "./plugins/duology",
-      "description": "Foundation for iPhone Duo apps: Xcode 27.1 and simulator setup, layout across the fold, vertical bars, and state that survives fold and unfold. Adds /duo-doctor.",
+      "description": "Foundation for iPhone Duo apps: Xcode 27.1 and simulator setup, layout across the fold, vertical bars, state that survives fold and unfold, and scenes and windows. Adds /duo-doctor.",
       "version": "0.1.0",
       "category": "development",
-      "keywords": ["iphone-duo", "foldable", "ios", "ios-27", "swiftui", "uikit", "xcode", "layout"]
+      "keywords": ["iphone-duo", "foldable", "ios", "ios-27", "swiftui", "uikit", "xcode", "layout", "scenes", "multiple-windows"]
     },
     {
       "name": "duology-design",
       "source": "./plugins/duology-design",
-      "description": "Design for iPhone Duo: eight layout patterns, two people on one screen, and a 15-point review of screenshots and Figma frames.",
+      "description": "Design for iPhone Duo: design tokens, eight layout patterns, every pose, fold transitions, ergonomics, accessibility, two people on one screen, and a 15-point review of screenshots and Figma frames. Adds the duo-design-reviewer agent and /duo-review.",
       "version": "0.1.0",
       "category": "design",
-      "keywords": ["iphone-duo", "foldable", "design", "design-review", "figma", "hig", "layout-patterns", "swiftui"]
+      "keywords": ["iphone-duo", "foldable", "design", "design-review", "figma", "hig", "layout-patterns", "swiftui", "design-system", "liquid-glass", "accessibility", "postures"]
     },
     {
       "name": "duology-recipes",
@@ -35,10 +35,10 @@
     {
       "name": "duology-ship",
       "source": "./plugins/duology-ship",
-      "description": "Test and ship for iPhone Duo: duo-lint (the fold linter), an opt-in lint hook, tests on the Duo simulator, and /duo-audit.",
+      "description": "Test and ship for iPhone Duo: duo-lint (the fold linter), an opt-in lint hook, tests on the Duo simulator, screenshots closed, open, in book pose and in tabletop (duo-pose-matrix), /duo-audit and /duo-poses.",
       "version": "0.1.0",
       "category": "development",
-      "keywords": ["iphone-duo", "foldable", "ios", "lint", "testing", "audit", "xcode", "app-store"]
+      "keywords": ["iphone-duo", "foldable", "ios", "lint", "testing", "audit", "xcode", "app-store", "screenshots", "simulator"]
     }
   ]
 }

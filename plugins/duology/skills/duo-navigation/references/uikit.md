@@ -202,8 +202,9 @@ final class CanvasViewController: UIViewController {
         view.addSubview(palette)
 
         let margins = view.layoutMarginsGuide
-        leadingConstraint = palette.leadingAnchor.constraint(equalTo: margins.leadingAnchor)
-        trailingConstraint = palette.trailingAnchor.constraint(equalTo: margins.trailingAnchor)
+        // 16 pt clears the bar's items: the margin next to a vertical bar is 0 pt.
+        leadingConstraint = palette.leadingAnchor.constraint(equalTo: margins.leadingAnchor, constant: 16)
+        trailingConstraint = palette.trailingAnchor.constraint(equalTo: margins.trailingAnchor, constant: -16)
         NSLayoutConstraint.activate([
             palette.bottomAnchor.constraint(equalTo: margins.bottomAnchor),
             palette.widthAnchor.constraint(equalToConstant: 200),
@@ -216,11 +217,12 @@ final class CanvasViewController: UIViewController {
         }
     }
 
-    /// Keeps the palette on the side away from the vertical bar.
+    /// Keeps the palette on the vertical bar's side, near the thumb. No bar: trailing.
     private func placePalette() {
         let barOnLeading = traitCollection.verticalBarEdge == .leading
-        leadingConstraint?.isActive = !barOnLeading
-        trailingConstraint?.isActive = barOnLeading
+        let (on, off) = barOnLeading ? (leadingConstraint, trailingConstraint) : (trailingConstraint, leadingConstraint)
+        off?.isActive = false  // turn the old side off first, so the two never conflict
+        on?.isActive = true
     }
 }
 ```

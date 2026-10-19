@@ -2,7 +2,7 @@
 #
 # This workflow runs on Ubuntu and doesn't need Xcode. Everything it checks is
 # plain text or Python: skill front matter and links, JSON manifests, and the
-# duo-lint tests. That keeps it fast and free for forks.
+# duo-lint and duo-pose-matrix tests. That keeps it fast and free for forks.
 #
 # What it can't check, and why:
 # - Swift snippets and the sample apps need Xcode 27.1 and the iOS 27.1 SDK.
@@ -54,6 +54,11 @@ jobs:
 
       - name: duo-lint unit tests
         run: python3 -m unittest discover plugins/duology-ship/skills/duo-lint/tests -v
+
+      - name: duo-pose-matrix unit tests
+        # Standard library only. Fakes stand in for simctl, devicectl and Device Hub,
+        # so these run on Linux without a simulator.
+        run: python3 -m unittest discover plugins/duology-ship/skills/duo-pose-matrix/tests -v
 
       - name: duo-lint on the gallery app and recipe templates
         # Duology's own Swift must pass its own linter.

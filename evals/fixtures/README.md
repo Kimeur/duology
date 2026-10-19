@@ -71,6 +71,20 @@ An empty SwiftUI app ("Hello") for tasks that build something new inside an exis
 - iOS 26.0 target, Swift 6, main-actor isolation by default, approachable concurrency.
 - A UI test target, `StarterUITests`, with one launch test. Oracle tests from [`../oracles`](../oracles) are copied into it after the agent's run.
 
+## Fixtures added for v0.2
+
+Each of these is used by one or two v0.2 tasks. The planted problems are listed in the task's "Starting point" section, so they aren't repeated here. All seven build for the iPhone Duo simulator (`build-for-testing`, 18 and 19 October 2026), and every task that uses them fails on the untouched fixture (`run.sh --selftest --with-build`).
+
+| Fixture | What it is | Target | Used by |
+|---|---|---|---|
+| `Steps` | A recipe step, a timer panel and Previous and Next buttons | iOS 17, Swift 5 | [`duo-postures/book-two-regions`](../tasks/duo-postures/book-two-regions.md) |
+| `Album` | An album screen with a cover, a track list and a player bar | iOS 17, Swift 5 | [`duo-transitions/fold-without-reload`](../tasks/duo-transitions/fold-without-reload.md) |
+| `Trail` | A drawn map, a stats panel and three map buttons, with `TrailUITests` | iOS 17, Swift 5 | [`duo-ergonomics/thumb-reach`](../tasks/duo-ergonomics/thumb-reach.md) |
+| `Inbox` | A mail inbox: list and message side by side open, a push closed, with `InboxUITests` | iOS 17, Swift 5 | [`duo-accessibility/voiceover-two-panes`](../tasks/duo-accessibility/voiceover-two-panes.md), [`duo-accessibility/large-text-closed`](../tasks/duo-accessibility/large-text-closed.md) |
+| `Trips` | A grid of trip cards built literally from two design frames (`Design/frames.md`), with `TripsUITests` | iOS 17, Swift 5 | [`duo-design-system/tokens-from-two-frames`](../tasks/duo-design-system/tokens-from-two-frames.md) |
+| `Notes` | A notes list that pushes an editor, one window only | iOS 26, Swift 6, main-actor isolation by default | [`duo-scenes/open-in-new-window`](../tasks/duo-scenes/open-in-new-window.md) |
+| `Shoot` | A full-screen rear camera preview with a record button and a countdown | iOS 17, Swift 5 | [`duo-scenes/camera-subject-view`](../tasks/duo-scenes/camera-subject-view.md) |
+
 ## review-shots
 
 Two real screenshots of `Places`, taken on the iPhone Duo simulator (Xcode 27.1, iOS 27.1) with the phone closed and upright: the list and a detail screen (1398 × 2034 px, the outer display). `frames.md` says what each shows. Used by `duo-design-review/screenshot-review`.
@@ -91,7 +105,7 @@ Not a folder. `fixture: empty` starts the agent in an empty folder.
 export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
 UDID=<an iPhone Duo simulator UDID>   # xcrun simctl list devices | grep "iPhone Duo"
 cd evals/fixtures
-for app in Places Reel Talk TapDuel Starter; do
+for app in Places Reel Talk TapDuel Starter Steps Album Trail Inbox Trips Notes Shoot; do
   xcodebuild build-for-testing -project "$app/$app.xcodeproj" -scheme "$app" \
     -destination "platform=iOS Simulator,id=$UDID" \
     -derivedDataPath "/tmp/fixture-dd/$app" CODE_SIGNING_ALLOWED=NO -quiet && echo "$app ok"
@@ -100,4 +114,4 @@ done
 
 Then run `evals/run.sh --selftest` to confirm every task still fails on its untouched fixture.
 
-`run.sh` builds under `env -i` with an empty `HOME`, so a fixture must not depend on anything in your account (a user-level Swift package cache, a signing identity, an environment variable). On 17 October 2026 all five built for the iPhone Duo simulator that way with `build-for-testing`.
+`run.sh` builds under `env -i` with an empty `HOME`, so a fixture must not depend on anything in your account (a user-level Swift package cache, a signing identity, an environment variable). On 17 October 2026 the first five built for the iPhone Duo simulator that way with `build-for-testing`; the seven v0.2 fixtures built the same way through `run.sh --selftest --with-build` on 18 and 19 October 2026.

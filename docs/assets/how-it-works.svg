@@ -1,14 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="How Duology works in v0.1: you ask Claude Code; Duology skills for patterns, layout, continuity and recipes guide the code; Xcode 27.1 builds and runs it on the iPhone Duo simulator; duo-lint and the 15-point design review check it; then you ship. A failed check goes back to Claude with its rule and a fix. Planned: screenshots of every pose in v0.2 and an App Store checklist in v1.0.">
-  <title>How Duology works in v0.1</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 300" width="1200" height="300" role="img" aria-label="How Duology works in v0.2: you ask Claude Code; Duology skills for patterns, design, layout, continuity, scenes and recipes guide the code; Xcode 27.1 builds and runs it on the iPhone Duo simulator; duo-lint, the 15-point design review and screenshots of four poses (closed, open, book and tabletop, added in v0.2) check it; then you ship. A failed check goes back to Claude with its rule and a fix. Planned: an App Store checklist in v1.0.">
+  <title>How Duology works in v0.2</title>
   <rect width="1200" height="300" rx="16" fill="#f7f8fa"/>
   <defs>
     <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path d="M0 0L10 5L0 10z" fill="#5b6475"/></marker>
   </defs>
   <g font-family="Helvetica Neue, Helvetica, Arial, sans-serif">
     <!-- header and legend -->
-    <text x="30" y="36" font-size="15" font-weight="700" fill="#141a26">How it works in v0.1</text>
+    <text x="30" y="36" font-size="15" font-weight="700" fill="#141a26">How it works in v0.2</text>
     <rect x="849" y="22" width="26" height="16" rx="5" fill="#ffffff" stroke="#c9d0dc" stroke-width="2"/>
-    <text x="883" y="36" font-size="14" fill="#5b6475">in v0.1</text>
+    <text x="883" y="36" font-size="14" fill="#5b6475">built</text>
     <rect x="949" y="22" width="26" height="16" rx="5" fill="#ffffff" stroke="#8a93a3" stroke-width="1.5" stroke-dasharray="4 3"/>
     <text x="983" y="36" font-size="14" fill="#5b6475">planned (tag = target release)</text>
   </g>
@@ -23,8 +23,8 @@
     <rect x="220" y="58" width="220" height="164" rx="12" fill="#2b55c7"/>
     <text x="330" y="104" font-size="20" font-weight="700" fill="#ffffff">Claude Code</text>
     <text x="330" y="130" font-size="15" fill="#dbe4ff">+ Duology skills</text>
-    <text x="330" y="152" font-size="15" fill="#dbe4ff">patterns · layout</text>
-    <text x="330" y="174" font-size="15" fill="#dbe4ff">continuity · recipes</text>
+    <text x="330" y="152" font-size="15" fill="#dbe4ff">patterns · design · layout</text>
+    <text x="330" y="174" font-size="15" fill="#dbe4ff">continuity · scenes · recipes</text>
 
     <!-- xcode -->
     <rect x="480" y="58" width="190" height="164" rx="12" fill="#ffffff" stroke="#c9d0dc" stroke-width="2"/>
@@ -37,8 +37,8 @@
     <text x="820" y="104" font-size="20" font-weight="700" fill="#141a26">Checks</text>
     <text x="820" y="130" font-family="Menlo, Consolas, monospace" font-size="14" fill="#5b6475">duo-lint</text>
     <text x="820" y="152" font-size="15" fill="#5b6475">15-point design review</text>
-    <rect x="722" y="176" width="196" height="36" rx="8" fill="#f7f8fa" stroke="#8a93a3" stroke-width="1.5" stroke-dasharray="5 4"/>
-    <text x="820" y="200" font-size="14" fill="#5b6475">screenshot every pose</text>
+    <rect x="722" y="176" width="196" height="36" rx="8" fill="#ffffff" stroke="#c9d0dc" stroke-width="2"/>
+    <text x="820" y="200" font-size="14" fill="#5b6475">screenshots of 4 poses</text>
     <rect x="864" y="165" width="42" height="20" rx="10" fill="#5b6475"/>
     <text x="885" y="179" font-size="12" font-weight="700" fill="#ffffff">v0.2</text>
 

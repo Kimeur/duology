@@ -4,7 +4,7 @@ Every pull request gets a review from Claude (the `Claude review` workflow) befo
 
 ## Blockers
 
-1. **Checks fail.** `python3 scripts/validate-skills.py`, the duo-lint tests (`python3 -m unittest discover plugins/duology-ship/skills/duo-lint/tests`) or the manifest JSON check fail.
+1. **Checks fail.** `python3 scripts/validate-skills.py`, the duo-lint tests (`python3 -m unittest discover plugins/duology-ship/skills/duo-lint/tests`), the duo-pose-matrix tests (`python3 -m unittest discover plugins/duology-ship/skills/duo-pose-matrix/tests`) or the manifest JSON check fail.
 2. **An API claim is wrong or unsourced.** A skill names an iOS API, type, modifier or signature that is not in `reference/api-index.md` and has no Apple link, or contradicts `reference/api-index.md`.
 3. **A broken promise.** The README, a command or a skill points to a file, command, plugin or script that does not exist, or says something ships that doesn't.
 4. **A contradiction.** Numbers, names, dates or versions disagree between files (for example skill counts, plugin names, Xcode version, release dates).

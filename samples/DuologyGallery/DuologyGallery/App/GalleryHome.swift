@@ -20,19 +20,10 @@ struct GalleryHome: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     intro
-                    LazyVGrid(columns: feedColumns(for: grid, minTileWidth: minCardWidth, spacing: spacing),
-                              alignment: .leading, spacing: spacing) {
-                        ForEach(Pattern.allCases) { pattern in
-                            Button {
-                                openPattern = pattern
-                            } label: {
-                                PatternCard(pattern: pattern)
-                            }
-                            .buttonStyle(.plain)
-                            .accessibilityHint("Opens the \(pattern.title) demo")
-                        }
-                    }
-                    .onFeedGridChange { grid = $0 }
+                    cards(Pattern.layoutPatterns)
+                        .onFeedGridChange { grid = $0 }
+                    designHeader
+                    cards(Pattern.designScreens)
                     footer
                 }
                 .containerMargins(.horizontal)
@@ -62,6 +53,35 @@ struct GalleryHome: View {
                 .fixedSize(horizontal: false, vertical: true)
             WindowFacts(size: viewSize, widthClass: widthClass, heightClass: heightClass, fold: fold)
         }
+    }
+
+    private func cards(_ patterns: [Pattern]) -> some View {
+        LazyVGrid(columns: feedColumns(for: grid, minTileWidth: minCardWidth, spacing: spacing),
+                  alignment: .leading, spacing: spacing) {
+            ForEach(patterns) { pattern in
+                Button {
+                    openPattern = pattern
+                } label: {
+                    PatternCard(pattern: pattern)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Opens the \(pattern.title) demo")
+            }
+        }
+    }
+
+    /// The v0.2 screens: one each for poses, fold transitions and design tokens.
+    private var designHeader: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Poses, transitions and tokens")
+                .font(.title3.weight(.bold))
+                .accessibilityAddTraits(.isHeader)
+            Text("A tabletop player, a reader that keeps your place through a fold, and the design tokens drawn over a real screen.")
+                .font(.subheadline)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.top, 8)
     }
 
     private var footer: some View {
@@ -161,7 +181,7 @@ private struct PatternCard: View {
                 DiagramColumn(caption: "Closed", detail: pattern.closed) {
                     ClosedDiagram(pattern: pattern)
                 }
-                DiagramColumn(caption: "Open", detail: pattern.open) {
+                DiagramColumn(caption: pattern.openCaption, detail: pattern.open) {
                     OpenDiagram(pattern: pattern)
                 }
             }
@@ -232,6 +252,9 @@ private struct ClosedDiagram: View {
         case .feedReflow: .grid
         case .tabsToSidebar: .sideTabs
         case .displacement: .memos(controls: true)
+        case .tabletopPlayer: .film(controls: true)
+        case .foldTransition: .reading
+        case .designTokens: .columns(4)
         }
     }
 }
@@ -264,6 +287,9 @@ private struct OpenDiagram: View {
         case .feedReflow: (.grid, .grid)
         case .tabsToSidebar: (.sidebar, .text)
         case .displacement: (.memos(controls: false), .memos(controls: true))
+        case .tabletopPlayer: (.film(controls: false), .controls)
+        case .foldTransition: (.contents, .reading)
+        case .designTokens: (.columns(4), .columns(4))
         }
     }
 }
@@ -274,6 +300,8 @@ private enum DiagramGlyph {
     case list, detail, text, bubbles, page, map, grid, sidebar, sideTabs
     case trail(TrailPart)
     case memos(controls: Bool)
+    case film(controls: Bool), controls, reading, contents
+    case columns(Int)
 }
 
 private struct DiagramHalf: View {
@@ -403,6 +431,79 @@ private struct DiagramHalf: View {
             }
         case .trail(let part):
             TrailGlyph(part: part, tint: tint)
+        case .film(let controls):
+            ZStack(alignment: .bottom) {
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(LinearGradient(colors: [tint.opacity(0.55), tint.opacity(0.9)], startPoint: .top, endPoint: .bottom))
+                    .aspectRatio(16 / 9, contentMode: .fit)
+                    .frame(maxHeight: .infinity)
+                    .overlay(Image(systemName: "play.fill").font(.system(size: 7)).foregroundStyle(.white))
+                if controls {
+                    Capsule()
+                        .fill(Color(.secondarySystemGroupedBackground))
+                        .frame(height: 8)
+                        .overlay(Capsule().fill(tint).frame(width: 10, height: 2.5))
+                        .shadow(color: .black.opacity(0.15), radius: 1.5, y: 1)
+                }
+            }
+        case .controls:
+            VStack(spacing: 4) {
+                Spacer(minLength: 0)
+                Capsule().fill(line).frame(height: 2.5)
+                HStack(spacing: 4) {
+                    Circle().fill(line).frame(width: 4, height: 4)
+                    Circle().fill(tint).frame(width: 8, height: 8)
+                    Circle().fill(line).frame(width: 4, height: 4)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(4)
+            .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 3))
+        case .reading:
+            ZStack(alignment: .bottom) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Capsule().fill(tint).frame(width: 18, height: 3.5)
+                    ForEach(0..<5, id: \.self) { index in
+                        Capsule()
+                            .fill(index == 2 ? Color.yellow.opacity(0.8) : line)
+                            .frame(maxWidth: index == 4 ? 16 : .infinity)
+                            .frame(height: 2.5)
+                    }
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Capsule()
+                    .fill(Color(.secondarySystemGroupedBackground))
+                    .frame(width: 24, height: 8)
+                    .shadow(color: .black.opacity(0.15), radius: 1.5, y: 1)
+            }
+        case .contents:
+            VStack(alignment: .leading, spacing: 4) {
+                ForEach(0..<5, id: \.self) { index in
+                    HStack(spacing: 3) {
+                        RoundedRectangle(cornerRadius: 1).fill(index == 3 ? tint : line).frame(width: 4, height: 4)
+                        Capsule().fill(line).frame(height: 2.5)
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+        case .columns(let count):
+            HStack(spacing: 2) {
+                ForEach(0..<count, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 1).fill(tint.opacity(0.28))
+                }
+            }
+            .overlay(alignment: .top) {
+                VStack(spacing: 3) {
+                    RoundedRectangle(cornerRadius: 2).fill(Color(.secondarySystemGroupedBackground)).frame(height: 9)
+                    HStack(spacing: 2) {
+                        RoundedRectangle(cornerRadius: 2).fill(Color(.secondarySystemGroupedBackground))
+                        RoundedRectangle(cornerRadius: 2).fill(Color(.secondarySystemGroupedBackground))
+                    }
+                    .frame(height: 9)
+                }
+                .padding(.top, 3)
+            }
         case .memos(let controls):
             ZStack(alignment: .bottom) {
                 VStack(spacing: 4) {

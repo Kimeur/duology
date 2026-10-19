@@ -87,7 +87,7 @@ DEVELOPER_DIR=<DEV> xcrun simctl io <UDID> screenshot --display=primary-1 <OUT>/
 - Use the UDID, never `booted`. Never run `sudo` or `xcode-select`.
 - Tell the user where `OUT` is, so they can open the screenshots.
 
-You can capture only the pose the simulator is in. `simctl` has no pose command. List the frames you are missing (step 1 of `duo-design-review` lists the full set) and ask the user once whether to capture more. If they agree, ask them to click Closed, Partially Open or Open in Device Hub, then take new screenshots. If they don't, mark the rules those frames would prove as **Check**.
+You can capture only the pose the simulator is in. `simctl` has no pose command. List the frames you are missing (step 1 of `duo-design-review` lists the full set) and ask the user once whether to capture more. If they agree, ask them to click Closed, Partially Open or Open in Device Hub, then take new screenshots, or suggest `/duo-poses`, which captures every pose when they have given Accessibility permission. If they don't, mark the rules those frames would prove as **Check**.
 
 ## 3. Run the checklist
 

@@ -6,9 +6,38 @@ Each release says which Xcode and iOS versions it was checked on.
 
 ## [Unreleased]
 
+v0.2 work, on `main` and not released yet. Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not yet checked on a real iPhone Duo.
+
 ### Added
 
+- 7 skills, so 18 in all:
+  - `duo-design-system` (`duology-design`): design tokens by size class, a drop-in SwiftUI token module, even-column grids with the fold as the middle gutter, one type scale with Dynamic Type for both displays, Liquid Glass, concentric corners, colour and contrast, 44 pt targets, and a UIKit version.
+  - `duo-postures` (`duology-design`): what each pose needs (closed, open, book, tabletop, tent, flipped), with `FoldGeometry` and `FoldRegionsLayout`, a tabletop media recipe, a book layout with two regions, and the hinge for effects only.
+  - `duo-transitions` (`duology-design`): fold and unfold without a reload. Stable identity, opting a resize into animation, Reduce Motion, UIKit transition coordinators and 120 Hz frame budgets, with measured evidence from Device Hub's pose buttons.
+  - `duo-ergonomics` (`duology-design`): grips and thumb reach, primary actions near the hands, a `ThumbCorner` modifier for floating controls, left-handed and right-to-left use, touch target audits.
+  - `duo-accessibility` (`duology-design`): VoiceOver order across panes and after a fold, Dynamic Type on the outer display, Reduce Motion, Increase Contrast, hardware keyboard, Switch Control and Voice Control, accessibility audits and `XCUIDevice.voiceOverService` in UI tests.
+  - `duo-scenes` (`duology`): second windows and their errors, Split View, scene accessories such as the camera capture accessory, state per window and the scene life cycle through fold and unfold.
+  - `duo-pose-matrix` (`duology-ship`): `duo-pose` (`status`, `list`, `set`) and `duo-pose-matrix`, which press Device Hub's pose buttons through the macOS Accessibility API, with the user's permission, and screenshot an installed app closed, open, in book pose and in tabletop. A manual mode captures poses set by hand. It refuses to run while UI tests share the simulator and puts the simulator back. Unit tests run without a simulator.
+- Commands: `/duo-poses` (`duology-ship`) and `/duo-review` (`duology-design`).
+- The `duo-design-reviewer` agent (`duology-design`): reviews screenshots or Figma exports with the 15-point checklist and the pose, layout, reach and accessibility rules. It reads only.
+- Gallery app: three screens, `tabletopPlayer`, `foldTransition` and `designTokens`, with screenshots in four poses.
+- 9 test tasks in `evals/` for the v0.2 skills, with seven new fixtures (`Steps`, `Album`, `Trail`, `Inbox`, `Trips`, `Notes`, `Shoot`). 29 tasks in all; 28 are ready.
+- `reference/api-index.md`: the standard SwiftUI, UIKit, XCUIAutomation and macOS APIs the v0.2 skills use (Liquid Glass and corners, type and touch targets, scenes and windows, accessibility, animation and frame rate, scrolling, test tools, the macOS Accessibility API), each checked in the SDK and linked to Apple's documentation. `focusSection()` joins "Not in the SDK": it is unavailable on iOS.
+- `reference/sources.md`: 23 Apple documentation and HIG pages, 6 WWDC sessions and one Apple Support page.
+- CI runs the `duo-pose-matrix` unit tests.
 - A 25-second demo at the top of the README (GIF, linked to the MP4 in `docs/assets/demo/`): duo-lint finds four problems in an app built before iPhone Duo, Claude fixes them, then the gallery app in every pose.
+
+### Changed
+
+- `duo-start` routes to the v0.2 skills, commands and agent. Its debug logger's struct is now `DuoFirstPassSize`, so it no longer clashes with `duo-design-system`'s `DuoSpace`.
+- `duo-navigation`: a lone floating control goes on the vertical bar's side, near the thumb, as Apple's `toolbarVerticalEdge` example does, matching `duo-ergonomics`. v0.1 said the opposite side.
+- `duo-patterns`: `FoldGeometry` ignores fold regions that lie outside the view, the same helper `duo-postures` and the gallery use.
+- `duo-continuity`: a fold on the simulator kept the root view, with no relaunch and no `.inactive` phase (measured in v0.2); one exception for scroll position when long text reflows.
+- `duo-setup`, `duo-testing`, `duo-design-review` and `/duo-audit` point to `duo-pose-matrix` for scripted poses. Asking the user to press the pose stays the default.
+- `reference/device-facts.md`: the closed window, 466 × 678 pt, is now measured. New-window requests on the closed simulator did not fail, unlike what Apple's talk describes for the device.
+- The how-it-works diagram shows the v0.2 pose screenshots as built.
+- `.gitattributes` marks the Python tooling as vendored, so GitHub lists the repo as Swift.
+- `README.md`, `AGENTS.md`, `llms.txt` and the plugin manifests list the v0.2 skills, commands and agent. Plugin versions stay 0.1.0 until the release.
 
 ### Removed
 

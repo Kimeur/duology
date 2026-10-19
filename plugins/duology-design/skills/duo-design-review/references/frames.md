@@ -96,7 +96,7 @@ If the screenshots show the first two rows, the main finding is R1: rebuild with
 
 - Simulator screenshots: `xcrun simctl io <device> screenshot --display=primary` saves the outer display, `--display=primary-1` the inner display (*measured*). The display that's off comes out black. See `duo-setup` for the full set of commands.
 - Device Hub's own screenshot button saves at full resolution to the Desktop ([capturing screenshots](https://developer.apple.com/documentation/xcode/capturing-screenshots-and-videos-from-devices)).
-- Poses: only the Closed, Partially Open and Open buttons under the bezel, or Option-drag on the slider for any angle. `simctl` has no pose command ([Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)). Ask the person to set each pose.
+- Poses: only the Closed, Partially Open and Open buttons under the bezel, or Option-drag on the slider for any angle. `simctl` has no pose command ([Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)). Ask the person to set each pose, or run [`duo-pose-matrix`](https://github.com/Kimeur/duology/blob/main/plugins/duology-ship/skills/duo-pose-matrix/SKILL.md) if they have given Accessibility permission.
 - Split View: on the inner display, drag the app by its home indicator to one side, then the other ([talk 111461, 7:30](https://developer.apple.com/videos/play/tech-talks/111461/?time=450)).
 - Recordings: `xcrun simctl io <device> recordVideo --display=primary-1 --force out.mov`, stopped with Ctrl-C. The simulator runs at 60 frames per second, so judge continuity, not smoothness.
 

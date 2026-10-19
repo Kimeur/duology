@@ -46,7 +46,7 @@ These are Apple's App Store screenshot sizes and the simulator's own sizes ([scr
 
 ### Capture from the simulator
 
-The iPhone Duo simulator needs Xcode 27.1. Poses change in Device Hub: the Closed, Partially Open and Open buttons under the bezel, or Option-drag on the slider for any angle ([Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)). `simctl` has no pose command (we checked in Xcode 27.1). Ask the person to set each pose, then capture both displays. Use the Duo's UDID, because `booted` is ambiguous when several simulators run:
+The iPhone Duo simulator needs Xcode 27.1. Poses change in Device Hub: the Closed, Partially Open and Open buttons under the bezel, or Option-drag on the slider for any angle ([Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)). `simctl` has no pose command (we checked in Xcode 27.1). Ask the person to set each pose, then capture both displays. With their Accessibility permission, [`duo-pose-matrix`](https://github.com/Kimeur/duology/blob/main/plugins/duology-ship/skills/duo-pose-matrix/SKILL.md) (`/duo-poses`) presses the pose buttons and saves every frame for you. Use the Duo's UDID, because `booted` is ambiguous when several simulators run:
 
 ```bash
 export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer

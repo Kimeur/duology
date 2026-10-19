@@ -21,6 +21,8 @@ Not this pattern: a single column of long text (let it scroll and cap its line l
 | Open, held tall | As many as fit; the fold runs across, between rows | Normal spacing |
 | Split View, half the display | As many as fit | Normal spacing |
 
+Flat, equal tiles with uneven margins (the vertical bar side has none) put the middle gap a few points off the fold line. `duo-design-review` R5 counts that as Minor. If the gap must sit on the fold line flat too, so folding only widens it, use `DuoColumns` from `duo-design-system` ([grid.md](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-design-system/references/grid.md)).
+
 The grid only changes column count and spacing. It never moves out of the fold as a block. Apple says continuous scrolling content such as feeds and lists does not displace ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=146)), and does not need to avoid the fold ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=568)). Apple's Fitness example keeps every tile tappable by keeping the outer margins and widening the gap at the hinge ([talk 111463](https://developer.apple.com/videos/play/tech-talks/111463/?time=312)). The recipe does the same.
 
 ## Apple APIs

@@ -1,0 +1,29 @@
+{
+  "devices": {
+    "com.apple.CoreSimulator.SimRuntime.iOS-27-0": [
+      {
+        "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-17",
+        "isAvailable": true,
+        "name": "iPhone 17",
+        "state": "Booted",
+        "udid": "00000000-0000-4000-8000-000000000017"
+      }
+    ],
+    "com.apple.CoreSimulator.SimRuntime.iOS-27-1": [
+      {
+        "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-Duo",
+        "isAvailable": true,
+        "name": "Duo spare",
+        "state": "Shutdown",
+        "udid": "00000000-0000-4000-8000-000000000002"
+      },
+      {
+        "deviceTypeIdentifier": "com.apple.CoreSimulator.SimDeviceType.iPhone-Duo",
+        "isAvailable": true,
+        "name": "iPhone Duo",
+        "state": "Booted",
+        "udid": "00000000-0000-4000-8000-000000000001"
+      }
+    ]
+  }
+}

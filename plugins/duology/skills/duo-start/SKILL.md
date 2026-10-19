@@ -1,6 +1,6 @@
 ---
 name: duo-start
-description: Entry point for iPhone Duo, Apple's foldable with an outer display, an inner display and a fold; use it first when someone asks to get an app ready for iPhone Duo, make it work on the foldable or survive fold and unfold, or doesn't know which Duology skill to load. It detects SwiftUI or UIKit, new or existing app, the Xcode and iOS SDK the app builds with (iOS 26, 27 or 27.1 behaviour on Duo), the deployment target and the UIKit scene life cycle, runs a five-minute first pass (Xcode 27.1 build, duo-lint, closed and open on the iPhone Duo simulator in Device Hub) and routes to duo-setup, duo-layout, duo-navigation, duo-continuity, duo-patterns, duo-testing, duo-lint and Apple's App Resizability skill (xcrun agent skills export).
+description: Entry point for iPhone Duo, Apple's foldable with an outer display, an inner display and a fold; use it first when someone asks to get an app ready for iPhone Duo, make it work on the foldable or survive fold and unfold, or doesn't know which Duology skill to load. It detects SwiftUI or UIKit, new or existing app, the Xcode and iOS SDK the app builds with (iOS 26, 27 or 27.1 behaviour on Duo), the deployment target and the UIKit scene life cycle, runs a five-minute first pass (Xcode 27.1 build, duo-lint, closed and open on the iPhone Duo simulator in Device Hub) and routes to duo-setup, duo-layout, duo-navigation, duo-continuity, duo-scenes, duo-patterns, the design skills (duo-design-system, duo-postures, duo-transitions, duo-ergonomics, duo-accessibility), duo-testing, duo-pose-matrix, duo-lint and Apple's App Resizability skill (xcrun agent skills export).
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
   sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
@@ -111,7 +111,7 @@ This is the supporting-pane pattern from `duo-patterns`, shaped like `duo-layout
 
 ## Step 2: Route to the right skill
 
-Duology v0.1 skills. Load the one that matches the task. Full map with symptoms: [references/routing.md](references/routing.md).
+Duology skills (v0.1 and v0.2). Load the one that matches the task. Full map with symptoms: [references/routing.md](references/routing.md).
 
 | Skill | Plugin | Load it when |
 |---|---|---|
@@ -120,20 +120,26 @@ Duology v0.1 skills. Load the one that matches the task. Full map with symptoms:
 | `duo-layout` | duology | Content lands in the fold, a screen breaks on one display, or you need size classes, safe areas, reserved regions or `ArrangementView`. |
 | `duo-navigation` | duology | Toolbars and tab bars go vertical, tabs should become a sidebar, sheets sit in the wrong place, items vanish into overflow. |
 | `duo-continuity` | duology | Scroll, playback, typed text, selection or navigation resets on fold, unfold, rotate or resize. |
+| `duo-scenes` | duology | The app opens a second window, runs in Split View, or shows something on the outer display while the camera runs on the inner one. |
 | `duo-patterns` | duology-design | You need to choose a layout: list-detail, supporting pane, two-page, dual view, extended canvas, feed reflow. |
+| `duo-design-system` | duology-design | You set up spacing, grids, type, Liquid Glass, corners, colours or touch targets for both displays. |
+| `duo-postures` | duology-design | A screen must work half folded: book pose, tabletop media or video call, or a hinge effect. |
+| `duo-transitions` | duology-design | A screen flashes, jumps or moves its controls when the phone opens or closes. |
+| `duo-ergonomics` | duology-design | You decide where primary actions and floating controls go so hands reach them. |
+| `duo-accessibility` | duology-design | VoiceOver order across panes, Dynamic Type on the outer display, Reduce Motion, keyboard and contrast. |
 | `duo-shared-screen` | duology-design | Two people use one phone: games, teaching, showing a customer. |
 | `duo-design-review` | duology-design | You review screenshots or Figma frames against the Duo checklist. |
 | `duo-testing` | duology-ship | You write unit or UI tests that must hold up on the Duo simulator. |
+| `duo-pose-matrix` | duology-ship | You need screenshots of the app closed, open, in book pose and in tabletop. |
 | `duo-lint` | duology-ship | You need to find code Apple warns against before it ships. |
 | `recipe-two-player-game` | duology-recipes | You build a two-player game on one phone from scratch. |
 
-Commands: `/duo-doctor` (check the setup), `/duo-new <recipe>` (new app from a recipe), `/duo-audit` (lint plus checklist, most serious first).
+Commands: `/duo-doctor` (check the setup), `/duo-new <recipe>` (new app from a recipe), `/duo-audit` (lint plus checklist, most serious first), `/duo-poses` (screenshot every pose), `/duo-review` (design review of screenshots by the `duo-design-reviewer` agent).
 
 If a skill isn't installed, tell the user the plugin to add, for example `/plugin install duology-design@duology`. On other agents: `npx skills add Kimeur/duology --skill <name>`.
 
-**Coming, not in v0.1.** Say "coming" and use the Apple source listed in [references/routing.md](references/routing.md) until then:
+**Coming.** Say "coming" and use the Apple source listed in [references/routing.md](references/routing.md) until then:
 
-- v0.2: `duo-design-system`, `duo-postures`, `duo-transitions`, `duo-ergonomics`, `duo-accessibility`, `duo-pose-matrix` (and `/duo-poses`), `duo-scenes`, `/duo-review`.
 - v0.3: `duo-intelligence`, `duo-app-intents`, `duo-camera`, `duo-media`, `duo-reading`, `duo-games`, `duo-swiftui-27`, `duo-system-surfaces`, plus four recipes.
 - v1.0: `duo-performance`, `duo-app-store`, `duo-migrate`, `/duo-ship`, and the last three recipes.
 
@@ -175,7 +181,7 @@ Goal: a short report, not fixes. Details, logger code and the report template: [
    xcrun simctl io booted screenshot --display=primary-1 "$TMPDIR/duo-inner.png"   # inner display
    ```
 
-   Then ask the user: "In Device Hub, click **Closed** (the pose buttons sit under the bezel). Tell me when it's done." Take the screenshots again. Repeat with **Partially Open** if time allows ([Device Hub article](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)). Look for: empty space around the app, clipped or stretched content, controls in the fold, lost scroll or typing, bars that look wrong.
+   Then ask the user: "In Device Hub, click **Closed** (the pose buttons sit under the bezel). Tell me when it's done." Take the screenshots again. Repeat with **Partially Open** if time allows ([Device Hub article](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)). If the user asks you to script the poses and has given Accessibility permission to the app that runs you, `duo-pose set closed` from `duo-pose-matrix` presses the button instead; it refuses while UI tests share the simulator. Look for: empty space around the app, clipped or stretched content, controls in the fold, lost scroll or typing, bars that look wrong.
 
 5. **Report and route.** Fill the template in [references/first-pass.md](references/first-pass.md#report). Map each problem to one skill from Step 2. For a deeper audit, run `/duo-audit`.
 

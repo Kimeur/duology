@@ -1,8 +1,8 @@
 # Duology Gallery
 
-A small SwiftUI app with one screen for each layout pattern in the [`duo-patterns`](../../plugins/duology-design/skills/duo-patterns/SKILL.md) skill. Run it on the iPhone Duo simulator, then close, open and fold the phone in Device Hub to see what each pattern does.
+A small SwiftUI app with one screen for each layout pattern in the [`duo-patterns`](../../plugins/duology-design/skills/duo-patterns/SKILL.md) skill, plus three screens for the v0.2 design skills: a tabletop player ([`duo-postures`](../../plugins/duology-design/skills/duo-postures/SKILL.md)), a fold transition ([`duo-transitions`](../../plugins/duology-design/skills/duo-transitions/SKILL.md) with [`duo-continuity`](../../plugins/duology/skills/duo-continuity/SKILL.md)) and design tokens ([`duo-design-system`](../../plugins/duology-design/skills/duo-design-system/SKILL.md)). Run it on the iPhone Duo simulator, then close, open and fold the phone in Device Hub to see what each screen does.
 
-Every screen uses real sample content (an inbox, an article, a short book, a day in Lisbon, a trail map, a shop, a music library, voice memos). All names, companies and text are made up for the sample.
+Every screen uses real sample content (an inbox, an article, a short book, a day in Lisbon, a trail map, a shop, a music library, voice memos, a nature film, a rock-pooling guide, a home energy dashboard). All names, companies and text are made up for the sample.
 
 <p align="center">
   <img src="../../docs/assets/gallery/home-closed.png" width="260" alt="The gallery's home screen on the closed iPhone Duo: a card for each pattern with what it is for and a closed and open diagram" />
@@ -40,12 +40,12 @@ xcrun simctl launch "iPhone Duo" dev.duology.gallery -pattern listDetail
 
 | Argument | What it does |
 |---|---|
-| `-pattern <name>` | Opens one screen straight away. Names: `listDetail`, `supportingPane`, `twoPage`, `dualView`, `extendedCanvas`, `feedReflow`, `tabsToSidebar`, `displacement`. |
+| `-pattern <name>` | Opens one screen straight away. Names: `listDetail`, `supportingPane`, `twoPage`, `dualView`, `extendedCanvas`, `feedReflow`, `tabsToSidebar`, `displacement`, `tabletopPlayer`, `foldTransition`, `designTokens`. |
 | `-showsRegions YES` | Starts with the region overlay on: every reserved region drawn over the screen (the fold in pink, cameras and the status bar corner in orange), with their frames and the window size. The dashed-rectangle button on the home screen still turns it off. The button's choice is saved for the next launch without the argument. |
-| `-select <id>` | Preselects an item: a message in list-detail, a place in dual view. |
+| `-select <id>` | Preselects an item: a message in list-detail, a place in dual view, a paragraph in the fold transition (which then opens at that paragraph's section). |
 | `-show map` | Starts the dual view on its map when only one view fits. |
 
-The shared scheme lists the `-pattern` and `-showsRegions` arguments, turned off. Tick one in **Product > Scheme > Edit Scheme > Run > Arguments**.
+The shared scheme lists every `-pattern` argument and `-showsRegions`, turned off. Tick one in **Product > Scheme > Edit Scheme > Run > Arguments**.
 
 ### Try the poses
 
@@ -70,7 +70,7 @@ For each screen, check:
 
 ## The screens
 
-The behaviour below is what we saw on the iPhone Duo simulator (iOS 27.1, Xcode 27.1, light mode, 18 October 2026), in the four poses above. Screenshots of every screen in every pose are in [Screenshots](#screenshots).
+The behaviour below is what we saw on the iPhone Duo simulator (iOS 27.1, Xcode 27.1, light mode, 18 October 2026; the design tokens open shot on 19 October), in the four poses above. The tabletop player always uses dark mode. Screenshots of every screen in every pose are in [Screenshots](#screenshots).
 
 | Screen | Use it for | Closed | Open and book | Tabletop | Built with |
 |---|---|---|---|---|---|
@@ -82,10 +82,13 @@ The behaviour below is what we saw on the iPhone Duo simulator (iOS 27.1, Xcode 
 | [Feed reflow](DuologyGallery/Patterns/FeedReflowView.swift) | Photos, shops, news | A homeware shop in two columns, picked from the grid's own width. A line above the grid says what the grid is doing. | Four columns. Open, an even count, ready to fold. In book pose two columns sit on each side and the fold is the middle gap. | Three columns. The fold runs across the grid, and rows scroll past it. | `LazyVGrid`, reserved regions with `.includeInactive`, `contentMargins(for: .container)` (iOS 27.1) |
 | [Tabs to sidebar](DuologyGallery/Patterns/TabsToSidebarView.swift) | Apps with many sections | A music library with a tab bar on the side. Listen Now shows Library shortcuts. | A sidebar with a Library section. The Library shortcuts on Listen Now hide because the sidebar lists them. | No tab bar and no sidebar on screen, only a sidebar button at the top. The Library shortcuts stay hidden. | `TabView`, `.sidebarAdaptable`, `defaultTabBarPlacement(.sidebar)` and `isTabViewSidebarAvailable` (iOS 27.0) |
 | [Displacement](DuologyGallery/Patterns/DisplacementView.swift) | Controls you place near the middle | Voice memos. The record group sits bottom centre over the list. | Open, the group stays bottom centre. In book pose it moves into the trailing region. The list never moves. | The group sits in the bottom region, below the fold. The list never moves. | `reservedRegions(kind: .division)` (iOS 27.1), `glassEffect` (iOS 26) |
+| [Tabletop player](DuologyGallery/Patterns/TabletopPlayerView.swift) | Video, calls, recipes, workouts | A nature film with subtitles. The picture sits above the controls. The bar stays horizontal, with Close and the title at the top. | Open: the film fills the width and the controls float over its bottom edge; the subtitle moves up above them. Book: the film in the leading region, the same controls centred in the trailing region. | The film above the fold, the same controls centred below it. | `FoldRegionsLayout` on the `.division` region and `toolbarVerticalBehavior(.disabled)` (iOS 27.1), `glassEffect` (iOS 26) |
+| [Fold transition](DuologyGallery/Patterns/FoldTransitionView.swift) | Readers, maps, editors: work in progress | A rock-pooling guide with a progress line at the top, floating reading tools at the bottom and Contents in the vertical bar. | Contents leading, the article trailing, split on the fold line. The article is about as wide as on the closed phone, so lines barely reflow. Book pose looks the same: nothing moves. | Contents above the fold, the article and its tools below. | Custom `Layout`, `ScrollViewReader` scrolling back to a saved paragraph ID (iOS 14), `ScrollPosition` for jumps from Contents and `onScrollTargetVisibilityChange` (iOS 18), `safeAreaBar` (iOS 26), reserved regions (iOS 27.1) |
+| [Design tokens](DuologyGallery/Patterns/DesignTokensView.swift) | Grids, margins, type and touch targets | A home energy dashboard on 4 columns with 12 pt gutters, with the columns, margins and touch targets drawn over it. The margin was 20 pt on the leading side and 0 pt next to the vertical bar. | 8 columns with 16 pt gutters, four on each side of the fold. Open, one 16 pt gutter sits centred on the flat fold line. In book pose only that gap widens, to the fold's 40 pt frame; the columns narrow by 3 pt and keep their row. | 8 columns. The fold runs across the screen, and the cards scroll under it. | `DuoColumns` and `@DuoMetrics` from `duo-design-system`, `contentMargins(for: .container)` and reserved regions (iOS 27.1) |
 
 ### Screenshots
 
-Taken with `xcrun simctl io <device> screenshot`: `--display=primary` (outer display, 1398 × 2034 px) when closed, `--display=primary-1` (inner display, 2853 × 2007 px held wide, 2007 × 2853 px held tall) when open. Scaled to half size. The status bar is set to 9:41 with `simctl status_bar`. List-detail's open, book and tabletop shots launch with `-select 1`, so they show a message.
+Taken with `xcrun simctl io <device> screenshot`: `--display=primary` (outer display, 1398 × 2034 px) when closed, `--display=primary-1` (inner display, 2853 × 2007 px held wide, 2007 × 2853 px held tall) when open. Scaled to half size. The status bar is set to 9:41 with `simctl status_bar`. List-detail's open, book and tabletop shots launch with `-select 1`, so they show a message. The fold transition shots launch with `-select 14`; its open, book and tabletop shots were taken without a relaunch: the screen was launched on the closed phone, then the pose was changed under it.
 
 | Screen | Closed | Open | Book | Tabletop |
 |---|---|---|---|---|
@@ -97,6 +100,9 @@ Taken with `xcrun simctl io <device> screenshot`: `--display=primary` (outer dis
 | Feed reflow | <img src="../../docs/assets/gallery/feedReflow-closed.png" width="110" alt="Shop grid in two columns on the closed phone" /> | <img src="../../docs/assets/gallery/feedReflow-open.png" width="230" alt="Open: the shop grid in four columns" /> | <img src="../../docs/assets/gallery/feedReflow-book.png" width="230" alt="Book pose: four columns, two per side, the fold as the middle gap" /> | <img src="../../docs/assets/gallery/feedReflow-tabletop.png" width="110" alt="Tabletop: the shop grid in three columns" /> |
 | Tabs to sidebar | <img src="../../docs/assets/gallery/tabsToSidebar-closed.png" width="110" alt="Listen Now on the closed phone with eight tabs in a vertical tab bar" /> | <img src="../../docs/assets/gallery/tabsToSidebar-open.png" width="230" alt="Open: a sidebar with a Library section next to Listen Now" /> | <img src="../../docs/assets/gallery/tabsToSidebar-book.png" width="230" alt="Book pose: the sidebar in the left half, Listen Now in the right half" /> | <img src="../../docs/assets/gallery/tabsToSidebar-tabletop.png" width="110" alt="Tabletop: Listen Now with a sidebar button and no tab bar" /> |
 | Displacement | <img src="../../docs/assets/gallery/displacement-closed.png" width="110" alt="Voice memo list on the closed phone with the record controls at the bottom" /> | <img src="../../docs/assets/gallery/displacement-open.png" width="230" alt="Open: voice memos with the record group bottom centre" /> | <img src="../../docs/assets/gallery/displacement-book.png" width="230" alt="Book pose: the record group in the right half" /> | <img src="../../docs/assets/gallery/displacement-tabletop.png" width="110" alt="Tabletop: the record group below the fold" /> |
+| Tabletop player | <img src="../../docs/assets/gallery/tabletopPlayer-closed.png" width="110" alt="Closed: the kelp forest film above the player controls, with a subtitle" /> | <img src="../../docs/assets/gallery/tabletopPlayer-open.png" width="230" alt="Open: the film across the display, the controls floating over its bottom edge" /> | <img src="../../docs/assets/gallery/tabletopPlayer-book.png" width="230" alt="Book pose: the film in the left half, the same controls in the right half" /> | <img src="../../docs/assets/gallery/tabletopPlayer-tabletop.png" width="110" alt="Tabletop: the film above the fold, the same controls below it" /> |
+| Fold transition | <img src="../../docs/assets/gallery/foldTransition-closed.png" width="110" alt="Closed: the rock-pooling guide at The middle shore, one paragraph highlighted and the next selected, reading tools at the bottom" /> | <img src="../../docs/assets/gallery/foldTransition-open.png" width="230" alt="Open: contents on the left of the fold, the same section and selection on the right" /> | <img src="../../docs/assets/gallery/foldTransition-book.png" width="230" alt="Book pose: the same split as open; nothing moved" /> | <img src="../../docs/assets/gallery/foldTransition-tabletop.png" width="110" alt="Tabletop: contents above the fold, the article and its tools below" /> |
+| Design tokens | <img src="../../docs/assets/gallery/designTokens-closed.png" width="110" alt="Closed: the energy dashboard on a four-column grid with the margin and touch target overlays" /> | <img src="../../docs/assets/gallery/designTokens-open.png" width="230" alt="Open: eight columns, four on each side, with a 16 pt gutter on the dashed fold line" /> | <img src="../../docs/assets/gallery/designTokens-book.png" width="230" alt="Book pose: the fold as the middle gutter, four columns on each side" /> | <img src="../../docs/assets/gallery/designTokens-tabletop.png" width="110" alt="Tabletop: eight columns, the fold drawn across the screen" /> |
 
 More screenshots:
 
@@ -130,7 +136,17 @@ On the iOS 27.1 iPhone Duo simulator. The table comes from the region overlay (w
 - Horizontal `ScrollView`s inside those margins (the shop's category chips, the music shelves) drew their content past their frame, under the status bar and the tab bar, until we added `.clipped()`.
 - With column visibility left to the system (`.automatic`), list-detail launched with a selection showed the message alone in book pose, its lines running across the fold. The screen now sets the column visibility itself.
 
-An earlier build ran every screen without a crash on an iPhone 17 Pro simulator with iOS 26.5, using the fallbacks (16 October 2026). The changes from 18 October were not run on iOS 26.5.
+### The v0.2 screens
+
+Measured on 18 and 19 October 2026, same simulator, with the poses pressed in Device Hub:
+
+- **Tabletop player.** `FoldRegionsLayout` placed the film and the controls as `duo-postures` describes, in every pose: controls floating at the bottom closed and open, film leading and controls trailing in book pose, film above and controls below in tabletop. Closed, the screen moves the picture up into the space above the controls, so they don't cover it; open, they float over its bottom edge. This is the first time that layout ran folded on the simulator.
+- **The vertical bar opt-out.** With `toolbarVerticalBehavior(.disabled)`, Close and the title stayed in a horizontal bar closed, open, in book pose and in tabletop. One earlier closed launch showed a vertical bar while the modifier sat only on the stack's top view. The screen now also sets it on the full-screen cover's root view, and later closed launches showed the horizontal bar. Which placement made the difference is not proven. (unverified)
+- **Fold transition.** On unfold, the article's text width went through about a dozen values in 0.3 s (the layout animation, then the system margins arriving), from 342 pt closed to 352 pt open. Neither a `ScrollPosition` that already named the paragraph nor a scroll command at the first new width kept the paragraph at the top: the reader landed one or two sections earlier. Measuring the text width inside the margins and scrolling back to the paragraph's ID with `ScrollViewReader` 400 ms after the last change kept it, closed to open to book to tabletop, open to closed, and when launched open. This is text that reflows in a `ScrollView` while the margins arrive late. It is not the case `duo-continuity` measured, a grid that changes its column count, where a `ScrollPosition` by ID kept the item.
+- **Design tokens.** The container margin was 20 pt on the leading side and 0 pt next to the vertical bar, closed (grid 362 pt wide) and open (847 pt). In the grid, the fold sits at 435 to 475 pt. Open and flat (19 October), a 16 pt gutter sat centred on the fold line, with four columns on each side: about 100 pt wide on the left and 84 pt on the right, where the vertical bar takes room. In book pose (18 October) the fold's 40 pt frame became the middle gutter. The current `DuoColumns` gives the same book columns (97 and 81 pt), so that shot still holds. The first version of this screen used an older copy of the helper, which put the flat fold line inside the fifth column.
+- **Design tokens, closing after opening.** Not yet run on the simulator without a relaunch. The dashboard measures a frame that fills the offered width, as `duo-design-system` asks. A macOS SwiftUI copy of that structure followed the width from 362 to 847 and back to 362 pt; without that frame it stayed 847 pt wide.
+
+An earlier build ran every screen without a crash on an iPhone 17 Pro simulator with iOS 26.5, using the fallbacks (16 October 2026). The changes from 18 and 19 October were not run on iOS 26.5.
 
 Not checked yet: open and held tall, Split View, right-to-left languages, dark mode on most screens, and a real iPhone Duo.
 
@@ -158,11 +174,13 @@ DuologyGallery/
   App/
     DuologyGalleryApp.swift    app entry; patterns open as full-screen covers
     GalleryHome.swift          home grid, window facts, closed and open diagrams
-    Pattern.swift              the eight patterns: names, one-liners, launch names
-  Patterns/                    one file per pattern, each with its sample data
+    Pattern.swift              the eleven screens: names, one-liners, launch names
+  Patterns/                    one file per screen, each with its sample data
   Shared/
     EvenSplit.swift            two halves that always show (see below)
     FoldGeometry.swift         where the fold is, from the .division region
+    FoldRegionsLayout.swift    content and controls in the regions a fold makes
+    DuoTokens.swift            the duo-design-system tokens and grid helper
     FeedGrid.swift             even column counts around a fold
     ReservedRegionOverlay.swift  debug overlay for every reserved region
     GalleryChrome.swift        launch arguments, Close button, avatars
@@ -177,6 +195,8 @@ The project uses file-system synchronized groups (`objectVersion = 77`). Add a S
 - **`FoldGeometry`** and `onFoldChange(_:)` read the fold from `reservedRegions(kind: .division, options: .includeInactive)` on every geometry change. Ask for inactive regions too: a flat phone returns none by default. The query also returns a region that only touches the view, so `FoldGeometry` keeps a fold only when it lies inside the view (`liesInside(_:of:)`). Before iOS 27.1 the modifier does nothing.
 - **`feedColumns(for:minTileWidth:spacing:)`** is a pure function, so you can test it on the Mac. We did, with a 150 pt minimum tile and 12 pt spacing: 5 columns at 867 pt with no fold, 4 with an inactive fold, and with an active 40 pt fold the column widths and gaps add up to exactly 867 pt.
 - **`controlRegion(in:fold:)`** returns where controls may sit: the whole view when flat, the trailing region when folded like a book, the bottom region when folded across.
+- **`FoldRegionsLayout`** is the `duo-postures` layout for two views, content first and controls second. With no active fold the controls float over the content at the bottom. Folded like a book, the content goes leading and the controls trailing; folded across, the content goes on top and the controls below. It is one `Layout` in every pose, so neither view is rebuilt. The tabletop player uses it.
+- **`DuoTokens.swift`** holds the `duo-design-system` token module (`DuoSpace`, `DuoTokens`, `@DuoMetrics`, `DuoType`, `DuoCard`, `duoTouchTarget()`) and its grid helper (`DuoFold`, `DuoGridGeometry`, `DuoColumns`). The code is the skill's as of 19 October 2026. The design tokens screen draws `DuoColumns` over a real screen. The skill's `duoContainerMargins()` is left out because `containerMargins(_:)` in `FeedGrid.swift` is the same code with an edges parameter.
 
 ## Rules the screens follow
 

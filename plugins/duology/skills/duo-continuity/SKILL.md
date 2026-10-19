@@ -28,7 +28,7 @@ Don't look for one. The iOS 27.1 SDK has no fold, pose or posture symbol, and th
 | Split View, pinned Picture in Picture | The window gets narrower or shorter. |
 | Combinations | Rotate, then close. Close while scrolling. Open while typing. Each step is another resize. |
 
-- *Unverified:* that a real close or open keeps your root view alive with no relaunch (Apple calls it a resize; we haven't measured a fold), whether the scene passes through `.inactive`, and what the keyboard does when the window changes display. Don't depend on any of them; check in Device Hub.
+- *Measured* on the simulator with Device Hub's pose buttons (v0.2): close, open, partial fold and rotation kept the root view alive, with no relaunch, no new `onAppear` and no scene disconnect, and the scene stayed `active` with no `.inactive` ([duo-transitions evidence](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-transitions/references/evidence.md), [duo-scenes evidence](https://github.com/Kimeur/duology/blob/main/plugins/duology/skills/duo-scenes/references/evidence.md)). *Unverified:* a real iPhone Duo, and what the keyboard does when the window changes display. Still save on `.background`.
 
 ## Where state gets lost
 
@@ -191,7 +191,7 @@ struct FeedView: View {
 ```
 
 - Apple's [ScrollPosition](https://developer.apple.com/documentation/swiftui/scrollposition) page says SwiftUI tries to keep the view with that ID visible when the scroll view's size changes. A point position gets no such help.
-- *Measured:* item 150 stayed at the top through 4 → 1 → 4 columns; a point position showed rows 31 to 33 instead. `scrollPosition(id:)` did not move a `List`. Use `ScrollViewReader` for a `List`, or a `ScrollView` with a lazy stack when you need ID positions.
+- *Measured:* item 150 stayed at the top through 4 → 1 → 4 columns; a point position showed rows 31 to 33 instead. `scrollPosition(id:)` did not move a `List`. Use `ScrollViewReader` for a `List`, or a `ScrollView` with a lazy stack when you need ID positions. One exception, *measured* in the gallery: long text that reflows while the system margins arrive late lost its paragraph with `ScrollPosition`; a `ScrollViewReader.scrollTo` by the saved ID after the width settles kept it ([gallery README](https://github.com/Kimeur/duology/blob/main/samples/DuologyGallery/README.md#the-v02-screens)).
 
 ## 5. No reloads, and no work tied to a view's life
 

@@ -1,8 +1,8 @@
 # API index
 
-Every iPhone Duo API that Duology skills use, checked against the iOS 27.1 SDK.
+Every iPhone Duo API that Duology skills use, checked against the iOS 27.1 SDK. From v0.2 it also lists the standard SwiftUI, UIKit, XCUIAutomation and macOS APIs that the design, accessibility, scenes and pose skills rely on, from [Liquid Glass and corners](#liquid-glass-and-corners) down. Those aren't Duo-specific; they are here so every name in a skill can be checked.
 
-- **Checked with:** Xcode 27.1 (27A9275), iOS 27.1 simulator SDK (build 24A94232), on 16 October 2026.
+- **Checked with:** Xcode 27.1 (27A9275), iOS 27.1 simulator SDK (build 24A94232), on 16 October 2026. The v0.2 sections were checked on 19 October 2026: each declaration against the SDK interfaces (XCUIAutomation in the iPhone Simulator platform, the macOS Accessibility API in the macOS SDK), each doc link through Apple's documentation JSON, and the SwiftUI and UIKit spellings in one scratch file that typechecks with no errors or warnings at an iOS 27.1 target.
 - **Where we looked:** the SwiftUI and SwiftUICore `.swiftinterface` files, the UIKit headers and `UIKit.swiftinterface`, the AVFoundation headers and the AVKit headers inside that SDK. Each doc link was fetched from Apple's documentation JSON and returned a page.
 - **Declarations** come from the SDK. To keep rows short we removed module prefixes (`SwiftUICore::`, `Swift.`), access and isolation keywords (`public`, `open`, `nonisolated`, `@MainActor @preconcurrency` on members) and doc comments. UIKit, AVFoundation and AVKit rows show the Swift form, read from Apple's doc JSON and from `swift-synthesize-interface` output for the SDK.
 - **Availability** is the iOS version in the SDK's `@available` or `API_AVAILABLE` attribute. In SwiftUI, `anyAppleOS 27.1` means every Apple platform at version 27.1.
@@ -266,6 +266,182 @@ These exist in the SDK, but Apple tells you not to base layout on them. `duo-lin
 - `swipeActionsContainer()` gives custom `ScrollView` or `LazyVStack` rows the one-open-row behaviour that `List` has built in.
 - Apple explains the source changes that `@State` and `ContentBuilder` can cause in [TN3211](https://developer.apple.com/documentation/technotes/tn3211-resolving-swiftui-source-incompatibilities-for-state-and-contentbuilder).
 
+## Liquid Glass and corners
+
+Used by `duo-design-system`, `duo-ergonomics` and the gallery app. None of these are new for iPhone Duo: they arrived with the iOS 26 design.
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `View.glassEffect(_:in:)` | SwiftUI | `func glassEffect(_ glass: Glass = .regular, in shape: some Shape = DefaultGlassEffectShape()) -> some View` | iOS 26.0; not visionOS | [doc](https://developer.apple.com/documentation/swiftui/view/glasseffect(_:in:)) |
+| `Glass` | SwiftUI | `struct Glass : Equatable, Sendable` with `static var regular`, `static var clear`, `func tint(_ color: Color?) -> Glass`, `func interactive(_ isEnabled: Bool = true) -> Glass` | iOS 26.0; not visionOS | [doc](https://developer.apple.com/documentation/swiftui/glass) |
+| `GlassEffectContainer` | SwiftUI | `struct GlassEffectContainer<Content> : View where Content : View` with `init(spacing: CGFloat? = nil, @ContentBuilder content: () -> Content)` | iOS 26.0; not visionOS | [doc](https://developer.apple.com/documentation/swiftui/glasseffectcontainer) |
+| `.glass`, `.glassProminent` button styles | SwiftUI | `static var glass: GlassButtonStyle` and `static var glassProminent: GlassProminentButtonStyle` on `PrimitiveButtonStyle` | iOS 26.0; not visionOS | [doc](https://developer.apple.com/documentation/swiftui/primitivebuttonstyle/glass) |
+| `View.scrollEdgeEffectStyle(_:for:)` | SwiftUI | `func scrollEdgeEffectStyle(_ style: ScrollEdgeEffectStyle?, for edges: Edge.Set) -> some View`; the style has `.automatic`, `.hard`, `.soft` | iOS 26.0; not visionOS | [doc](https://developer.apple.com/documentation/swiftui/view/scrolledgeeffectstyle(_:for:)) |
+| `View.safeAreaBar(edge:alignment:spacing:content:)` | SwiftUI | `func safeAreaBar(edge: VerticalEdge, alignment: HorizontalAlignment = .center, spacing: CGFloat? = nil, @ContentBuilder content: () -> some View) -> some View` (also a `HorizontalEdge` overload) | iOS 26.0 | [doc](https://developer.apple.com/documentation/swiftui/view/safeareabar(edge:alignment:spacing:content:)) |
+| `View.containerShape(_:)` | SwiftUI | `func containerShape(_ shape: some RoundedRectangularShape) -> some View` and the older `func containerShape<T>(_ shape: T) -> some View where T : InsettableShape` | iOS 26.0 (`RoundedRectangularShape`); iOS 15.0 (`InsettableShape`) | [doc](https://developer.apple.com/documentation/swiftui/view/containershape(_:)) |
+| `RoundedRectangularShape` | SwiftUI | `protocol RoundedRectangularShape : InsettableShape` | iOS 26.0 | [doc](https://developer.apple.com/documentation/swiftui/roundedrectangularshape) |
+| `Edge.Corner.Style` | SwiftUI | `static func concentric(minimum: Edge.Corner.Style? = nil) -> Edge.Corner.Style`, `static func fixed(_ radius: CGFloat) -> Edge.Corner.Style` | iOS 26.0 | [doc](https://developer.apple.com/documentation/swiftui/edge/corner/style) |
+| `ConcentricRectangle.init(uniformTopCorners:uniformBottomCorners:)` | SwiftUI | `init(uniformTopCorners: Edge.Corner.Style = .concentric, uniformBottomCorners: Edge.Corner.Style = .concentric)`; also `Shape.rect(corners:isUniform:)` where `Self == ConcentricRectangle` | iOS 26.0 | [doc](https://developer.apple.com/documentation/swiftui/concentricrectangle/init(uniformtopcorners:uniformbottomcorners:)) |
+| `RectangleCornerRadii` | SwiftUI | `struct RectangleCornerRadii`; used by `Path(roundedRect:cornerRadii:style:)` and `GeometryProxy.concentricCornerRadii` | iOS 16.0 | [doc](https://developer.apple.com/documentation/swiftui/rectanglecornerradii) |
+| `UIGlassEffect` | UIKit | `class UIGlassEffect : UIVisualEffect` with `init(style: UIGlassEffect.Style)`, `var isInteractive: Bool`, `var tintColor: UIColor?` | iOS 26.0 | [doc](https://developer.apple.com/documentation/uikit/uiglasseffect) |
+| `UIButton.Configuration.glass()`, `.prominentGlass()` | UIKit | `static func glass() -> UIButton.Configuration`, `static func prominentGlass() -> UIButton.Configuration` | iOS 26.0; not watchOS, visionOS | [doc](https://developer.apple.com/documentation/uikit/uibutton/configuration-swift.struct/glass()) |
+| `UICornerConfiguration.corners(radius:)`, `.capsule(maximumRadius:)` | UIKit | `static func corners(radius: UICornerRadius) -> UICornerConfiguration`, `static func capsule(maximumRadius: Double? = nil) -> UICornerConfiguration` | iOS 26.0 | [doc](https://developer.apple.com/documentation/uikit/uicornerconfiguration-swift.struct/corners(radius:)) |
+| `UICornerRadius` | UIKit | `static func containerConcentric(minimum: CGFloat? = nil) -> UICornerRadius`, `static func fixed(_ radius: Double) -> UICornerRadius` | iOS 26.0 | [doc](https://developer.apple.com/documentation/uikit/uicornerradius-swift.struct) |
+| `UIView.effectiveRadius(corner:)` | UIKit | `func effectiveRadius(corner: UIRectCorner) -> CGFloat` | iOS 26.0 | [doc](https://developer.apple.com/documentation/uikit/uiview/effectiveradius(corner:)) |
+
+- Only the iOS 26 `containerShape(_:)` overload, which takes a `RoundedRectangularShape`, gives `GeometryProxy.concentricCornerRadii` a container to measure against (`duo-design-system` references/corners.md).
+- `UIView.effectiveRadius(corner:)` reads back the radius the view's `cornerConfiguration` resolves to. Called inside `layoutSubviews()` or `updateProperties()`, it is invalidated when that radius changes (UIKit header).
+
+## Type, size and touch targets
+
+Standard SwiftUI and UIKit APIs the v0.2 design, ergonomics and accessibility skills use. Not Duo-specific.
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `ScaledMetric` | SwiftUI | `@propertyWrapper struct ScaledMetric<Value> where Value : BinaryFloatingPoint` with `init(wrappedValue: Value, relativeTo textStyle: Font.TextStyle)` | iOS 14.0 | [doc](https://developer.apple.com/documentation/swiftui/scaledmetric) |
+| `Font.custom(_:size:relativeTo:)` | SwiftUI | `static func custom(_ name: String, size: CGFloat, relativeTo textStyle: Font.TextStyle) -> Font` | iOS 14.0 | [doc](https://developer.apple.com/documentation/swiftui/font/custom(_:size:relativeto:)) |
+| `DynamicTypeSize.isAccessibilitySize` | SwiftUI | `var isAccessibilitySize: Bool { get }`; read the current size from `EnvironmentValues.dynamicTypeSize` | iOS 15.0 | [doc](https://developer.apple.com/documentation/swiftui/dynamictypesize/isaccessibilitysize) |
+| `ViewThatFits` | SwiftUI | `struct ViewThatFits<Content> : View where Content : View` with `init(in axes: Axis.Set = [.horizontal, .vertical], @ContentBuilder content: () -> Content)` | iOS 16.0 | [doc](https://developer.apple.com/documentation/swiftui/viewthatfits) |
+| `AnyLayout`, `HStackLayout`, `VStackLayout` | SwiftUI | `struct AnyLayout : Layout, Sendable` with `init<L>(_ layout: L) where L : Layout` | iOS 16.0 | [doc](https://developer.apple.com/documentation/swiftui/anylayout) |
+| `View.onGeometryChange(for:of:action:)` | SwiftUI | `func onGeometryChange<T>(for type: T.Type, of transform: @escaping @Sendable (GeometryProxy) -> T, action: @escaping (_ newValue: T) -> Void) -> some View where T : Equatable` | iOS 16.0 (back-deployed); the `(oldValue, newValue)` form is iOS 18.0 | [doc](https://developer.apple.com/documentation/swiftui/view/ongeometrychange(for:of:action:)) |
+| `View.contentShape(_:eoFill:)` | SwiftUI | `func contentShape<S>(_ shape: S, eoFill: Bool = false) -> some View where S : Shape` | iOS 13.0 | [doc](https://developer.apple.com/documentation/swiftui/view/contentshape(_:eofill:)) |
+| `View.controlSize(_:)`, `ControlSize.extraLarge` | SwiftUI | `func controlSize(_ controlSize: ControlSize) -> some View`; `case extraLarge` | iOS 15.0; `.extraLarge` iOS 17.0 | [doc](https://developer.apple.com/documentation/swiftui/view/controlsize(_:)) |
+| `UIFontMetrics.scaledValue(for:compatibleWith:)` | UIKit | `func scaledValue(for value: CGFloat, compatibleWith traitCollection: UITraitCollection?) -> CGFloat` | iOS 11.0 | [doc](https://developer.apple.com/documentation/uikit/uifontmetrics/scaledvalue(for:compatiblewith:)) |
+| `UIButton.Configuration.buttonSize` | UIKit | `var buttonSize: UIButton.Configuration.Size` | iOS 15.0 | [doc](https://developer.apple.com/documentation/uikit/uibutton/configuration-swift.struct/buttonsize) |
+| `UIView.effectiveUserInterfaceLayoutDirection` | UIKit | `var effectiveUserInterfaceLayoutDirection: UIUserInterfaceLayoutDirection { get }` | iOS 10.0 | [doc](https://developer.apple.com/documentation/uikit/uiview/effectiveuserinterfacelayoutdirection) |
+
+- Apple's minimum hit region is 44 x 44 pt ([HIG: Buttons](https://developer.apple.com/design/human-interface-guidelines/buttons)). In SwiftUI, put the frame and `contentShape` inside the button's label. With them outside the `Button`, clicks off the glyph did nothing in a SwiftUI check on the Mac; iOS taps are unverified (`duo-ergonomics` references/measured.md).
+
+## Scenes and windows
+
+Used by `duo-scenes`. Most of these date from iOS 13 to iOS 17; iPhone Duo is the first iPhone where more than one window matters.
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `UIApplication.activateSceneSession(for:errorHandler:)` | UIKit | `func activateSceneSession(for request: UISceneSessionActivationRequest, errorHandler: ((any Error) -> Void)? = nil)` | iOS 17.0 | [doc](https://developer.apple.com/documentation/uikit/uiapplication/activatescenesession(for:errorhandler:)) |
+| `UISceneSessionActivationRequest` | UIKit | `struct UISceneSessionActivationRequest : Hashable` with `init(role: UISceneSession.Role = .windowApplication, userActivity: NSUserActivity? = nil, options: UIScene.ActivationRequestOptions? = nil)` and `init(session:userActivity:options:)` | iOS 17.0 | [doc](https://developer.apple.com/documentation/uikit/uiscenesessionactivationrequest-swift.struct) |
+| `UIApplication.requestSceneSessionActivation(_:userActivity:options:errorHandler:)` | UIKit | `func requestSceneSessionActivation(_ sceneSession: UISceneSession?, userActivity: NSUserActivity?, options: UIScene.ActivationRequestOptions?, errorHandler: ((any Error) -> Void)? = nil)` | iOS 13.0; the SDK marks it to be deprecated in favour of `activateSceneSession(for:errorHandler:)`, and Apple's doc page lists it as deprecated in iOS 27.0 | [doc](https://developer.apple.com/documentation/uikit/uiapplication/requestscenesessionactivation(_:useractivity:options:errorhandler:)) |
+| `UISceneError.Code` | UIKit | `enum Code : Int` with `.multipleScenesNotSupported`, `.requestDenied` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uisceneerror/code) |
+| `UIApplication.supportsMultipleScenes`, `openSessions`, `connectedScenes` | UIKit | `var supportsMultipleScenes: Bool { get }`, `var openSessions: Set<UISceneSession> { get }`, `var connectedScenes: Set<UIScene> { get }` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uiapplication/supportsmultiplescenes) |
+| `UIApplicationSupportsMultipleScenes` | Info.plist key | Boolean inside `UIApplicationSceneManifest` | iOS 13.0 | [doc](https://developer.apple.com/documentation/bundleresources/information-property-list/uiapplicationscenemanifest/uiapplicationsupportsmultiplescenes) |
+| `UIWindowScene.ActivationAction.init(title:subtitle:image:identifier:discoverabilityTitle:attributes:alternate:_:)` | UIKit | `convenience init(title: String? = nil, subtitle: String? = nil, image: UIImage? = nil, identifier: UIAction.Identifier? = nil, discoverabilityTitle: String? = nil, attributes: UIMenuElement.Attributes = [], alternate: UIAction? = nil, _ configuration: @escaping UIWindowScene.ActivationAction.ConfigurationProvider)` | iOS 15.0 | [doc](https://developer.apple.com/documentation/uikit/uiwindowscene/activationaction) |
+| `UIWindowScene.ActivationConfiguration` | UIKit | `class ActivationConfiguration : NSObject` with `convenience init(userActivity: NSUserActivity, options: UIWindowScene.ActivationRequestOptions? = nil, preview: UITargetedPreview? = nil)` | iOS 15.0 | [doc](https://developer.apple.com/documentation/uikit/uiwindowscene/activationconfiguration) |
+| `UISceneActivationConditions` | UIKit | `class UISceneActivationConditions : NSObject, NSSecureCoding` with `var canActivateForTargetContentIdentifierPredicate: NSPredicate`, `var prefersToActivateForTargetContentIdentifierPredicate: NSPredicate`; pairs with `NSUserActivity.targetContentIdentifier` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uisceneactivationconditions) |
+| `UIWindowScene.closureConfirmation` | UIKit | `var closureConfirmation: UISceneClosureConfirmation? { get set }`; `class UISceneClosureConfirmation : NSObject, NSCopying, NSSecureCoding` | iOS 27.0; not tvOS, watchOS, visionOS | [doc](https://developer.apple.com/documentation/uikit/uiwindowscene/closureconfirmation) |
+| `UIWindowSceneDelegate.windowScene(_:didUpdateEffectiveGeometry:)` | UIKit | `optional func windowScene(_ windowScene: UIWindowScene, didUpdateEffectiveGeometry previousEffectiveGeometry: UIWindowScene.Geometry)`; reads `UIWindowScene.effectiveGeometry` (iOS 16.0) | iOS 26.0 | [doc](https://developer.apple.com/documentation/uikit/uiwindowscenedelegate/windowscene(_:didupdateeffectivegeometry:)) |
+| `UIWindowScene.displayLink(target:selector:)` | UIKit | `func displayLink(target: Any, selector: Selector) -> CADisplayLink?` | iOS 27.0; `UIScreen.displayLink(withTarget:selector:)` is deprecated in iOS 27.0 | [doc](https://developer.apple.com/documentation/uikit/uiwindowscene/displaylink(target:selector:)) |
+| `UISceneDelegate.stateRestorationActivity(for:)` | UIKit | `optional func stateRestorationActivity(for scene: UIScene) -> NSUserActivity?`; also `UISceneSession.stateRestorationActivity`, `UISceneSession.userInfo`, `UIScene.ConnectionOptions.userActivities` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uiscenedelegate/staterestorationactivity(for:)) |
+| `UISceneDelegate.sceneDidBecomeActive(_:)` | UIKit | `optional func sceneDidBecomeActive(_ scene: UIScene)` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenedidbecomeactive(_:)) |
+| `UIApplicationDelegate.application(_:didDiscardSceneSessions:)` | UIKit | `optional func application(_ application: UIApplication, didDiscardSceneSessions sceneSessions: Set<UISceneSession>)` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/application(_:diddiscardscenesessions:)) |
+| `UIViewController.updateProperties()`, `setNeedsUpdateProperties()` | UIKit | `func updateProperties()`, `func setNeedsUpdateProperties()` | iOS 26.0 | [doc](https://developer.apple.com/documentation/uikit/uiviewcontroller/updateproperties()) |
+| `EnvironmentValues.supportsMultipleWindows` | SwiftUI | `var supportsMultipleWindows: Bool { get }` | iOS 16.0 | [doc](https://developer.apple.com/documentation/swiftui/environmentvalues/supportsmultiplewindows) |
+| `OpenWindowAction`, `DismissWindowAction` | SwiftUI | `struct OpenWindowAction` (`EnvironmentValues.openWindow`) and `struct DismissWindowAction` (`EnvironmentValues.dismissWindow`) | iOS 16.0; `DismissWindowAction` iOS 17.0 | [doc](https://developer.apple.com/documentation/swiftui/openwindowaction) |
+| `WindowGroup.init(_:for:content:)` | SwiftUI | `init<D, C>(_ title: Text, for type: D.Type, @ContentBuilder content: @escaping (Binding<D?>) -> C)` (also with a title key or string) | iOS 16.0 | [doc](https://developer.apple.com/documentation/swiftui/windowgroup) |
+| `SceneStorage` | SwiftUI | `@propertyWrapper struct SceneStorage<Value> : DynamicProperty` | iOS 14.0 | [doc](https://developer.apple.com/documentation/swiftui/scenestorage) |
+| `View.onChange(of:initial:_:)` | SwiftUI | `func onChange<V>(of value: V, initial: Bool = false, _ action: @escaping (_ oldValue: V, _ newValue: V) -> Void) -> some View where V : Equatable` | iOS 17.0 | [doc](https://developer.apple.com/documentation/swiftui/view/onchange(of:initial:_:)) |
+
+- `EnvironmentValues.supportsMultipleWindows` doc still names only iPadOS and macOS as true. `duo-scenes` records what the iPhone Duo simulator returned.
+- Pass an `errorHandler` (or an `alternate:` action) every time. A new-window request can fail with `UISceneError.Code` on a phone, and `duo-scenes` explains which initializer to avoid.
+
+## Accessibility
+
+Used by `duo-accessibility`, `duo-postures`, `duo-transitions` and `duo-ergonomics`. Not Duo-specific.
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `View.accessibilityElement(children:)` | SwiftUI | `func accessibilityElement(children: AccessibilityChildBehavior = .ignore) -> some View`; behaviours `.ignore`, `.combine`, `.contain` | iOS 13.0 | [doc](https://developer.apple.com/documentation/swiftui/view/accessibilityelement(children:)) |
+| `View.accessibilitySortPriority(_:)` | SwiftUI | `func accessibilitySortPriority(_ sortPriority: Double) -> ModifiedContent<Self, AccessibilityAttachmentModifier>` | iOS 14.0 | [doc](https://developer.apple.com/documentation/swiftui/view/accessibilitysortpriority(_:)) |
+| `AccessibilityFocusState`, `View.accessibilityFocused(_:equals:)` | SwiftUI | `@propertyWrapper struct AccessibilityFocusState<Value> : DynamicProperty where Value : Hashable`; `func accessibilityFocused<Value>(_ binding: AccessibilityFocusState<Value>.Binding, equals value: Value) -> some View where Value : Hashable` | iOS 15.0 | [doc](https://developer.apple.com/documentation/swiftui/accessibilityfocusstate) |
+| `View.accessibilityInputLabels(_:)` | SwiftUI | `func accessibilityInputLabels(_ inputLabels: [Text]) -> ModifiedContent<Self, AccessibilityAttachmentModifier>` (also `LocalizedStringKey` and `StringProtocol` forms) | iOS 14.0 | [doc](https://developer.apple.com/documentation/swiftui/view/accessibilityinputlabels(_:)) |
+| `View.accessibilityAction(named:_:)` | SwiftUI | `func accessibilityAction(named name: Text, _ handler: @escaping () -> Void) -> ModifiedContent<Self, AccessibilityAttachmentModifier>` (also key, string and `LocalizedStringResource` forms) | iOS 13.0; the `LocalizedStringResource` form iOS 16.0 | [doc](https://developer.apple.com/documentation/swiftui/view/accessibilityaction(named:_:)) |
+| `View.accessibilityShowsLargeContentViewer(_:)` | SwiftUI | `func accessibilityShowsLargeContentViewer<V>(@ContentBuilder _ largeContentView: () -> V) -> some View where V : View` (also a form with no arguments) | iOS 15.0 | [doc](https://developer.apple.com/documentation/swiftui/view/accessibilityshowslargecontentviewer(_:)) |
+| `View.accessibilityRotor(_:entries:)` | SwiftUI | `func accessibilityRotor<Content>(_ label: Text, @ContentBuilder entries: @escaping () -> Content) -> some View where Content : AccessibilityRotorContent` | iOS 15.0 | [doc](https://developer.apple.com/documentation/swiftui/view/accessibilityrotor(_:entries:)) |
+| `View.accessibilityAddTraits(_:)`, `accessibilityHidden(_:)` | SwiftUI | `func accessibilityAddTraits(_ traits: AccessibilityTraits) -> ModifiedContent<Self, AccessibilityAttachmentModifier>`; `func accessibilityHidden(_ hidden: Bool) -> ModifiedContent<Self, AccessibilityAttachmentModifier>` | iOS 14.0 | [doc](https://developer.apple.com/documentation/swiftui/view/accessibilityaddtraits(_:)) |
+| Accessibility settings in `EnvironmentValues` | SwiftUI | `accessibilityReduceMotion`, `accessibilityReduceTransparency`, `accessibilityDifferentiateWithoutColor`, `accessibilitySwitchControlEnabled`, `accessibilityVoiceOverEnabled` (all `Bool { get }`); `colorSchemeContrast: ColorSchemeContrast { get }` | iOS 13.0; `accessibilitySwitchControlEnabled` and `accessibilityVoiceOverEnabled` iOS 14.0 and 15.0 | [doc](https://developer.apple.com/documentation/swiftui/environmentvalues/accessibilityreducemotion) |
+| `EnvironmentValues.accessibilityPrefersCrossFadeTransitions` | SwiftUI | `var accessibilityPrefersCrossFadeTransitions: Bool { get }` | iOS 26.4 | [doc](https://developer.apple.com/documentation/swiftui/environmentvalues/accessibilitypreferscrossfadetransitions) |
+| `View.keyboardShortcut(_:modifiers:)` | SwiftUI | `func keyboardShortcut(_ key: KeyEquivalent, modifiers: EventModifiers = .command) -> some View` | iOS 14.0 | [doc](https://developer.apple.com/documentation/swiftui/view/keyboardshortcut(_:modifiers:)) |
+| `View.onKeyPress(_:action:)` | SwiftUI | `func onKeyPress(_ key: KeyEquivalent, action: @escaping () -> KeyPress.Result) -> some View` | iOS 17.0 | [doc](https://developer.apple.com/documentation/swiftui/view/onkeypress(_:action:)) |
+| `View.defaultFocus(_:_:priority:)` | SwiftUI | `func defaultFocus<V>(_ binding: FocusState<V>.Binding, _ value: V, priority: DefaultFocusEvaluationPriority = .automatic) -> some View where V : Hashable` | iOS 17.0 | [doc](https://developer.apple.com/documentation/swiftui/view/defaultfocus(_:_:priority:)) |
+| `View.focusable(_:interactions:)`, `focused(_:equals:)` | SwiftUI | `func focusable(_ isFocusable: Bool = true, interactions: FocusInteractions) -> some View` (iOS 17.0); `func focused<Value>(_ binding: FocusState<Value>.Binding, equals value: Value) -> some View where Value : Hashable` (iOS 15.0) | iOS 15.0 and 17.0 | [doc](https://developer.apple.com/documentation/swiftui/view/focusable(_:interactions:)) |
+| `AccessibilityNotification.LayoutChanged` | Accessibility | `struct LayoutChanged` with `init(_ element: Any? = nil)`; post it with `.post()` | iOS 17.0 | [doc](https://developer.apple.com/documentation/accessibility/accessibilitynotification/layoutchanged) |
+| `UIAccessibility.post(notification:argument:)`, `isVoiceOverRunning` | UIKit | `static func post(notification: UIAccessibility.Notification, argument: Any?)`; `static var isVoiceOverRunning: Bool { get }` | iOS 3.0 and 4.0 | [doc](https://developer.apple.com/documentation/uikit/uiaccessibility/post(notification:argument:)) |
+| `UIAccessibility.isReduceMotionEnabled`, `reduceMotionStatusDidChangeNotification` | UIKit | `static var isReduceMotionEnabled: Bool { get }`; `static let reduceMotionStatusDidChangeNotification: NSNotification.Name` | iOS 8.0 | [doc](https://developer.apple.com/documentation/uikit/uiaccessibility/isreducemotionenabled) |
+| `UIAccessibility.prefersCrossFadeTransitions` | UIKit | `static var prefersCrossFadeTransitions: Bool { get }` | iOS 14.0 | [doc](https://developer.apple.com/documentation/uikit/uiaccessibility/preferscrossfadetransitions) |
+| `UITraitCollection.accessibilityContrast` | UIKit | `var accessibilityContrast: UIAccessibilityContrast { get }` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uitraitcollection/accessibilitycontrast) |
+| `UIContentSizeCategory.isAccessibilityCategory` | UIKit | `var isAccessibilityCategory: Bool { get }` | iOS 11.0 | [doc](https://developer.apple.com/documentation/uikit/uicontentsizecategory/isaccessibilitycategory) |
+| `shouldGroupAccessibilityChildren`, `accessibilityContainerType`, `accessibilityUserInputLabels` | UIKit | `var shouldGroupAccessibilityChildren: Bool` (iOS 6.0); `var accessibilityContainerType: UIAccessibilityContainerType` with `.semanticGroup` (iOS 13.0); `var accessibilityUserInputLabels: [String]!` (iOS 13.0) | iOS 6.0 to 13.0 | [doc](https://developer.apple.com/documentation/objectivec/nsobject-swift.class/shouldgroupaccessibilitychildren) |
+| `UIAccessibilityCustomAction.init(name:actionHandler:)` | UIKit | `init(name: String, actionHandler: @escaping UIAccessibilityCustomAction.Handler)` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uiaccessibilitycustomaction/init(name:actionhandler:)) |
+| `UIKeyCommand.init(title:image:action:input:modifierFlags:...)` | UIKit | `convenience init(title: String = "", image: UIImage? = nil, action: Selector, input: String, modifierFlags: UIKeyModifierFlags = [], propertyList: Any? = nil, alternates: [UICommandAlternate] = [], discoverabilityTitle: String? = nil, attributes: UIMenuElement.Attributes = [], state: UIMenuElement.State = .off)` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uikeycommand) |
+| `UIFocusSystem.focusSystem(for:)` | UIKit | `class func focusSystem(for environment: any UIFocusEnvironment) -> UIFocusSystem?` | iOS 15.0 | [doc](https://developer.apple.com/documentation/uikit/uifocussystem) |
+| `UILargeContentViewerInteraction` | UIKit | `class UILargeContentViewerInteraction : NSObject, UIInteraction` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uilargecontentviewerinteraction) |
+
+- `accessibilityPrefersCrossFadeTransitions` is iOS 26.4 in SwiftUI. Gate it with `if #available(iOS 26.4, *)` when the deployment target is lower; UIKit's `prefersCrossFadeTransitions` covers iOS 14 and later.
+- `focusSection()` is unavailable on iOS. See [Not in the SDK](#not-in-the-sdk).
+
+## Animation and frame rate
+
+Used by `duo-transitions`. Not Duo-specific.
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `View.animation(_:value:)` | SwiftUI | `func animation<V>(_ animation: Animation?, value: V) -> some View where V : Equatable` | iOS 13.0 | [doc](https://developer.apple.com/documentation/swiftui/view/animation(_:value:)) |
+| `View.transaction(_:)`, `transaction(value:_:)` | SwiftUI | `func transaction(_ transform: @escaping (inout Transaction) -> Void) -> some View` (iOS 13.0); `func transaction(value: some Equatable, _ transform: @escaping (inout Transaction) -> Void) -> some View` (iOS 17.0) | iOS 13.0 and 17.0 | [doc](https://developer.apple.com/documentation/swiftui/view/transaction(value:_:)) |
+| `Transaction` | SwiftUI | `struct Transaction` with `var animation: Animation?`, `var disablesAnimations: Bool` | iOS 13.0 | [doc](https://developer.apple.com/documentation/swiftui/transaction) |
+| `withAnimation(_:_:)`, `withTransaction(_:_:)` | SwiftUI | `func withAnimation<Result>(_ animation: Animation? = .default, _ body: () throws -> Result) rethrows -> Result`; `func withTransaction<Result>(_ transaction: Transaction, _ body: () throws -> Result) rethrows -> Result` | iOS 13.0 | [doc](https://developer.apple.com/documentation/swiftui/withanimation(_:_:)) |
+| `View.contentTransition(_:)` | SwiftUI | `func contentTransition(_ transition: ContentTransition) -> some View`; `ContentTransition.identity`, `.interpolate` | iOS 16.0 | [doc](https://developer.apple.com/documentation/swiftui/view/contenttransition(_:)) |
+| `View.matchedGeometryEffect(id:in:properties:anchor:isSource:)` | SwiftUI | `func matchedGeometryEffect<ID>(id: ID, in namespace: Namespace.ID, properties: MatchedGeometryProperties = .frame, anchor: UnitPoint = .center, isSource: Bool = true) -> some View where ID : Hashable` | iOS 14.0 | [doc](https://developer.apple.com/documentation/swiftui/view/matchedgeometryeffect(id:in:properties:anchor:issource:)) |
+| `View.geometryGroup()` | SwiftUI | `func geometryGroup() -> some View` | iOS 17.0 | [doc](https://developer.apple.com/documentation/swiftui/view/geometrygroup()) |
+| `Animation.smooth` | SwiftUI | `static var smooth: Animation { get }` (also `smooth(duration:extraBounce:)`) | iOS 13.0 (inlined into the app) | [doc](https://developer.apple.com/documentation/swiftui/animation/smooth) |
+| `UIContentContainer.viewWillTransition(to:with:)` | UIKit | `func viewWillTransition(to size: CGSize, with coordinator: any UIViewControllerTransitionCoordinator)` | iOS 8.0 | [doc](https://developer.apple.com/documentation/uikit/uicontentcontainer/viewwilltransition(to:with:)) |
+| `UIViewControllerTransitionCoordinator.animate(alongsideTransition:completion:)` | UIKit | `func animate(alongsideTransition animation: ((any UIViewControllerTransitionCoordinatorContext) -> Void)?, completion: ((any UIViewControllerTransitionCoordinatorContext) -> Void)? = nil) -> Bool` | iOS 7.0 | [doc](https://developer.apple.com/documentation/uikit/uiviewcontrollertransitioncoordinator/animate(alongsidetransition:completion:)) |
+| `UIView.animate(_:changes:completion:)` | UIKit (declared in SwiftUI) | `static func animate(_ animation: Animation, changes: () -> Void, completion: (() -> Void)? = nil)` | iOS 18.0 | [doc](https://developer.apple.com/documentation/uikit/uiview/animate(_:changes:completion:)) |
+| `UIView.AnimationOptions.overrideInheritedDuration`, `UIView.inheritedAnimationDuration` | UIKit | `static var overrideInheritedDuration: UIView.AnimationOptions { get }`; `class var inheritedAnimationDuration: TimeInterval { get }` (iOS 9.0) | iOS 4.0 and 9.0 | [doc](https://developer.apple.com/documentation/uikit/uiview/animationoptions/overrideinheritedduration) |
+| `CADisplayLink.preferredFrameRateRange` | QuartzCore | `var preferredFrameRateRange: CAFrameRateRange`; also `var targetTimestamp: CFTimeInterval { get }` (iOS 10.0) | iOS 15.0 | [doc](https://developer.apple.com/documentation/quartzcore/cadisplaylink/preferredframeraterange) |
+| `CADisableMinimumFrameDurationOnPhone` | Info.plist key | Boolean; lets Core Animation run above 60 Hz on iPhone | iOS 15.0 | [doc](https://developer.apple.com/documentation/quartzcore/optimizing-iphone-and-ipad-apps-to-support-promotion-displays) |
+
+- SwiftUI animates a resize only for views that opt in with `animation(_:value:)` or a transaction tied to the size change. `withAnimation` around a fold isn't possible: the system changes the size. `duo-transitions` explains how to opt in and out.
+- The iPhone Duo simulator reports a 60 fps maximum (*measured*, [device facts](device-facts.md)). Judge 120 Hz transitions on a device.
+
+## Scrolling
+
+Used by the gallery app's fold transition screen and by `duo-continuity`. Not Duo-specific.
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `ScrollPosition` | SwiftUI | `struct ScrollPosition : Sendable` with `init(idType: (some Hashable & Sendable).Type = Never.self)`, `mutating func scrollTo(id: some Hashable & Sendable, anchor: UnitPoint? = nil)` | iOS 18.0 | [doc](https://developer.apple.com/documentation/swiftui/scrollposition) |
+| `View.scrollPosition(_:anchor:)` | SwiftUI | `func scrollPosition(_ position: Binding<ScrollPosition>, anchor: UnitPoint? = nil) -> some View` | iOS 18.0 | [doc](https://developer.apple.com/documentation/swiftui/view/scrollposition(_:anchor:)) |
+| `View.onScrollTargetVisibilityChange(idType:threshold:_:)` | SwiftUI | `func onScrollTargetVisibilityChange<ID>(idType: ID.Type, threshold: Double = 0.5, _ action: @escaping ([ID]) -> Void) -> some View where ID : Hashable` | iOS 18.0 | [doc](https://developer.apple.com/documentation/swiftui/view/onscrolltargetvisibilitychange(idtype:threshold:_:)) |
+| `View.onScrollPhaseChange(_:)` | SwiftUI | `func onScrollPhaseChange(_ action: @escaping (_ oldPhase: ScrollPhase, _ newPhase: ScrollPhase) -> Void) -> some View` | iOS 18.0 | [doc](https://developer.apple.com/documentation/swiftui/view/onscrollphasechange(_:)) |
+| `ScrollViewReader` | SwiftUI | `struct ScrollViewReader<Content> : View where Content : View`; `ScrollViewProxy.scrollTo(_:anchor:)` | iOS 14.0 | [doc](https://developer.apple.com/documentation/swiftui/scrollviewreader) |
+
+- Measured in the gallery (18 Oct 2026): when a text column narrows on unfold and its margins arrive late, `ScrollPosition` by ID did not keep the paragraph, and calling `scrollTo` again with the same ID did nothing. A `ScrollViewReader.scrollTo(_:anchor:)` after the width settles restored it. In a grid that only changes its column count, `ScrollPosition` by ID worked (`duo-continuity`).
+
+## Test tools: XCUIAutomation
+
+Used by `duo-accessibility` and the v0.2 eval oracles. These live in the Xcode 27.1 iPhone Simulator platform (`Developer/Library/Frameworks/XCUIAutomation.framework`), not in the SDK.
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `XCUIDevice.voiceOverService` | XCUIAutomation | `var voiceOverService: XCUIVoiceOverService { get }` | iOS 27.0 | [doc](https://developer.apple.com/documentation/xcuiautomation/xcuidevice/voiceoverservice) |
+| `XCUIVoiceOverService` | XCUIAutomation | `class XCUIVoiceOverService` with `enable()`, `disable()`, `var isEnabled: Bool`, `moveForward()`, `moveBackward()`, `currentSpeech()`, `moveIn()`, `moveOut()` (each `throws`; in Swift the moves and `currentSpeech()` return a non-optional `XCUIVoiceOverService.Output`, which has `utterance: String`) | iOS 27.0 | [doc](https://developer.apple.com/documentation/xcuiautomation/xcuivoiceoverservice) |
+| `XCUIApplication.performAccessibilityAudit(for:_:)` | XCUIAutomation | `func performAccessibilityAudit(for auditTypes: XCUIAccessibilityAuditType = .all, _ issueHandler: ((XCUIAccessibilityAuditIssue) throws -> Bool)? = nil) throws` | iOS 17.0 | [doc](https://developer.apple.com/documentation/xcuiautomation/xcuiapplication/performaccessibilityaudit(for:_:)) |
+| `XCUIAccessibilityAuditType` | XCUIAutomation | `struct XCUIAccessibilityAuditType : OptionSet` with `.contrast`, `.elementDetection`, `.hitRegion`, `.sufficientElementDescription`, `.dynamicType`, `.textClipped`, `.trait`, `.action`, `.parentChild`, `.all` | iOS 17.0 | [doc](https://developer.apple.com/documentation/xcuiautomation/xcuiaccessibilityaudittype) |
+
+- *Measured* by the v0.2 evals (Xcode 27.1): `.hitRegion` did not flag 30 pt buttons; `.contrast` timed out on a low-contrast screen in the open pose; `.textClipped` reports issues with no element for text inside a `ViewThatFits` child it rejected. Don't rely on the audit alone for touch targets.
+
+## macOS Accessibility API (duo-pose-matrix)
+
+`duo-pose-matrix` presses Device Hub's pose buttons from a small macOS tool. These are macOS APIs in `ApplicationServices` (HIServices), checked in the macOS SDK inside Xcode 27.1.
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `AXIsProcessTrustedWithOptions(_:)` | ApplicationServices (macOS) | `func AXIsProcessTrustedWithOptions(_ options: CFDictionary?) -> Bool` | macOS 10.9 | [doc](https://developer.apple.com/documentation/applicationservices/1459186-axisprocesstrustedwithoptions) |
+| `kAXTrustedCheckOptionPrompt` | ApplicationServices (macOS) | `let kAXTrustedCheckOptionPrompt: Unmanaged<CFString>` | macOS 10.9 | [doc](https://developer.apple.com/documentation/applicationservices/kaxtrustedcheckoptionprompt) |
+| `AXUIElementPerformAction(_:_:)` | ApplicationServices (macOS) | `func AXUIElementPerformAction(_ element: AXUIElement, _ action: CFString) -> AXError`; Device Hub's pose buttons take `kAXPressAction` | macOS 10.2 | [doc](https://developer.apple.com/documentation/applicationservices/1462091-axuielementperformaction) |
+
+- `duo-pose` passes `kAXTrustedCheckOptionPrompt: false`, so the check never shows the permission prompt. Only the user grants Accessibility, in System Settings > Privacy & Security > Accessibility ([Apple Support](https://support.apple.com/guide/mac-help/mh43185/mac)).
+- It also uses `AXUIElementCreateApplication`, `AXUIElementCopyAttributeValue` and `AXUIElementSetMessagingTimeout` from the same header (`AXUIElement.h`).
+
 ## Not in the SDK
 
 Brief claims we could not find in the iOS 27.1 SDK:
@@ -275,6 +451,7 @@ Brief claims we could not find in the iOS 27.1 SDK:
 - **"max 1080p60" for the virtual front camera**: not in the headers and not in Apple's camera guide. (unverified)
 - **A posture API** (book, tabletop): no fold, posture or pose symbols exist in SwiftUI or UIKit. The hinge APIs give status and angle only.
 - **A singular `reservedRegion` API**: only the plural `reservedRegions(kind:…)` exists, in both SwiftUI and UIKit.
+- **`focusSection()` on iOS**: the modifier exists, but the SDK marks it `@available(iOS, unavailable)`. It is for macOS and tvOS only. Use `focusable(_:interactions:)`, `defaultFocus(_:_:priority:)` and the order of your views for keyboard focus on the inner display (`duo-accessibility`).
 - **"AsyncImage HTTP caching"**: the SDK adds `AsyncImage(request:…)` initializers that take a `URLRequest`, so you can set a cache policy. We found no API that names caching. (unverified)
 - **"iPhone apps resizable"**: a behaviour, not an API. No symbol to index.
 
@@ -311,5 +488,5 @@ The brief also makes claims about behaviour, not API names. This index does not 
 - How apps built with the iOS 26, 27.0 and 27.1 SDKs look on the inner display.
 - Size classes on each display, and the inner display ignoring supported orientations.
 - `ArrangementView` showing only its first half on the closed phone held sideways (found while testing a two-player app on the iOS 27.1 simulator).
-- `UIWindowScene.ActivationAction` hiding itself when a new window is not possible. The header only says an alternate action runs where multiple windows are not supported.
+- `UIWindowScene.ActivationAction` hiding itself when a new window is not possible. The header only says an alternate action runs where multiple windows are not supported. *Measured* in `duo-scenes` on the simulator (18 Oct 2026): on the closed phone the action was missing with `alternate: nil` and the alternate took its place when given; on the open phone the action showed. The raw `openWindow` and `activateSceneSession` requests still succeeded on the closed phone. A real iPhone Duo is unverified.
 - A division having zero width when the phone is flat.

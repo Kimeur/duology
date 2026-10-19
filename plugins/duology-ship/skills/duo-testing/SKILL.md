@@ -12,7 +12,7 @@ Test an iPhone Duo app in three layers, cheapest first:
 
 1. **Logic on the Mac.** Rules, maths and state machines in plain Swift. Seconds per run, no simulator.
 2. **UI tests on the iPhone Duo simulator.** XCTest drives the real app. Minutes per run.
-3. **Pose checks by hand in Device Hub.** No API can fold the simulator, so a person clicks Closed, Partially Open and Open.
+3. **Pose checks in Device Hub.** No API inside a test can fold the simulator. A person clicks Closed, Partially Open and Open, or, with their Accessibility permission, `duo-pose-matrix` presses the same buttons from outside the test.
 
 Load other skills for neighbouring work: `duo-setup` (Xcode 27.1, the simulator, Device Hub), `duo-continuity` (state that must survive a fold, with a manual fold test in its `references/testing.md`), `duo-layout` (what the layouts should do).
 
@@ -246,7 +246,7 @@ XCUIAutomation types are main-actor types. Mark each test method `@MainActor`, a
 ### Rotation, folds and the two displays
 
 - *Measured:* on the closed Duo simulator, `XCUIDevice.shared.orientation = .landscapeLeft` changed the reported device orientation, but the app stayed 466 × 678 pt and screenshots stayed portrait. The same test rotated the app to 874 × 402 pt on an iPhone 17 Pro simulator (iOS 27.0). Rotate a Duo with Device Hub's rotate button. Open pose not measured.
-- `XCUIDevice` has no hinge or pose property, and `simctl` and `devicectl` have no pose command (checked in Xcode 27.1). Outside the test, a Mac tool can press Device Hub's pose buttons through the Accessibility API, once the user gives the app that runs it Accessibility permission (see `duo-setup`). Duology ships no such tool yet. For a fold inside a test, use the manual pattern in `duo-continuity`'s `references/testing.md`: the test waits while a person presses Closed and Open and clicks rotate in Device Hub. Run it with `-parallel-testing-enabled NO`, so it waits on the simulator the person is looking at, not on a clone.
+- `XCUIDevice` has no hinge or pose property, and `simctl` and `devicectl` have no pose command (checked in Xcode 27.1). Outside the test, a Mac tool can press Device Hub's pose buttons through the Accessibility API, once the user gives the app that runs it Accessibility permission (see `duo-setup`). `duo-pose-matrix` is that tool: use it for screenshots of each pose between test runs. For a fold inside a test, use the manual pattern in `duo-continuity`'s `references/testing.md`: the test waits while a person presses Closed and Open and clicks rotate in Device Hub. Run it with `-parallel-testing-enabled NO`, so it waits on the simulator the person is looking at, not on a clone.
 - `XCUIScreen.screens` listed two screens. Closed, `screens[0]` shot 466 × 678 pt and `screens[1]` about 669 × 951 pt (*measured*). Attach a screenshot of each display when a test fails ([`screens`](https://developer.apple.com/documentation/xcuiautomation/xcuiscreen/screens)). Don't use them for the App Store: the inner one came out 2006 × 2852 px, while `simctl io ... screenshot --display=primary-1` gave the required 2007 × 2853 px (*measured*).
 - Device Hub can't send two-finger touches (Xcode 27 known issue), but `pinch(withScale:velocity:)` from a UI test reached a `MagnifyGesture` (*measured*, closed).
 

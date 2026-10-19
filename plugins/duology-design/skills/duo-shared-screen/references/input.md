@@ -53,7 +53,7 @@ Why it is built this way:
 - **`minimumDistance` above zero.** `DragGesture` defaults to 10 pt ([doc](https://developer.apple.com/documentation/swiftui/draggesture/init(minimumdistance:coordinatespace:))). Below that, the touch stays a tap, so `onTapGesture` still fires. *Measured* with 6 pt: a tap counted once and started no drag; a press-and-drag counted once and added no tap. With 0, the drag starts on touch down and can take the touch from the tap (not measured here). Use 0 only on a surface that has no taps, such as a drawing canvas.
 - **`coordinateSpace: seat.space`.** The half names its space in `SeatHalf` ([coordinateSpace(_:)](https://developer.apple.com/documentation/swiftui/view/coordinatespace(_:))). Locations then mean the same thing in either half and in either seating. *Measured:* inside a half turned upside down, a screen drag from (38, 48) to (152, 48) arrived as (343, 273) to (229, 273): the owner's coordinates, with no maths in your code.
 - **Clamp.** A dragged piece never leaves its half, so it never draws over the other person's side.
-- **Accessibility before `.position`.** Applied after it, the element would be the size of the whole half. *Measured:* the piece's element was 64 × 64 pt.
+- **Accessibility before `.position`.** `.position` returns a view as large as its parent, so a `contentShape` or gesture applied after it covers the whole half, and the accessibility element grows with it (`duo-accessibility` measured this). *Measured:* the piece's element was 64 × 64 pt.
 - **`canAct` in the view and the gate in the model.** The view check stops a drag from even starting. The model check is the real one, because a drag can start just before a turn ends.
 
 ## Pick, then place

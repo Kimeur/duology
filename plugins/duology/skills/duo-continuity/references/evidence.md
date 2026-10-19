@@ -14,7 +14,7 @@ What the flip does not do: move content to the other display, resize the window,
 
 ## Does a fold relaunch the app?
 
-*Unverified.* Apple says the app resizes when someone opens or closes the phone, and compares it to resizing in iPhone Mirroring ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)). We have not measured a real fold.
+Apple says the app resizes when someone opens or closes the phone, and compares it to resizing in iPhone Mirroring ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/)). *Measured* in v0.2 on the simulator, with Device Hub's own pose buttons pressed by a script: no relaunch, one root `onAppear`, no scene disconnect, and no `sceneWillResignActive` or `sceneDidBecomeActive`, across open, close, partial fold and rotation ([duo-transitions evidence](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-transitions/references/evidence.md#does-a-fold-relaunch-or-reset-the-app)). A real iPhone Duo is unverified.
 
 A size log from this project's device-facts work looks like a fold but isn't one. Its compact line, in full:
 

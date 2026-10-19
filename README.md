@@ -14,7 +14,8 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/Kimeur/duology?style=flat-square&color=f4c430)](https://github.com/Kimeur/duology/stargazers)
 [![Release](https://img.shields.io/github/v/release/Kimeur/duology?style=flat-square&color=1d7a4b)](https://github.com/Kimeur/duology/releases)
-[![Skills](https://img.shields.io/badge/skills-11_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
+[![Skills](https://img.shields.io/badge/skills-18_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
+[![Commands and agents](https://img.shields.io/badge/commands_·_agents-5_·_1_built-2b55c7?style=flat-square)](#commands-and-agents)
 [![Recipes](https://img.shields.io/badge/app_recipes-1_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
 [![Built for Xcode 27.1](https://img.shields.io/badge/built_for-Xcode_27.1_·_iOS_27.1-1d7a4b?style=flat-square)](#verified-on)
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-d97757?style=flat-square)](#quick-start)
@@ -35,7 +36,7 @@
 </div>
 
 > [!IMPORTANT]
-> **v0.1 is out** (18 October 2026): 11 skills, `/duo-doctor`, `/duo-new` and `/duo-audit`, checked on Xcode 27.1 and the iPhone Duo simulator. Duology is built in the open: v0.2 (design skills and the pose check) is next, and the full pack of 36 skills is planned for v1.0 in January 2027. Star or watch the repo to follow along. See the [roadmap](ROADMAP.md) and the [release notes](CHANGELOG.md).
+> **v0.1 is out** (18 October 2026): 11 skills, `/duo-doctor`, `/duo-new` and `/duo-audit`, checked on Xcode 27.1 and the iPhone Duo simulator. v0.2 work (seven more skills, `/duo-poses`, `/duo-review` and a design review agent) is on `main` and not released yet. Duology is built in the open: the full pack of 36 skills is planned for v1.0 in January 2027. Star or watch the repo to follow along. See the [roadmap](ROADMAP.md) and the [release notes](CHANGELOG.md).
 
 > [!NOTE]
 > Duology is a community project. It is not affiliated with, endorsed by or sponsored by Apple Inc.
@@ -65,13 +66,13 @@ Apple published the rules in six Tech Talks, a HIG page and the iOS 27.1 SDK. Du
 
 ### How Duology fixes it
 
-1. **It knows the device.** Size classes, reserved regions, `ArrangementView`, vertical bars and the hinge. Each fact is checked against the iOS 27.1 SDK. Scenes and the cameras get their own skills in v0.2 and v0.3.
-2. **It designs, not just compiles.** Eight named layout patterns, state that survives fold and unfold, and two people on one screen, each with SwiftUI code. Guidance for each pose, transitions and thumb reach follow in v0.2.
+1. **It knows the device.** Size classes, reserved regions, `ArrangementView`, vertical bars and the hinge. Each fact is checked against the iOS 27.1 SDK. Scenes and windows have their own skill (v0.2); the cameras get one in v0.3.
+2. **It designs, not just compiles.** Eight named layout patterns, state that survives fold and unfold, and two people on one screen, each with SwiftUI code. v0.2 adds design tokens, guidance for each pose, fold transitions, thumb reach and accessibility on both displays.
 3. **It builds whole apps.** A recipe creates a project that builds and runs on the iPhone Duo simulator. v0.1 has the first one, a two-player game. Seven more are planned.
-4. **It checks its own work.** `duo-lint` finds code Apple warns against. `/duo-audit` adds a 15-point design checklist on screenshots from the simulator. A pose check that screenshots every pose (`/duo-poses`) is planned for v0.2.
+4. **It checks its own work.** `duo-lint` finds code Apple warns against. `/duo-audit` adds a 15-point design checklist on screenshots from the simulator. `/duo-poses` (v0.2) screenshots your app closed, open, in book pose and in tabletop, and `/duo-review` hands those frames to a design review agent.
 
 <div align="center">
-<img src="docs/assets/how-it-works.svg" alt="You ask Claude Code, Duology guides the code, Xcode 27.1 builds it for the iPhone Duo simulator, duo-lint and the 15-point design review check it, then you ship. Screenshots of every pose (v0.2) and an App Store checklist (v1.0) are planned" width="100%" />
+<img src="docs/assets/how-it-works.svg" alt="You ask Claude Code, Duology guides the code, Xcode 27.1 builds it for the iPhone Duo simulator, duo-lint, the 15-point design review and screenshots of four poses (v0.2) check it, then you ship. An App Store checklist (v1.0) is planned" width="100%" />
 </div>
 
 ## Quick start
@@ -150,10 +151,10 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 
 ## What's inside
 
-**v0.1: 11 skills in 4 plugins, plus 3 commands.** The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
+**v0.1 and v0.2: 18 skills in 4 plugins, 5 commands and 1 review agent.** Rows marked v0.2 are on `main` and not released yet. The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
 
 <details open>
-<summary><strong>duology</strong> · foundation: setup, layout, continuity</summary>
+<summary><strong>duology</strong> · foundation: setup, layout, continuity, scenes</summary>
 
 | Skill | Status | Use it when |
 |---|---|---|
@@ -162,7 +163,7 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 | `duo-layout` | v0.1 | Content lands in the fold. Size classes, uneven safe areas, reserved regions, `ArrangementView` and when to use your own split instead. |
 | `duo-navigation` | v0.1 | Toolbars and tab bars. Vertical bars, tabs that become a sidebar, `NavigationSplitView`, sheets, overflow. |
 | `duo-continuity` | v0.1 | Something resets when you fold. Scroll, playback, typed text, selection and navigation survive fold, unfold, rotate and resize. |
-| `duo-scenes` | planned (v0.2) | Several windows, Split View, and showing something on the outer display while the inner one is in use. |
+| `duo-scenes` | v0.2 | Several windows, Split View, and showing something on the outer display while the inner one is in use. |
 
 </details>
 
@@ -171,13 +172,13 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 
 | Skill | Status | Use it when |
 |---|---|---|
-| `duo-design-system` | planned (v0.2) | Setting up spacing, grids (even column counts), type for both displays, iOS 27 Liquid Glass, corners, touch targets. |
+| `duo-design-system` | v0.2 | Setting up spacing, grids (even column counts), type for both displays, Liquid Glass, corners, colour and contrast, touch targets. |
 | `duo-patterns` | v0.1 | Choosing a layout. List-detail, supporting pane, two-page, dual view, extended canvas, feed reflow, tabs to sidebar, displacement. |
-| `duo-postures` | planned (v0.2) | Designing for book, tabletop, standing and flipped. The hinge as an input, used sparingly. |
-| `duo-transitions` | planned (v0.2) | The move from closed to open should feel like one app, not a reload. |
-| `duo-ergonomics` | planned (v0.2) | Two-handed grip, thumb reach, controls on the side edge. |
+| `duo-postures` | v0.2 | Designing for closed, open, book, tabletop, standing and flipped. The hinge as an effect, used sparingly. |
+| `duo-transitions` | v0.2 | The move from closed to open should feel like one app, not a reload. |
+| `duo-ergonomics` | v0.2 | Two-handed grip, thumb reach, controls on the side edge. |
 | `duo-shared-screen` | v0.1 | Two people use one phone: games, teaching, showing something to a customer. |
-| `duo-accessibility` | planned (v0.2) | VoiceOver order across panes, Dynamic Type on both displays, Reduce Motion, hardware keyboard. |
+| `duo-accessibility` | v0.2 | VoiceOver order across panes, Dynamic Type on both displays, Reduce Motion, hardware keyboard. |
 | `duo-design-review` | v0.1 | Reviewing screenshots or Figma frames against the 15-point Duo checklist. |
 
 </details>
@@ -211,7 +212,7 @@ See [App recipes](#app-recipes).
 | Skill | Status | Use it when |
 |---|---|---|
 | `duo-testing` | v0.1 | Writing tests that hold up on the Duo simulator: logic tested on the Mac, launch switches, UI tests that really reach SwiftUI gestures. |
-| `duo-pose-matrix` | planned (v0.2) | Checking every pose with screenshots and the accessibility tree. |
+| `duo-pose-matrix` | v0.2 | Screenshots of your app closed, open, in book pose and in tabletop, by pressing Device Hub's pose buttons (with your Accessibility permission) or with poses you set by hand. |
 | `duo-lint` | v0.1 | Finding code Apple warns against before it ships. |
 | `duo-performance` | planned (v1.0) | Resizing smoothly at 120 Hz when the phone opens. |
 | `duo-app-store` | planned (v1.0) | Duo screenshots (required from April 2027), metadata, App Review notes, privacy manifest. |
@@ -226,13 +227,13 @@ See [App recipes](#app-recipes).
 | `/duo-doctor` | v0.1 | Checks the Mac: Xcode 27.1, the iOS 27.1 runtime, an iPhone Duo simulator, Xcode's agent bridge and Python. |
 | `/duo-new <recipe> <AppName>` | v0.1 | Creates a new app from a recipe, tests its rules on the Mac, builds it and runs it on the Duo simulator. |
 | `/duo-audit` | v0.1 | Runs `duo-lint` and the 15-point checklist on your app and lists what to fix, most serious first. |
-| `/duo-poses` | planned (v0.2) | Runs your app closed, open, in book pose and in tabletop, and saves a screenshot of each. |
-| `/duo-review` | planned (v0.2) | Design critique of screenshots or Figma frames. |
+| `/duo-poses` | v0.2 | Runs your app closed, open, in book pose and in tabletop, saves a screenshot of each, and puts the simulator back. |
+| `/duo-review` | v0.2 | Design critique of screenshots or Figma frames by the `duo-design-reviewer` agent. Reads only. |
 | `/duo-ship` | planned (v1.0) | App Store checklist for Duo: screenshots, metadata, review notes. |
 
 | Agent | Status | What it does |
 |---|---|---|
-| `duo-design-reviewer` | planned (v0.2) | Reviews a screen the way a Duo design lead would, with the rule behind each comment. |
+| `duo-design-reviewer` | v0.2 | Reviews a screen the way a Duo design lead would, with the rule behind each comment. |
 | `duo-pose-tester` | planned (v1.0) | Runs the pose check and reports each failure with its screenshot. |
 
 <details>
@@ -295,6 +296,14 @@ The gallery app on the iPhone Duo simulator (iOS 27.1): closed on the outer disp
 | Tabs to sidebar | <img src="docs/assets/gallery/tabsToSidebar-closed.png" width="100" alt="Listen Now on the closed phone with eight tabs in a vertical tab bar" /> | <img src="docs/assets/gallery/tabsToSidebar-open.png" width="206" alt="Open: a sidebar with a Library section next to Listen Now" /> |
 | Displacement | <img src="docs/assets/gallery/displacement-closed.png" width="100" alt="Voice memo list on the closed phone with the record controls at the bottom" /> | <img src="docs/assets/gallery/displacement-open.png" width="206" alt="Open: voice memos with the record group bottom centre" /> |
 
+v0.2 adds three screens, one for each of `duo-postures`, `duo-transitions` and `duo-design-system`. The last column shows the pose each one is about.
+
+| Screen | Closed | Open | Folded |
+|---|---|---|---|
+| Tabletop player | <img src="docs/assets/gallery/tabletopPlayer-closed.png" width="100" alt="Closed: the kelp forest film above the player controls, with a subtitle" /> | <img src="docs/assets/gallery/tabletopPlayer-open.png" width="206" alt="Open: the film across the display, the controls floating over its bottom edge" /> | <img src="docs/assets/gallery/tabletopPlayer-tabletop.png" width="144" alt="Tabletop: the film above the fold, the same controls below it" /> |
+| Fold transition | <img src="docs/assets/gallery/foldTransition-closed.png" width="100" alt="Closed: the rock-pooling guide at The middle shore, one paragraph highlighted and the next selected, reading tools at the bottom" /> | <img src="docs/assets/gallery/foldTransition-open.png" width="206" alt="Open: contents on the left of the fold, the same section and selection on the right" /> | <img src="docs/assets/gallery/foldTransition-book.png" width="206" alt="Book pose: the same split as open; nothing moved" /> |
+| Design tokens | <img src="docs/assets/gallery/designTokens-closed.png" width="100" alt="Closed: the energy dashboard on a four-column grid with the margin and touch target overlays" /> | <img src="docs/assets/gallery/designTokens-open.png" width="206" alt="Open: eight columns, four on each side, with a 16 pt gutter on the dashed fold line" /> | <img src="docs/assets/gallery/designTokens-book.png" width="206" alt="Book pose: the fold as the middle gutter, four columns on each side" /> |
+
 ## App recipes
 
 `/duo-new <recipe> <AppName>` creates the project, tests its rules on the Mac, builds it and opens it on the iPhone Duo simulator. v0.1 has one recipe; the others are planned.
@@ -312,9 +321,9 @@ The gallery app on the iPhone Duo simulator (iOS 27.1): closed on the outer disp
 
 ## Proof, not promises
 
-Every v0.1 skill has test tasks in [`evals/`](evals), 20 so far. Each task runs with Claude Code twice, with and without Duology, in a fresh copy of the same sample project. A run passes when the app builds for the iPhone Duo simulator, `duo-lint` finds nothing, every check in the task passes and every checklist rule it covers passes.
+Every skill has test tasks in [`evals/`](evals), 29 so far (28 ready to run). Each task runs with Claude Code twice, with and without Duology, in a fresh copy of the same sample project. A run passes when the app builds for the iPhone Duo simulator, `duo-lint` finds nothing, every check in the task passes and every checklist rule it covers passes.
 
-No results yet. The first runs come with v0.1, and we'll publish them here whatever they show.
+No results yet. The first published runs are planned for the v0.2 release, and we'll publish them here whatever they show.
 
 | Task | Without Duology | With Duology |
 |---|---|---|
@@ -341,7 +350,7 @@ Each `SKILL.md` repeats this in its front matter, so you can see how far every r
 <details>
 <summary><strong>How is this different from other iPhone Duo skill repos?</strong></summary>
 
-Other repos explain the Duo APIs well, and [mirzaaghazadeh/iphone-duo-skills](https://github.com/mirzaaghazadeh/iphone-duo-skills) also covers Flutter, React Native and Capacitor. Duology aims to go from design to the App Store for native SwiftUI and UIKit apps. v0.1 has layout patterns, a recipe, a linter, an audit command and a test harness. The pose check, the App Store skill and published test results come later.
+Other repos explain the Duo APIs well, and [mirzaaghazadeh/iphone-duo-skills](https://github.com/mirzaaghazadeh/iphone-duo-skills) also covers Flutter, React Native and Capacitor. Duology aims to go from design to the App Store for native SwiftUI and UIKit apps. v0.1 has layout patterns, a recipe, a linter, an audit command and a test harness. v0.2, on `main` and not yet released, adds design skills, a scenes skill, the pose screenshots (`/duo-poses`) and a design review agent. The App Store skill and published test results come later.
 
 </details>
 
@@ -362,14 +371,14 @@ No. Everything runs on the iPhone Duo simulator in Xcode 27.1. A few things only
 <details>
 <summary><strong>Does it work with UIKit?</strong></summary>
 
-Yes. `duo-layout`, `duo-navigation`, `duo-continuity` and `duo-shared-screen` give SwiftUI and UIKit versions. `duo-patterns` builds in SwiftUI and maps each pattern to its UIKit counterpart. The two-player recipe is SwiftUI.
+Yes. `duo-layout`, `duo-navigation`, `duo-continuity` and `duo-shared-screen` give SwiftUI and UIKit versions, and so do the v0.2 skills (`duo-scenes`, `duo-design-system`, `duo-postures`, `duo-transitions`, `duo-ergonomics`, `duo-accessibility`). `duo-patterns` builds in SwiftUI and maps each pattern to its UIKit counterpart. The two-player recipe is SwiftUI.
 
 </details>
 
 <details>
 <summary><strong>Does Duology send any data anywhere?</strong></summary>
 
-No. Skills are text files, and `duo-lint` and `duo-doctor` run on your Mac.
+No. Skills are text files, and `duo-lint`, `duo-doctor` and the `duo-pose-matrix` tools run on your Mac.
 
 </details>
 

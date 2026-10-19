@@ -34,6 +34,12 @@
          </CommandLineArgument>
          <CommandLineArgument argument = "-pattern displacement" isEnabled = "NO">
          </CommandLineArgument>
+         <CommandLineArgument argument = "-pattern tabletopPlayer" isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument argument = "-pattern foldTransition" isEnabled = "NO">
+         </CommandLineArgument>
+         <CommandLineArgument argument = "-pattern designTokens" isEnabled = "NO">
+         </CommandLineArgument>
          <CommandLineArgument argument = "-showsRegions YES" isEnabled = "NO">
          </CommandLineArgument>
       </CommandLineArguments>

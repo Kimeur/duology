@@ -350,7 +350,7 @@ Each `SKILL.md` repeats this in its front matter, so you can see how far every r
 <details>
 <summary><strong>How is this different from other iPhone Duo skill repos?</strong></summary>
 
-Other repos explain the Duo APIs well, and [mirzaaghazadeh/iphone-duo-skills](https://github.com/mirzaaghazadeh/iphone-duo-skills) also covers Flutter, React Native and Capacitor. Duology aims to go from design to the App Store for native SwiftUI and UIKit apps. v0.1 has layout patterns, a recipe, a linter, an audit command and a test harness. v0.2, on `main` and not yet released, adds design skills, a scenes skill, the pose screenshots (`/duo-poses`) and a design review agent. The App Store skill and published test results come later.
+Other repos explain the Duo APIs well, and [mirzaaghazadeh/iphone-duo-skills](https://github.com/mirzaaghazadeh/iphone-duo-skills) also covers Flutter, React Native and Capacitor. Duology aims to go from design to the App Store for native SwiftUI and UIKit apps. v0.1 has layout patterns, a recipe, a linter, an audit command and a test harness. v0.2 adds design skills, a scenes skill, the pose screenshots (`/duo-poses`) and a design review agent. The App Store skill and published test results come later.
 
 </details>
 

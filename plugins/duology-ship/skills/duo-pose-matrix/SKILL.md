@@ -112,7 +112,7 @@ duo-pose-matrix com.example.notes --no-relaunch --poses closed,open,book -- -uiT
 | `--busy-wait SECONDS` | How long to wait when UI tests start mid-run, before the next pose or the restore. Default 120. |
 | `--no-restore`, `--keep-running`, `--no-bring-forward`, `--json` | Leave the last pose; leave the app running; fail instead of bringing Device Hub forward; print the summary as JSON. |
 
-From the default waits, setting a pose takes about 7 to 20 seconds. Each screenshot takes about 6 to 7 seconds more (*measured*: two cases in one pose took 13 seconds). Four poses and two cases take about two minutes.
+From the default waits, setting a pose takes about 7 to 20 seconds. Each screenshot takes about 6 to 7 seconds more (*measured*: two cases in one pose took 13 seconds). Four poses and two cases take two to four minutes (*measured*: 4 minutes on a shared, busy simulator on 18 October 2026).
 
 ### 3. Read the results
 

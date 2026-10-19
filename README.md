@@ -158,7 +158,7 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 **v0.1 and v0.2: 18 skills in 4 plugins, 5 commands and 1 review agent.** Rows marked v0.2 are on `main` and not released yet. The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
 
 <details open>
-<summary><strong>duology</strong> · foundation: setup, layout, continuity</summary>
+<summary><strong>duology</strong> · foundation: setup, layout, continuity, scenes</summary>
 
 | Skill | Status | Use it when |
 |---|---|---|

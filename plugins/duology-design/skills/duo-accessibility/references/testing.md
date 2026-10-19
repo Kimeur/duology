@@ -71,6 +71,8 @@ final class AuditTests: XCTestCase {
 
 The audit named the 20 pt icon "Trash" from its symbol name. That label came for free; for anything else, write one.
 
+The audit has blind spots. *Measured* by the v0.2 eval oracles on the open phone (Xcode 27.1): `.hitRegion` did not flag 30 pt circle buttons; `.contrast` timed out ("Audit failed to complete in time") on a low-contrast screen; `.textClipped` reported issues with no element for text inside a child that `ViewThatFits` rejected. So measure targets between about 30 and 43 pt yourself (`duo-ergonomics`), run `.contrast` on its own and retry once, and look at element-less issues before you ignore them.
+
 ## A VoiceOver walk
 
 iOS 27 adds [`XCUIDevice.shared.voiceOverService`](https://developer.apple.com/documentation/xcuiautomation/xcuidevice/voiceoverservice): turn VoiceOver on, move through elements, and read what it says ([`XCUIVoiceOverService`](https://developer.apple.com/documentation/xcuiautomation/xcuivoiceoverservice); declared in `XCUIVoiceOverService.h` in the iOS 27.1 SDK).

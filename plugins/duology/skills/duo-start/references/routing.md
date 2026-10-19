@@ -39,7 +39,7 @@ Install a missing plugin with `/plugin install <plugin>@duology`. On other agent
 | `/duo-doctor` | Check Xcode 27.1, the Duo simulator and Xcode's agent connection. Run it first when anything in the build step fails. |
 | `/duo-new <recipe>` | Create a new app from a recipe and run it on the Duo simulator. Only `recipe-two-player-game` exists in v0.1. |
 | `/duo-audit` | Run `duo-lint` and the checklist and list what to fix, most serious first. Use it after the first pass. |
-| `/duo-poses <bundle-id>` | Screenshot the installed app in every pose with `duo-pose-matrix` and put the simulator back. (v0.2) |
+| `/duo-poses <bundle-id>` | Screenshot the installed app closed, open, in book pose and in tabletop with `duo-pose-matrix`, and put the simulator back. (v0.2) |
 | `/duo-review [folder]` | Hand screenshots or Figma exports (default: the newest `/duo-poses` run) to the `duo-design-reviewer` agent for a design critique, most serious first. It reads only. (v0.2) |
 
 The `duo-design-reviewer` agent (`duology-design`, v0.2) applies the 15-point `duo-design-review` checklist plus the `duo-postures`, `duo-patterns`, `duo-ergonomics` and `duo-accessibility` rules to pictures. It never edits files.

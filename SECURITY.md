@@ -27,10 +27,13 @@ Not security issues:
 
 ## How to report
 
+Security contact: gazouzimarouane@gmail.com. Duology has applied to Anthropic's OSS Scanner (application pending); if accepted, its findings go to this address.
+
 Please don't open a public issue, discussion or pull request for a security problem.
 
 1. Use GitHub's private form: [Report a vulnerability](https://github.com/Kimeur/duology/security/advisories/new). GitHub explains how it works in [Privately reporting a security vulnerability](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability).
-2. If that form isn't available, open an issue titled "Security contact request" with no details. The maintainer will reply with a private way to send them.
+2. Or email the maintainer at gazouzimarouane@gmail.com with "Duology security" in the subject.
+3. If neither works, open an issue titled "Security contact request" with no details. The maintainer will reply with a private way to send them.
 
 Include:
 

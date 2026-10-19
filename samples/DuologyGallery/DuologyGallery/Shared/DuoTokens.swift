@@ -5,9 +5,10 @@ import SwiftUI
 // screen. Every value follows the size class and Dynamic Type size of the view
 // that reads it. Nothing here asks which device, display or screen it runs on.
 //
-// One change from the skill: the skill's `duoContainerMargins()` is left out,
-// because the gallery already has the same helper as `containerMargins(_:)`
-// in `FeedGrid.swift`.
+// The code is the skill's, copied on 19 October 2026, with one change: the
+// skill's `duoContainerMargins()` is left out, because `containerMargins(_:)`
+// in `FeedGrid.swift` is the same code with an edges parameter. The skill
+// keeps the grid helper in a second file; here both live in this one.
 
 /// Duology's 4-point spacing scale. The suffix is the number of 4-point steps.
 nonisolated enum DuoSpace {
@@ -37,7 +38,7 @@ nonisolated struct DuoTokens: Equatable, Sendable {
         self.readableWidth = readableWidth
     }
 
-    /// Layout grid columns. Even in both size classes, so a fold lands in a gutter.
+    /// Layout grid columns. Even in both size classes, so a fold never lands inside a column.
     var columns: Int { isRegularWidth ? 8 : 4 }
     var gutter: CGFloat { isRegularWidth ? DuoSpace.x4 : DuoSpace.x3 }
     var sectionSpacing: CGFloat { isRegularWidth ? DuoSpace.x8 : DuoSpace.x6 }
@@ -86,6 +87,19 @@ nonisolated enum DuoColor {
     static let groupedBackground = Color(uiColor: .systemGroupedBackground)
     static let card = Color(uiColor: .secondarySystemGroupedBackground)
     static let separator = Color(uiColor: .separator)
+
+    /// A brand colour with light, dark and increased-contrast variants.
+    static func dynamic(light: UIColor, dark: UIColor,
+                        lightHighContrast: UIColor? = nil,
+                        darkHighContrast: UIColor? = nil) -> Color {
+        Color(uiColor: UIColor { traits in
+            let high = traits.accessibilityContrast == .high
+            if traits.userInterfaceStyle == .dark {
+                return high ? (darkHighContrast ?? dark) : dark
+            }
+            return high ? (lightHighContrast ?? light) : light
+        })
+    }
 }
 
 extension View {
@@ -183,52 +197,73 @@ nonisolated struct DuoColumns: Equatable, Sendable {
     }
 
     private(set) var columns: [Column]
-    /// True when a fold crosses the grid, active or not. Groups never cross the middle then.
-    private(set) var hasFold: Bool
+    /// Index of the first column after the fold, or nil when the fold doesn't
+    /// split the grid. Groups never cross it.
+    private(set) var split: Int?
 
-    /// `count` is rounded down to even when a fold crosses the grid. While the
-    /// fold is active, its frame is the middle gutter and each half gets half the columns.
-    init(width: CGFloat, count: Int, gutter: CGFloat, fold: DuoFold? = nil) {
-        var count = max(1, count)
-        hasFold = fold != nil
-        if hasFold { count = max(2, count - count % 2) }
-
-        if let fold, fold.isActive {
-            let half = count / 2
-            let gaps = CGFloat(half - 1) * gutter
-            let left = max(0, (fold.minX - gaps) / CGFloat(half))
-            let right = max(0, (width - fold.maxX - gaps) / CGFloat(half))
-            columns = (0..<count).map { index in
-                index < half
-                    ? Column(x: CGFloat(index) * (left + gutter), width: left)
-                    : Column(x: fold.maxX + CGFloat(index - half) * (right + gutter), width: right)
-            }
+    /// With a fold, `count` is rounded down to even and each side of the fold gets
+    /// half the columns. Flat, the gap at the fold is one gutter centred on it;
+    /// partly folded, it is the fold's frame. If one side is too narrow for its
+    /// half at `minimumColumn`, every column goes on the other side and the fold
+    /// becomes the grid's edge.
+    init(width: CGFloat, count: Int, gutter: CGFloat, fold: DuoFold? = nil,
+         minimumColumn: CGFloat = 44) {
+        guard let fold else {
+            columns = Self.row(from: 0, to: width, count: max(1, count), gutter: gutter)
+            split = nil
+            return
+        }
+        let count = max(2, count - count % 2)
+        let half = count / 2
+        let gapStart = fold.isActive ? fold.minX : (fold.minX + fold.maxX - gutter) / 2
+        let gapEnd = fold.isActive ? fold.maxX : gapStart + gutter
+        // Decided on the fold's frame, which has the same size flat and folded,
+        // so the choice doesn't flip when the phone folds.
+        func holdsHalf(_ length: CGFloat) -> Bool {
+            length - CGFloat(half - 1) * gutter >= CGFloat(half) * minimumColumn
+        }
+        if holdsHalf(fold.minX), holdsHalf(width - fold.maxX) {
+            columns = Self.row(from: 0, to: gapStart, count: half, gutter: gutter)
+                + Self.row(from: gapEnd, to: width, count: half, gutter: gutter)
+            split = half
+        } else if fold.minX > width - fold.maxX {
+            columns = Self.row(from: 0, to: gapStart, count: count, gutter: gutter)
+            split = nil
         } else {
-            let each = max(0, (width - CGFloat(count - 1) * gutter) / CGFloat(count))
-            columns = (0..<count).map { Column(x: CGFloat($0) * (each + gutter), width: each) }
+            columns = Self.row(from: gapEnd, to: width, count: count, gutter: gutter)
+            split = nil
         }
     }
 
-    /// Merges every `span` columns into one. With a fold, each half is grouped
-    /// on its own, so no group crosses the middle gutter.
+    private static func row(from start: CGFloat, to end: CGFloat,
+                            count: Int, gutter: CGFloat) -> [Column] {
+        let each = max(0, (end - start - CGFloat(count - 1) * gutter) / CGFloat(count))
+        return (0..<count).map { Column(x: start + CGFloat($0) * (each + gutter), width: each) }
+    }
+
+    /// Merges every `span` columns into one. Each side of the fold is grouped
+    /// on its own, so no group crosses it.
     func grouped(by span: Int) -> DuoColumns {
         let span = max(1, span)
         guard span > 1, !columns.isEmpty else { return self }
-        let middle = columns.count / 2
-        let halves = hasFold ? [columns[..<middle], columns[middle...]] : [columns[...]]
-        var merged: [Column] = []
-        for half in halves {
-            var start = half.startIndex
-            while start < half.endIndex {
-                let last = min(start + span, half.endIndex) - 1
-                merged.append(Column(x: half[start].x, width: half[last].maxX - half[start].x))
+        let sides = split.map { [columns[..<$0], columns[$0...]] } ?? [columns[...]]
+        var result = self
+        result.columns = []
+        for (index, side) in sides.enumerated() {
+            if index == 1 { result.split = result.columns.count }
+            var start = side.startIndex
+            while start < side.endIndex {
+                let last = min(start + span, side.endIndex) - 1
+                result.columns.append(Column(x: side[start].x, width: side[last].maxX - side[start].x))
                 start += span
             }
         }
-        var result = self
-        result.columns = merged
         return result
     }
+
+    /// Empty space before the first column. Not zero only when the fold is the
+    /// grid's leading edge. Put it on the grid as leading padding.
+    var leadingInset: CGFloat { columns.first?.x ?? 0 }
 
     /// Items for `LazyVGrid`: fixed widths, and the real gap after each column.
     var gridItems: [GridItem] {

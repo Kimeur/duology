@@ -1,6 +1,6 @@
 # Dynamic Type on both displays
 
-The text size is one setting for the whole phone. The room for text is not: the closed outer display gives a screen 382 pt wide inside its safe area, the open inner display about 950 pt (*measured* by `duo-design-system` and `duo-patterns`). A layout that reads well open can clip closed at the same size. Apple wants text enlargeable by at least 200 percent, as much text visible at the largest accessibility size as at the largest standard size, and stacked layouts when inline items crowd the text ([HIG, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Vision), [HIG, Typography](https://developer.apple.com/design/human-interface-guidelines/typography#Supporting-Dynamic-Type)).
+The text size is one setting for the whole phone. The room for text is not: inside the safe area, the closed outer display is 382 pt wide and the open inner display 867 pt, held wide with the vertical bar on the right (both *measured* by `duo-design-system`; the open window is 951 pt, and the bar's column takes the rest). A layout that reads well open can clip closed at the same size. Apple wants text enlargeable by at least 200 percent, as much text visible at the largest accessibility size as at the largest standard size, and stacked layouts when inline items crowd the text ([HIG, Accessibility](https://developer.apple.com/design/human-interface-guidelines/accessibility#Vision), [HIG, Typography](https://developer.apple.com/design/human-interface-guidelines/typography#Supporting-Dynamic-Type)).
 
 ## Sizes and names
 
@@ -33,19 +33,29 @@ struct PlaybackStrip: View {
 
     var body: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: 16) {                       // titles and icons
-                Button("Play", systemImage: "play.fill", action: play)
-                Button("Skip 15 Seconds", systemImage: "goforward.15", action: skip)
-            }
-            HStack(spacing: 16) {                       // icons only; titles stay for VoiceOver
-                Button("Play", systemImage: "play.fill", action: play)
-                Button("Skip 15 Seconds", systemImage: "goforward.15", action: skip)
-            }
-            .labelStyle(.iconOnly)
+            strip.labelStyle(.titleAndIcon)
+            strip.labelStyle(.iconOnly)                 // titles stay for VoiceOver and Voice Control
+        }
+    }
+
+    private var strip: some View {
+        HStack(spacing: 16) {
+            button("Play", "play.fill", play)
+            button("Skip 15 Seconds", "goforward.15", skip)
+        }
+    }
+
+    private func button(_ title: LocalizedStringKey, _ symbol: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Label(title, systemImage: symbol)
+                .frame(minWidth: 44, minHeight: 44)     // 44 pt hit area, inside the label (duo-ergonomics)
+                .contentShape(.rect)
         }
     }
 }
 ```
+
+The frame and `contentShape` sit inside the label. *Measured* by the audit: a plain icon button was 16 × 16 pt, and a 44 pt frame outside the label still gave "Hit area is too small" ([testing.md](testing.md#audits)).
 
 ### A grid with fewer, wider columns
 
@@ -79,7 +89,8 @@ When a fold crosses the grid, `duo-patterns` (feed reflow) and `duo-design-syste
 
 ### Two panes at large sizes
 
-- Each half of the open display is wider than the closed display (about 455 pt against 382 pt, *derived* from the 951 pt window and the 40 pt fold region). A pane that works closed at AX5 fits in a half.
+- The two halves of the open display differ. Inside the 867 pt safe area, a split at the fold's 40 pt frame (x 455.5 to 495.5, *measured* by `duo-layout`) leaves about 455 pt for the pane away from the vertical bar and about 371 pt for the pane beside it (*derived*). Flat, with a 16 pt gutter on the fold line instead (`duo-design-system`), the pane beside the bar gets about 383 pt.
+- So the pane beside the bar is about as narrow as the closed display (382 pt), or narrower, before margins. Don't assume a pane that works closed fits there: check it at AX5 on its own, flat and partly folded.
 - A sidebar column is narrower than a half. Check the `NavigationSplitView` sidebar at AX5; rows must wrap, not clip.
 - Keep both panes at large sizes. Removing a pane removes a feature, and Apple asks for the same features closed and open (`duo-patterns`).
 

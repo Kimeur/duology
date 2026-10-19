@@ -89,7 +89,9 @@ struct ComposeView: View {
 
 ### When you need to know if it failed
 
-`openWindow` reports nothing back. If your flow depends on the result, call UIKit's request from SwiftUI and fall back in the error handler (next section). *Measured:* a bare [UISceneSessionActivationRequest()](https://developer.apple.com/documentation/uikit/uiscenesessionactivationrequest-swift.struct) from a SwiftUI app with one `WindowGroup` opened a new window of that group. *Unverified:* which group it picks when the app has several. Test that on the simulator before you rely on it.
+You can't, in SwiftUI. `openWindow` reports nothing back, so don't build a flow that waits for its result. Make the in-window path the fallback that always works: the `NavigationLink` in the SKILL.md example, or the sheet above. The window is only an extra.
+
+Don't swap in UIKit's request to get an error handler. A [UISceneSessionActivationRequest](https://developer.apple.com/documentation/uikit/uiscenesessionactivationrequest-swift.struct) has no public way to carry the value that `WindowGroup(for:)` presents. Even when it succeeds, the new window gets no value: expect the group's default ("Note not found" in the SKILL.md example) or a window of another group. *Measured:* a bare `UISceneSessionActivationRequest()` from a SwiftUI app with one `WindowGroup` opened a window of that group with no activity. We didn't test routing a request to one of several groups.
 
 ## UIKit
 

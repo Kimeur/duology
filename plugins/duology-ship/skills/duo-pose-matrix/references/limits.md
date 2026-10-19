@@ -38,7 +38,7 @@ These checks find interference, but they can't prevent it. Run one pose sweep pe
 
 ## Permission is the user's decision
 
-macOS gives Accessibility access per app, in System Settings > Privacy & Security > Accessibility ([Apple](https://support.apple.com/guide/mac-help/allow-accessibility-apps-to-access-your-mac-mh43185/mac)). An app with that access can read and press anything on screen, in every app. That is a real grant of trust, and only the user should make it.
+macOS gives Accessibility access per app, in System Settings > Privacy & Security > Accessibility ([Apple](https://support.apple.com/guide/mac-help/mh43185/mac)). An app with that access can read and press anything on screen, in every app. That is a real grant of trust, and only the user should make it.
 
 - The tools check without a prompt and never open System Settings, call `tccutil` or change any setting. A test in `tests/` fails if the code ever does.
 - If the check fails, tell the user what the permission allows, how to grant it, and that the manual route works without it. Don't press for an answer.
@@ -48,7 +48,7 @@ macOS gives Accessibility access per app, in System Settings > Privacy & Securit
 
 The tools find Device Hub's window through Accessibility, which listed no windows for Device Hub while its window was off the current desktop and Mission Control was open (*measured*). Expect the same when the window is minimized, on another Space or in full screen elsewhere (not tested one by one).
 
-- `duo-pose set` and the matrix run `open -a DeviceHub.app` and wait up to 10 seconds. That brings Device Hub to the front and moves the user's keyboard focus to it. Warn the user first. `--no-bring-forward` turns this off.
+- `duo-pose set` and the matrix run `open -a DeviceHub.app` and wait up to 10 seconds. That brings Device Hub to the front and moves the user's keyboard focus to it. Warn the user first. `--no-bring-forward` turns this off. `duo-pose status` and `list` do this only when you pass `--bring-forward`.
 - If the screen is in Mission Control, behind a system dialog, or locked, `open -a` may not bring the window back (*measured* on 18 October: Device Hub became the active app, but Mission Control and a system authentication dialog stayed on screen and the window stayed hidden). Never click, type or press Escape to get past a system dialog. Report it and use the manual route, or try again later.
 
 ## Open and book look the same from outside
@@ -63,7 +63,7 @@ Both show the inner display, held wide, at the same size. Device Hub doesn't rep
 
 The waits (5 s after a fold button, up to 20 s for the displays to switch) come from runs on one Mac. A slow or busy Mac, a first boot, or a heavy app can take longer.
 
-How you notice: a shot `failed` with "the inner display should be active" or a size mismatch, or an app that hasn't drawn yet. Do this: raise `duo-pose set --wait` and `--timeout`, or the matrix's `--wait`, and run again.
+How you notice: a shot `failed` with "the inner display should be active" or a size mismatch, or an app that hasn't drawn yet. Do this: for a pose that didn't take, raise the matrix's `--pose-wait` and `--timeout` (or `duo-pose set --wait` and `--timeout`); for an app that hasn't drawn, raise the matrix's `--wait`. Then run again.
 
 ## What the matrix doesn't capture
 

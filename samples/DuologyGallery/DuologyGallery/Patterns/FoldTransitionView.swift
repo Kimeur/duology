@@ -6,8 +6,11 @@ import SwiftUI
 /// - The reading column and its tools. On the inner display the article sits in
 ///   the region beside the fold, about as wide as the outer display, so lines
 ///   barely reflow and the floating tools keep their place under the text.
-/// - The scroll position: the paragraph at the top, kept as an ID and put back
-///   with `ScrollPosition` whenever the column changes width.
+/// - The scroll position: the paragraph at the top, kept as an ID in the model.
+///   `ScrollViewReader`'s `scrollTo(_:anchor:)` puts it back at every width
+///   change, and again 400 ms after the text width stops changing. On the
+///   iOS 27.1 simulator a `ScrollPosition` that named the paragraph did not
+///   keep it on unfold. `ScrollPosition` only drives the jumps from Contents.
 /// - The selected paragraph, the highlights, the text size and the bookmark,
 ///   all in one model above the layout.
 ///
@@ -156,8 +159,8 @@ private struct ReadingLayout: Layout {
 @Observable
 final class ReadingModel {
     let guide: FieldGuide
-    /// Where the article is, as a block ID. SwiftUI keeps a view with that ID in
-    /// place when the scroll view changes size. A point offset gets no such help.
+    /// Drives the animated jumps from Contents. It does not keep the reader's
+    /// place on a resize: `anchorID` and the article's `scrollTo` do that.
     var scroll: ScrollPosition
     /// Blocks at least half on screen, from the scroll view.
     var visible: [Int] = []

@@ -237,7 +237,7 @@ struct ReplyControls: View {
     private func iconButton(_ title: LocalizedStringKey, _ symbol: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Label(title, systemImage: symbol).labelStyle(.iconOnly)
-                .frame(minWidth: 44, minHeight: 44).contentShape(.rect)  // inside the label, or taps miss
+                .frame(minWidth: 44, minHeight: 44).contentShape(.rect)  // inside: outside, the audit flagged it
         }
     }
 }
@@ -289,7 +289,7 @@ Test file, launch arguments, cleanup if VoiceOver stays on, and the audit result
 - [ ] Each custom pane is an `accessibilityElement(children: .contain)` with a label; the order is the same closed, open and partly folded.
 - [ ] Pane titles have the header trait.
 - [ ] After fold and unfold, VoiceOver lands on the person's place, moved once, after the layout settles.
-- [ ] At AX5 on the closed display, nothing truncates, clips or overlaps; rows stack; no `lineLimit(1)` on content, no fixed text heights.
+- [ ] At AX5 on the closed display and in the open pane beside the vertical bar, nothing truncates, clips or overlaps; rows stack; no `lineLimit(1)` on content, no fixed text heights.
 - [ ] Icons and spacing use `@ScaledMetric`; custom bar items have a large content view.
 - [ ] Reduce Motion turns off hinge effects and moving resize animations; fades remain.
 - [ ] Custom colours pass 4.5:1 (3:1 at 18 pt or bold) in light, dark and Increase Contrast; state never relies on colour alone.

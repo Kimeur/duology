@@ -133,6 +133,7 @@ struct CameraScreen: View {
 ```swift
 import SwiftUI
 
+#if !targetEnvironment(macCatalyst)
 @available(iOS 27.1, *)
 struct PresenterCamera: View {
     @State private var model = ShootModel()
@@ -149,11 +150,12 @@ struct PresenterCamera: View {
             }
     }
 }
+#endif
 ```
 
 ## UIKit
 
-Register on the view controller that shows the camera, keep the registration, and read `isAvailable` in [updateProperties()](https://developer.apple.com/documentation/uikit/uiviewcontroller/updateproperties()) (iOS 26). Call [setNeedsUpdateProperties()](https://developer.apple.com/documentation/uikit/uiviewcontroller/setneedsupdateproperties()) after you change `isEnabled` yourself. Apple's guide says availability supports observation, and `UISceneAccessoryRegistration.h` says it is observable in `updateProperties` and `layoutSubviews`. So UIKit calls `updateProperties()` again when it changes. Mac Catalyst targets need the same `#if !targetEnvironment(macCatalyst)` guard as above around this code.
+Register on the view controller that shows the camera, keep the registration, and read `isAvailable` in [updateProperties()](https://developer.apple.com/documentation/uikit/uiviewcontroller/updateproperties()) (iOS 26). Call [setNeedsUpdateProperties()](https://developer.apple.com/documentation/uikit/uiviewcontroller/setneedsupdateproperties()) after you change `isEnabled` yourself. Apple's guide says availability supports observation, and `UISceneAccessoryRegistration.h` says it is observable in `updateProperties` and `layoutSubviews`. So UIKit calls `updateProperties()` again when it changes. Mac Catalyst targets need the same `#if !targetEnvironment(macCatalyst)` guard as above around this code, and around the camera direction code below.
 
 ```swift
 import UIKit
@@ -218,12 +220,13 @@ final class SubjectSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 ## Camera direction on each display
 
-With the accessory on screen, your app has one view on each display. Apple's camera talk says to make a separate direction coordinator per view: from the outer display's view the rear cameras face forward, from the inner display's view they face backward ([Tech Talk 111465](https://developer.apple.com/videos/play/tech-talks/111465/?time=289)). The coordinator is in **AVKit**, and its handler runs on the main queue (`AVCaptureDeviceDirectionCoordinator.h`).
+With the accessory on screen, your app has one view on each display. Apple's camera talk says to make a separate direction coordinator per view: from the outer display's view the rear cameras face forward, from the inner display's view they face backward ([Tech Talk 111465](https://developer.apple.com/videos/play/tech-talks/111465/?time=289)). The coordinator is in **AVKit**, and its handler runs on the main queue (`AVCaptureDeviceDirectionCoordinator.h`). `AVCaptureDevice.h` marks the outer and inner ultra wide camera types unavailable on Mac Catalyst, so the block keeps the compile-time guard.
 
 ```swift
 import AVKit
 import UIKit
 
+#if !targetEnvironment(macCatalyst)   // the outer and inner camera types don't exist there
 @available(iOS 27.1, *)
 @MainActor
 final class DirectionWatcher {
@@ -242,6 +245,7 @@ final class DirectionWatcher {
         }
     }
 }
+#endif
 ```
 
 Camera choice and the virtual front camera are beyond this skill; see Apple's [Choosing a camera by the direction it faces](https://developer.apple.com/documentation/avkit/choosing-a-camera-by-the-direction-it-faces).

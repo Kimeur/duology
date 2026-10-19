@@ -79,8 +79,8 @@ Open and book pass checks 1 and 2 the same way. That is why the summary marks th
 
 | Wait | Default | Why |
 |---|---|---|
-| After a fold button | 5 s (`--wait` on `duo-pose set`) | Open and Partially Open settled in 4 to 6 s (*measured*). Open to book changes no display, so the tool can't poll for it. |
-| For the displays to switch | up to 20 s (`--timeout`) | Closed once took between 5 and 9 s (*measured*). The tool polls `devicectl` every second. |
+| After a fold button | 5 s (`duo-pose set --wait`, the matrix's `--pose-wait`) | Open and Partially Open settled in 4 to 6 s (*measured*). Open to book changes no display, so the tool can't poll for it. |
+| For the displays to switch | up to 20 s (`--timeout` on both tools) | Closed once took between 5 and 9 s (*measured*). The tool polls `devicectl` every second. The matrix's restore uses the same two waits. |
 | After Rotate Right | 1.5 s, then poll | |
 | Before the check | 1.5 s | Lets the app finish its layout. |
 | Launch to screenshot (matrix) | 4 s (`--wait`) | A first launch after install can be slower. |
@@ -101,7 +101,7 @@ A `--manual` run in a folder that already has a `summary.json` for the same app 
 2. Stop if UI tests run (unless `--force`) or the app isn't installed. "UI tests run" means an `xcodebuild test` or `test-without-building` process on the Mac, or an `.xctrunner` app running in the simulator (see [limits.md](limits.md#the-pose-belongs-to-the-whole-simulator)).
 3. Read the start pose. Connect to Device Hub (bringing it forward if needed).
 4. For each pose: check for UI tests again, press the buttons, check the pose; then for each case launch the app with `simctl launch --terminate-running-process`, wait, take the screenshot and check it. With `--no-relaunch` the loops swap: each case launches once and stays running through every pose.
-5. Restore the start pose, quit the app (`simctl terminate`), read the end pose, write the summary.
+5. Check for UI tests again (waiting up to `--busy-wait`), then restore the start pose. If tests still run, skip the restore and record why. Quit the app (`simctl terminate`), read the end pose, write the summary.
 
 ## What we checked
 

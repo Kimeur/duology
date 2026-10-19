@@ -169,14 +169,26 @@ import UIKit
 final class PlayerSceneDelegate: UIResponder, UIWindowSceneDelegate {
     var window: UIWindow?
     private var displayLink: CADisplayLink?
+    private var renderSize: CGSize = .zero               // the size your renderer is set up for
 
     func windowScene(_ windowScene: UIWindowScene,
                      didUpdateEffectiveGeometry previousEffectiveGeometry: UIWindowScene.Geometry) {
-        let old = previousEffectiveGeometry.coordinateSpace.bounds.size
-        let new = windowScene.effectiveGeometry.coordinateSpace.bounds.size
-        guard old != new, windowScene.activationState == .foregroundActive else { return }
-        // Size changed while someone is looking. Layout follows traits on its own;
-        // only adjust things that don't, such as a render target size.
+        // Background windows can get resized too, with no fold. Skip them here.
+        guard windowScene.activationState == .foregroundActive else { return }
+        applyCurrentSize(of: windowScene)
+    }
+
+    func sceneDidBecomeActive(_ scene: UIScene) {
+        // Catch up on a size change that arrived while the window wasn't active.
+        guard let windowScene = scene as? UIWindowScene else { return }
+        applyCurrentSize(of: windowScene)
+    }
+
+    private func applyCurrentSize(of windowScene: UIWindowScene) {
+        let size = windowScene.effectiveGeometry.coordinateSpace.bounds.size
+        guard size != renderSize else { return }
+        renderSize = size
+        // Layout follows traits on its own; adjust only what doesn't, such as a render target.
     }
 
     func startFrameUpdates(in windowScene: UIWindowScene) {
@@ -202,6 +214,38 @@ final class PlayerSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 - `UIWindowScene.displayLink(target:selector:)` is iOS 27.0. Apple's doc says the link is retargeted when the scene moves between displays ([doc](https://developer.apple.com/documentation/uikit/uiwindowscene/displaylink(target:selector:))). `UIScreen`'s [displayLink(withTarget:selector:)](https://developer.apple.com/documentation/uikit/uiscreen/displaylink(withtarget:selector:)) is deprecated in iOS 27 (`UIScreen.h` points to the window scene's version).
 - `windowScene.screen` changes when the window moves. Never keep a `UIScreen` in a property. `duo-layout` has the wider rule.
+- Skipping inactive scenes in the geometry callback isn't enough on its own. A window can change size while it isn't active, and we don't know that UIKit sends another update when it becomes active. So read `effectiveGeometry` again in [sceneDidBecomeActive(_:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenedidbecomeactive(_:)). *Unverified:* the order of the geometry update and activation when a background window comes back on a closed phone.
+
+### SwiftUI: a size-class change is not a fold
+
+*Measured:* in five of six runs, a window that went to the background got resized and back (table below). On the open phone its width class goes `regular`, `compact`, `regular` within a tenth of a second. Code that reads a width-class change as "the phone folded" would run each time the app leaves the screen.
+
+```swift
+import SwiftUI
+
+/// Reacts to a real width change only while people can see this window.
+struct FoldAwareWindowRoot: View {
+    @Environment(\.horizontalSizeClass) private var widthClass
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var appliedWidthClass: UserInterfaceSizeClass?
+
+    var body: some View {
+        NotesWindowRoot()                                    // one view tree for every width (above)
+            .onChange(of: widthClass, initial: true) { applyIfActive() }
+            .onChange(of: scenePhase) { applyIfActive() }    // catch up when the window is active again
+    }
+
+    private func applyIfActive() {
+        guard scenePhase == .active, widthClass != appliedWidthClass else { return }
+        appliedWidthClass = widthClass
+        // First call: the starting width. Later calls: the width changed while on screen,
+        // for example on a fold or an unfold. Adjust what doesn't follow layout on its own.
+    }
+}
+```
+
+- Don't swap whole view trees with `if`/`else` on the size class. The background round trip would rebuild them and drop their `@State`. Change the layout inside one tree; `duo-continuity` has the patterns.
+- [onChange(of:initial:_:)](https://developer.apple.com/documentation/swiftui/view/onchange(of:initial:_:)) is iOS 17 and later.
 
 ### What we saw, and what we couldn't check
 
@@ -214,15 +258,17 @@ final class PlayerSceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 So a fold is a resize of the same scene, as Apple says. Your window code doesn't restart.
 
-*Measured* on the closed phone, when a second window covered the first:
+*Measured* when a window goes to the background, whether a second window covers it or the whole app leaves the screen. Seen closed and open, in five runs. In a sixth, the covered window got no geometry update in the second before the log ended.
 
-| Order | First window |
+| Order | The window going to the background |
 |---|---|
 | 1 | [sceneWillResignActive(_:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenewillresignactive(_:)), SwiftUI phase `active` to `inactive` |
 | 2 | [sceneDidEnterBackground(_:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenedidenterbackground(_:)), phase `inactive` to `background`; the scene stayed connected |
-| 3 | `didUpdateEffectiveGeometry` to 951 × 669 pt in landscape, then back to 466 × 678 pt, all while in the background |
+| 3 | Two `didUpdateEffectiveGeometry` calls within 0.2 s, on the same screen, with no fold. Closed: 466 × 678 to 951 × 669 pt (landscape) and back; width class stayed `compact`. Open: 951 × 669 to 466 × 678 pt (portrait) and back; width class `regular` to `compact` to `regular`. |
 
-The new window, meanwhile, laid out first at 466 × 562 pt and then at 382 × 644 pt (its root view inside the safe area).
+Apple doesn't document this resize. Treat any size or size-class change in a scene that isn't active as noise, and read the size again when it becomes active.
+
+When a second window opened on the closed phone, it laid out first at 466 × 562 pt and then at 382 × 644 pt (its root view inside the safe area).
 
 *Unverified:*
 
@@ -233,5 +279,5 @@ The new window, meanwhile, laid out first at 466 × 562 pt and then at 382 × 64
 Run the probe in [evidence.md](evidence.md#the-probe), set up Split View by hand, press the poses, and read the log. Meanwhile:
 
 - Save on `.background`. Never tear down (stop playback, clear drafts, release the UI) on `.inactive`.
-- Check [activationState](https://developer.apple.com/documentation/uikit/uiscene/activationstate-swift.property) before doing work in a geometry callback.
+- Check [activationState](https://developer.apple.com/documentation/uikit/uiscene/activationstate-swift.property) before doing work in a geometry callback, and catch up in `sceneDidBecomeActive(_:)`. In SwiftUI, act on size-class changes only while `scenePhase == .active`.
 - Handle [sceneDidDisconnect(_:)](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenediddisconnect(_:)) at any point: UIKit can disconnect a background scene to reclaim resources and keep its session ([Managing your app's life cycle](https://developer.apple.com/documentation/uikit/managing-your-app-s-life-cycle)).

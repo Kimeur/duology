@@ -255,7 +255,7 @@ Apple says opening and closing work like resizing the app in iPhone Mirroring ([
 | Display link | `windowScene.displayLink(target:selector:)` (iOS 27) follows the scene to the new display. `UIScreen`'s [version](https://developer.apple.com/documentation/uikit/uiscreen/displaylink(withtarget:selector:)) is deprecated in iOS 27 (`UIScreen.h`). | [doc](https://developer.apple.com/documentation/uikit/uiwindowscene/displaylink(target:selector:)) |
 | Scene phase during a fold | *Measured:* [scenePhase](https://developer.apple.com/documentation/swiftui/environmentvalues/scenephase) stayed `active` through close and open. No `inactive`, no new `onAppear`. | [evidence](references/evidence.md#results-open-and-fold) |
 | Two windows in Split View, then close | *Unverified* which one moves to the outer display | Split View needs a drag in Device Hub |
-| Any window going to the background (covered by another window, or the whole app) | *Measured:* inactive, then background, still connected. Then two geometry updates within 0.2 s, with no fold. Closed: 466 × 678 to 951 × 669 pt and back, width class unchanged. Open: 951 × 669 to 466 × 678 pt and back, width class `regular`, `compact`, `regular`. | [evidence](references/evidence.md#results-open-and-fold) |
+| Any window going to the background (covered by another window, or the whole app) | *Measured:* inactive, then background, still connected. In 5 of 6 runs, two geometry updates followed within 0.2 s, with no fold. Closed: 466 × 678 to 951 × 669 pt and back, width class unchanged. Open: 951 × 669 to 466 × 678 pt and back, width class `regular`, `compact`, `regular`. | [closed](references/evidence.md#results-closed-phone), [open](references/evidence.md#results-open-and-fold) |
 
 So:
 
@@ -272,7 +272,7 @@ Scene delegate code for new windows, a close confirmation for windows with unsav
 ## Test it
 
 1. Run on the iPhone Duo simulator. Closed: request a new window and check that the content still opens in place when the request fails or covers the old window.
-2. In Device Hub press Open. Open a second window, then drag your app by its home indicator to each side for Split View ([Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)). Press Closed with two windows open and note which one stays.
+2. Open the phone: ask the user to press Open in [Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub), or, if they want it scripted, run `duo-pose set open` from [duo-pose-matrix](https://github.com/Kimeur/duology/blob/main/plugins/duology-ship/skills/duo-pose-matrix/SKILL.md). The pose applies to everything on the shared simulator, and `duo-pose` refuses while UI tests run. Open a second window, then drag your app by its home indicator to each side for Split View ([Tech Talk 111461](https://developer.apple.com/videos/play/tech-talks/111461/?time=470)). Close the phone the same way (`duo-pose set closed`) with two windows open and note which one stays.
 3. Log scene events with the probe pattern in [references/evidence.md](references/evidence.md#the-probe).
 4. Screenshots: `xcrun simctl io booted screenshot --display=primary outer.png` and `--display=primary-1 inner.png`.
 
@@ -294,6 +294,6 @@ What the simulator can't tell you:
 - [ ] The layout works at half the inner display, with bars on either edge (Split View on both sides).
 - [ ] The camera capture accessory is registered on the camera view, shares the capture model, has a toggle shown only while available, and carries no essential control.
 - [ ] Accessory code sits behind `#available(iOS 27.1, *)`, and behind `#if !targetEnvironment(macCatalyst)` when the target builds for Mac Catalyst.
-- [ ] Per-window state saves on `.background`; nothing tears down on `.inactive`.
+- [ ] Per-window state saves on `.background`; nothing tears down on `.inactive`; size and size-class reactions run only while the scene is active, and catch up when it becomes active.
 - [ ] No cached `UIScreen`; display links come from the window scene.
 - [ ] Accessory tested on a real iPhone Duo with capture running; inner-display windows tested in Device Hub.

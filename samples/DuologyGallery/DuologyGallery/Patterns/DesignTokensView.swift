@@ -5,11 +5,12 @@ import UIKit
 /// tokens, with the layout grid drawn over it.
 ///
 /// - Columns come from the size class: 4 on the outer display, 8 on the inner
-///   display. Both counts are even, so a fold always lands in a gutter.
+///   display. With a fold, half the columns sit on each side of it (`DuoColumns`).
+/// - Flat, the middle gutter is a normal gutter centred on the fold line.
+///   Partly folded, only that gap widens to the fold's frame; the outer margins
+///   stay and the columns narrow by a few points.
 /// - Margins are the system's container margins (iOS 27.1). They can differ on
 ///   each side next to a vertical bar, and the overlay shows both.
-/// - Partly folded, the fold's frame becomes the middle gutter: half the
-///   columns on each side, outer margins unchanged (`DuoColumns`).
 /// - One type scale on both displays, read live at the current text size.
 /// - Every tappable element has a hit region of at least 44 × 44 pt. The touch
 ///   target overlay outlines each one, and the tokens card reports the smallest.
@@ -101,6 +102,12 @@ private struct EnergyDashboard: View {
                     }
                 }
             }
+            // Only when one side of the fold is too narrow for half the columns.
+            .padding(.leading, columns.leadingInset)
+            // Take the offered width, not the width of the fixed columns. Measured
+            // on the grids themselves, the width would never shrink after an open
+            // phone closes (duo-design-system, references/grid.md).
+            .frame(minWidth: 0, maxWidth: .infinity, alignment: .leading)
             // The grid reads its own width and the fold, before the margins.
             .readGridGeometry { grid = $0 }
             .onGeometryChange(for: CGRect.self) { $0.frame(in: .named(Self.space)) } action: { gridFrame = $0 }
@@ -184,11 +191,13 @@ private struct Legend: View {
     private var summary: String {
         let count = columns.columns.count
         var text = "\(count) columns, \(Int(gutter)) pt gutters, system margins."
-        if let fold {
-            text += fold.isActive
-                ? " Folded: \(count / 2) columns each side of a \(Int(fold.maxX - fold.minX)) pt fold gutter."
-                : " Fold the phone and the middle gutter widens to the fold."
+        guard let fold else { return text }
+        guard let split = columns.split else {
+            return text + " One side of the fold is too narrow for half the columns, so the fold is the grid's edge."
         }
+        text += fold.isActive
+            ? " Folded: \(split) columns each side of a \(Int(fold.maxX - fold.minX)) pt fold gutter."
+            : " Flat: a \(Int(gutter)) pt gutter on the fold line. Fold the phone and only that gutter widens, to the fold."
         return text
     }
 
@@ -299,8 +308,10 @@ private struct FoldBand: View {
     }
 }
 
-/// Gives a control a 44 × 44 pt hit region and, while the overlay is on,
-/// outlines that region: green when it is at least 44 pt each way, red when not.
+/// Measures a control's hit region and, while the overlay is on, outlines it:
+/// green when it is at least 44 pt each way, red when not. It only measures:
+/// the control gets its size from `duoTouchTarget()` before this marker, so a
+/// control built without it shows red and lowers "Smallest target".
 private struct TouchTargetMarker: ViewModifier {
     @Environment(\.showsTouchTargets) private var isShown
 
@@ -308,7 +319,6 @@ private struct TouchTargetMarker: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .duoTouchTarget()
             .background {
                 GeometryReader { proxy in
                     Color.clear.preference(key: SmallestTargetKey.self, value: proxy.size)
@@ -331,7 +341,7 @@ private struct TouchTargetMarker: ViewModifier {
 }
 
 private extension View {
-    func touchTarget() -> some View { modifier(TouchTargetMarker()) }
+    func markTouchTarget() -> some View { modifier(TouchTargetMarker()) }
 }
 
 /// The smallest hit region on screen.
@@ -418,7 +428,8 @@ private struct ChartCard: View {
                         Button(option.rawValue) { range = option }
                             .font(DuoType.meta.weight(.semibold))
                             .padding(.horizontal, DuoSpace.x3)
-                            .touchTarget()
+                            .duoTouchTarget()
+                            .markTouchTarget()
                             .background(range == option ? Color.orange.opacity(0.18) : Color(.tertiarySystemFill),
                                         in: Capsule())
                             .foregroundStyle(range == option ? Color.orange : Color.primary)
@@ -525,7 +536,8 @@ private struct DeviceCard: View {
                     .labelStyle(.iconOnly)
                     .font(.body.weight(.semibold))
                     .foregroundStyle(device.isOn ? .white : .secondary)
-                    .touchTarget()
+                    .duoTouchTarget()
+                    .markTouchTarget()
                     .background(device.isOn ? device.tint : Color(.tertiarySystemFill), in: Circle())
                     .buttonStyle(.plain)
                 }
@@ -552,9 +564,13 @@ private struct TokensCard: View {
     private var rows: [(String, String)] {
         var middle = "\(points(tokens.gutter)), no fold"
         if let gridFold {
-            middle = gridFold.isActive
-                ? "\(points(gridFold.maxX - gridFold.minX)), the fold"
-                : "\(points(tokens.gutter)), fold flat"
+            if columns.split == nil {
+                middle = "None, the fold is the edge"
+            } else {
+                middle = gridFold.isActive
+                    ? "\(points(gridFold.maxX - gridFold.minX)), the fold"
+                    : "\(points(tokens.gutter)), on the fold line"
+            }
         }
         let target = smallestTarget.map { "\(Int($0.width.rounded())) × \(Int($0.height.rounded())) pt" } ?? "None"
         return [

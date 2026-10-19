@@ -1,25 +1,25 @@
 # What we measured
 
-Every *measured* claim in this skill comes from one probe app and its UI tests, run on the shared iPhone Duo simulator on 18 October 2026.
+Every *measured* claim in this skill comes from one probe app and its UI tests, run on the shared iPhone Duo simulator on 18 October 2026, plus one re-run of the walk test on 19 October 2026.
 
 ## Setup
 
 - Xcode 27.1 (27A9275), iOS 27.1 simulator runtime (24A94425), the "iPhone Duo" device type, macOS 27.0.1.
 - A SwiftUI probe app with one screen per question, picked by launch argument, and an XCUITest target. VoiceOver was driven with `XCUIDevice.shared.voiceOverService`; audits with `performAccessibilityAudit(for:_:)`.
 - Closed means the outer display, portrait. Open means the inner display, fully open, held wide. The window was 466 × 678 pt closed (`app.windows.firstMatch.frame`).
-- For the real fold, the test logged `READY` and the Closed button in Device Hub was then pressed through the macOS Accessibility API, as `duo-setup` describes.
+- For the real fold, the test logged `READY` and the Closed button in Device Hub was then pressed through the macOS Accessibility API, as `duo-setup` describes (a small helper of our own; `duo-pose-matrix` now ships this as `duo-pose set`). The test ran with `-parallel-testing-enabled NO`, on the shared simulator itself.
 - Not covered: real hardware, partial fold, Split View, unfold with VoiceOver, the inner display with a keyboard. In the afternoon run Device Hub had no open window, so no pose could be pressed.
 
 ## VoiceOver order
 
-Two panes, each a heading and three lines ("Left 1" to "Left 3", "Right 1" to "Right 3"). VoiceOver output, one step per `|`:
+Two panes, each a heading and three lines ("Left 1" to "Left 3", "Right 1" to "Right 3"). Where a row says "with a label", the labels were "Inbox pane" and "Message pane": that is where the word "pane" in the output comes from. VoiceOver output, one step per `|`:
 
 | Layout | Display | Output |
 |---|---|---|
 | `HStack`, plain panes | closed | `Inbox, Heading \| Message, Heading \| Left 1 \| Right 1 \| Left 2 \| Right 2 \| Left 3 \| Right 3` |
 | `HStack`, plain panes | open | `Port on left \| Message, Heading \| Left 1 \| Right 1 \| …` (`Inbox, Heading` was not spoken) |
 | Right pane 20 pt lower | closed | same interleaving as plain |
-| Both panes `.contain` with a label | closed and open | `Inbox, Heading \| Left 1 \| Left 2 \| Left 3 \| Message pane, Message, Heading \| Right 1 \| Right 2 \| Right 3` |
+| Both panes `.contain` with a label ("Inbox pane", "Message pane") | closed and open | `Inbox, Heading \| Left 1 \| Left 2 \| Left 3 \| Message pane, Message, Heading \| Right 1 \| Right 2 \| Right 3` (open, the first step was `Port on left` instead of `Inbox, Heading`) |
 | Same, right pane priority 1 | closed | `Message, Heading \| Right 1 \| Right 2 \| Right 3 \| Inbox pane, Inbox, Heading \| Left 1 \| Left 2 \| Left 3` |
 | `ArrangementView`, `.split.axes(.horizontal)` | closed | primary only: `Inbox, Heading \| Left 1 \| Left 2 \| Left 3` |
 | `ArrangementView`, `.split.axes(.horizontal)` | open | same interleaving as plain |
@@ -27,6 +27,18 @@ Two panes, each a heading and three lines ("Left 1" to "Left 3", "Right 1" to "R
 | `NavigationSplitView`, `columnVisibility` `.all` | open | `Hide Sidebar, Button \| Sidebar, Left 1 \| Left 2 \| Left 3 \| Message, Heading \| Right 1 \| Right 2 \| Right 3` |
 
 On the open split view, `app.staticTexts` listed `Inbox, Message, Right 1, Right 2, Right 3, Left 1, Left 2, Left 3`: a different order from VoiceOver.
+
+### The walk test's assertions (19 October 2026, open)
+
+The `walk` helper and the three assertions from [testing.md](testing.md#a-voiceover-walk), with "Left " as the row text and "Message Heading" as the title, on the same screens:
+
+| Layout | Spoken | Result |
+|---|---|---|
+| Both panes `.contain` | `Port on left \| Left 1 \| Left 1 \| Left 2 \| Left 3 \| Message pane Message Heading \| Right 1 \| …` | passed |
+| `HStack`, plain panes | `Port on left \| Message Heading \| Left 1 \| Right 1 \| Left 2 \| …` | failed: no row before the title, rows after it |
+| Right pane priority 1 | `Port on left \| Right 1 \| Right 2 \| Right 3 \| Inbox pane Inbox Heading \| Left 1 \| …` | failed: the title was never spoken (`XCTUnwrap`) |
+
+Each test took about 29 s. The probe was uninstalled afterwards; the pose, text size, contrast, appearance and VoiceOver were left as found.
 
 ## Focus after a fold
 

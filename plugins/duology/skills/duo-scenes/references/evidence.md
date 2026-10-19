@@ -5,6 +5,7 @@ Every *measured* line in this skill comes from the runs below. Read the limits f
 - **When:** 18 October 2026.
 - **Tools:** Xcode 27.1 (27A9275), iOS 27.1 simulator SDK, the shared "iPhone Duo" simulator on iOS 27.1. The probe app was built with `swiftc` and installed with `simctl`; logs came from `simctl launch --stdout`.
 - **Pose:** closed and portrait for most runs (`devicectl device info displays` marked LCD active). One session pressed Open, Closed, Open, Closed in Device Hub through the macOS Accessibility API, checked the active display after each press, and left the simulator closed.
+- **Runs:** numbered in the order we ran them (run 1 to run 8), plus one open-and-fold session. A table row names its run when it matters.
 - **Device:** none. Nothing here has run on a real iPhone Duo.
 
 ## Limits
@@ -93,7 +94,7 @@ Run it with output in a file, change the pose, then read the file while the app 
 xcrun simctl launch --terminate-running-process --stdout="$PWD/scenes.log" booted com.example.probe
 ```
 
-Keep the `setvbuf` line. When stdout goes to a file, the C library holds output in a block buffer until the process exits, and the next `--terminate-running-process` launch kills the app before it writes. Without the line, `scenes.log` stays at 0 bytes while the app runs, and the lines are lost (*measured*, on the simulator and on the Mac). To watch live instead, launch with `--console-pty` in place of `--stdout=...`.
+Keep the `setvbuf` line. When stdout goes to a file, the C library holds output in a buffer until the buffer fills or the process exits, and the next `--terminate-running-process` launch kills the app before it writes. Without the line, `scenes.log` stays at 0 bytes while the app runs, and the lines are lost. With it, the census lines were in the file 2 s after launch (*measured* on 19 October 2026, on the simulator and on the Mac). To watch live instead, launch with `--console-pty` in place of `--stdout=...`; that printed the same lines within 5 s, with or without the line.
 
 ## Results: closed phone
 
@@ -102,7 +103,7 @@ Keep the `setvbuf` line. When stdout goes to a file, the C library holds output 
 | Read `supportsMultipleScenes` and SwiftUI's `supportsMultipleWindows` | Both `true` |
 | `openWindow(id:)` from the first window | No error. A second scene connected on the outer screen (1398 × 2034 px native, window 466 × 678 pt) and became active. The first went `inactive`, then `background`, and stayed connected. |
 | `activateSceneSession(for: UISceneSessionActivationRequest())` | Same: a third scene, no error handler call |
-| The covered window, while in the background | Two geometry updates: 466 × 678 to 951 × 669 pt (`effectiveGeometry.interfaceOrientation` raw value 4, `landscapeLeft`), then back to 466 × 678 pt, on the outer screen |
+| The covered window, while in the background | Two geometry updates: 466 × 678 to 951 × 669 pt (`effectiveGeometry.interfaceOrientation` raw value 4, `landscapeLeft`), then back to 466 × 678 pt, on the outer screen. Seen in runs 2 and 5. In run 4 the covered window went to the background and got no geometry update in the 1 s before the log ended. |
 | One window, the whole app sent to the background (something else came to the front) | The same: resign, background, then 466 × 678 to 951 × 669 pt and back within 0.2 s, on the outer screen. Width class stayed `compact` (trait raw value 1) at both sizes. Seen twice (run 6 at 156.8-159.7 s, the open-and-fold session at 136.9-140.1 s after its last Closed). |
 | The new window's first layout | Root view 466 × 562 pt, then 382 × 644 pt |
 | Edit menu with `UIWindowScene.ActivationAction` (no alternate) and a plain `UIAction` | Only the plain action appeared |
@@ -178,4 +179,4 @@ xcrun -sdk iphonesimulator swiftc -typecheck -target arm64-apple-ios27.1-simulat
 
 We ran it in Swift 5 and Swift 6 language modes, at deployment targets iOS 27.1 and iOS 26.0 (the iOS 27 APIs are behind `@available` and `#available`), and in Swift 6 with `-default-isolation MainActor`. No errors and no warnings in any mode.
 
-The Mac Catalyst helper in [scene-accessories.md](scene-accessories.md#deploying-below-ios-271) was also typechecked for `arm64-apple-ios27.1-macabi` against the macOS SDK's iOSSupport frameworks: no issues with the guard. Without the guard, the same code fails there with "cannot find 'CameraCaptureAccessory' in scope".
+The Mac Catalyst helper in [scene-accessories.md](scene-accessories.md#deploying-below-ios-271), the both-accessories block and `DirectionWatcher` were also typechecked for `arm64-apple-ios27.1-macabi` against the macOS SDK's iOSSupport frameworks: no issues with the guard. Without it, the helper fails there with "cannot find 'CameraCaptureAccessory' in scope" and `DirectionWatcher` with "cannot find type 'AVCaptureDeviceDirectionCoordinator' in scope".

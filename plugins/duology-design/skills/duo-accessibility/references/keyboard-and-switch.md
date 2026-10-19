@@ -11,19 +11,22 @@ Any iPhone works with an external keyboard, and Apple asks you to test with one 
 ```swift
 import SwiftUI
 
-struct NotesToolbar: View {
+/// Puts the commands in the system toolbar: its items move to the vertical bar and off the fold (duo-ergonomics).
+struct NotesToolbar: ViewModifier {
     let newNote: () -> Void
     let search: () -> Void
     let toggleSidebar: () -> Void
 
-    var body: some View {
-        HStack {
-            Button("New Note", systemImage: "square.and.pencil", action: newNote)
-                .keyboardShortcut("n")                          // Command is the default modifier
-            Button("Search", systemImage: "magnifyingglass", action: search)
-                .keyboardShortcut("f")
-            Button("Show Sidebar", systemImage: "sidebar.leading", action: toggleSidebar)
-                .keyboardShortcut("s", modifiers: [.command, .control])
+    func body(content: Content) -> some View {
+        content.toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button("New Note", systemImage: "square.and.pencil", action: newNote)
+                    .keyboardShortcut("n")                      // Command is the default modifier
+                Button("Search", systemImage: "magnifyingglass", action: search)
+                    .keyboardShortcut("f")
+                Button("Show Sidebar", systemImage: "sidebar.leading", action: toggleSidebar)
+                    .keyboardShortcut("s", modifiers: [.command, .control])
+            }
         }
     }
 }
@@ -32,7 +35,8 @@ struct NotesToolbar: View {
 - `keyboardShortcut(_:modifiers:)` defaults to Command ([doc](https://developer.apple.com/documentation/swiftui/view/keyboardshortcut(_:modifiers:))). Prefer Command, keep standard shortcuts for their standard actions, and add custom ones only for frequent commands ([HIG, Keyboards](https://developer.apple.com/design/human-interface-guidelines/keyboards#Best-practices)).
 - A shortcut works while its control is somewhere in the active scene ([doc](https://developer.apple.com/documentation/swiftui/view/keyboardshortcut(_:modifiers:))). Closed, a pane that isn't on screen takes its shortcuts with it, so put screen-wide shortcuts on views that exist in both layouts.
 - When two controls share a shortcut, the first one found leading to trailing wins (same doc). Open, with two panes, give each shortcut one owner.
-- *Measured* in UI tests on the closed display: `typeKey("n", modifierFlags: .command)` ran the action. In one run it was ignored until the app had been tapped once, and after a tap, two presses counted once. Assert after each press and wait for the result.
+- Apply `NotesToolbar` inside a `NavigationStack`, so the toolbar has a bar to live in.
+- *Measured* in UI tests on the closed display, with the button in the view (toolbar buttons not measured): `typeKey("n", modifierFlags: .command)` ran the action. In one run it was ignored until the app had been tapped once, and after a tap, two presses counted once. Assert after each press and wait for the result.
 
 ### Focus
 
@@ -91,9 +95,13 @@ struct PlayerButton: View {
     let toggle: () -> Void
 
     var body: some View {
-        Button(isPlaying ? "Pause" : "Play", systemImage: isPlaying ? "pause.fill" : "play.fill", action: toggle)
-            .labelStyle(.iconOnly)
-            .accessibilityInputLabels(isPlaying ? ["Pause", "Stop"] : ["Play", "Start"])
+        Button(action: toggle) {
+            Label(isPlaying ? "Pause" : "Play", systemImage: isPlaying ? "pause.fill" : "play.fill")
+                .labelStyle(.iconOnly)                 // the title stays the label Voice Control hears
+                .frame(minWidth: 44, minHeight: 44)    // 44 pt hit area, inside the label (duo-ergonomics)
+                .contentShape(.rect)
+        }
+        .accessibilityInputLabels(isPlaying ? ["Pause", "Stop"] : ["Play", "Start"])
     }
 }
 ```

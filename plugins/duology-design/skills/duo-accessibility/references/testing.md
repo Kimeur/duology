@@ -115,13 +115,13 @@ final class ReadingOrderTests: XCTestCase {
 }
 ```
 
-- The test fails when the title is never spoken, when no row comes before it, and when any row comes after it. Replayed on the orders we logged, the assertions passed only for the layout with containers (*derived*: not run as a UI test).
-- Match visible text, not the pane's label. VoiceOver did not speak the first pane's label at the start, and a layout without containers has no pane label to speak (*measured*). The probe's labels were "Inbox pane" and "Message pane"; VoiceOver speaks what you set and adds nothing.
+- The test fails when the title is never spoken, when no row comes before it, and when any row comes after it. *Measured* open, with this helper and these assertions on the probe's two-pane screen (rows "Left 1" to "Left 3", title "Message"): panes with containers passed; plain panes failed both checks; with the right pane given priority, the title was never spoken and `XCTUnwrap` failed.
+- Match visible text, not the pane's label. VoiceOver did not speak the first pane's label at the start, and a layout without containers has no pane label to speak (*measured*). The probe's labels were "Inbox pane" and "Message pane": the word "pane" came from the probe, not from VoiceOver.
 
 What we learned running walks like this (*measured*):
 
 - Each step took about 2 s. A 14-step walk made a test last about 35 s.
-- The first utterance can include the app name ("A11yProbe Inbox, Heading") or, on the open phone, the orientation ("Port on left"). Don't assert on it.
+- The first utterance can include the app name ("A11yProbe Inbox, Heading"). On the open phone it was the orientation ("Port on left") in place of the first element, which was then never spoken. Don't assert on it, and don't make the first element the one you look for.
 - At the end of the screen, `moveForward()` keeps returning the last element. Stop on a repeat.
 - `moveIn()` and `moveOut()` exist for containers (iOS and macOS only).
 - The order of `app.staticTexts` is not VoiceOver's order. On an open `NavigationSplitView`, XCUI listed detail rows before sidebar rows; VoiceOver read the sidebar first.
@@ -170,7 +170,7 @@ xcodebuild test -scheme <App> -destination "id=<UDID>" -parallel-testing-enabled
   -only-testing:<UITestTarget>/FoldFocusTests/testVoiceOverKeepsItsPlaceWhenClosed
 ```
 
-- `-parallel-testing-enabled NO` keeps the test on that simulator. Without it, xcodebuild can run it on a clone ("Clone 1 of iPhone Duo"), which nobody can fold from Device Hub: the test times out after 120 s, and the clone takes another 4-6 GB of disk (`duo-testing`).
+- `-parallel-testing-enabled NO` keeps the test on that simulator. Without it, xcodebuild can run it on a clone ("Clone 1 of iPhone Duo"). The clone is not the phone the person folds in Device Hub, so the test times out after 120 s, and the clone takes another 4-6 GB of disk (`duo-testing`).
 - Watch the log for `READY`, then change the pose.
 - `duo-pose` refuses while any UI test runs (exit 6), and this one is yours. First check that no other test runs on the simulator: `pgrep -fl "xctrunner|xcodebuild.*test"` must list only your run. Then, with the user's OK, run `duo-pose set closed --force`. Without that OK, ask the person to press Closed.
 - Put the pose back afterwards.

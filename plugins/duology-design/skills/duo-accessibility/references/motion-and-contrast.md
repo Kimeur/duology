@@ -66,15 +66,19 @@ struct SupportingPaneStack<Main: View, Pane: View>: View {
             if widthClass == .regular {
                 pane
                     .frame(width: 320)
-                    .transition(reduceMotion ? .opacity : .move(edge: .trailing))
+                    .transition(reduceMotion
+                        ? .opacity.animation(.easeInOut(duration: 0.2))     // the fade carries its own animation
+                        : .opacity.combined(with: .move(edge: .trailing)))
             }
         }
-        .animation(reduceMotion ? .easeInOut(duration: 0.2) : .smooth, value: widthClass)
+        .animation(reduceMotion ? nil : .smooth(duration: 0.3), value: widthClass)  // nil: no layout motion
     }
 }
 ```
 
-The short ease under Reduce Motion animates only the fade; nothing travels. For the finer setting, read `accessibilityPrefersCrossFadeTransitions` behind `if #available(iOS 26.4, *)`.
+- Under Reduce Motion the layout change has no animation: the main pane takes its new width at once, and nothing slides or resizes. Only the new pane fades in. An animation on the whole stack would also animate the main pane's frame.
+- The fade still runs because the transition carries its own animation. *Measured* by `duo-transitions`: a transition with its own `.animation` ran in full on a size-class change that carried none; without it, the pane appeared in one step.
+- This matches `duo-transitions`' `ResizeMotion`. For the finer setting, read `accessibilityPrefersCrossFadeTransitions` behind `if #available(iOS 26.4, *)`.
 
 ### UIKit
 

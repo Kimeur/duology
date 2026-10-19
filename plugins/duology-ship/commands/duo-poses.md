@@ -68,7 +68,9 @@ Tell the user in one line that the run changes the simulator's pose for everythi
 ```
 
 - Give the Bash call a timeout of 10 minutes. Setting a pose takes about 7 to 20 seconds, and each screenshot about 7 more.
-- Exit 0: every screenshot passed its checks. Exit 1: some failed; that is a result, so go on to step 4.
+- Exit 0: every screenshot passed its checks. Exit 1: some failed, or the run stopped early; that is a result, so go on to step 4.
+- "Stopped early: UI tests started" means someone's tests began during the run. The matrix left the pose alone instead of putting it back. Tell the user which poses were captured and the pose the simulator was left in. Don't rerun until the tests finish.
+- A pose that failed with "the inner display should be active" may need more time on a slow Mac: rerun only that pose with `--poses <pose> --pose-wait 10 --timeout 40`.
 - Exit 8: the app isn't installed on the simulator. Tell the user to build and install it for the iPhone Duo simulator (`/duo-audit` step 2 has the commands), then run this again.
 - Exit 3 or 4: go to step 5. The output already lists the manual commands.
 - The line "Saved ... in <folder>" names the output folder. Tell the user where it is.

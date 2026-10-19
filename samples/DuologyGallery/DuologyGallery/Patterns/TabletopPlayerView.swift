@@ -4,7 +4,9 @@ import SwiftUI
 ///
 /// One layout in every pose (`FoldRegionsLayout`), so the film and its controls
 /// keep their identity and playback never stops when the phone folds:
-/// - Closed, and open flat: the controls float over the film, at the bottom.
+/// - Closed, and open flat: the controls float at the bottom of the film's
+///   view. Closed, the picture moves up into the space above them; open, the
+///   picture fills the width and they cover its bottom edge.
 /// - Partly folded like a book: the film in the leading region, the controls
 ///   in the trailing region.
 /// - Partly folded across and propped on a table (tabletop): the film above

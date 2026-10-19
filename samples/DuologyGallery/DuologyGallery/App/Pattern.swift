@@ -88,7 +88,7 @@ enum Pattern: String, CaseIterable, Identifiable {
         case .feedReflow: "As many columns as fit"
         case .tabsToSidebar: "A tab bar on the side"
         case .displacement: "Controls at the bottom"
-        case .tabletopPlayer: "Controls over the film"
+        case .tabletopPlayer: "The film above the controls"
         case .foldTransition: "The article, tools at the bottom"
         case .designTokens: "4 columns, 12 pt gutters"
         }
@@ -106,7 +106,7 @@ enum Pattern: String, CaseIterable, Identifiable {
         case .displacement: "Same place flat; off the fold when folded"
         case .tabletopPlayer: "Film on one side of the fold, controls on the other"
         case .foldTransition: "Same column, place and tools; contents beside"
-        case .designTokens: "8 columns; the fold becomes the middle gutter"
+        case .designTokens: "8 columns; the middle gutter on the fold"
         }
     }
 
@@ -130,7 +130,7 @@ enum Pattern: String, CaseIterable, Identifiable {
         case .tabsToSidebar: "defaultTabBarPlacement"
         case .displacement: "reservedRegions"
         case .tabletopPlayer: "reservedRegions"
-        case .foldTransition: "ScrollPosition"
+        case .foldTransition: "ScrollViewReader"
         case .designTokens: "contentMargins"
         }
     }

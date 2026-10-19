@@ -145,7 +145,7 @@ The UIKit path was not measured on the simulator (*unverified*). The same rules 
 The fold must be real. A UI test can't change the pose, so it waits while the pose changes:
 
 1. The test launches the app, turns VoiceOver on and moves to a row, then logs `READY`.
-2. Someone presses Closed in Device Hub, or a Mac script presses it (see `duo-setup`).
+2. Someone presses Closed in Device Hub, or you run `duo-pose set closed --force` from `duo-pose-matrix` once you have checked that no other test runs and the user agrees. `duo-pose` refuses without `--force` while a UI test runs, this one included ([testing.md](testing.md#focus-after-a-real-fold)).
 3. The test waits for a marker that says the layout changed, waits 4 s more, then reads `currentSpeech()` and moves forward and back to confirm where VoiceOver is.
 
 The full test is in [testing.md](testing.md#focus-after-a-real-fold).

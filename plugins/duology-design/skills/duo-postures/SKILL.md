@@ -28,7 +28,7 @@ Apple calls these "device poses" and describes them with comparisons: "partially
 
 ## Tell the poses apart from layout inputs
 
-Add `FoldGeometry` and `FoldRegionsLayout` from [references/fold-regions.md](references/fold-regions.md) once per app. If `duo-patterns` already added `FoldGeometry`, keep that copy; it is the same code. Then read the fold with `.onFoldChange { fold = $0 }` on the view you lay out.
+Add `FoldGeometry` and `FoldRegionsLayout` from [references/fold-regions.md](references/fold-regions.md) once per app. If the app already has a `FoldGeometry` (`duo-patterns` adds one), keep a single copy, and make sure its `init(_:)` filters with `liesInside(_:of:)` as fold-regions.md shows. The `duo-patterns` copy has no filter yet; add it. Then read the fold with `.onFoldChange { fold = $0 }` on the view you lay out.
 
 | Pose (Duology word) | Apple's words | Your app is on | Size classes (width, height) | `.division` region | `FoldGeometry` |
 |---|---|---|---|---|---|
@@ -209,7 +209,7 @@ Hinge input with an on-screen alternative, UIKit, and testing angles: [reference
 
 ## Measured fold frames
 
-iOS 27.1 iPhone Duo simulator, read from the reserved regions with the gallery app's region overlay and our probes (16 and 18 October 2026). Frames are in a view that fills the window. Full detail: [`duo-patterns` two-page measurements](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/two-page.md#what-we-measured) and [references/measurements.md](references/measurements.md).
+iOS 27.1 iPhone Duo simulator, read from the reserved regions with the gallery app's region overlay and our probes (16 to 19 October 2026). Frames are in a view that fills the window. Full detail: [`duo-patterns` two-page measurements](https://github.com/Kimeur/duology/blob/main/plugins/duology-design/skills/duo-patterns/references/two-page.md#what-we-measured) and [references/measurements.md](references/measurements.md).
 
 | Pose | Window | `.division` region | Camera (`.occlusion`, our reading) |
 |---|---|---|---|
@@ -221,11 +221,12 @@ iOS 27.1 iPhone Duo simulator, read from the reserved regions with the gallery a
 - Folding flips `isActive`; the frame stays put. Read it with `.includeInactive` and a split lands in the same place flat and folded.
 - The 40 pt is a zero-width fold line plus 20 pt of margins on each side. Keep controls out of the whole frame.
 - The default query returned only active regions, and the first layout pass returned none. React with `onGeometryChange`; don't read once in `onAppear`.
-- Not yet measured: size classes and the hinge angle in book and tabletop, and the fold width at other angles.
+- Device Hub's Partially Open settles the hinge at 127° held wide and 128° held tall (*measured*, 19 October 2026).
+- Not yet measured: size classes in book and tabletop, and the fold width at other angles.
 
 ## UIKit
 
-Read `traitCollection` size classes, query `view.reservedRegions(kind: .division, options: .includeInactive)` in `layoutSubviews`, and observe the hinge with `UIHingeInteraction`. Code: [references/uikit.md](references/uikit.md) and [references/hinge.md](references/hinge.md#uikit).
+Read `traitCollection` size classes and query `view.reservedRegions(kind: .division, options: .includeInactive)` in `layoutSubviews`. That is enough: UIKit runs that view's `layoutSubviews` again when the fold turns active or inactive (*measured*). Don't trigger layout from `UIHingeInteraction`; the status changes about 0.7 s before the region does. Keep the hinge for effects. Code: [references/uikit.md](references/uikit.md) and [references/hinge.md](references/hinge.md#uikit).
 
 ## Test every pose
 

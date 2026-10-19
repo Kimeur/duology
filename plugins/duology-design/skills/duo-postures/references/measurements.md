@@ -57,12 +57,11 @@ From the gallery overlay ([screenshot](https://github.com/Kimeur/duology/blob/ma
 | Gap | Why it matters | How to fill it |
 |---|---|---|
 | Size classes in book and tabletop | Rule 2 assumes regular width on the inner display in every inner pose | Run the probe below in each pose |
-| Hinge angle at Device Hub's Partially Open | Effects scale with the angle | Same probe; then Option-drag the slider |
-| Open, flat, held tall: the inactive fold | `.split` assumes a side-to-side fold there | Same probe after Open and a rotation |
+| Hinge angle while Option-dragging the slider | Effects scale with the angle | Same probe; then Option-drag the slider |
 | Fold width at other angles | Whether the 40 pt frame changes as the phone closes | Option-drag the slider and log `.division` |
 | Tent and flipped | Our reading says the outer display; Device Hub can't set either | A real iPhone Duo |
 | `FoldRegionsLayout` and `FoldRegionsView` folded | Both recipes rely on them | Run the recipes in book and tabletop |
-| Whether a fold calls `layoutSubviews` in UIKit | `FoldRegionsView` re-layouts on hinge changes as a safety net | Log `layoutSubviews` while pressing Partially Open |
+| Whether `viewDidLayoutSubviews` gets the same extra pass | A view controller that reads regions there may miss a fold | Log it in the UIKit probe below |
 | Right-to-left | Content should stay leading | Run with the Right-to-Left Pseudolanguage |
 
 ## Probe to re-measure

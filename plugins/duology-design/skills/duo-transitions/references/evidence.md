@@ -68,7 +68,7 @@ So a fold is a resize, as Apple says ([Tech Talk 111461](https://developer.apple
 | `GeometryReader` width | | one step each: 382 → 466 → 951 → 867 | one step: 867 → 382 | | one step: 382 → 594 |
 
 - During the rotation, `body` logged `uikitInherited=0.3`: SwiftUI's update ran inside UIKit's rotation animation, and no SwiftUI value interpolated.
-- The size-class change reached SwiftUI on open in the same update as the new size (`onChange` and the 951 pt width at 10.792 in run 2). On close, the size class came first, in its own update: about 25 ms (run 2, twice) and 70 ms (run 3) before the width changed.
+- On the two opens from closed portrait, the size-class change reached SwiftUI in the same update as the new size: `onChange` and the 951 pt width at 10.792 in run 2; `body` with `h=regular` at 39.829 and the 951 pt width at 39.830 in run 3. On the open from the closed phone held sideways (run 2), the size class came first, in its own update: the plain probe read `regular` at 50.879, `onChange` ran at 50.888, and the width changed at 50.895, 16 ms after the probe. On close, the size class also came first, in its own update: about 25 ms (run 2, twice) and 70 ms (run 3) before the width changed. So there is no fixed order on open either.
 - The width steps took 54 ms in run 2 (10.760 to 10.814) and 250 ms in run 3 (39.628 to 39.878).
 - The width passes through 466 pt on open because the safe area insets (84 pt across the width, closed and open) drop before the resize and come back after it.
 

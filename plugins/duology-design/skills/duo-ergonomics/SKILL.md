@@ -1,6 +1,6 @@
 ---
 name: duo-ergonomics
-description: "Puts controls where hands can reach them on iPhone Duo, Apple's foldable iPhone: one-handed on the closed phone, two hands on the open display, the book grip, and hands-free on a table. Use it when you decide where a primary action, a floating button, player controls or a custom control strip goes; when buttons sit at the top centre of the open display, on the fold or out of thumb reach; when you check thumb zones or reachability; when you design for left-handed people or right-to-left languages; or when touch targets are small. Covers why bars move to the side edge, toolbarVerticalEdge and verticalBarEdge (read them; right to left changes the name, not the side), visibilityPriority for bottom-bar actions, a ThumbCorner modifier for floating controls, an in-app hand preference, ArrangementView with the overlay style to put controls in the bottom half, reservedRegions(kind: .division) to keep targets off the fold, and 44 pt hit regions with frame(minWidth:minHeight:) and contentShape (controlSize grows only bordered buttons)."
+description: "Puts controls where hands can reach them on iPhone Duo, Apple's foldable iPhone: one-handed on the closed phone, two hands on the open display, the book grip, and hands-free on a table. Use it when you decide where a primary action, a floating button, player controls or a custom control strip goes; when buttons sit at the top centre of the open display, on the fold or out of thumb reach; when you check thumb zones or reachability; when you design for left-handed people or right-to-left languages; or when touch targets are small. Covers why bars move to the side edge, toolbarVerticalEdge and verticalBarEdge (read them; right to left changes the name, not the side), visibilityPriority for bottom-bar actions, a ThumbCorner modifier for floating controls, an in-app hand preference, ArrangementView with the overlay style to put controls in the bottom half, reservedRegions(kind: .division) to keep targets off the fold, and 44 pt hit regions with frame(minWidth:minHeight:) and contentShape on the label."
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
   sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
@@ -12,7 +12,7 @@ iPhone Duo changes shape in people's hands. Closed, it is a phone you hold in on
 
 Load other skills for neighbouring work: `duo-navigation` (bar order, overflow, sheets), `duo-layout` (reserved regions, safe areas, margins), `duo-patterns` (layouts and displacement), `duo-design-review` (rules R4, R7 and R13 check this skill's advice on screenshots).
 
-Labels: a link means Apple says it. *Measured* means we ran it on the iPhone Duo simulator (iOS 27.1, closed, portrait, 18 Oct 2026; details in [references/measured.md](references/measured.md)). *Derived* means arithmetic on Apple's numbers. *Judgement* means Duology's design advice, not Apple's. *Unverified* means we could not confirm it. Apple never says "tabletop" or "book grip". Like `duo-design-review`, Duology says *book* for Apple's "partially folded, like a book" (fold top to bottom) and *tabletop* for "seated on a table like a laptop" (fold side to side, the lower half flat on the table).
+Labels: a link means Apple says it. *Measured* means we ran it on the iPhone Duo simulator (iOS 27.1, 18 Oct 2026), closed and portrait unless the claim says open; details in [references/measured.md](references/measured.md). *Derived* means arithmetic on Apple's numbers. *Judgement* means Duology's design advice, not Apple's. *Unverified* means we could not confirm it. Apple never says "tabletop" or "book grip". Like `duo-design-review`, Duology says *book* for Apple's "partially folded, like a book" (fold top to bottom) and *tabletop* for "seated on a table like a laptop" (fold side to side, the lower half flat on the table).
 
 ## How people hold iPhone Duo
 
@@ -29,11 +29,7 @@ Labels: a link means Apple says it. *Measured* means we ran it on the iPhone Duo
 
 ## Why the bars sit on the side
 
-Apple gives these reasons ([HIG, Vertical controls](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls), [talk 111462, 0:41 to 1:02](https://developer.apple.com/videos/play/tech-talks/111462/?time=41), [talk 111466, 1:10](https://developer.apple.com/videos/play/tech-talks/111466/?time=70)):
-- Closed, the screen is wide and short for an iPhone. Bars on the side leave more height for content.
-- On the side, controls are easier to reach; closed, the right thumb reaches them.
-- They stay on the same edge when the phone opens held wide, so nothing jumps between displays.
-- They line up with the hardware: same spot next to the outer camera, same edge in right-to-left languages.
+Apple gives four reasons ([HIG, Vertical controls](https://developer.apple.com/design/human-interface-guidelines/designing-for-iphone-duo#Vertical-controls), [talk 111462, 0:41 to 1:02](https://developer.apple.com/videos/play/tech-talks/111462/?time=41), [talk 111466, 1:10](https://developer.apple.com/videos/play/tech-talks/111466/?time=70)). Closed, the screen is wide and short for an iPhone, so side bars leave more height for content. On the side, controls are easier to reach; closed, the right thumb reaches them. They stay on the same edge when the phone opens held wide, so nothing jumps between displays. They line up with the hardware: next to the outer camera, and on the same edge in right-to-left languages. Each reason with its timestamp: [references/grips-and-reach.md](references/grips-and-reach.md).
 
 So the side edge is the reach zone the system already gives you. *Judgement:* put your own controls near it, not across from it. Held tall, the inner display keeps top and bottom bars ([talk 111466, 5:27](https://developer.apple.com/videos/play/tech-talks/111466/?time=327)).
 
@@ -105,10 +101,7 @@ Use a floating control only for an action that has no place in the bar, such as 
 import SwiftUI
 
 /// The side a person wants your own floating controls on. System bars ignore it.
-nonisolated enum HandPreference: String, CaseIterable, Identifiable, Sendable {
-    case automatic, left, right
-    var id: String { rawValue }
-}
+nonisolated enum HandPreference: String, Sendable { case automatic, left, right }
 
 /// Pins one custom control to the bottom corner nearest the thumb.
 @available(iOS 27.1, *)
@@ -161,11 +154,15 @@ struct MapScreen: View {
         NavigationStack {
             Color.teal.opacity(0.3)
                 .thumbCorner(hand) {
-                    Button("My Location", systemImage: "location.fill") {}
-                        .labelStyle(.iconOnly)
-                        .font(.title2)
-                        .frame(width: 56, height: 56)
-                        .background(.regularMaterial, in: .circle)
+                    Button {} label: {
+                        // Frame, background and shape go on the label, so the whole circle takes taps.
+                        Label("My Location", systemImage: "location.fill")
+                            .labelStyle(.iconOnly)
+                            .font(.title2)
+                            .frame(width: 56, height: 56)
+                            .background(.regularMaterial, in: .circle)
+                            .contentShape(.circle)
+                    }
                 }
                 .toolbar {
                     Menu("Floating Controls", systemImage: "hand.raised") {
@@ -181,8 +178,8 @@ struct MapScreen: View {
 }
 ```
 
-- *Measured*, closed only (open and folded are *unverified*): with `.automatic` the button sat bottom right, beside the bar's foot, in both directions. Right to left, `toolbarVerticalEdge` read `.leading` and the bar stayed on the right. `.left` moved it bottom left. Frames: [references/measured.md](references/measured.md).
-- Apple's own `toolbarVerticalEdge` example aligns a floating palette with the bar's edge, and `.automatic` does the same. Where the system never places a vertical bar, the value is `nil` ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/toolbarverticaledge)) and the button goes trailing. The v0.1 text of `duo-navigation` put floating controls on the side away from the bar; follow Apple's example and this section instead.
+- *Measured* closed: with `.automatic` the button sat bottom right, beside the bar's foot, in both directions; `.left` moved it bottom left. Open and flat, held wide, `toolbarVerticalEdge` read the same values, and section 3's controls, placed by the same edge logic, sat next to the bar in both directions. Folded is *unverified*. Frames: [references/measured.md](references/measured.md).
+- `.automatic` follows Apple's own `toolbarVerticalEdge` example, which aligns a floating palette with the bar's edge ([doc](https://developer.apple.com/documentation/swiftui/environmentvalues/toolbarverticaledge)). Where the system never places a vertical bar, the value is `nil` and the button goes trailing.
 - Why 16 pt: *measured*, the container margin next to the bar is 0 pt and the far side keeps 20 pt. Without padding the button touches the bar's items.
 - Tabletop and book need nothing extra: the button stays at the bottom and against a side edge, so it is near the person and off the fold (*judgement*).
 

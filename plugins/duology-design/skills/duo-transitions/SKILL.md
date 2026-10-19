@@ -20,7 +20,7 @@ All *measured*:
 
 | Change | Window | Size class | UIKit coordinator | SwiftUI transaction |
 |---|---|---|---|---|
-| Open | 466 × 678 → 951 × 669 pt, other display | compact → regular, same update as the new size | not animated, duration 0 | no animation |
+| Open | 466 × 678 → 951 × 669 pt, other display | compact → regular. From closed portrait: same update as the new size (2 runs). From closed sideways: about 16 ms *before* it (1 run) | not animated, duration 0 | no animation |
 | Close | 951 × 669 → 466 × 678 pt, other display | regular → compact, 25 to 70 ms *before* the new size | not animated, duration 0 | no animation |
 | Partially open | no change | no change | no call | the fold region turns active once the hinge settles |
 | Rotate | width and height swap | vertical class flips on the closed phone | animated, 0.3 s | no animation |
@@ -96,7 +96,7 @@ struct NowPlayingScreenCopy: View {
 - *Measured:* the copy started animating in the same frame as `.animation(_:value:)`, so lateness is not the problem.
 - The problems: an app launched open shows the stacked layout until the next fold, because `onChange` without `initial: true` never ran; two values that can disagree; and a second `body` pass on every fold.
 - The same goes for `DispatchQueue.main.asyncAfter`, `Task.sleep` before a state change, or an animation started in `onAppear`: each animates *after* the resize, so people see the window change and then the content move.
-- When a value only exists after layout (the fold's frame, an exact width), use [`onGeometryChange(for:of:action:)`](https://developer.apple.com/documentation/swiftui/view/ongeometrychange(for:of:action:)). Return a small value (a column count, a fold flag), write it in one cheap action, and key the animation on it. *Measured:* on open, its action ran in the same millisecond as the size-class update.
+- When a value only exists after layout (the fold's frame, an exact width), use [`onGeometryChange(for:of:action:)`](https://developer.apple.com/documentation/swiftui/view/ongeometrychange(for:of:action:)). Return a small value (a column count, a fold flag), write it in one cheap action, and key the animation on it. *Measured:* on the two opens from closed portrait, its action ran in the same millisecond as the size-class update. On the open from the closed phone held sideways, it ran about 16 ms after it, once the width changed.
 
 ## Rules
 
@@ -164,7 +164,7 @@ final class PlayerViewController: UIViewController {
 - [`viewWillTransition(to:with:)`](https://developer.apple.com/documentation/uikit/uicontentcontainer/viewwilltransition(to:with:)) runs before the size changes. Always call `super`. Blocks you pass to [`animate(alongsideTransition:completion:)`](https://developer.apple.com/documentation/uikit/uiviewcontrollertransitioncoordinator/animate(alongsidetransition:completion:)) run in the transition's own animation context.
 - *Measured:* on rotation that context lasts 0.3 s, so the layout glides with the window. On open and close the coordinator says `isAnimated` `false` with duration 0, so the layout lands at once, together with the resize.
 - Collection views: invalidate the layout inside the alongside block. Never call `reloadData()` there. Keep the top item in view as `duo-continuity` shows.
-- A partial fold has no coordinator. Re-read reserved regions in `viewDidLayoutSubviews`, ask for that pass from a `UIHingeInteraction`, and animate with [`UIView.animate(_:changes:completion:)`](https://developer.apple.com/documentation/uikit/uiview/animate(_:changes:completion:)) (iOS 18), which takes a SwiftUI `Animation`. It is declared in SwiftUI, so the file needs `import SwiftUI`.
+- A partial fold has no coordinator. Re-read reserved regions in `viewDidLayoutSubviews` and ask for that pass from a `UIHingeInteraction`. Work out the place on every pass, because a resize moves it too. Animate only when the fold changed and the window kept its size, with [`UIView.animate(_:changes:completion:)`](https://developer.apple.com/documentation/uikit/uiview/animate(_:changes:completion:)) (iOS 18), which takes a SwiftUI `Animation`. It is declared in SwiftUI, so the file needs `import SwiftUI`.
 - Optional motion on open and close, the partial-fold recipe and Reduce Motion: [references/uikit.md](references/uikit.md).
 
 ## Reduce Motion

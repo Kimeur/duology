@@ -21,7 +21,7 @@ Apple's model, from [WWDC23 Explore SwiftUI animation](https://developer.apple.c
 - During a rotation, `body` ran inside UIKit's 0.3 s rotation animation (`UIView.inheritedAnimationDuration` read 0.3). No SwiftUI value interpolated anyway: in our probe, UIKit's animation context did not become a SwiftUI animation.
 - `.animation(.linear(duration: 0.5), value: horizontalSizeClass)` interpolated: 27 to 30 in-between values over 0.5 s. The first one came about 60 to 80 ms after a real open or close, and 25 to 40 ms after a size-class flip made from code. That is simulator timing; a device will differ.
 - Under that opt-in, `.transaction { $0.animation = nil }` on a leaf and `.animation(nil, value:)` both gave one step.
-- On open, the size class and the new size arrived in the same update. On close, the size class flipped 25 to 70 ms before the window shrank, in an update of its own. A spring started by the size class is still running when the size changes, and springs keep their velocity when the target moves ([WWDC23 Animate with springs](https://developer.apple.com/videos/play/wwdc2023/10158/?time=900)).
+- The order of the size class and the new size varies. On the two opens from closed portrait, they arrived in the same update. On the one open from the closed phone held sideways, the size class flipped about 16 ms before the width changed, in an update of its own. On close, the size class flipped 25 to 70 ms before the window shrank, also in an update of its own. Don't depend on either order. A spring started by the size class is still running when the size changes, and springs keep their velocity when the target moves ([WWDC23 Animate with springs](https://developer.apple.com/videos/play/wwdc2023/10158/?time=900)).
 
 ## See what a change hands you
 
@@ -235,7 +235,7 @@ struct ShelfGrid: View {
 }
 ```
 
-- *Measured:* on Open, the geometry action and the size-class update ran in the same millisecond in our probe. Whether a frame with the old count reaches the screen first is *unverified*; check a recording.
+- *Measured:* on the two opens from closed portrait, the geometry action and the size-class update ran in the same millisecond in our probe. On the open from the closed phone held sideways, the action ran about 16 ms after the size class changed, when the width did. Whether a frame with the old count at the new width reaches the screen first is *unverified*; check a recording.
 - *Measured:* on Open, a full-width view's width went 382 → 466 → 951 → 867 pt within 50 to 250 ms, as the safe area insets changed around the resize. The transform runs for each.
 
 - Return the column count from the transform, not the width. The action then runs only when the count changes, and the animation key stays discrete.

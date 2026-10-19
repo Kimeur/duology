@@ -176,6 +176,7 @@ import UIKit
 final class RecorderViewController: UIViewController {
     private let recordGroup = UIStackView()
     private var lastFold: CGRect?
+    private var lastSize = CGSize.zero
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -188,15 +189,21 @@ final class RecorderViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
+        // Work out the place on every pass: open, close, rotation and Split View move it too.
         let fold = view.reservedRegions(kind: .division).first { $0.isActive }?.frame
-        guard fold != lastFold || recordGroup.frame == .zero else { return }
-        let isFirstPass = recordGroup.frame == .zero
-        lastFold = fold
+        let size = view.bounds.size
         let target = targetFrame(avoiding: fold)
-        if isFirstPass || UIAccessibility.isReduceMotionEnabled {
-            recordGroup.frame = target                 // no motion: take the new place at once
-        } else {
+        // Only the fold changed, in a window that kept its size: a partial fold.
+        let foldOnly = fold != lastFold && size == lastSize
+        lastFold = fold
+        lastSize = size
+        guard recordGroup.frame != target else { return }
+        if foldOnly && !UIAccessibility.isReduceMotionEnabled {
             UIView.animate(.smooth) { self.recordGroup.frame = target }
+        } else {
+            // First pass, a resize or a safe-area change: take the new place at once.
+            // During a rotation this pass runs inside the system's animation and glides with it.
+            recordGroup.frame = target
         }
     }
 
@@ -219,7 +226,9 @@ final class RecorderViewController: UIViewController {
 ```
 
 - [`UIHingeInteraction`](https://developer.apple.com/documentation/uikit/uihingeinteraction) and [`reservedRegions(kind:options:)`](https://developer.apple.com/documentation/uikit/uiview/reservedregions(kind:options:)) are iOS 27.1. *Measured in SwiftUI:* the fold read as active about 1 s after the hinge started to fold, once it stopped at 127°. The UIKit timing is *unverified*.
-- The hinge reports updates while it moves. [`setNeedsLayout()`](https://developer.apple.com/documentation/uikit/uiview/setneedslayout()) only marks the view; UIKit lays it out once in the next update cycle, and the frame check skips passes where the fold didn't move.
+- The hinge reports updates while it moves. [`setNeedsLayout()`](https://developer.apple.com/documentation/uikit/uiview/setneedslayout()) only marks the view; UIKit lays it out once in the next update cycle. The guard skips passes where the target didn't change, so hinge updates that leave the fold where it was cost one cheap frame calculation.
+- Animate only when the fold changed and the window kept its size. Open and close bring no system motion, so after a resize the group takes its new place at once, like the rest of the layout. *Measured:* during a rotation, `layoutSubviews` ran with `UIView.inheritedAnimationDuration` 0.3, so the direct set rides the rotation's animation.
+- Don't compare only the fold. When the phone is closed there is no division, and when it is open and flat the division is inactive, so the fold reads `nil` before and after a resize. A guard on the fold alone leaves the group at its old place: below the bottom edge after a rotation, or near x = 233 pt in a 951 pt window after an open.
 - Keep the move small and keep the control's edge: bottom stays bottom (`duo-patterns`, displacement).
 
 ## Reduce Motion and cross-fade

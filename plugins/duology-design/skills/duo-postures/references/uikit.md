@@ -22,7 +22,6 @@ import UIKit
 final class FoldRegionsView: UIView {
     let contentView: UIView
     let controlsView: UIView
-    private var lastHingeStatus: UIHinge.Status?
 
     init(content: UIView, controls: UIView) {
         contentView = content
@@ -30,13 +29,6 @@ final class FoldRegionsView: UIView {
         super.init(frame: .zero)
         addSubview(content)
         addSubview(controls)
-        // UIKit has no callback for region changes. Re-layout when the hinge
-        // status changes; the regions, not the hinge, decide where views go.
-        addInteraction(UIHingeInteraction { [weak self] _, update in
-            guard let self, update.hinge?.status != lastHingeStatus else { return }
-            lastHingeStatus = update.hinge?.status
-            setNeedsLayout()
-        })
     }
 
     required init?(coder: NSCoder) {
@@ -45,6 +37,8 @@ final class FoldRegionsView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+        // Reading the regions here is enough: UIKit calls layoutSubviews again
+        // when the fold turns active or inactive. No hinge observer needed.
         let area = bounds.inset(by: safeAreaInsets)
         guard let fold = reservedRegions(kind: .division, options: .includeInactive)
             .first(where: \.isActive)?.frame else {
@@ -85,8 +79,9 @@ final class FoldRegionsView: UIView {
 Notes:
 
 - UIKit returns region frames in the view's own coordinates, with no mirroring for right-to-left that the headers mention. So the code picks the leading side itself. Not yet tested in a right-to-left language. (unverified)
-- The hinge interaction only asks for a new layout pass. It never decides where a view goes, so the layout stays right when the phone is flipped or in Split View.
-- We have not checked on the simulator whether a fold change calls `layoutSubviews` without that nudge. (unverified)
+- *Measured* (iOS 27.1 iPhone Duo simulator, 19 Oct 2026, Partially Open and Open in Device Hub, held wide and held tall): a view that reads `reservedRegions` in `layoutSubviews` got a new pass within 1 ms of the region turning active, and again when it turned inactive. A sibling view that never read the regions got no pass. So read the regions in the view whose layout depends on them ([measurements](measurements.md#uikit-layout-passes-on-a-fold)).
+- Don't nudge layout from a `UIHingeInteraction`. The hinge status turned `partiallyOpen` 0.7 to 0.9 s before the region turned active, so a pass on a status change reads the old, inactive region. A pass on every hinge update ran about 30 times a second while folding, for nothing. Keep the hinge for effects.
+- The layout reads only regions, never the hinge, so it stays right when the phone is flipped or in Split View.
 - Animate the change with `UIView.animate` around `layoutIfNeeded()` only when `UIAccessibility.isReduceMotionEnabled` is false.
 - Unlike the SwiftUI recipe, this version doesn't check that the fold crosses the middle of the view. Add that check if the view can sit beside the fold, for example in one column of a split view.
 

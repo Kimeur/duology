@@ -25,6 +25,7 @@ v0.2 work, on `main` and not released yet. Checked on Xcode 27.1 (27A9275) and t
 - `reference/api-index.md`: the standard SwiftUI, UIKit, XCUIAutomation and macOS APIs the v0.2 skills use (Liquid Glass and corners, type and touch targets, scenes and windows, accessibility, animation and frame rate, scrolling, test tools, the macOS Accessibility API), each checked in the SDK and linked to Apple's documentation. `focusSection()` joins "Not in the SDK": it is unavailable on iOS.
 - `reference/sources.md`: 23 Apple documentation and HIG pages, 6 WWDC sessions and one Apple Support page.
 - CI runs the `duo-pose-matrix` unit tests.
+- A 25-second demo at the top of the README (GIF, linked to the MP4 in `docs/assets/demo/`): duo-lint finds four problems in an app built before iPhone Duo, Claude fixes them, then the gallery app in every pose.
 
 ### Changed
 
@@ -35,6 +36,7 @@ v0.2 work, on `main` and not released yet. Checked on Xcode 27.1 (27A9275) and t
 - `duo-setup`, `duo-testing`, `duo-design-review` and `/duo-audit` point to `duo-pose-matrix` for scripted poses. Asking the user to press the pose stays the default.
 - `reference/device-facts.md`: the closed window, 466 × 678 pt, is now measured. New-window requests on the closed simulator did not fail, unlike what Apple's talk describes for the device.
 - The how-it-works diagram shows the v0.2 pose screenshots as built.
+- `.gitattributes` marks the Python tooling as vendored, so GitHub lists the repo as Swift.
 - `README.md`, `AGENTS.md`, `llms.txt` and the plugin manifests list the v0.2 skills, commands and agent. Plugin versions stay 0.1.0 until the release.
 
 ### Removed

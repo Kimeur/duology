@@ -230,9 +230,9 @@ Choose between them:
 | | `ArrangementView` `.overlay` | `FoldRegionsLayout` |
 |---|---|---|
 | Fold code | None | Reads `.division` |
-| Tells you which state it is in | Apple documents `overlayArrangementZIndex` for this. Closed, our probe read `1` in the primary and `0` in the secondary; `duo-patterns` read `0` everywhere open and flat. Not yet checked folded | You hold `fold` |
+| Tells you which state it is in | `overlayArrangementZIndex`, read one view inside the primary: `1` closed and open flat, `0` in book and tabletop (*measured* in `duo-media`, 20 Oct 2026). The view you pass in directly reads the default `0` (`duo-layout`) | You hold `fold` |
 | Placement inside a region | System | Yours (centred) |
-| Checked folded on the simulator | No (unverified) | Yes: the gallery's tabletop player ran the same layout in book and tabletop on 18 Oct 2026 ([book](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/tabletopPlayer-book.png), [tabletop](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/tabletopPlayer-tabletop.png)) |
+| Checked folded on the simulator | Yes: `duo-media` ran a player in it on 20 Oct 2026. The primary took the trailing 455 pt in book and the bottom 455 pt in tabletop, and both views stayed out of the 40 pt fold (`duo-media`, `references/testing.md`) | Yes: the gallery's tabletop player ran the same layout in book and tabletop on 18 Oct 2026 ([book](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/tabletopPlayer-book.png), [tabletop](https://github.com/Kimeur/duology/blob/main/docs/assets/gallery/tabletopPlayer-tabletop.png)) |
 | Where it can't go | Not inside a `List`, `ScrollView` or `NavigationSplitView` | Anywhere |
 
 Start with the arrangement when the screen is a plain "controls over content" stack and you don't need to know the state. Use `FoldRegionsLayout` when the controls change with the region (a compact bar over the video, a full panel below it) or when the screen sits somewhere an arrangement can't.

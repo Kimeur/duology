@@ -410,3 +410,48 @@ When the phone closes, extra panes leave the view tree:
 - your own "only when regular" panes go away.
 
 Anything a hidden pane must remember goes in the model: its scroll position, its draft, its selection.
+
+## Popping a stack while the phone opens
+
+A screen pushed on the closed phone often moves into a second pane when the phone opens, so the stack pops and the screen under it comes back. *Measured* on the iPhone Duo simulator (iOS 27.1, 20 October 2026) in `recipe-finance-dashboard` and `recipe-shop`:
+
+- Popped at once, during the unfold animation, the screen that came back kept the closed phone's geometry: x = −2 pt, a right safe-area inset of 42 pt instead of 84 pt, and no margins. Its close button ended up under the vertical bar. It stayed so until relaunch; a new `.id` and animations on or off made no difference.
+- Popped after the animation, it matched a fresh launch on the open phone.
+
+So when the phone opens on a pushed screen, switch to two panes after the animation. At launch, and with nothing pushed, switch at once. The 600 ms wait is a measured workaround, not an Apple rule, and unverified on a device. It applies to layouts you switch yourself; `NavigationSplitView`'s own collapse and expand were not tested for it.
+
+```swift
+import Observation
+import SwiftUI
+
+@Observable
+final class PaneModel {
+    var selection: Int?     // something is pushed while this is set
+    var isTwoPane = false   // the layout reads this, never the size class
+}
+
+struct TwoPaneSwitch: ViewModifier {
+    @Environment(\.horizontalSizeClass) private var widthClass
+    let model: PaneModel
+    @State private var paneChange: Task<Void, Never>?
+
+    func body(content: Content) -> some View {
+        content.onChange(of: widthClass, initial: true) { oldValue, newValue in
+            let isTwoPane = newValue == .regular
+            paneChange?.cancel()
+            // Opening on a pushed screen pops it: wait out the unfold animation first.
+            if isTwoPane, oldValue != newValue, !model.isTwoPane, model.selection != nil {
+                paneChange = Task {
+                    try? await Task.sleep(for: .milliseconds(600))
+                    guard !Task.isCancelled else { return }
+                    model.isTwoPane = true
+                }
+            } else {
+                model.isTwoPane = isTwoPane
+            }
+        }
+    }
+}
+```
+
+The recipes' `RootView.swift` uses the same switch with their own models.

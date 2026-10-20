@@ -126,7 +126,7 @@ struct ArticleScreen: View {
 
 ## 3. Selection and navigation stack
 
-Keep the selection and the path in the model. `NavigationSplitView` collapses to one stack when the phone closes and shows the detail when something is selected ([NavigationSplitView](https://developer.apple.com/documentation/swiftui/navigationsplitview)).
+Keep the selection and the path in the model. `NavigationSplitView` collapses to one stack when the phone closes and shows the detail when something is selected ([NavigationSplitView](https://developer.apple.com/documentation/swiftui/navigationsplitview)). If you switch panes yourself and opening the phone pops a pushed screen, pop it after the unfold animation ([references/swiftui.md](references/swiftui.md#popping-a-stack-while-the-phone-opens)).
 
 ```swift
 import SwiftUI

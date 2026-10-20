@@ -64,7 +64,8 @@ check(ChapterText(title: "Empty", body: "").string == "Empty", "a chapter with n
 check(ChapterText(title: "Empty", body: "").titleRange.length == 5, "and the title range stays inside the text")
 check(text.excerpt(at: 0, words: 3) == "Fog First line…", "an excerpt from the start")
 let sameIndex = (text.string as NSString).range(of: "same").location
-check(text.excerpt(at: sameIndex + 2, words: 2) == "…same paragraph.…", "an excerpt backs up to the start of a word")
+check(text.excerpt(at: sameIndex + 2, words: 2) == "…same paragraph.", "an excerpt backs up to the start of a word, and adds no … after a full stop")
+check(ChapterText(title: "T", body: "one two").excerpt(at: 0, words: 3) == "T one two", "no … when nothing follows")
 check(text.excerpt(at: 10_000, words: 2).hasSuffix("café."), "an offset past the end shows the last word")
 
 // MARK: Reading log

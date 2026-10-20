@@ -32,6 +32,16 @@ Each release says which Xcode and iOS versions it was checked on.
 - `recipe-two-player-game`: the layout UI test attaches a screenshot of each display from `XCUIScreen.screens`. `XCUIScreen.main` is the outer display on iPhone Duo, black while the phone is open.
 - `evals/`: the run with Duology may call the four new recipes' `new-project.sh` (`PLUGIN_SCRIPTS`). The evals README counts 41 tasks for 30 skills, the fixtures README names the v0.3 tasks that use each fixture, and the tabletop video call task no longer waits for `duo-media`.
 
+### Fixed
+
+- `evals/lib/checks/single_owner.py`: a return type (`-> Model {`) no longer counts as a place the model is created, folders such as `Tools/ModelTests` are skipped like other test code, and a model built in a static factory is traced to where the factory is called. The finance and shop tasks get back their ownership checks (`selection-survives-fold`, `basket-survives-fold`).
+- `duo-games` hides the status bar with `toolbarVisibility(.hidden, for: .statusBar)`. The iOS 27.1 SDK marks `statusBarHidden(_:)` to be deprecated.
+- `duo-postures` and `duo-patterns`: the overlay arrangement was checked folded (in `duo-media`). Read one view inside the primary, `overlayArrangementZIndex` is `1` closed and open flat, `0` in book and tabletop.
+- `duo-continuity` and `duo-navigation`: popping a pushed screen during the unfold animation leaves it with the closed phone's insets. Switch panes after the animation (measured in `recipe-finance-dashboard` and `recipe-shop`).
+- `duo-scenes`: the simulator showed the camera capture accessory in book at 128°, with no capture session (measured in `duo-camera`). Unverified on a device.
+- `recipe-reader`: a "Continue Reading" excerpt no longer ends in a double ellipsis ("paragraph.…"), and adds no "…" when nothing follows.
+- README: `duology-design` and `duology-features` install on their own, but point to `duology`'s skills, so install `duology` first.
+
 ## [0.2.0] - 2026-10-19
 
 Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not yet checked on a real iPhone Duo, and the first published test results are not in yet; both are planned for v0.3.

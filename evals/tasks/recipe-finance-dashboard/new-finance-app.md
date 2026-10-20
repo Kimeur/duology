@@ -64,6 +64,24 @@ no_src '(var|let) +[A-Za-z_]*([Aa]mount|[Bb]alance|[Tt]otal|[Ss]pent|[Pp]rice)[A
 has_src 'NavigationSplitView|UISplitViewController|ArrangementView|UIArrangementViewController|reservedRegions'
 ```
 
+```sh check selection-survives-fold
+# The selected transaction has one owner that a fold can't rebuild. Looks for a state
+# named selection, then selectedTransaction or selectedEntry; renamed past both, the
+# checklist decides.
+for pat in '\bvar +selection\b' '\bvar +selected(Transaction|Entry)[A-Za-z]*\b *[:=]'; do
+  if out="$(pycheck single_owner.py "$pat")"; then
+    echo "$out"
+    exit 0
+  fi
+  case "$out" in
+    "FAIL: nothing matches"*) echo "nothing matches $pat"; continue ;;
+  esac
+  echo "$out"
+  exit 1
+done
+echo "note: no selection state found by name, so the checklist decides"
+```
+
 ```sh check launches
 launch_ok
 ```

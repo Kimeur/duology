@@ -71,6 +71,23 @@ n="$(find . \( -name .git -o -name DerivedData -o -name build \) -prune -o -name
 has_src 'NavigationSplitView|UISplitViewController|ArrangementView|UIArrangementViewController|reservedRegions'
 ```
 
+```sh check basket-survives-fold
+# The basket has one owner that a fold can't rebuild. Looks for a state named basket or
+# cart, then anything ending in Basket or Cart; renamed past both, the checklist decides.
+for pat in '\bvar +(basket|cart)\b' '\bvar +[A-Za-z]*([Bb]asket|[Cc]art)\b *[:=]'; do
+  if out="$(pycheck single_owner.py "$pat")"; then
+    echo "$out"
+    exit 0
+  fi
+  case "$out" in
+    "FAIL: nothing matches"*) echo "nothing matches $pat"; continue ;;
+  esac
+  echo "$out"
+  exit 1
+done
+echo "note: no basket state found by name, so the checklist decides"
+```
+
 ```sh check launches
 launch_ok
 ```

@@ -145,7 +145,7 @@ struct GameScreen: View {
             session.scene.isPaused = paused
         }
         .background(.black)
-        .statusBarHidden()
+        .toolbarVisibility(.hidden, for: .statusBar)
         .persistentSystemOverlays(.hidden)
     }
 }
@@ -155,7 +155,7 @@ struct GameScreen: View {
 - Pause only when `scenePhase` leaves `.active`. Opening or closing the phone kept the app active (*measured*: frames kept counting), so a fold never pauses the game.
 - Pause the scene, not the `SpriteView`. *Measured:* with `SpriteView(isPaused:)` bound to the phase, a game launched while the app was still inactive stayed frozen once it became active (0 frames in 4 s), and so did a pause button turned off again: the argument set the scene's `isPaused` but didn't clear it. Setting `scene.isPaused` in `onChange` ran in every case, and again after a trip to the Home Screen.
 - `.ignoresSafeArea()` on the world only. Controls, score and menus stay in the safe area, clear of the outer camera and the Home indicator ([HIG: Game controls](https://developer.apple.com/design/human-interface-guidelines/game-controls#Touch-controls)).
-- `persistentSystemOverlays(.hidden)` and `statusBarHidden()` during play only. Show them again on menus ([`persistentSystemOverlays(_:)`](https://developer.apple.com/documentation/swiftui/view/persistentsystemoverlays(_:))).
+- `persistentSystemOverlays(.hidden)` and `toolbarVisibility(.hidden, for: .statusBar)` during play only. Show them again on menus ([`persistentSystemOverlays(_:)`](https://developer.apple.com/documentation/swiftui/view/persistentsystemoverlays(_:)), [`toolbarVisibility(_:for:)`](https://developer.apple.com/documentation/swiftui/view/toolbarvisibility(_:for:))). The `.statusBar` placement is new in iOS 27.0; the iOS 27.1 SDK marks `statusBarHidden(_:)` to be deprecated in its favour.
 
 ## 3. Touch controls off the fold
 

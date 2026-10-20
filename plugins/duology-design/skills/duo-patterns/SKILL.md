@@ -214,7 +214,7 @@ Measured on the simulator, open and flat:
 
 - `.split.axes(.horizontal)` in a frame taller than wide showed only the primary. The secondary still ran `onAppear` and got the full size. No API told us it was hidden.
 - A primary shorter than the overlay sat at the top edge, over the secondary.
-- `splitArrangementAxis` read `nil` and `overlayArrangementZIndex` read `0` in every view, full screen and in frames. Don't rely on either until you have checked it folded in Device Hub. (unverified folded)
+- `splitArrangementAxis` read `nil` and `overlayArrangementZIndex` read `0` in the views passed to the arrangement, full screen and in frames: those views get the defaults. Read both one view down (`duo-layout`). There, `overlayArrangementZIndex` in the primary read `1` closed and open flat and `0` in book and tabletop (*measured* in `duo-media`). `splitArrangementAxis` folded is unverified.
 
 ## UIKit
 

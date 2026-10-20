@@ -320,6 +320,10 @@ struct HomeTab: View {
 }
 ```
 
+## A stack that pops when the phone opens
+
+If you push a detail on the closed phone and show it in a second pane when open, the stack pops as the phone opens. Popped during the unfold animation, the screen that comes back can keep the closed phone's safe area and lose its margins, so its bar buttons end up under the vertical bar (*measured* on the simulator in `recipe-finance-dashboard` and `recipe-shop`). Switch to two panes after the animation. The measurements and the code are in `duo-continuity` (`references/swiftui.md`, "Popping a stack while the phone opens"). `NavigationSplitView`'s own collapse and expand were not tested for this.
+
 ## Deployment targets below iOS 27.1
 
 iPhone Duo always runs iOS 27.1 or later, so these fallbacks only run on other iPhones. Use the helpers instead of raw calls when the deployment target is lower. This block typechecks with deployment targets iOS 17.0, 17.5, 18.0 and 26.0.

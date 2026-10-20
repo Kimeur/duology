@@ -140,7 +140,8 @@ If a skill isn't installed, tell the user the plugin to add, for example `/plugi
 
 **Coming.** Say "coming" and use the Apple source listed in [references/routing.md](references/routing.md) until then:
 
-- v0.3: `duo-intelligence`, `duo-app-intents`, `duo-camera`, `duo-media`, `duo-reading`, `duo-games`, `duo-swiftui-27`, `duo-system-surfaces`, plus four recipes.
+- Out in v0.3 so far: `duo-camera` (plugin `duology-features`).
+- v0.3: `duo-intelligence`, `duo-app-intents`, `duo-media`, `duo-reading`, `duo-games`, `duo-swiftui-27`, `duo-system-surfaces`, plus four recipes.
 - v1.0: `duo-performance`, `duo-app-store`, `duo-migrate`, `/duo-ship`, and the last three recipes.
 
 ## Step 3: The five-minute first pass (existing app)

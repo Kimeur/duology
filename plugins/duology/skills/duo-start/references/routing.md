@@ -83,7 +83,7 @@ Say "coming" when one of these fits, and work from the Apple source in the last 
 | `duo-reading` | v0.3 | Books and documents, two pages | `duo-patterns` (two-page) |
 | `duo-games` | v0.3 | Fill the screen in every pose, touch controls off the fold | HIG (games), `duo-shared-screen`, `duo-layout` |
 | `duo-swiftui-27` | v0.3 (out) | iOS 27 SwiftUI changes that matter on Duo | Load `duo-swiftui-27` (plugin `duology-features`) |
-| `duo-system-surfaces` | v0.3 | Widgets, Live Activities, StandBy, Controls | No Duo-specific Apple page found. StandBy doesn't run in the Duo simulator ([Xcode 27.1 release notes](https://developer.apple.com/documentation/xcode-release-notes/xcode-27_1-release-notes)). |
+| `duo-system-surfaces` | v0.3 (out) | Widgets, Live Activities, StandBy, Controls | Load `duo-system-surfaces` (plugin `duology-features`) |
 | `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop` | v0.3 | App recipes | `duo-patterns` |
 | `duo-performance` | v1.0 | Smooth resizing at 120 Hz | Test on a device: the simulator reports a 60 fps maximum (*measured*, see [device facts](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md)) |
 | `duo-app-store` | v1.0 | Duo screenshots, metadata, review notes | [Screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications), [news of 5 Oct 2026](https://developer.apple.com/news/?id=kkphp5qo) |

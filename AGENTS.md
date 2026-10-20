@@ -46,6 +46,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 | `duo-intelligence` | [`plugins/duology-features/skills/duo-intelligence/`](plugins/duology-features/skills/duo-intelligence/) | The app uses Foundation Models: an AI pane when open, a short summary when closed. |
 | `duo-app-intents` | [`plugins/duology-features/skills/duo-app-intents/`](plugins/duology-features/skills/duo-app-intents/) | The app exposes actions to Siri, Shortcuts or the Action button, and they must open the right pane or window. |
 | `duo-swiftui-27` | [`plugins/duology-features/skills/duo-swiftui-27/`](plugins/duology-features/skills/duo-swiftui-27/) | The app adopts the iOS 27 SwiftUI changes (reordering, swipe actions, the @State macro, new toolbar and tab APIs) and needs them to work on both displays. |
+| `duo-system-surfaces` | [`plugins/duology-features/skills/duo-system-surfaces/`](plugins/duology-features/skills/duo-system-surfaces/) | The app has widgets, Live Activities, StandBy or Control Center controls that must look right on both displays. |
 
 ### Commands, without Claude Code
 

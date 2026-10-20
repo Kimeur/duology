@@ -14,7 +14,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/Kimeur/duology?style=flat-square&color=f4c430)](https://github.com/Kimeur/duology/stargazers)
 [![Release](https://img.shields.io/github/v/release/Kimeur/duology?style=flat-square&color=1d7a4b)](https://github.com/Kimeur/duology/releases)
-[![Skills](https://img.shields.io/badge/skills-26_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
+[![Skills](https://img.shields.io/badge/skills-27_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
 [![Commands and agents](https://img.shields.io/badge/commands_·_agents-5_·_1_built-2b55c7?style=flat-square)](#commands-and-agents)
 [![Recipes](https://img.shields.io/badge/app_recipes-2_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
 [![Built for Xcode 27.1](https://img.shields.io/badge/built_for-Xcode_27.1_·_iOS_27.1-1d7a4b?style=flat-square)](#verified-on)

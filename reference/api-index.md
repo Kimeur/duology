@@ -629,7 +629,7 @@ Used by `duo-games`. Checked in the SpriteKit, MetalKit, GameController, TouchCo
 
 - *Measured* in `duo-games`: `SpriteView(isPaused:)` set the scene's `isPaused` when it turned `true` and never cleared it, so the game stayed frozen. Pause the scene itself.
 - *Measured* in `duo-games`: the iPhone Duo simulator connected its own controller, named "Gamepad" (product category MFi, not attached to the device), shortly after every launch, with no controller on the Mac.
-- `View.statusBarHidden(_:)` is marked to be deprecated in the iOS 27.1 SDK (`deprecated: 100000`, "Use .toolbarVisibility(_, for: .statusBar) instead"). It builds without a warning today; `duo-games` uses the replacement.
+- `View.statusBarHidden(_:)` is marked to be deprecated in the iOS 27.1 SDK (`deprecated: 100000`, "Use .toolbarVisibility(_, for: .statusBar) instead"). It builds without a warning today; `duo-games` uses the replacement on iOS 27 and falls back to `statusBarHidden()` below it, where `.statusBar` doesn't build without an `#available` check (*measured* in a recipe that targets iOS 26.0).
 - *Measured* in `duo-games`: `TCTouchController.isSupported` was `false` on the simulator. Where `automaticallyLayoutControls(for:)` puts controls on iPhone Duo is unverified.
 
 ## Reading and text

@@ -51,7 +51,7 @@
     {
       "name": "duology-recipes",
       "source": "./plugins/duology-recipes",
-      "description": "App recipes for iPhone Duo. /duo-new creates a project that builds and runs on the iPhone Duo simulator. Recipes: a two-player game, a media player and a reader.",
+      "description": "App recipes for iPhone Duo. /duo-new creates a project that builds and runs on the iPhone Duo simulator. Recipes: a two-player game, a finance dashboard, a media player and a reader.",
       "version": "0.2.0",
       "category": "development",
       "keywords": [

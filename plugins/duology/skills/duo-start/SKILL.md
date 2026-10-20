@@ -207,7 +207,7 @@ Apple says the skill finds most issues, not all. Run `duo-lint` after it to catc
 ## New app
 
 1. Run `/duo-doctor`, or load `duo-setup`, so Xcode 27.1 and the Duo simulator are ready.
-2. A two-player game: run `/duo-new recipe-two-player-game`. Ready recipes: `recipe-two-player-game`, `recipe-media-player`, `recipe-reader`; run `/duo-new <recipe>`.
+2. A two-player game: run `/duo-new recipe-two-player-game`. Ready recipes: `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`; run `/duo-new <recipe>`.
 3. Anything else: ask the user to create a SwiftUI app in Xcode 27.1 (File > New > Project > iOS App). Then load `duo-patterns` to pick a layout, `duo-layout` and `duo-navigation` to build it, `duo-continuity` to keep state, and `duo-testing` to test it.
 4. Ask the user which deployment target they want. iOS 27.1 removes every availability check but drops older iPhones. A lower target keeps them and needs the gate from Step 1. From April 2027 the App Store floor is iOS 15 ([Submitting](https://developer.apple.com/app-store/submitting/)).
 

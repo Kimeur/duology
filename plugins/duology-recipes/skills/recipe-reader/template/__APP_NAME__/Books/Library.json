@@ -1,0 +1,42 @@
+{
+  "books": [
+    {
+      "id": "keeper",
+      "title": "The Keeper of Gull Rock",
+      "author": "Tamsin Hale",
+      "kind": "A story",
+      "summary": "The last keeper of a small lighthouse spends one more autumn on the rock before the light runs itself.",
+      "colors": ["1F4E79", "0B1F33"],
+      "chapters": [
+        { "title": "The Last Supply Boat", "file": "keeper-1.txt" },
+        { "title": "Fog", "file": "keeper-2.txt" },
+        { "title": "The Light Goes Out", "file": "keeper-3.txt" }
+      ]
+    },
+    {
+      "id": "bread",
+      "title": "Bread Without Hurry",
+      "author": "Owen Marsh",
+      "kind": "A field guide",
+      "summary": "A plain guide to slow bread at home: what flour, water and salt do, how long to wait, and when to stop worrying.",
+      "colors": ["B5562B", "4A1D0C"],
+      "chapters": [
+        { "title": "Flour, Water, Salt", "file": "bread-1.txt" },
+        { "title": "The Long Rise", "file": "bread-2.txt" },
+        { "title": "Into the Oven", "file": "bread-3.txt" }
+      ]
+    },
+    {
+      "id": "train",
+      "title": "Letters from the Night Train",
+      "author": "Ada Lindqvist",
+      "kind": "Letters",
+      "summary": "Two letters written on a sleeper train, one as it leaves the city and one as it reaches the border at dawn.",
+      "colors": ["2E6B5A", "0E2B24"],
+      "chapters": [
+        { "title": "Leaving the City", "file": "train-1.txt" },
+        { "title": "The Border at Dawn", "file": "train-2.txt" }
+      ]
+    }
+  ]
+}

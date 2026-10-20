@@ -1,0 +1,261 @@
+{
+  "appPolicies": {
+    "eula": "",
+    "policies": [
+      {
+        "locale": "en_US",
+        "policyText": "",
+        "policyURL": ""
+      }
+    ]
+  },
+  "identifier": "5C0DE5A1",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "2.99",
+      "familyShareable": true,
+      "internalID": "1A2B0001",
+      "localizations": [
+        {
+          "description": "Rain on a shed roof, from first drops to the last drip.",
+          "displayName": "Rain on Tin",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pack.rain",
+      "referenceName": "Rain on Tin",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "3.99",
+      "familyShareable": true,
+      "internalID": "1A2B0002",
+      "localizations": [
+        {
+          "description": "Rigging, gulls and boats heading out before sunrise.",
+          "displayName": "Harbor at Dawn",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pack.harbor",
+      "referenceName": "Harbor at Dawn",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "2.99",
+      "familyShareable": true,
+      "internalID": "1A2B0003",
+      "localizations": [
+        {
+          "description": "Dripping leaves, a woodpecker, wind high in the pines.",
+          "displayName": "Forest After Rain",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pack.forest",
+      "referenceName": "Forest After Rain",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "1A2B0004",
+      "localizations": [
+        {
+          "description": "A wood stove that crackles and settles for hours.",
+          "displayName": "Fireside",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pack.fireside",
+      "referenceName": "Fireside",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "1A2B0005",
+      "localizations": [
+        {
+          "description": "Pages turning, a far-off cough, a clock in the stacks.",
+          "displayName": "Library Hush",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pack.library",
+      "referenceName": "Library Hush",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "2.99",
+      "familyShareable": true,
+      "internalID": "1A2B0006",
+      "localizations": [
+        {
+          "description": "Rails, a soft carriage sway and stations in the dark.",
+          "displayName": "Night Train",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pack.nighttrain",
+      "referenceName": "Night Train",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "3.99",
+      "familyShareable": true,
+      "internalID": "1A2B0007",
+      "localizations": [
+        {
+          "description": "Long waves on a wide beach, near and far.",
+          "displayName": "Ocean Swell",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pack.ocean",
+      "referenceName": "Ocean Swell",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "2.99",
+      "familyShareable": true,
+      "internalID": "1A2B0008",
+      "localizations": [
+        {
+          "description": "A storm that stays on the horizon all evening.",
+          "displayName": "Distant Thunder",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pack.thunder",
+      "referenceName": "Distant Thunder",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "1A2B0009",
+      "localizations": [
+        {
+          "description": "Cups, a milk steamer and quiet talk at the next table.",
+          "displayName": "Corner Café",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pack.cafe",
+      "referenceName": "Corner Café",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "2.99",
+      "familyShareable": true,
+      "internalID": "1A2B0010",
+      "localizations": [
+        {
+          "description": "Snowmelt over stones, close up and from the bank.",
+          "displayName": "Mountain Stream",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pack.stream",
+      "referenceName": "Mountain Stream",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "2.99",
+      "familyShareable": true,
+      "internalID": "1A2B0011",
+      "localizations": [
+        {
+          "description": "Empty streets, a far siren, rain on a window.",
+          "displayName": "City at 3 AM",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pack.city",
+      "referenceName": "City at 3 AM",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "1.99",
+      "familyShareable": true,
+      "internalID": "1A2B0012",
+      "localizations": [
+        {
+          "description": "Dry wind over dunes, with grit against a tent.",
+          "displayName": "Desert Wind",
+          "locale": "en_US"
+        }
+      ],
+      "productID": "pack.wind",
+      "referenceName": "Desert Wind",
+      "type": "NonConsumable"
+    }
+  ],
+  "settings": {
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storefront": "USA"
+  },
+  "subscriptionGroups": [
+    {
+      "id": "5C0D0001",
+      "localizations": [],
+      "name": "Plus",
+      "subscriptions": [
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "3.99",
+          "familyShareable": true,
+          "groupNumber": 2,
+          "internalID": "5C0D0010",
+          "localizations": [
+            {
+              "description": "Every pack, billed each month.",
+              "displayName": "Plus Monthly",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "plus.monthly",
+          "recurringSubscriptionPeriod": "P1M",
+          "referenceName": "Plus Monthly",
+          "subscriptionGroupID": "5C0D0001",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        },
+        {
+          "adHocOffers": [],
+          "codeOffers": [],
+          "displayPrice": "29.99",
+          "familyShareable": true,
+          "groupNumber": 1,
+          "internalID": "5C0D0011",
+          "introductoryOffer": {
+            "internalID": "5C0D0012",
+            "paymentMode": "free",
+            "subscriptionPeriod": "P1W"
+          },
+          "localizations": [
+            {
+              "description": "Every pack, billed once a year.",
+              "displayName": "Plus Yearly",
+              "locale": "en_US"
+            }
+          ],
+          "productID": "plus.yearly",
+          "recurringSubscriptionPeriod": "P1Y",
+          "referenceName": "Plus Yearly",
+          "subscriptionGroupID": "5C0D0001",
+          "type": "RecurringSubscription",
+          "winbackOffers": []
+        }
+      ]
+    }
+  ],
+  "version": {
+    "major": 4,
+    "minor": 0
+  }
+}

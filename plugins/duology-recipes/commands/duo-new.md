@@ -1,15 +1,19 @@
 ---
 name: duo-new
-description: "Create a new iPhone Duo app from a Duology recipe (a two-player game, a media player or a reader), build it with Xcode 27.1 and run it on the iPhone Duo simulator."
+description: "Create a new iPhone Duo app from a Duology recipe (a two-player game, a finance dashboard, a media player, a reader or a shop), build it with Xcode 27.1 and run it on the iPhone Duo simulator."
 argument-hint: "<recipe> <AppName> [bundle-id] [folder]"
 allowed-tools:
   - Bash(duo-doctor *)
   - Bash(${CLAUDE_PLUGIN_ROOT}/skills/recipe-two-player-game/scripts/new-project.sh *)
   - Bash("${CLAUDE_PLUGIN_ROOT}/skills/recipe-two-player-game/scripts/new-project.sh" *)
+  - Bash(${CLAUDE_PLUGIN_ROOT}/skills/recipe-finance-dashboard/scripts/new-project.sh *)
+  - Bash("${CLAUDE_PLUGIN_ROOT}/skills/recipe-finance-dashboard/scripts/new-project.sh" *)
   - Bash(${CLAUDE_PLUGIN_ROOT}/skills/recipe-media-player/scripts/new-project.sh *)
   - Bash("${CLAUDE_PLUGIN_ROOT}/skills/recipe-media-player/scripts/new-project.sh" *)
   - Bash(${CLAUDE_PLUGIN_ROOT}/skills/recipe-reader/scripts/new-project.sh *)
   - Bash("${CLAUDE_PLUGIN_ROOT}/skills/recipe-reader/scripts/new-project.sh" *)
+  - Bash(${CLAUDE_PLUGIN_ROOT}/skills/recipe-shop/scripts/new-project.sh *)
+  - Bash("${CLAUDE_PLUGIN_ROOT}/skills/recipe-shop/scripts/new-project.sh" *)
   - Read
   - Glob
 ---
@@ -40,10 +44,10 @@ Every recipe's script is `${CLAUDE_PLUGIN_ROOT}/skills/<recipe>/scripts/new-proj
 | Recipe | What it makes |
 |---|---|
 | `recipe-two-player-game` | A two-player race on one phone. Each player gets half the screen in every pose. |
-| `recipe-finance-dashboard` | A personal finance dashboard. Closed: the balance and recent spending. Open: the balance, a spending chart and the transactions side by side, with a detail for each transaction. Coming in v0.3; no script yet. |
+| `recipe-finance-dashboard` | A personal finance dashboard. Closed: the balance and recent spending. Open: the balance, a spending chart and the transactions side by side, with a detail for each transaction. |
 | `recipe-media-player` | A video podcast player: a library, and a player that keeps playing through every fold, with the video above the fold and the controls below in tabletop, Picture in Picture and an up next card. |
 | `recipe-reader` | An e-book reader: one page closed, two facing pages open and in book pose, and the reader's place kept through every fold. |
-| `recipe-shop` | A shop for digital packs: the grid and a pack's page side by side when open, a basket, and StoreKit purchases and a subscription, tested with a local StoreKit configuration file. Coming in v0.3; no script yet. |
+| `recipe-shop` | A shop for digital packs: the grid and a pack's page side by side when open, a basket, and StoreKit purchases and a subscription, tested with a local StoreKit configuration file. |
 | `recipe-notes-ai`, `recipe-camera-studio`, `recipe-kids-learning` | Planned for v1.0. No script yet. |
 
 Accept the short form without `recipe-`, such as `media-player`. If the user describes an app instead of naming a recipe, propose the closest one and say why in one line. If none fits, say so.

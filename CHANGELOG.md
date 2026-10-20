@@ -18,6 +18,8 @@ Each release says which Xcode and iOS versions it was checked on.
 - `duo-games` (`duology-features`): games on both displays. Fill the screen in every pose instead of letterboxing, touch controls off the fold, the bottom half as a controller in tabletop, SpriteKit and Metal views that resize without restarting the scene, and game controllers.
 - `recipe-media-player` (`duology-recipes`): a video podcast player. A library, a player that keeps playing through every fold, video above the fold and the controls below in tabletop, Picture in Picture and an up next card.
 - `recipe-reader` (`duology-recipes`): an e-book reader. One page closed, two facing pages open and in book pose, the reader's place kept through every fold, and Dynamic Type reflow.
+- `recipe-finance-dashboard` (`duology-recipes`): a personal finance dashboard. The balance and recent spending when closed; the balance, a spending chart and the transactions side by side when open, with a detail for each transaction.
+- `recipe-shop` (`duology-recipes`): a shop for digital packs. The grid and a pack's page side by side when open, a basket, and StoreKit 2 purchases and a subscription tested with a local StoreKit configuration file.
 
 ## [0.2.0] - 2026-10-19
 

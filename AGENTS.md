@@ -44,6 +44,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 | `duo-camera` | [`plugins/duology-features/skills/duo-camera/`](plugins/duology-features/skills/duo-camera/) | The app takes photos or video, runs a video call or shows a camera preview, on either display or in tabletop. |
 | `duo-media` | [`plugins/duology-features/skills/duo-media/`](plugins/duology-features/skills/duo-media/) | The app plays video or audio and playback must survive fold and unfold, with a tabletop player and Picture in Picture. |
 | `duo-intelligence` | [`plugins/duology-features/skills/duo-intelligence/`](plugins/duology-features/skills/duo-intelligence/) | The app uses Foundation Models: an AI pane when open, a short summary when closed. |
+| `duo-app-intents` | [`plugins/duology-features/skills/duo-app-intents/`](plugins/duology-features/skills/duo-app-intents/) | The app exposes actions to Siri, Shortcuts or the Action button, and they must open the right pane or window. |
 
 ### Commands, without Claude Code
 

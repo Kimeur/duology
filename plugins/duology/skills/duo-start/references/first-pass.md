@@ -19,7 +19,7 @@ xcodebuild -scheme <Scheme> \
 - Add `-workspace <Name>.xcworkspace` (CocoaPods, several projects) or `-project <Name>.xcodeproj` when the folder holds more than one.
 - `-derivedDataPath` keeps the build out of the repo and makes the app easy to find.
 - *Measured:* with Xcode 27.1, `xcodebuild -scheme <Scheme> -showdestinations` lists the simulator with `platform:iOS Simulator`, `OS:27.1` and `name:iPhone Duo`. If it is missing, load `duo-setup`.
-- Xcode 27.1 brings the iOS 27.1 SDK and Swift 6.4. Some new errors come from the [`@State` and `ContentBuilder` source changes](https://developer.apple.com/documentation/technotes/tn3211-resolving-swiftui-source-incompatibilities-for-state-and-contentbuilder) Apple describes in TN3211. Count the errors and list the first three. `duo-swiftui-27` is coming; until then, TN3211 is the reference.
+- Xcode 27.1 brings the iOS 27.1 SDK and Swift 6.4. Some new errors come from the [`@State` and `ContentBuilder` source changes](https://developer.apple.com/documentation/technotes/tn3211-resolving-swiftui-source-incompatibilities-for-state-and-contentbuilder) Apple describes in TN3211. Count the errors and list the first three. load `duo-swiftui-27` (plugin `duology-features`), which covers TN3211.
 
 ## 2. Run duo-lint
 

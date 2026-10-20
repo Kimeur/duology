@@ -160,10 +160,21 @@ PROBE 14.5 didDiscardSceneSessions ["7E34CB"]
 PROBE 20.9 didUpdateEffectiveGeometry from 466x678 to scene EE5849 ... state=0 screen=inner(2007x2853) window=951x669
 ```
 
+## Results: the camera capture accessory partly open
+
+`duo-camera` ran a `CameraCaptureAccessory` on a full-screen view, again with no capture session, on 20 October 2026 (its `references/testing.md`, "The accessory in each pose").
+
+| Pose at the time | Availability | Content |
+|---|---|---|
+| Partially Open at 128°, held wide (book), at launch | `true` | appeared at once on the outer display |
+| Tabletop | not measured | |
+
+Apple's conditions say fully open. The simulator already shows the accessory with no capture session, so it may skip this condition too. Unverified on a device: don't depend on the accessory partly open.
+
 ## Not verified yet
 
 - Split View: window sizes and size classes, two windows of one app side by side, and which window survives a close from Split View.
-- Partially Open.
+- Partially Open, apart from the camera capture accessory in book (above). Tabletop with the accessory.
 - What a real iPhone Duo returns for a new-window request on the outer display (Apple says it fails).
 - Camera capture accessory availability with a running capture session.
 - `UISceneActivationConditions` routing on iPhone Duo.

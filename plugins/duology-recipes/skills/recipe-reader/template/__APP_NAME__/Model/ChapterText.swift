@@ -48,9 +48,11 @@ nonisolated struct ChapterText: Equatable, Sendable {
             start -= 1
         }
         let rest = text.substring(from: start)
-        let picked = rest.split(whereSeparator: { $0 == " " || $0 == "\n" }).prefix(words)
-        let joined = picked.joined(separator: " ")
-        let more = picked.count == words ? "…" : ""
+        let all = rest.split(whereSeparator: { $0 == " " || $0 == "\n" })
+        let joined = all.prefix(words).joined(separator: " ")
+        // "…" only when more text follows and the last word doesn't already end a sentence.
+        let endsSentence = joined.last.map { ".!?…".contains($0) } ?? false
+        let more = all.count > words && !endsSentence ? "…" : ""
         return (start > 0 ? "…" : "") + joined + more
     }
 }

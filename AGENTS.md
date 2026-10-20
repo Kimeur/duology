@@ -47,6 +47,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 | `duo-app-intents` | [`plugins/duology-features/skills/duo-app-intents/`](plugins/duology-features/skills/duo-app-intents/) | The app exposes actions to Siri, Shortcuts or the Action button, and they must open the right pane or window. |
 | `duo-swiftui-27` | [`plugins/duology-features/skills/duo-swiftui-27/`](plugins/duology-features/skills/duo-swiftui-27/) | The app adopts the iOS 27 SwiftUI changes (reordering, swipe actions, the @State macro, new toolbar and tab APIs) and needs them to work on both displays. |
 | `duo-system-surfaces` | [`plugins/duology-features/skills/duo-system-surfaces/`](plugins/duology-features/skills/duo-system-surfaces/) | The app has widgets, Live Activities, StandBy or Control Center controls that must look right on both displays. |
+| `duo-reading` | [`plugins/duology-features/skills/duo-reading/`](plugins/duology-features/skills/duo-reading/) | The app shows books, articles or documents and should read like a book when open, keeping the reader's place through a fold. |
 
 ### Commands, without Claude Code
 

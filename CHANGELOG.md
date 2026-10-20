@@ -14,6 +14,7 @@ Each release says which Xcode and iOS versions it was checked on.
 - `duo-app-intents` (`duology-features`): App Intents on both displays. Intents and entities that act on the right pane, opening a specific pane or window from Siri or Shortcuts, intents that work on the closed phone, and testing with AppIntentsTesting.
 - `duo-swiftui-27` (`duology-features`): the iOS 27 SwiftUI changes that matter on iPhone Duo: reordering, swipe actions on any view, the `@State` macro and its source-breaking cases (TN3211), prominent tabs, toolbar minimizing, visibility priority and overflow.
 - `duo-system-surfaces` (`duology-features`): widgets, Live Activities and the vertical Dynamic Island, StandBy and Controls on both displays, with what Apple has and hasn't published.
+- `duo-reading` (`duology-features`): books and documents on both displays. Two facing pages in book pose and when open, one page when closed, the reader's place kept through fold and unfold, notes beside the text, and Dynamic Type reflow.
 
 ## [0.2.0] - 2026-10-19
 

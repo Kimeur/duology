@@ -80,7 +80,7 @@ Say "coming" when one of these fits, and work from the Apple source in the last 
 | `duo-app-intents` | v0.3 (out) | Siri, app actions, onscreen awareness | Load `duo-app-intents` (plugin `duology-features`) |
 | `duo-camera` | v0.3 (out) | Each camera by the way it faces, the virtual front camera | Load `duo-camera` (plugin `duology-features`) |
 | `duo-media` | v0.3 (out) | Video and audio, Picture in Picture, "up next" | Load `duo-media` (plugin `duology-features`) |
-| `duo-reading` | v0.3 | Books and documents, two pages | `duo-patterns` (two-page) |
+| `duo-reading` | v0.3 (out) | Books and documents, two pages | Load `duo-reading` (plugin `duology-features`) |
 | `duo-games` | v0.3 | Fill the screen in every pose, touch controls off the fold | HIG (games), `duo-shared-screen`, `duo-layout` |
 | `duo-swiftui-27` | v0.3 (out) | iOS 27 SwiftUI changes that matter on Duo | Load `duo-swiftui-27` (plugin `duology-features`) |
 | `duo-system-surfaces` | v0.3 (out) | Widgets, Live Activities, StandBy, Controls | Load `duo-system-surfaces` (plugin `duology-features`) |

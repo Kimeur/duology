@@ -43,6 +43,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 | `recipe-two-player-game` | [`plugins/duology-recipes/skills/recipe-two-player-game/`](plugins/duology-recipes/skills/recipe-two-player-game/) | Starting a new two-player game. |
 | `duo-camera` | [`plugins/duology-features/skills/duo-camera/`](plugins/duology-features/skills/duo-camera/) | The app takes photos or video, runs a video call or shows a camera preview, on either display or in tabletop. |
 | `duo-media` | [`plugins/duology-features/skills/duo-media/`](plugins/duology-features/skills/duo-media/) | The app plays video or audio and playback must survive fold and unfold, with a tabletop player and Picture in Picture. |
+| `duo-intelligence` | [`plugins/duology-features/skills/duo-intelligence/`](plugins/duology-features/skills/duo-intelligence/) | The app uses Foundation Models: an AI pane when open, a short summary when closed. |
 
 ### Commands, without Claude Code
 

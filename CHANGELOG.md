@@ -30,7 +30,7 @@ Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not ye
 ### Changed
 
 - `duo-start` and its routing map route to every v0.3 skill and recipe. Only the v1.0 items are still "coming".
-- The README, `AGENTS.md`, `llms.txt` and the roadmap list every v0.3 skill and recipe as built. The `duology-features` description no longer says its skills land one by one, and the `duology-features` and `duology-recipes` keywords match between the plugin manifests and the marketplace. Versions stay 0.2.0.
+- The README, `AGENTS.md`, `llms.txt` and the roadmap list every v0.3 skill and recipe as built. The `duology-features` description no longer says its skills land one by one, and the `duology-features` and `duology-recipes` keywords match between the plugin manifests and the marketplace.
 - `reference/api-index.md`: the virtual front camera's limits (1080p at 60 fps, no depth) are no longer unverified, because Tech Talk 111465 states them. `AsyncImage` caching leaves "Not in the SDK": Apple's `AsyncImage` page documents it from iOS 27. `TupleContent` is indexed with its SDK availability (iOS 26.0) and TN3211's deployment-target rule.
 - `/duo-new` says that `recipe-shop` prices read "–" after a plain `simctl launch`, until a StoreKit test session has run.
 - `recipe-two-player-game`: the layout UI test attaches a screenshot of each display from `XCUIScreen.screens`. `XCUIScreen.main` is the outer display on iPhone Duo, black while the phone is open.

@@ -76,7 +76,7 @@ Say "coming" when one of these fits, and work from the Apple source in the last 
 
 | Skill | Release | Covers | Until then |
 |---|---|---|---|
-| `duo-intelligence` | v0.3 | Foundation Models: a pane when open, a summary when closed | [Foundation Models](https://developer.apple.com/documentation/foundationmodels) |
+| `duo-intelligence` | v0.3 (out) | Foundation Models: a pane when open, a summary when closed | Load `duo-intelligence` (plugin `duology-features`) |
 | `duo-app-intents` | v0.3 | Siri, app actions, onscreen awareness | [App Intents](https://developer.apple.com/documentation/appintents) |
 | `duo-camera` | v0.3 (out) | Each camera by the way it faces, the virtual front camera | Load `duo-camera` (plugin `duology-features`) |
 | `duo-media` | v0.3 (out) | Video and audio, Picture in Picture, "up next" | Load `duo-media` (plugin `duology-features`) |

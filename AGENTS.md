@@ -41,6 +41,8 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 | `duo-pose-matrix` | [`plugins/duology-ship/skills/duo-pose-matrix/`](plugins/duology-ship/skills/duo-pose-matrix/) | Screenshots of the app closed, open, in book pose and in tabletop. |
 | `duo-lint` | [`plugins/duology-ship/skills/duo-lint/`](plugins/duology-ship/skills/duo-lint/) | Checking code before review, release or CI. |
 | `recipe-two-player-game` | [`plugins/duology-recipes/skills/recipe-two-player-game/`](plugins/duology-recipes/skills/recipe-two-player-game/) | Starting a new two-player game. |
+| `duo-camera` | [`plugins/duology-features/skills/duo-camera/`](plugins/duology-features/skills/duo-camera/) | The app takes photos or video, runs a video call or shows a camera preview, on either display or in tabletop. |
+| `duo-media` | [`plugins/duology-features/skills/duo-media/`](plugins/duology-features/skills/duo-media/) | The app plays video or audio and playback must survive fold and unfold, with a tabletop player and Picture in Picture. |
 
 ### Commands, without Claude Code
 

@@ -22,18 +22,18 @@ Checked on Xcode 27.1 and the iPhone Duo simulator. Two items moved to v0.3 (bel
 - [x] Gallery screens for the tabletop player, the fold transition and the design tokens
 - [x] Test tasks for every v0.2 skill in `evals/` (29 tasks in all; the pose task waits until the eval account can run the pose tools)
 
-## v0.3: iOS 27 features (by 18 December 2026)
+## v0.3: iOS 27 features (released 21 October 2026)
 
-Every v0.3 skill and recipe is built and on `main`, checked on Xcode 27.1 and the iPhone Duo simulator. The two items carried over from v0.2 are still open.
+Checked on Xcode 27.1 and the iPhone Duo simulator. The two items carried over from v0.2 move to v1.0 (below).
 
-- [ ] Carried over from v0.2: first published test results (the harness runs in a separate macOS user account or a VM)
-- [ ] Carried over from v0.2: first checks on a real iPhone Duo (the hinge, 120 Hz transitions, the camera capture accessory, new windows on the outer display)
 - [x] Plugin `duology-features`: `duo-intelligence`, `duo-app-intents`, `duo-camera`, `duo-media`, `duo-reading`, `duo-games`, `duo-swiftui-27`, `duo-system-surfaces`
 - [x] Recipes: `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop`
 - [x] Test tasks for every v0.3 skill and recipe in `evals/` (41 tasks in all; 40 are ready)
 
 ## v1.0: complete (by end of January 2027)
 
+- [ ] Carried over from v0.3: first checks on a real iPhone Duo (the hinge, 120 Hz transitions, the camera capture accessory, new windows on the outer display)
+- [ ] Carried over from v0.3: first published test results (the harness runs in a separate macOS user account or a VM)
 - All 36 skills and 8 recipes, including `recipe-notes-ai`, `recipe-camera-studio`, `recipe-kids-learning`
 - `duo-performance`, `duo-app-store`, `duo-migrate`, `/duo-ship`, `duo-pose-tester` agent
 - Ready before Apple's April 2027 rule that App Store listings include iPhone Duo screenshots

@@ -43,7 +43,7 @@ import re
 import sys
 import urllib.parse
 
-VERSION = "0.2.0"
+VERSION = "0.3.0"
 
 DEFAULT_MAX_LINES = 300
 MAX_NAME = 64

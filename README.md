@@ -36,7 +36,7 @@
 </div>
 
 > [!IMPORTANT]
-> **v0.2 is out** (19 October 2026): 18 skills, `/duo-doctor`, `/duo-new`, `/duo-audit`, `/duo-poses`, `/duo-review` and a design review agent, checked on Xcode 27.1 and the iPhone Duo simulator. The v0.3 content is on `main` now: eight iOS 27 feature skills in `duology-features` and four more recipes, 30 skills in all. Checks on a real iPhone Duo and published test results come next. Duology is built in the open: the full pack of 36 skills is planned for v1.0 in January 2027. Star or watch the repo to follow along. See the [roadmap](ROADMAP.md) and the [release notes](CHANGELOG.md).
+> **v0.3 is out** (21 October 2026): 30 skills in 5 plugins, with a new plugin of iOS 27 features (`duology-features`) and five app recipes, plus `/duo-doctor`, `/duo-new`, `/duo-audit`, `/duo-poses`, `/duo-review` and a design review agent, checked on Xcode 27.1 and the iPhone Duo simulator. Checks on a real iPhone Duo and published test results come next. Duology is built in the open: the full pack of 36 skills is planned for v1.0 in January 2027. Star or watch the repo to follow along. See the [roadmap](ROADMAP.md) and the [release notes](CHANGELOG.md).
 
 > [!NOTE]
 > Duology is a community project. It is not affiliated with, endorsed by or sponsored by Apple Inc.
@@ -152,7 +152,7 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 
 ## What's inside
 
-**30 skills in 5 plugins, 5 commands and 1 review agent.** v0.2 released 18 of the skills; the other 12 are the v0.3 skills and recipes. The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
+**v0.3: 30 skills in 5 plugins, 5 commands and 1 review agent.** The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
 
 <details open>
 <summary><strong>duology</strong> · foundation: setup, layout, continuity, scenes</summary>
@@ -332,7 +332,7 @@ v0.2 adds three screens, one for each of `duo-postures`, `duo-transitions` and `
 
 Every skill has test tasks in [`evals/`](evals), 41 so far (40 ready to run). Each task runs with Claude Code twice, with and without Duology, in a fresh copy of the same sample project. A run passes when the app builds for the iPhone Duo simulator, `duo-lint` finds nothing, every check in the task passes and every checklist rule it covers passes.
 
-No results yet. The first published runs are planned for the v0.3 release, and we'll publish them here whatever they show.
+No results yet. The first published runs are planned before v1.0, and we'll publish them here whatever they show.
 
 | Task | Without Duology | With Duology |
 |---|---|---|
@@ -349,7 +349,7 @@ How the runs work and how to rerun them: [`evals/README.md`](evals/README.md).
 |---|---|
 | Xcode 27.1 (27A9275) | Checked |
 | iPhone Duo simulator, iOS 27.1 | Checked |
-| iPhone Duo device | Planned for v0.3 |
+| iPhone Duo device | Planned before v1.0 |
 | iOS 27.2 beta | Not tracked until release |
 
 Each `SKILL.md` repeats this in its front matter, so you can see how far every rule has been tested.

@@ -1,6 +1,6 @@
 # Routing map
 
-Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 (released 19 October 2026) added seven skills, two commands and a review agent. v0.3 adds eight iOS 27 feature skills in a fifth plugin, `duology-features`, and four recipes; they are on `main` and ship with the v0.3 release. The other six of the 36 are "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
+Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 (released 19 October 2026) added seven skills, two commands and a review agent. v0.3 (released 21 October 2026) added eight iOS 27 feature skills in a fifth plugin, `duology-features`, and four recipes. The other six of the 36 are "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
 
 ## v0.1 skills
 

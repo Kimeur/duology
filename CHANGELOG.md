@@ -6,7 +6,9 @@ Each release says which Xcode and iOS versions it was checked on.
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- `duo-camera` (new plugin `duology-features`): camera capture on both displays. The virtual front camera, choosing each camera by the way it faces, rotation and mirroring through fold and unfold, a preview on the outer display with `CameraCaptureAccessory`, and tabletop hands-free capture.
 
 ## [0.2.0] - 2026-10-19
 

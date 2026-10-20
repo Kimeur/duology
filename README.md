@@ -14,7 +14,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/Kimeur/duology?style=flat-square&color=f4c430)](https://github.com/Kimeur/duology/stargazers)
 [![Release](https://img.shields.io/github/v/release/Kimeur/duology?style=flat-square&color=1d7a4b)](https://github.com/Kimeur/duology/releases)
-[![Skills](https://img.shields.io/badge/skills-18_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
+[![Skills](https://img.shields.io/badge/skills-19_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
 [![Commands and agents](https://img.shields.io/badge/commands_·_agents-5_·_1_built-2b55c7?style=flat-square)](#commands-and-agents)
 [![Recipes](https://img.shields.io/badge/app_recipes-1_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
 [![Built for Xcode 27.1](https://img.shields.io/badge/built_for-Xcode_27.1_·_iOS_27.1-1d7a4b?style=flat-square)](#verified-on)
@@ -93,9 +93,10 @@ Add the other plugins when you need them:
 /plugin install duology-design@duology
 /plugin install duology-recipes@duology
 /plugin install duology-ship@duology
+/plugin install duology-features@duology
 ```
 
-`duology-recipes` and `duology-ship` need `duology`, which gives them `/duo-doctor`. A fifth plugin, `duology-features`, is planned for v0.3.
+`duology-recipes` and `duology-ship` need `duology`, which gives them `/duo-doctor`. A fifth plugin, `duology-features` (iOS 27 features), is arriving skill by skill in v0.3.
 
 Restart Claude Code, then check your setup:
 
@@ -184,13 +185,13 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 </details>
 
 <details>
-<summary><strong>duology-features</strong> · iOS 27 features on two displays · planned (v0.3)</summary>
+<summary><strong>duology-features</strong> · iOS 27 features on two displays · arriving in v0.3</summary>
 
 | Skill | Status | Use it when |
 |---|---|---|
 | `duo-intelligence` | planned (v0.3) | Adding Foundation Models: an AI pane when open, a short summary when closed. |
 | `duo-app-intents` | planned (v0.3) | Siri, app actions and onscreen awareness with App Intents. |
-| `duo-camera` | planned (v0.3) | Capture apps. Each camera by the way it faces, the virtual front camera, a preview on the outer display. |
+| `duo-camera` | v0.3 | Capture apps. Each camera by the way it faces, the virtual front camera, a preview on the outer display. |
 | `duo-media` | planned (v0.3) | Video and audio. Tabletop player, Picture in Picture, "up next". |
 | `duo-reading` | planned (v0.3) | Books and documents. Two pages in book pose, notes beside the text. |
 | `duo-games` | planned (v0.3) | Games. Fill the screen in every pose, keep touch controls off the fold. |

@@ -1,0 +1,24 @@
+{
+  "name": "duology-features",
+  "version": "0.2.0",
+  "description": "iOS 27 features on iPhone Duo's two displays: Foundation Models, App Intents, the camera, media, reading, games, the iOS 27 SwiftUI changes, and widgets, Live Activities and Controls. Skills land one by one in v0.3.",
+  "author": {
+    "name": "Kimeur",
+    "url": "https://github.com/Kimeur"
+  },
+  "homepage": "https://github.com/Kimeur/duology",
+  "repository": "https://github.com/Kimeur/duology",
+  "license": "MIT",
+  "keywords": [
+    "iphone-duo",
+    "foldable",
+    "ios-27",
+    "swiftui",
+    "foundation-models",
+    "app-intents",
+    "camera",
+    "avfoundation",
+    "media",
+    "widgets"
+  ]
+}

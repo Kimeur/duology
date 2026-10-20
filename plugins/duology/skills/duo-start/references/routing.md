@@ -78,7 +78,7 @@ Say "coming" when one of these fits, and work from the Apple source in the last 
 |---|---|---|---|
 | `duo-intelligence` | v0.3 | Foundation Models: a pane when open, a summary when closed | [Foundation Models](https://developer.apple.com/documentation/foundationmodels) |
 | `duo-app-intents` | v0.3 | Siri, app actions, onscreen awareness | [App Intents](https://developer.apple.com/documentation/appintents) |
-| `duo-camera` | v0.3 | Each camera by the way it faces, the virtual front camera | [Choosing a camera by the direction it faces](https://developer.apple.com/documentation/avkit/choosing-a-camera-by-the-direction-it-faces), [Tech Talk 111465](https://developer.apple.com/videos/play/tech-talks/111465/) |
+| `duo-camera` | v0.3 (out) | Each camera by the way it faces, the virtual front camera | Load `duo-camera` (plugin `duology-features`) |
 | `duo-media` | v0.3 | Video and audio, Picture in Picture, "up next" | Tech Talk 111466 |
 | `duo-reading` | v0.3 | Books and documents, two pages | `duo-patterns` (two-page) |
 | `duo-games` | v0.3 | Fill the screen in every pose, touch controls off the fold | HIG (games), `duo-shared-screen`, `duo-layout` |

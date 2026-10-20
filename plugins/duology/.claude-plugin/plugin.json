@@ -1,6 +1,6 @@
 {
   "name": "duology",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Foundation for iPhone Duo apps: Xcode 27.1 and simulator setup, layout across the fold, vertical bars, state that survives fold and unfold, and scenes and windows. Adds /duo-doctor.",
   "author": {
     "name": "Kimeur",

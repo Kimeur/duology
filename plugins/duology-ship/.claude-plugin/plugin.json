@@ -1,6 +1,6 @@
 {
   "name": "duology-ship",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Test and ship for iPhone Duo: duo-lint (the fold linter), an opt-in lint hook, tests on the Duo simulator, screenshots closed, open, in book pose and in tabletop (duo-pose-matrix), /duo-audit and /duo-poses.",
   "author": {
     "name": "Kimeur",

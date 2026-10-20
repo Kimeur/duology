@@ -6,6 +6,10 @@ Each release says which Xcode and iOS versions it was checked on.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-10-21
+
+Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not yet checked on a real iPhone Duo, and the first published test results are not in yet; both are planned before v1.0.
+
 ### Added
 
 - `duo-camera` (new plugin `duology-features`): camera capture on both displays. The virtual front camera, choosing each camera by the way it faces, rotation and mirroring through fold and unfold, a preview on the outer display with `CameraCaptureAccessory`, and tabletop hands-free capture.
@@ -35,7 +39,7 @@ Each release says which Xcode and iOS versions it was checked on.
 ### Fixed
 
 - `evals/lib/checks/single_owner.py`: a return type (`-> Model {`) no longer counts as a place the model is created, folders such as `Tools/ModelTests` are skipped like other test code, and a model built in a static factory is traced to where the factory is called. The finance and shop tasks get back their ownership checks (`selection-survives-fold`, `basket-survives-fold`).
-- `duo-games` hides the status bar with `toolbarVisibility(.hidden, for: .statusBar)`. The iOS 27.1 SDK marks `statusBarHidden(_:)` to be deprecated.
+- `duo-games` hides the status bar with `toolbarVisibility(.hidden, for: .statusBar)`. The iOS 27.1 SDK marks `statusBarHidden(_:)` to be deprecated. Below iOS 27 a helper falls back to `statusBarHidden()`, because `.statusBar` doesn't build there without a check.
 - `duo-postures` and `duo-patterns`: the overlay arrangement was checked folded (in `duo-media`). Read one view inside the primary, `overlayArrangementZIndex` is `1` closed and open flat, `0` in book and tabletop.
 - `duo-continuity` and `duo-navigation`: popping a pushed screen during the unfold animation leaves it with the closed phone's insets. Switch panes after the animation (measured in `recipe-finance-dashboard` and `recipe-shop`).
 - `duo-scenes`: the simulator showed the camera capture accessory in book at 128°, with no capture session (measured in `duo-camera`). Unverified on a device.
@@ -115,6 +119,7 @@ Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not ye
 - `AGENTS.md` for Codex, Cursor, GitHub Copilot, Gemini CLI and other agents, and `llms.txt`.
 - `SECURITY.md`, `CODE_OF_CONDUCT.md` and this changelog.
 
-[Unreleased]: https://github.com/Kimeur/duology/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/Kimeur/duology/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/Kimeur/duology/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Kimeur/duology/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Kimeur/duology/releases/tag/v0.1.0

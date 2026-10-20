@@ -2,7 +2,7 @@
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "duology",
   "description": "Claude Code plugins for designing, building, testing and shipping apps on iPhone Duo, the foldable iPhone with an outer and an inner display. Community project, not affiliated with Apple.",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "owner": {
     "name": "Kimeur",
     "url": "https://github.com/Kimeur"
@@ -12,7 +12,7 @@
       "name": "duology",
       "source": "./plugins/duology",
       "description": "Foundation for iPhone Duo apps: Xcode 27.1 and simulator setup, layout across the fold, vertical bars, state that survives fold and unfold, and scenes and windows. Adds /duo-doctor.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "category": "development",
       "keywords": [
         "iphone-duo",
@@ -31,7 +31,7 @@
       "name": "duology-design",
       "source": "./plugins/duology-design",
       "description": "Design for iPhone Duo: design tokens, eight layout patterns, every pose, fold transitions, ergonomics, accessibility, two people on one screen, and a 15-point review of screenshots and Figma frames. Adds the duo-design-reviewer agent and /duo-review.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "category": "design",
       "keywords": [
         "iphone-duo",
@@ -52,7 +52,7 @@
       "name": "duology-recipes",
       "source": "./plugins/duology-recipes",
       "description": "App recipes for iPhone Duo. /duo-new creates a project that builds and runs on the iPhone Duo simulator. Recipes: a two-player game, a finance dashboard, a media player, a reader and a shop.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "category": "development",
       "keywords": [
         "iphone-duo",
@@ -73,7 +73,7 @@
       "name": "duology-ship",
       "source": "./plugins/duology-ship",
       "description": "Test and ship for iPhone Duo: duo-lint (the fold linter), an opt-in lint hook, tests on the Duo simulator, screenshots closed, open, in book pose and in tabletop (duo-pose-matrix), /duo-audit and /duo-poses.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "category": "development",
       "keywords": [
         "iphone-duo",
@@ -92,7 +92,7 @@
       "name": "duology-features",
       "source": "./plugins/duology-features",
       "description": "iOS 27 features on iPhone Duo's two displays: Foundation Models, App Intents, the camera, media, reading, games, the iOS 27 SwiftUI changes, and widgets, Live Activities and Controls.",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "category": "development",
       "keywords": [
         "iphone-duo",

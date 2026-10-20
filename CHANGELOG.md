@@ -15,6 +15,7 @@ Each release says which Xcode and iOS versions it was checked on.
 - `duo-swiftui-27` (`duology-features`): the iOS 27 SwiftUI changes that matter on iPhone Duo: reordering, swipe actions on any view, the `@State` macro and its source-breaking cases (TN3211), prominent tabs, toolbar minimizing, visibility priority and overflow.
 - `duo-system-surfaces` (`duology-features`): widgets, Live Activities and the vertical Dynamic Island, StandBy and Controls on both displays, with what Apple has and hasn't published.
 - `duo-reading` (`duology-features`): books and documents on both displays. Two facing pages in book pose and when open, one page when closed, the reader's place kept through fold and unfold, notes beside the text, and Dynamic Type reflow.
+- `duo-games` (`duology-features`): games on both displays. Fill the screen in every pose instead of letterboxing, touch controls off the fold, the bottom half as a controller in tabletop, SpriteKit and Metal views that resize without restarting the scene, and game controllers.
 
 ## [0.2.0] - 2026-10-19
 

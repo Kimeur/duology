@@ -142,8 +142,8 @@ final class __APP_NAME__UITests: XCTestCase {
     // MARK: Layout and screenshots
 
     /// Both halves show, split along the window's long side, with equal play fields, in
-    /// whatever pose and orientation the simulator is in. Saves a screenshot to the result
-    /// bundle (export with `xcrun xcresulttool export attachments`).
+    /// whatever pose and orientation the simulator is in. Saves a screenshot of each display
+    /// to the result bundle (export with `xcrun xcresulttool export attachments`).
     ///
     /// Device Hub sets the pose and the rotation. On the iPhone Duo simulator,
     /// XCUIDevice.shared.orientation reported the new orientation but the app did not
@@ -166,10 +166,14 @@ final class __APP_NAME__UITests: XCTestCase {
         let target = element(app, "p1.target").frame
         XCTAssertTrue(one.contains(target), "player 1's target is inside player 1's field")
         XCTAssertLessThan(target.width, one.width / 2, "the target's frame is the circle, not the field")
-        let shot = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
-        shot.name = "play-\(Int(window.width))x\(Int(window.height))"
-        shot.lifetime = .keepAlways
-        add(shot)
+        // One screenshot per display; the one not in use is black. XCUIScreen.main is the
+        // outer display, black while the phone is open (measured); XCUIScreen.screens lists both.
+        for (index, screen) in XCUIScreen.screens.enumerated() {
+            let shot = XCTAttachment(screenshot: screen.screenshot())
+            shot.name = "play-\(Int(window.width))x\(Int(window.height))-screen\(index)"
+            shot.lifetime = .keepAlways
+            add(shot)
+        }
     }
 
     // MARK: Helpers

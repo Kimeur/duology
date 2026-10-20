@@ -1,6 +1,6 @@
 ---
 name: duo-start
-description: Entry point for iPhone Duo, Apple's foldable with an outer display, an inner display and a fold; use it first when someone asks to get an app ready for iPhone Duo, make it work on the foldable or survive fold and unfold, or doesn't know which Duology skill to load. It detects SwiftUI or UIKit, new or existing app, the Xcode and iOS SDK the app builds with (iOS 26, 27 or 27.1 behaviour on Duo), the deployment target and the UIKit scene life cycle, runs a five-minute first pass (Xcode 27.1 build, duo-lint, closed and open on the iPhone Duo simulator in Device Hub) and routes to duo-setup, duo-layout, duo-navigation, duo-continuity, duo-scenes, duo-patterns, the design skills (duo-design-system, duo-postures, duo-transitions, duo-ergonomics, duo-accessibility), duo-testing, duo-pose-matrix, duo-lint and Apple's App Resizability skill (xcrun agent skills export).
+description: Entry point for iPhone Duo, Apple's foldable with an outer display, an inner display and a fold; use it first when someone asks to get an app ready for iPhone Duo, make it work on the foldable or survive fold and unfold, or doesn't know which Duology skill to load. It detects SwiftUI or UIKit, new or existing app, the Xcode and iOS SDK the app builds with (iOS 26, 27 or 27.1 behaviour on Duo), the deployment target and the UIKit scene life cycle, runs a five-minute first pass (Xcode 27.1 build, duo-lint, closed and open on the iPhone Duo simulator in Device Hub) and routes to duo-setup, duo-layout, duo-navigation, duo-continuity, duo-scenes, duo-patterns, the design skills (duo-design-system, duo-postures, duo-transitions, duo-ergonomics, duo-accessibility), the iOS 27 feature skills in duology-features, duo-testing, duo-pose-matrix, duo-lint, the recipes and Apple's App Resizability skill (xcrun agent skills export).
 metadata:
   verified: "Xcode 27.1 (27A9275), iOS 27.1 simulator, device: no"
   sources: "https://github.com/Kimeur/duology/blob/main/reference/sources.md"
@@ -111,7 +111,7 @@ This is the supporting-pane pattern from `duo-patterns`, shaped like `duo-layout
 
 ## Step 2: Route to the right skill
 
-Duology skills (v0.1 and v0.2). Load the one that matches the task. Full map with symptoms: [references/routing.md](references/routing.md).
+Duology skills. Load the one that matches the task. Full map with symptoms: [references/routing.md](references/routing.md).
 
 | Skill | Plugin | Load it when |
 |---|---|---|
@@ -129,20 +129,28 @@ Duology skills (v0.1 and v0.2). Load the one that matches the task. Full map wit
 | `duo-accessibility` | duology-design | VoiceOver order across panes, Dynamic Type on the outer display, Reduce Motion, keyboard and contrast. |
 | `duo-shared-screen` | duology-design | Two people use one phone: games, teaching, showing a customer. |
 | `duo-design-review` | duology-design | You review screenshots or Figma frames against the Duo checklist. |
+| `duo-intelligence` | duology-features | The app uses Foundation Models: an AI pane when open, a short summary when closed. |
+| `duo-app-intents` | duology-features | Siri, Shortcuts or the Action button must open the right pane or window. |
+| `duo-camera` | duology-features | The app captures photos or video, or shows a camera preview, on either display or in tabletop. |
+| `duo-media` | duology-features | Video or audio must keep playing through fold and unfold; tabletop player, Picture in Picture. |
+| `duo-reading` | duology-features | Books and documents: two facing pages, the reader's place kept through a fold, notes beside the text. |
+| `duo-games` | duology-features | A game must fill every pose, with touch controls off the fold. |
+| `duo-swiftui-27` | duology-features | The app adopts iOS 27 SwiftUI: reordering, swipe actions on any view, the `@State` macro, toolbar minimizing. |
+| `duo-system-surfaces` | duology-features | Widgets, Live Activities, StandBy or Controls must look right on both displays. |
 | `duo-testing` | duology-ship | You write unit or UI tests that must hold up on the Duo simulator. |
 | `duo-pose-matrix` | duology-ship | You need screenshots of the app closed, open, in book pose and in tabletop. |
 | `duo-lint` | duology-ship | You need to find code Apple warns against before it ships. |
 | `recipe-two-player-game` | duology-recipes | You build a two-player game on one phone from scratch. |
+| `recipe-finance-dashboard` | duology-recipes | You start a personal finance or dashboard app. |
+| `recipe-media-player` | duology-recipes | You start a video or podcast player. |
+| `recipe-reader` | duology-recipes | You start an e-book or document reader. |
+| `recipe-shop` | duology-recipes | You start a shop with in-app purchases. |
 
 Commands: `/duo-doctor` (check the setup), `/duo-new <recipe>` (new app from a recipe), `/duo-audit` (lint plus checklist, most serious first), `/duo-poses` (screenshot every pose), `/duo-review` (design review of screenshots by the `duo-design-reviewer` agent).
 
 If a skill isn't installed, tell the user the plugin to add, for example `/plugin install duology-design@duology`. On other agents: `npx skills add Kimeur/duology --skill <name>`.
 
-**Coming.** Say "coming" and use the Apple source listed in [references/routing.md](references/routing.md) until then:
-
-- Out in v0.3 so far: `duo-camera` (plugin `duology-features`), `duo-media`, `duo-intelligence`, `duo-app-intents`, `duo-swiftui-27`, `duo-system-surfaces`, `duo-reading`, `duo-games`.
-- v0.3: plus four recipes.
-- v1.0: `duo-performance`, `duo-app-store`, `duo-migrate`, `/duo-ship`, and the last three recipes.
+**Coming.** Say "coming" and use the Apple source listed in [references/routing.md](references/routing.md) until then: `duo-performance`, `duo-app-store`, `duo-migrate`, `/duo-ship` and the last three recipes, all planned for v1.0.
 
 ## Step 3: The five-minute first pass (existing app)
 
@@ -207,7 +215,7 @@ Apple says the skill finds most issues, not all. Run `duo-lint` after it to catc
 ## New app
 
 1. Run `/duo-doctor`, or load `duo-setup`, so Xcode 27.1 and the Duo simulator are ready.
-2. A two-player game: run `/duo-new recipe-two-player-game`. Ready recipes: `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop`; run `/duo-new <recipe>`.
+2. A two-player game, a finance dashboard, a media player, a reader or a shop: run `/duo-new <recipe>` with `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader` or `recipe-shop`.
 3. Anything else: ask the user to create a SwiftUI app in Xcode 27.1 (File > New > Project > iOS App). Then load `duo-patterns` to pick a layout, `duo-layout` and `duo-navigation` to build it, `duo-continuity` to keep state, and `duo-testing` to test it.
 4. Ask the user which deployment target they want. iOS 27.1 removes every availability check but drops older iPhones. A lower target keeps them and needs the gate from Step 1. From April 2027 the App Store floor is iOS 15 ([Submitting](https://developer.apple.com/app-store/submitting/)).
 

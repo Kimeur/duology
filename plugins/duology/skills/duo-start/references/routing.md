@@ -1,6 +1,6 @@
 # Routing map
 
-Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 (released 19 October 2026) added seven skills, two commands and a review agent. The rest of the 36 are "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
+Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 (released 19 October 2026) added seven skills, two commands and a review agent. v0.3 adds eight iOS 27 feature skills in a fifth plugin, `duology-features`, and four recipes; they are on `main` and ship with the v0.3 release. The other six of the 36 are "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
 
 ## v0.1 skills
 
@@ -30,6 +30,23 @@ Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugin
 | `duo-accessibility` | `duology-design` | VoiceOver order across panes and after a fold, Dynamic Type on the outer display, Reduce Motion, Increase Contrast, hardware keyboard, Switch Control and Voice Control, accessibility audits. | Visual design review (`duo-design-review`). |
 | `duo-pose-matrix` | `duology-ship` | Screenshots of an installed app closed, open, in book pose and in tabletop, by pressing Device Hub's pose buttons (with the user's Accessibility permission), or poses set by hand. Run it with `/duo-poses`. | Split View (a drag in Device Hub), tent and flipped (Device Hub can't set them). |
 
+## v0.3 skills
+
+| Skill | Plugin | Load it when | Not for |
+|---|---|---|---|
+| `duo-intelligence` | `duology-features` | Foundation Models on both displays: an AI pane beside the content when open, a short summary when closed, streaming that survives a fold, availability and fallbacks, Private Cloud Compute. | Siri and Shortcuts (`duo-app-intents`). |
+| `duo-app-intents` | `duology-features` | Intents and entities that act on the right pane, opening a pane or window from Siri, Shortcuts or the Action button, intents that work on the closed phone, AppIntentsTesting. | The AI pane itself (`duo-intelligence`). |
+| `duo-camera` | `duology-features` | The virtual front camera, choosing a camera by the way it faces, rotation and mirroring through a fold, a preview on the outer display, hands-free capture in tabletop. | Registering the scene accessory alone (`duo-scenes`). |
+| `duo-media` | `duology-features` | A player that keeps playing through fold and unfold, video above the fold and controls below in tabletop, Picture in Picture, "up next", Now Playing, the iOS 27 audio session notifications. | Layout of a tabletop screen without media (`duo-postures`). |
+| `duo-reading` | `duology-features` | Books and documents: two facing pages open and in book pose, one page closed, the reader's place kept through a fold, notes beside the text, Dynamic Type reflow, PDFs. | A new reader app from scratch (`recipe-reader`). |
+| `duo-games` | `duology-features` | Games that fill every pose, touch controls off the fold, the bottom half as a controller in tabletop, SpriteKit and Metal views that resize without restarting, game controllers. | Two players on one screen (`duo-shared-screen`). |
+| `duo-swiftui-27` | `duology-features` | The iOS 27 SwiftUI changes on both displays: reordering, swipe actions on any view, the `@State` macro and its source breaks (TN3211), prominent tabs, toolbar minimizing, `AsyncImage` requests. | Vertical bars and overflow (`duo-navigation`). |
+| `duo-system-surfaces` | `duology-features` | Widgets, Live Activities and the vertical Dynamic Island, StandBy and Controls on both displays, and what Apple has and hasn't published about them. | The app's own screens. |
+| `recipe-finance-dashboard` | `duology-recipes` | A new personal finance dashboard. Run it with `/duo-new recipe-finance-dashboard`. | Existing apps. |
+| `recipe-media-player` | `duology-recipes` | A new video podcast player. Run it with `/duo-new recipe-media-player`. | Existing apps (`duo-media`). |
+| `recipe-reader` | `duology-recipes` | A new e-book reader. Run it with `/duo-new recipe-reader`. | Existing apps (`duo-reading`). |
+| `recipe-shop` | `duology-recipes` | A new shop for digital packs with StoreKit purchases and a subscription. Run it with `/duo-new recipe-shop`. | Existing apps. |
+
 Install a missing plugin with `/plugin install <plugin>@duology`. On other agents, `npx skills add Kimeur/duology --skill <name>` adds one skill.
 
 ## Commands and agent
@@ -37,7 +54,7 @@ Install a missing plugin with `/plugin install <plugin>@duology`. On other agent
 | Command | Use it for |
 |---|---|
 | `/duo-doctor` | Check Xcode 27.1, the Duo simulator and Xcode's agent connection. Run it first when anything in the build step fails. |
-| `/duo-new <recipe>` | Create a new app from a recipe and run it on the Duo simulator. Only `recipe-two-player-game` exists in v0.1. |
+| `/duo-new <recipe>` | Create a new app from a recipe and run it on the Duo simulator. Recipes: `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop`. |
 | `/duo-audit` | Run `duo-lint` and the checklist and list what to fix, most serious first. Use it after the first pass. |
 | `/duo-poses <bundle-id>` | Screenshot the installed app closed, open, in book pose and in tabletop with `duo-pose-matrix`, and put the simulator back. (v0.2) |
 | `/duo-review [folder]` | Hand screenshots or Figma exports (default: the newest `/duo-poses` run) to the `duo-design-reviewer` agent for a design critique, most serious first. It reads only. (v0.2) |
@@ -67,6 +84,14 @@ The `duo-design-reviewer` agent (`duology-design`, v0.2) applies the 15-point `d
 | "Show me every pose" | `duo-pose-matrix` (`/duo-poses`), then `/duo-review` |
 | "Review these designs for Duo" | `duo-design-review`, or `/duo-review` for the agent |
 | UI tests pass on iPhone and fail on the Duo simulator | `duo-testing` |
+| An AI summary or chat should sit beside the content when open | `duo-intelligence` |
+| Siri or a shortcut opens the app but not the right pane or window | `duo-app-intents` |
+| The front camera switches, mirrors or rotates wrongly after a fold | `duo-camera` |
+| Video restarts after a fold, or Picture in Picture and Now Playing misbehave | `duo-media`, then `duo-continuity` |
+| A book or document should show two facing pages and keep its place | `duo-reading` |
+| A game letterboxes, or its touch controls sit on the fold | `duo-games` |
+| Reordering, swipe actions or the new toolbar modifiers act oddly after a fold | `duo-swiftui-27` |
+| A widget, Live Activity or control looks wrong on one display | `duo-system-surfaces` |
 | `UIScreen.main`, `userInterfaceIdiom`, orientation checks in the code | `duo-lint` to list them with the fix for each rule; Apple's App Resizability skill for the generic fixes |
 | The agent can't reach Xcode, or the wrong Xcode builds | `duo-setup` |
 
@@ -76,23 +101,11 @@ Say "coming" when one of these fits, and work from the Apple source in the last 
 
 | Skill | Release | Covers | Until then |
 |---|---|---|---|
-| `duo-intelligence` | v0.3 (out) | Foundation Models: a pane when open, a summary when closed | Load `duo-intelligence` (plugin `duology-features`) |
-| `duo-app-intents` | v0.3 (out) | Siri, app actions, onscreen awareness | Load `duo-app-intents` (plugin `duology-features`) |
-| `recipe-media-player` | v0.3 (out) | App recipe | Run `/duo-new recipe-media-player` |
-| `recipe-reader` | v0.3 (out) | App recipe | Run `/duo-new recipe-reader` |
-| `recipe-finance-dashboard` | v0.3 (out) | App recipe | Run `/duo-new recipe-finance-dashboard` |
-| `recipe-shop` | v0.3 (out) | App recipe | Run `/duo-new recipe-shop` |
-| `duo-camera` | v0.3 (out) | Each camera by the way it faces, the virtual front camera | Load `duo-camera` (plugin `duology-features`) |
-| `duo-media` | v0.3 (out) | Video and audio, Picture in Picture, "up next" | Load `duo-media` (plugin `duology-features`) |
-| `duo-reading` | v0.3 (out) | Books and documents, two pages | Load `duo-reading` (plugin `duology-features`) |
-| `duo-games` | v0.3 (out) | Fill the screen in every pose, touch controls off the fold | Load `duo-games` (plugin `duology-features`) |
-| `duo-swiftui-27` | v0.3 (out) | iOS 27 SwiftUI changes that matter on Duo | Load `duo-swiftui-27` (plugin `duology-features`) |
-| `duo-system-surfaces` | v0.3 (out) | Widgets, Live Activities, StandBy, Controls | Load `duo-system-surfaces` (plugin `duology-features`) |
 | `duo-performance` | v1.0 | Smooth resizing at 120 Hz | Test on a device: the simulator reports a 60 fps maximum (*measured*, see [device facts](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md)) |
 | `duo-app-store` | v1.0 | Duo screenshots, metadata, review notes | [Screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications), [news of 5 Oct 2026](https://developer.apple.com/news/?id=kkphp5qo) |
 | `duo-migrate` | v1.0 | Moving an existing app across SDKs | [detect.md](detect.md), the [prepare page](https://developer.apple.com/iphone-duo/prepare/) |
 | `/duo-ship`, `duo-pose-tester` | v1.0 | App Store checklist; pose check agent | The `duo-app-store` sources above; [first-pass.md](first-pass.md) for poses |
-| `recipe-notes-ai`, `recipe-camera-studio`, `recipe-kids-learning` | v1.0 | App recipes | `duo-patterns`, `duo-camera` sources |
+| `recipe-notes-ai`, `recipe-camera-studio`, `recipe-kids-learning` | v1.0 | App recipes | Start from the closest ready recipe, then load `duo-patterns`, plus `duo-intelligence` for notes with AI or `duo-camera` for a camera studio |
 
 ## Apple's skills in Xcode 27.1
 

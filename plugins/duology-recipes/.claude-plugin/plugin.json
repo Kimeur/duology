@@ -17,6 +17,10 @@
     "templates",
     "recipes",
     "games",
+    "finance",
+    "media-player",
+    "reader",
+    "shop",
     "xcode"
   ],
   "dependencies": [

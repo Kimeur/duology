@@ -147,7 +147,7 @@ The script passes `-parallel-testing-enabled NO` (otherwise `xcodebuild` may clo
 Tools/run-ui-tests.sh -only-testing:DuelTapUITests/DuelTapUITests/testBothHalvesShowInThisPose
 ```
 
-It checks the split follows the window's long side, the two play fields match, and the target's frame is the circle. It saves a screenshot to the result bundle.
+It checks the split follows the window's long side, the two play fields match, and the target's frame is the circle. It saves a screenshot of each display to the result bundle; the display not in use is black.
 
 ## Checklist
 

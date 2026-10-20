@@ -2,7 +2,7 @@
 
 Does Duology make Claude Code better at iPhone Duo work? These evals answer that with a with/without comparison. Each task runs twice, once with the Duology plugins loaded and once without them. Both runs get the same starting project, the same prompt and the same permissions. Then both results are scored the same way.
 
-- **Tasks:** 29 tasks for 18 skills: one to three for each of the 11 v0.1 skills, and one or two for each v0.2 skill. 28 are `status: ready`; `duo-pose-matrix/every-pose-screenshots` is `planned` until the eval account can run the pose tools (see [Known limits](#known-limits)). They include the four tasks in the main README's [Proof table](../README.md#proof-not-promises). One of those, the tabletop video call, is filed under `duo-postures`. Each task is one file in [`tasks/`](tasks).
+- **Tasks:** 41 tasks for 30 skills: one to three for each of the 11 v0.1 skills, one or two for each v0.2 skill, and one for each v0.3 skill and recipe. 40 are `status: ready`; `duo-pose-matrix/every-pose-screenshots` is `planned` until the eval account can run the pose tools (see [Known limits](#known-limits)). They include the four tasks in the main README's [Proof table](../README.md#proof-not-promises). One of those, the tabletop video call, is filed under `duo-postures`. Each task is one file in [`tasks/`](tasks).
 - **Fixtures:** small Xcode projects with typical pre-Duo mistakes, in [`fixtures/`](fixtures). Each one builds for the iPhone Duo simulator.
 - **Scoring:** [`rubric.md`](rubric.md). Build, duo-lint, task checks, and the 15-point checklist from `duo-design-review`.
 - **Runner:** [`run.sh`](run.sh). It runs Claude Code headless (`claude -p`) in a fresh throwaway copy of the fixture, with an empty environment and a short list of allowed commands. It collects everything, scores it and writes a summary.
@@ -32,7 +32,7 @@ For each task, each *arm* (`with`, `without`) and each trial:
      --max-budget-usd 5 --append-system-prompt "<preamble>" < prompt.txt
    ```
 
-   The `with` arm adds two things: `--plugin-dir <trial>/plugins`, which loads all four Duology plugins for that session, and allow rules for the plugins' own scripts (duo-lint, the recipe's `new-project.sh`, `duo-doctor`), each by its exact path in that copy, plus the bare `duo-doctor` and `duo-lint` commands that the plugins put on PATH. Every trial's exact command is in its `command.txt`, with the sign-in value redacted.
+   The `with` arm adds two things: `--plugin-dir <trial>/plugins`, which loads all five Duology plugins for that session, and allow rules for the plugins' own scripts (duo-lint, the recipe's `new-project.sh`, `duo-doctor`), each by its exact path in that copy, plus the bare `duo-doctor` and `duo-lint` commands that the plugins put on PATH. Every trial's exact command is in its `command.txt`, with the sign-in value redacted.
 4. **Preamble.** Both arms get the same short system-prompt addition. It says to run headless without asking questions, that `DEVELOPER_DIR` already points at Xcode 27.1, which simulator UDID to build for (and to reuse it, not create or clone another), and which shell commands are allowed. Tasks marked `preamble: minimal` (the Mac check) leave out the Xcode facts, because finding them is the task.
 5. **Score.** Build, duo-lint and the task's checks run on the work folder, under `env -i` with a fresh scoring `HOME`. A checklist template is written for the human review.
 

@@ -126,7 +126,7 @@ Debug builds only (`#if DEBUG`). The last copy of a switch wins, so a test can o
 | `testTimeLimitCanEndInATie` | The clock shows; time up with equal hits is a tie. |
 | `testTurnedHalfStillScores` | Face to face: each score bar sits at its player's edge, away from the seam; hits and misses count in both halves. Pose-agnostic, so it covers stacked and side by side. |
 | `testLeavingAsksFirst` | Leave asks, then goes home. |
-| `testBothHalvesShowInThisPose` | Split along the long side, equal fields, target frame is the circle; saves a screenshot. |
+| `testBothHalvesShowInThisPose` | Split along the long side, equal fields, target frame is the circle; saves a screenshot of each display from `XCUIScreen.screens`. |
 
 Duo simulator notes:
 

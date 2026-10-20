@@ -37,22 +37,22 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 | `duo-accessibility` | [`plugins/duology-design/skills/duo-accessibility/`](plugins/duology-design/skills/duo-accessibility/) | VoiceOver, Dynamic Type, Reduce Motion, keyboard and contrast on both displays. |
 | `duo-shared-screen` | [`plugins/duology-design/skills/duo-shared-screen/`](plugins/duology-design/skills/duo-shared-screen/) | Two people use the phone at the same time. |
 | `duo-design-review` | [`plugins/duology-design/skills/duo-design-review/`](plugins/duology-design/skills/duo-design-review/) | Reviewing screenshots or Figma frames. |
+| `duo-intelligence` | [`plugins/duology-features/skills/duo-intelligence/`](plugins/duology-features/skills/duo-intelligence/) | The app uses Foundation Models: an AI pane when open, a short summary when closed. |
+| `duo-app-intents` | [`plugins/duology-features/skills/duo-app-intents/`](plugins/duology-features/skills/duo-app-intents/) | The app exposes actions to Siri, Shortcuts or the Action button, and they must open the right pane or window. |
+| `duo-camera` | [`plugins/duology-features/skills/duo-camera/`](plugins/duology-features/skills/duo-camera/) | The app takes photos or video, runs a video call or shows a camera preview, on either display or in tabletop. |
+| `duo-media` | [`plugins/duology-features/skills/duo-media/`](plugins/duology-features/skills/duo-media/) | The app plays video or audio and playback must survive fold and unfold, with a tabletop player and Picture in Picture. |
+| `duo-reading` | [`plugins/duology-features/skills/duo-reading/`](plugins/duology-features/skills/duo-reading/) | The app shows books, articles or documents and should read like a book when open, keeping the reader's place through a fold. |
+| `duo-games` | [`plugins/duology-features/skills/duo-games/`](plugins/duology-features/skills/duo-games/) | The project is a game (SpriteKit, Metal, or a native shell around an engine) and must fill every pose with touch controls off the fold. |
+| `duo-swiftui-27` | [`plugins/duology-features/skills/duo-swiftui-27/`](plugins/duology-features/skills/duo-swiftui-27/) | The app adopts the iOS 27 SwiftUI changes (reordering, swipe actions, the `@State` macro, new toolbar and tab APIs) and needs them to work on both displays. |
+| `duo-system-surfaces` | [`plugins/duology-features/skills/duo-system-surfaces/`](plugins/duology-features/skills/duo-system-surfaces/) | The app has widgets, Live Activities, StandBy or Control Center controls that must look right on both displays. |
 | `duo-testing` | [`plugins/duology-ship/skills/duo-testing/`](plugins/duology-ship/skills/duo-testing/) | Writing logic tests or UI tests for the Duo simulator. |
 | `duo-pose-matrix` | [`plugins/duology-ship/skills/duo-pose-matrix/`](plugins/duology-ship/skills/duo-pose-matrix/) | Screenshots of the app closed, open, in book pose and in tabletop. |
 | `duo-lint` | [`plugins/duology-ship/skills/duo-lint/`](plugins/duology-ship/skills/duo-lint/) | Checking code before review, release or CI. |
 | `recipe-two-player-game` | [`plugins/duology-recipes/skills/recipe-two-player-game/`](plugins/duology-recipes/skills/recipe-two-player-game/) | Starting a new two-player game. |
-| `recipe-media-player` | [`plugins/duology-recipes/skills/recipe-media-player/`](plugins/duology-recipes/skills/recipe-media-player/) | Start a new video or podcast player app for iPhone Duo with /duo-new recipe-media-player. |
-| `recipe-reader` | [`plugins/duology-recipes/skills/recipe-reader/`](plugins/duology-recipes/skills/recipe-reader/) | Start a new e-book or document reader app for iPhone Duo with /duo-new recipe-reader. |
-| `recipe-finance-dashboard` | [`plugins/duology-recipes/skills/recipe-finance-dashboard/`](plugins/duology-recipes/skills/recipe-finance-dashboard/) | Start a new personal finance or dashboard app for iPhone Duo with /duo-new recipe-finance-dashboard. |
-| `recipe-shop` | [`plugins/duology-recipes/skills/recipe-shop/`](plugins/duology-recipes/skills/recipe-shop/) | Start a new shop or in-app purchase app for iPhone Duo with /duo-new recipe-shop. |
-| `duo-camera` | [`plugins/duology-features/skills/duo-camera/`](plugins/duology-features/skills/duo-camera/) | The app takes photos or video, runs a video call or shows a camera preview, on either display or in tabletop. |
-| `duo-media` | [`plugins/duology-features/skills/duo-media/`](plugins/duology-features/skills/duo-media/) | The app plays video or audio and playback must survive fold and unfold, with a tabletop player and Picture in Picture. |
-| `duo-intelligence` | [`plugins/duology-features/skills/duo-intelligence/`](plugins/duology-features/skills/duo-intelligence/) | The app uses Foundation Models: an AI pane when open, a short summary when closed. |
-| `duo-app-intents` | [`plugins/duology-features/skills/duo-app-intents/`](plugins/duology-features/skills/duo-app-intents/) | The app exposes actions to Siri, Shortcuts or the Action button, and they must open the right pane or window. |
-| `duo-swiftui-27` | [`plugins/duology-features/skills/duo-swiftui-27/`](plugins/duology-features/skills/duo-swiftui-27/) | The app adopts the iOS 27 SwiftUI changes (reordering, swipe actions, the @State macro, new toolbar and tab APIs) and needs them to work on both displays. |
-| `duo-system-surfaces` | [`plugins/duology-features/skills/duo-system-surfaces/`](plugins/duology-features/skills/duo-system-surfaces/) | The app has widgets, Live Activities, StandBy or Control Center controls that must look right on both displays. |
-| `duo-reading` | [`plugins/duology-features/skills/duo-reading/`](plugins/duology-features/skills/duo-reading/) | The app shows books, articles or documents and should read like a book when open, keeping the reader's place through a fold. |
-| `duo-games` | [`plugins/duology-features/skills/duo-games/`](plugins/duology-features/skills/duo-games/) | The project is a game (SpriteKit, Metal, or a native shell around an engine) and must fill every pose with touch controls off the fold. |
+| `recipe-finance-dashboard` | [`plugins/duology-recipes/skills/recipe-finance-dashboard/`](plugins/duology-recipes/skills/recipe-finance-dashboard/) | Starting a new personal finance or dashboard app. |
+| `recipe-media-player` | [`plugins/duology-recipes/skills/recipe-media-player/`](plugins/duology-recipes/skills/recipe-media-player/) | Starting a new video or podcast player. |
+| `recipe-reader` | [`plugins/duology-recipes/skills/recipe-reader/`](plugins/duology-recipes/skills/recipe-reader/) | Starting a new e-book or document reader. |
+| `recipe-shop` | [`plugins/duology-recipes/skills/recipe-shop/`](plugins/duology-recipes/skills/recipe-shop/) | Starting a new shop with in-app purchases. |
 
 ### Commands, without Claude Code
 
@@ -62,7 +62,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 |---|---|
 | `/duo-doctor` | Run `plugins/duology/bin/duo-doctor --skip-claude`. It only reads, and it explains each failure. |
 | `/duo-audit` | Run `python3 plugins/duology-ship/skills/duo-lint/scripts/duo-lint.py <app-folder>`, then follow the checklist in `duo-design-review`. |
-| `/duo-new` | Follow `recipe-two-player-game/SKILL.md`. It runs `scripts/new-project.sh <AppName> <bundle-id> <folder>` from that skill. |
+| `/duo-new` | Follow the recipe's own `SKILL.md`, for example `recipe-shop/SKILL.md`. Each recipe runs `scripts/new-project.sh <AppName> <bundle-id> <folder>` from its skill folder. The five recipes are `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader` and `recipe-shop`. |
 | `/duo-poses` | Run `plugins/duology-ship/skills/duo-pose-matrix/scripts/duo-pose status`, then `duo-pose-matrix <bundle-id>` from the same folder. Read `duo-pose-matrix/SKILL.md` first: it changes the pose of the whole simulator and needs the user's Accessibility permission. |
 | `/duo-review` | Read the frames yourself and follow `duo-design-review/SKILL.md`, with the `duo-postures`, `duo-patterns`, `duo-ergonomics` and `duo-accessibility` rules. The `duo-design-reviewer` agent in `plugins/duology-design/agents/` describes the output. Don't edit files. |
 

@@ -2,7 +2,6 @@
 id: duo-postures/tabletop-video-call
 skill: duo-postures
 also: duo-layout, duo-patterns, duo-ergonomics
-depends: duo-media (v0.3); until it ships, the run with Duology has the v0.1 and v0.2 skills
 title: Tabletop layout for a video call
 readme: yes
 fixture: Talk
@@ -19,7 +18,7 @@ status: ready
 
 A README task. "Tabletop" is Duology's shorthand for what Apple describes as the phone seated on a table like a laptop: held tall, partly folded, with the fold running across the inner display. Apple has no posture API; layout comes from size classes, reserved regions and arrangement views, and the hinge is for effects ([api-index.md](../../../reference/api-index.md#hinge)).
 
-`duo-postures` shipped in v0.2. Its tabletop recipe and video call variant (`FoldRegionsLayout`, or an `ArrangementView` with the overlay style) are the fix this task looks for. `duo-media` (v0.3) will add more on players and calls; until it ships, the gap between the two runs may be smaller than it will be.
+`duo-postures` shipped in v0.2. Its tabletop recipe and video call variant (`FoldRegionsLayout`, or an `ArrangementView` with the overlay style) are the fix this task looks for. `duo-media` and `duo-camera` (v0.3) add more on players and video calls, and the run with Duology has them too.
 
 ## Prompt
 

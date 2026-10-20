@@ -27,7 +27,7 @@ Create a new iPhone Duo personal finance app in this folder. Closed, it shows th
 
 An empty folder (`fixture: empty`). With Duology, the `recipe-finance-dashboard` skill and `/duo-new` can create the project from a template. Without it, the agent has to write the Xcode project itself.
 
-The extra `tools:` let the agent run scripts under `Tools/` and compile Swift for the Mac. The run with Duology should also get the recipe's own `new-project.sh`, by its exact path in the plugin copy; that needs the script added to `PLUGIN_SCRIPTS` in [`lib/evalkit.py`](../../lib/evalkit.py).
+The extra `tools:` let the agent run scripts under `Tools/` and compile Swift for the Mac. The run with Duology also gets the recipe's own `new-project.sh`, by its exact path in the plugin copy (`PLUGIN_SCRIPTS` in [`lib/evalkit.py`](../../lib/evalkit.py)).
 
 ## Pass checks
 

@@ -29,6 +29,17 @@ Start with the duo-start skill: it detects the app's setup and says which skill 
 - [duo-shared-screen](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-design/skills/duo-shared-screen/SKILL.md): Two people using one phone at once: one half each, input per half, accessibility and UI tests.
 - [duo-design-review](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-design/skills/duo-design-review/SKILL.md): A 15-point review of screenshots and Figma frames, with severity, rule and fix for each finding.
 
+## iOS 27 feature skills (plugin: duology-features)
+
+- [duo-intelligence](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-features/skills/duo-intelligence/SKILL.md): Foundation Models on both displays: an AI pane beside the content when open, a short summary when closed, streaming that survives a fold, availability and fallbacks, Private Cloud Compute.
+- [duo-app-intents](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-features/skills/duo-app-intents/SKILL.md): App Intents that open the right pane or window from Siri, Shortcuts or the Action button, intents that work on the closed phone, testing with AppIntentsTesting.
+- [duo-camera](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-features/skills/duo-camera/SKILL.md): The virtual front camera, choosing each camera by the way it faces, rotation and mirroring through a fold, a preview on the outer display, tabletop capture.
+- [duo-media](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-features/skills/duo-media/SKILL.md): Playback that survives fold and unfold, the tabletop player, Picture in Picture, up next, Now Playing and the iOS 27 audio session notifications.
+- [duo-reading](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-features/skills/duo-reading/SKILL.md): Books and documents: two facing pages open and in book pose, one page closed, the reader's place kept through a fold, notes beside the text.
+- [duo-games](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-features/skills/duo-games/SKILL.md): Games that fill every pose, touch controls off the fold, the bottom half as a controller in tabletop, SpriteKit and Metal views that resize, game controllers.
+- [duo-swiftui-27](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-features/skills/duo-swiftui-27/SKILL.md): The iOS 27 SwiftUI changes on both displays: reordering, swipe actions on any view, the @State macro (TN3211), prominent tabs, toolbar minimizing.
+- [duo-system-surfaces](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-features/skills/duo-system-surfaces/SKILL.md): Widgets, Live Activities and the vertical Dynamic Island, StandBy and Controls on both displays.
+
 ## Test and ship skills (plugin: duology-ship)
 
 - [duo-lint](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/skills/duo-lint/SKILL.md): The fold linter. Finds main-screen sizing, orientation and idiom checks, hard-coded device sizes, fixed widths and UIRequiresFullScreen.
@@ -38,6 +49,10 @@ Start with the duo-start skill: it detects the app's setup and says which skill 
 ## Recipes (plugin: duology-recipes)
 
 - [recipe-two-player-game](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/skills/recipe-two-player-game/SKILL.md): Creates a two-player, one-phone SwiftUI game that builds and runs on the iPhone Duo simulator.
+- [recipe-finance-dashboard](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/skills/recipe-finance-dashboard/SKILL.md): Creates a personal finance dashboard: the balance and recent spending closed; the balance, a spending chart and the transactions side by side open.
+- [recipe-media-player](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/skills/recipe-media-player/SKILL.md): Creates a video podcast player whose playback survives every fold, with video above the fold and controls below in tabletop.
+- [recipe-reader](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/skills/recipe-reader/SKILL.md): Creates an e-book reader: one page closed, two facing pages open and in book pose, the reader's place kept through every fold.
+- [recipe-shop](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/skills/recipe-shop/SKILL.md): Creates a shop for digital packs with a basket, StoreKit 2 purchases and a subscription, tested with a local StoreKit configuration file.
 
 ## Commands and agent (Claude Code)
 
@@ -45,6 +60,8 @@ Start with the duo-start skill: it detects the app's setup and says which skill 
 - [/duo-review](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-design/commands/duo-review.md): Hands a folder of frames (default: the newest /duo-poses run) to the reviewer agent.
 - [/duo-poses](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/commands/duo-poses.md): Runs duo-pose-matrix on an installed app and puts the simulator back.
 - [/duo-audit](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/commands/duo-audit.md): duo-lint plus the design checklist, most serious first.
+- [/duo-new](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/commands/duo-new.md): Creates an app from a recipe, tests its rules on the Mac, builds it and runs it on the iPhone Duo simulator.
+- [/duo-doctor](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology/commands/duo-doctor.md): Checks the Mac: Xcode 27.1, the iOS 27.1 runtime, an iPhone Duo simulator, Xcode's agent bridge and Python.
 
 ## Reference
 

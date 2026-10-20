@@ -2,7 +2,7 @@
 
 Duology's rules and device facts come from the pages on this list. We link to these pages and explain them in our own words. We never copy their text.
 
-- **Checked:** 16 October 2026, and 19 October 2026 for the rows added with v0.2. On those days every URL below returned HTTP 200, unless the row says otherwise.
+- **Checked:** 16 October 2026, 19 October 2026 for the rows added with v0.2, and 20 October 2026 for the rows added with v0.3. On those days every URL below returned HTTP 200, unless the row says otherwise. Apple documentation and HIG pages were checked through their documentation JSON.
 - **IDs:** each source has an ID (A1, D2, V3...). [`device-facts.md`](device-facts.md) and the skills cite sources by ID.
 - **API pages:** for every Duo API and its doc link, see [`api-index.md`](api-index.md).
 
@@ -25,6 +25,7 @@ Duology's rules and device facts come from the pages on this list. We link to th
 | <a id="a10"></a>A10 | Software Releases | https://developer.apple.com/news/releases/ | Build numbers and dates: Xcode 27 (27A266a, 14 Sep), Xcode 27.1 beta (27A9269, 18 Sep), Xcode 27.1 (27A9275, 15 Oct), iOS 27.2 beta 4 (24B5110a, 13 Oct). | 16 Oct 2026 |
 | <a id="a11"></a>A11 | Xcode 27.1 Release Notes | https://developer.apple.com/documentation/xcode-release-notes/xcode-27_1-release-notes | SDKs included, macOS requirement, the Previews Display group, iPhone Duo simulator known issues (StandBy, extensions, camera accessory). | 16 Oct 2026 |
 | <a id="a12"></a>A12 | Xcode 27 Release Notes | https://developer.apple.com/documentation/xcode-release-notes/xcode-27-release-notes | Device Hub changes and known issues (for example, no two-finger touch), Apple-built agent specialists. | 16 Oct 2026 |
+| <a id="a13"></a>A13 | Apple Pencil | https://www.apple.com/apple-pencil/ | The model comparison. Apple Pencil (USB-C) has tilt and hover, and no pressure sensitivity, double tap, squeeze or barrel roll. Used by `duo-reading`. | 20 Oct 2026 |
 
 ## Apple: documentation and design guidance
 
@@ -67,6 +68,46 @@ Duology's rules and device facts come from the pages on this list. We link to th
 | <a id="d35"></a>D35 | Performing accessibility audits for your app | https://developer.apple.com/documentation/accessibility/performing-accessibility-audits-for-your-app | Audit types, the audit report, and audits inside UI tests. | 19 Oct 2026 |
 | <a id="d36"></a>D36 | Testing system accessibility features in your app | https://developer.apple.com/documentation/accessibility/testing-system-accessibility-features-in-your-app | Turning on Reduce Motion, Increase Contrast, Full Keyboard Access and Bold Text from Accessibility Inspector. | 19 Oct 2026 |
 | <a id="d37"></a>D37 | Switch Control | https://developer.apple.com/documentation/accessibility/switch-control | How Switch Control moves through an app and what it needs from it. | 19 Oct 2026 |
+| <a id="d38"></a>D38 | Foundation Models (framework) | https://developer.apple.com/documentation/foundationmodels | The on-device model, sessions, guided generation and tools; from iOS 27, Private Cloud Compute and image input. Used by `duo-intelligence`. | 20 Oct 2026 |
+| <a id="d39"></a>D39 | Generating content and performing tasks with Foundation Models | https://developer.apple.com/documentation/foundationmodels/generating-content-and-performing-tasks-with-foundation-models | Prompting the on-device model, and checking that it is available first. | 20 Oct 2026 |
+| <a id="d40"></a>D40 | Generating Swift data structures with guided generation | https://developer.apple.com/documentation/foundationmodels/generating-swift-data-structures-with-guided-generation | `@Generable` and `@Guide`: asking for typed output instead of text. | 20 Oct 2026 |
+| <a id="d41"></a>D41 | Expanding generation with tool calling | https://developer.apple.com/documentation/foundationmodels/expanding-generation-with-tool-calling | Tools the model can call to reach the app's own data. | 20 Oct 2026 |
+| <a id="d42"></a>D42 | Improving the safety of generative model output | https://developer.apple.com/documentation/foundationmodels/improving-the-safety-of-generative-model-output | Guardrails and handling sensitive input. | 20 Oct 2026 |
+| <a id="d43"></a>D43 | Managing the context window | https://developer.apple.com/documentation/foundationmodels/managing-the-context-window | Token budgets, the context size and counting tokens. | 20 Oct 2026 |
+| <a id="d44"></a>D44 | Analyzing images with multimodal prompting | https://developer.apple.com/documentation/foundationmodels/analyzing-images-with-multimodal-prompting | Image attachments in a prompt (iOS 27). | 20 Oct 2026 |
+| <a id="d45"></a>D45 | Adding server-side intelligence with Private Cloud Compute | https://developer.apple.com/documentation/foundationmodels/adding-server-side-intelligence-with-private-cloud-compute | The Private Cloud Compute model, its entitlement, the daily quota, and the scheme option that simulates availability and quota. Its option labels differ from WWDC26 session 319; `duo-intelligence` quotes this guide. | 20 Oct 2026 |
+| <a id="d46"></a>D46 | Private Cloud Compute entitlement | https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.private-cloud-compute | The Boolean entitlement an app needs to use Private Cloud Compute. | 20 Oct 2026 |
+| <a id="d47"></a>D47 | Private Cloud Compute (developer page) | https://developer.apple.com/private-cloud-compute/ | Apple's overview of Private Cloud Compute for developers. | 20 Oct 2026 |
+| <a id="d48"></a>D48 | HIG: Generative AI | https://developer.apple.com/design/human-interface-guidelines/generative-ai | Designing features that use generative models. | 20 Oct 2026 |
+| <a id="d49"></a>D49 | App Intents (framework) | https://developer.apple.com/documentation/appintents | Intents, entities and queries for Siri, Shortcuts, Spotlight and widgets. Used by `duo-app-intents`. | 20 Oct 2026 |
+| <a id="d50"></a>D50 | Directing app intents to your app's scenes | https://developer.apple.com/documentation/appintents/directing-app-intents-to-your-apps-scenes | Routing an intent to a SwiftUI or UIKit scene with `TargetContentProvidingIntent`, `onAppIntentExecution(_:perform:)` and `UISceneAppIntent`. | 20 Oct 2026 |
+| <a id="d51"></a>D51 | Configuring the runtime behavior of your app intents | https://developer.apple.com/documentation/appintents/configuring-the-runtime-behavior-of-your-app-intents | Running an intent in the foreground, in the background or in an extension (`supportedModes`, `allowedExecutionTargets`). | 20 Oct 2026 |
+| <a id="d52"></a>D52 | Providing contextual cues to Apple Intelligence and Siri | https://developer.apple.com/documentation/appintents/providing-contextual-cues-to-apple-intelligence-and-siri | Annotating views with app entities so Siri knows what is on screen. | 20 Oct 2026 |
+| <a id="d53"></a>D53 | Testing your App Intents code | https://developer.apple.com/documentation/appintentstesting/testing-your-app-intents-code | AppIntentsTesting: running intents and reading view annotations from tests (iOS 27). | 20 Oct 2026 |
+| <a id="d54"></a>D54 | HIG: App Shortcuts | https://developer.apple.com/design/human-interface-guidelines/app-shortcuts | Phrases, titles and symbols for App Shortcuts. | 20 Oct 2026 |
+| <a id="d55"></a>D55 | Updating views automatically with observation tracking in UIKit | https://developer.apple.com/documentation/uikit/updating-views-automatically-with-observation-tracking-in-uikit | `updateProperties()` and observation tracking in UIKit. | 20 Oct 2026 |
+| <a id="d56"></a>D56 | TN3211: Resolving SwiftUI source incompatibilities for State and ContentBuilder | https://developer.apple.com/documentation/technotes/tn3211-resolving-swiftui-source-incompatibilities-for-state-and-contentbuilder | The `@State` macro and `ContentBuilder` changes in Xcode 27, and the build errors they cause. Used by `duo-swiftui-27`. | 20 Oct 2026 |
+| <a id="d57"></a>D57 | Displaying live data with Live Activities | https://developer.apple.com/documentation/activitykit/displaying-live-data-with-live-activities | Starting, updating and ending a Live Activity, and its Dynamic Island and Lock Screen views. Used by `duo-system-surfaces`. | 20 Oct 2026 |
+| <a id="d58"></a>D58 | HIG: Live Activities | https://developer.apple.com/design/human-interface-guidelines/live-activities | Live Activity layouts. Guidance for limited-width layouts was added on 13 Oct 2026. | 20 Oct 2026 |
+| <a id="d59"></a>D59 | HIG: Widgets | https://developer.apple.com/design/human-interface-guidelines/widgets | Widget sizes, content and backgrounds. | 20 Oct 2026 |
+| <a id="d60"></a>D60 | HIG: Controls | https://developer.apple.com/design/human-interface-guidelines/controls | Controls in Control Center, on the Lock Screen and on the Action button. | 20 Oct 2026 |
+| <a id="d61"></a>D61 | WidgetKit updates and ActivityKit updates | https://developer.apple.com/documentation/updates/widgetkit and https://developer.apple.com/documentation/updates/activitykit | Apple's change logs. Their latest entries are from June 2025: nothing for iOS 27 or iPhone Duo yet. | 20 Oct 2026 |
+| <a id="d62"></a>D62 | HIG: Designing for games | https://developer.apple.com/design/human-interface-guidelines/designing-for-games | Minimum text and button sizes, and alternatives to game controllers. Used by `duo-games`. | 20 Oct 2026 |
+| <a id="d63"></a>D63 | HIG: Game controls | https://developer.apple.com/design/human-interface-guidelines/game-controls | Touch controls and physical controllers. | 20 Oct 2026 |
+| <a id="d64"></a>D64 | HIG: Playing haptics | https://developer.apple.com/design/human-interface-guidelines/playing-haptics | When haptics help and when they get in the way. | 20 Oct 2026 |
+| <a id="d65"></a>D65 | Touch Controller (framework) | https://developer.apple.com/documentation/touchcontroller | On-screen touch controls for Metal games (iOS 26). | 20 Oct 2026 |
+| <a id="d66"></a>D66 | Configuring your app for media playback | https://developer.apple.com/documentation/avfoundation/configuring-your-app-for-media-playback | The `.playback` audio category, and the background mode that also enables AirPlay and Picture in Picture. Used by `duo-media` and `recipe-media-player`. | 20 Oct 2026 |
+| <a id="d67"></a>D67 | Adopting Picture in Picture in a standard player | https://developer.apple.com/documentation/avkit/adopting-picture-in-picture-in-a-standard-player | Picture in Picture with `AVPlayerViewController`. | 20 Oct 2026 |
+| <a id="d68"></a>D68 | Adopting Picture in Picture in a custom player | https://developer.apple.com/documentation/avkit/adopting-picture-in-picture-in-a-custom-player | Picture in Picture with `AVPictureInPictureController` and your own controls. | 20 Oct 2026 |
+| <a id="d69"></a>D69 | Accessing the camera while multitasking on iPad | https://developer.apple.com/documentation/avkit/accessing-the-camera-while-multitasking-on-ipad | Using the camera in Split View and the other multitasking modes. `duo-camera` applies it to iPhone Duo. | 20 Oct 2026 |
+| <a id="d70"></a>D70 | Handling audio interruptions | https://developer.apple.com/documentation/avfaudio/handling-audio-interruptions | Observing audio session notifications so playback reacts to interruptions. | 20 Oct 2026 |
+| <a id="d71"></a>D71 | Responding to audio route changes | https://developer.apple.com/documentation/avfaudio/responding-to-audio-route-changes | Reacting when headphones or other outputs come and go. | 20 Oct 2026 |
+| <a id="d72"></a>D72 | HIG: Playing video | https://developer.apple.com/design/human-interface-guidelines/playing-video | Video playback, full screen and Picture in Picture. | 20 Oct 2026 |
+| <a id="d73"></a>D73 | HIG: Playing audio | https://developer.apple.com/design/human-interface-guidelines/playing-audio | Audio that adapts when the context changes, and Now Playing. | 20 Oct 2026 |
+| <a id="d74"></a>D74 | Setting up StoreKit Testing in Xcode | https://developer.apple.com/documentation/xcode/setting-up-storekit-testing-in-xcode | A local StoreKit configuration file and the scheme option that uses it. Used by `recipe-shop`. | 20 Oct 2026 |
+| <a id="d75"></a>D75 | Testing in-app purchases with StoreKit transaction manager in Xcode | https://developer.apple.com/documentation/xcode/testing-in-app-purchases-with-storekit-transaction-manager-in-code | The transaction manager (Debug > StoreKit > Manage Transactions). | 20 Oct 2026 |
+| <a id="d76"></a>D76 | StoreKit (framework) | https://developer.apple.com/documentation/storekit | Products, purchases, transactions and subscriptions (StoreKit 2). | 20 Oct 2026 |
+| <a id="d77"></a>D77 | Swift Charts (framework) | https://developer.apple.com/documentation/charts | Marks, scales, axes and legends. Used by `recipe-finance-dashboard`. | 20 Oct 2026 |
 
 ## Apple: videos
 
@@ -91,6 +132,14 @@ Duology's rules and device facts come from the pages on this list. We link to th
 | <a id="v17"></a>V17 | Animate with springs (WWDC23 session 10158) | https://developer.apple.com/videos/play/wwdc2023/10158/ | Springs keep their velocity when a new change retargets them. | 19 Oct 2026 |
 | <a id="v18"></a>V18 | Demystify SwiftUI (WWDC21 session 10022) | https://developer.apple.com/videos/play/wwdc2021/10022/ | View identity and lifetime: why a changed identity resets state. | 19 Oct 2026 |
 | <a id="v19"></a>V19 | Optimize for variable refresh rate displays (WWDC21 session 10147) | https://developer.apple.com/videos/play/wwdc2021/10147/ | ProMotion frame pacing and choosing a frame rate range. | 19 Oct 2026 |
+| <a id="v20"></a>V20 | What's new in the Foundation Models framework (WWDC26 session 241) | https://developer.apple.com/videos/play/wwdc2026/241/ | Third-party models, Keychain and OAuth tokens, and what an image costs in tokens. | 20 Oct 2026 |
+| <a id="v21"></a>V21 | Build with the new Apple Foundation Model on Private Cloud Compute (WWDC26 session 319) | https://developer.apple.com/videos/play/wwdc2026/319/ | Privacy, no token cost to the developer, a daily limit per person (higher with iCloud+), and apps with fewer than 2 million downloads. | 20 Oct 2026 |
+| <a id="v22"></a>V22 | Validate your App Intents adoption with AppIntentsTesting (WWDC26 session 295) | https://developer.apple.com/videos/play/wwdc2026/295/ | Testing intents, entities and view annotations. | 20 Oct 2026 |
+| <a id="v23"></a>V23 | Explore advanced App Intents features for Siri and Apple Intelligence (WWDC26 session 343) | https://developer.apple.com/videos/play/wwdc2026/343/ | Full and supporting dialog, indexed entities, onscreen awareness, and annotating collections versus rows. | 20 Oct 2026 |
+| <a id="v24"></a>V24 | Discover new capabilities in the App Intents framework (WWDC26 session 345) | https://developer.apple.com/videos/play/wwdc2026/345/ | Long-running intents shown as a Live Activity with a stop button, and cancellable intents. | 20 Oct 2026 |
+| <a id="v25"></a>V25 | Code-along: Build powerful drag and drop in SwiftUI (WWDC26 session 271) | https://developer.apple.com/videos/play/wwdc2026/271/ | Reordering with `reorderable()` and `reorderContainer`. Used by `duo-swiftui-27`. | 20 Oct 2026 |
+| <a id="v26"></a>V26 | Live Activities essentials (WWDC26 session 223) | https://developer.apple.com/videos/play/wwdc2026/223/ | Building and updating Live Activities. | 20 Oct 2026 |
+| <a id="v27"></a>V27 | WidgetKit foundations (WWDC26 session 277) | https://developer.apple.com/videos/play/wwdc2026/277/ | Widget families, timelines and backgrounds. | 20 Oct 2026 |
 
 ## Apple: App Store
 
@@ -100,6 +149,7 @@ Duology's rules and device facts come from the pages on this list. We link to th
 | <a id="s2"></a>S2 | App preview specifications | https://developer.apple.com/help/app-store-connect/reference/app-information/app-preview-specifications | Duo preview resolutions. Its "19.5:9" label for Duo doesn't match its own pixel numbers. | 16 Oct 2026 |
 | <a id="s3"></a>S3 | App Store asset best practices and resources | https://developer.apple.com/app-store/asset-best-practices/ | Templates and guidance for screenshots, previews and the new product page assets. | 16 Oct 2026 |
 | <a id="s4"></a>S4 | Submitting | https://developer.apple.com/app-store/submitting/ | From April 2027: iOS 27 SDK or later and a deployment target of iOS 15 or later. | 16 Oct 2026 |
+| <a id="s5"></a>S5 | App Review Guidelines | https://developer.apple.com/app-store/review/guidelines/ | In-app purchase (3.1.1), what to tell people before they subscribe (3.1.2(c)) and goods or services used outside the app (3.1.3(e)). Used by `recipe-shop`. | 20 Oct 2026 |
 
 ## Apple: support pages
 
@@ -130,6 +180,16 @@ These are not web pages. They are local checks we ran with Xcode 27.1 (27A9275),
 | Xcode's agent skills export | `xcrun agent skills export -h` | Takes `--output-dir <path>` and `--replace-existing` |
 | Device Hub's pose buttons | The macOS Accessibility API from a small tool (`duo-pose-matrix`), with the user's Accessibility permission; notes in `duo-pose-matrix` references/how-it-works.md | `Closed`, `Partially Open`, `Open` and `Rotate Right` can be pressed; `simctl` and `devicectl` have no pose command |
 | Probe apps for the v0.2 skills | Small SwiftUI and UIKit apps on the shared iPhone Duo simulator, 17 to 19 Oct 2026; the code and logs are in each skill's evidence or measurement file (for example `duo-scenes` references/evidence.md, `duo-postures` references/measurements.md) | Window sizes per pose, scene and focus behaviour through fold and unfold. Each skill marks what it measured and what is still unverified |
+| iOS 27.1 SDK, v0.3 frameworks | The `.swiftinterface` files and headers of FoundationModels, AppIntents, WidgetKit, ActivityKit, StoreKit, StoreKitTest, Charts, AVFoundation, AVKit, AVFAudio, MediaPlayer, SpriteKit, MetalKit, GameController, TouchController, PDFKit and PencilKit, plus AppIntentsTesting in the iPhone Simulator platform | Every name in `api-index.md`'s v0.3 sections was found there and typechecks at an iOS 27.1 target |
+| Xcode 27.1 build settings | `CoreBuildSystem.xcspec` inside Xcode 27.1 | `INFOPLIST_KEY_NSSupportsLiveActivities` exists; there is no `INFOPLIST_KEY_UIBackgroundModes`, so background audio needs an Info.plist file |
+| iOS 27.1 simulator runtime | Its `Applications` folder, read by `duo-app-intents` on 20 Oct 2026 | `ShortcutsUI.app` is there, but no Shortcuts app, so Shortcuts runs can't be tested in the simulator |
+| Probe apps for the v0.3 skills and recipes | Small apps and the recipe templates on the shared iPhone Duo simulator, 20 Oct 2026; logs in each skill's evidence, measurements or testing file | Behaviour through fold and unfold for each feature. Each skill marks what it measured and what needs a device |
+
+## Tools outside Apple
+
+| Title | URL | What it covers | Checked |
+|---|---|---|---|
+| FFmpeg filters documentation | https://ffmpeg.org/ffmpeg-filters.html | The `gradients` source and `drawtext` filter behind `recipe-media-player`'s sample clips, and the `testsrc` source behind the `Reel` eval fixture. Both are made on the Mac; nothing is downloaded. | 20 Oct 2026 |
 
 ## Prior art outside Apple
 

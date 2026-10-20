@@ -20,6 +20,17 @@ Each release says which Xcode and iOS versions it was checked on.
 - `recipe-reader` (`duology-recipes`): an e-book reader. One page closed, two facing pages open and in book pose, the reader's place kept through every fold, and Dynamic Type reflow.
 - `recipe-finance-dashboard` (`duology-recipes`): a personal finance dashboard. The balance and recent spending when closed; the balance, a spending chart and the transactions side by side when open, with a detail for each transaction.
 - `recipe-shop` (`duology-recipes`): a shop for digital packs. The grid and a pack's page side by side when open, a basket, and StoreKit 2 purchases and a subscription tested with a local StoreKit configuration file.
+- `reference/api-index.md`: the APIs the v0.3 skills and recipes use, in eight new sections (Foundation Models; App Intents; widgets, Live Activities and Controls; capture sessions and devices; media playback; games; reading and text; StoreKit and Charts), plus new rows for the iOS 27 SwiftUI changes and the test tools (`XCUIScreen.screens`, `SKTestSession`, AppIntentsTesting). Each name was checked in the iOS 27.1 SDK and typechecked, and each doc link answers.
+- `reference/sources.md`: 40 rows of Apple documentation, HIG and developer pages (D38 to D77), 8 WWDC26 sessions (V20 to V27), the App Review Guidelines (S5), Apple's Apple Pencil page (A13), the FFmpeg filters page and the local checks behind the v0.3 skills.
+
+### Changed
+
+- `duo-start` and its routing map route to every v0.3 skill and recipe. Only the v1.0 items are still "coming".
+- The README, `AGENTS.md`, `llms.txt` and the roadmap list every v0.3 skill and recipe as built. The `duology-features` description no longer says its skills land one by one, and the `duology-features` and `duology-recipes` keywords match between the plugin manifests and the marketplace. Versions stay 0.2.0.
+- `reference/api-index.md`: the virtual front camera's limits (1080p at 60 fps, no depth) are no longer unverified, because Tech Talk 111465 states them. `AsyncImage` caching leaves "Not in the SDK": Apple's `AsyncImage` page documents it from iOS 27. `TupleContent` is indexed with its SDK availability (iOS 26.0) and TN3211's deployment-target rule.
+- `/duo-new` says that `recipe-shop` prices read "–" after a plain `simctl launch`, until a StoreKit test session has run.
+- `recipe-two-player-game`: the layout UI test attaches a screenshot of each display from `XCUIScreen.screens`. `XCUIScreen.main` is the outer display on iPhone Duo, black while the phone is open.
+- `evals/`: the run with Duology may call the four new recipes' `new-project.sh` (`PLUGIN_SCRIPTS`). The evals README counts 41 tasks for 30 skills, the fixtures README names the v0.3 tasks that use each fixture, and the tabletop video call task no longer waits for `duo-media`.
 
 ## [0.2.0] - 2026-10-19
 

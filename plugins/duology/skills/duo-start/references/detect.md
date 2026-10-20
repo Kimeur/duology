@@ -105,7 +105,7 @@ We ran it on 16 Oct 2026 against two scratch projects: a SwiftUI app (iOS 17.0 t
 | `EXISTING app`, but the source count is small and the views are template code | Treat it as new. Confirm with the user. |
 | `project.yml` or `Project.swift` | The project is generated (XcodeGen or Tuist). Change settings in that file, not in the `.xcodeproj`. |
 | `NOT NATIVE: pubspec.yaml`, `package.json` (React Native), `capacitor.config.*` | Not native, even though `ios/` holds an Xcode project. Point to [mirzaaghazadeh/iphone-duo-skills](https://github.com/mirzaaghazadeh/iphone-duo-skills). |
-| `NOT NATIVE: ProjectSettings/ProjectVersion.txt` | A Unity project. Duology's `duo-games` is coming (v0.3). Until then, use the layout rules in `duo-layout` for the native shell, if any. |
+| `NOT NATIVE: ProjectSettings/ProjectVersion.txt` | A Unity project. Load `duo-games` (plugin `duology-features`) for the game rules (fill every pose, touch controls off the fold), and `duo-layout` for the native shell, if any. |
 
 ### SwiftUI, UIKit or mixed
 

@@ -17,6 +17,7 @@ Each release says which Xcode and iOS versions it was checked on.
 - `duo-reading` (`duology-features`): books and documents on both displays. Two facing pages in book pose and when open, one page when closed, the reader's place kept through fold and unfold, notes beside the text, and Dynamic Type reflow.
 - `duo-games` (`duology-features`): games on both displays. Fill the screen in every pose instead of letterboxing, touch controls off the fold, the bottom half as a controller in tabletop, SpriteKit and Metal views that resize without restarting the scene, and game controllers.
 - `recipe-media-player` (`duology-recipes`): a video podcast player. A library, a player that keeps playing through every fold, video above the fold and the controls below in tabletop, Picture in Picture and an up next card.
+- `recipe-reader` (`duology-recipes`): an e-book reader. One page closed, two facing pages open and in book pose, the reader's place kept through every fold, and Dynamic Type reflow.
 
 ## [0.2.0] - 2026-10-19
 

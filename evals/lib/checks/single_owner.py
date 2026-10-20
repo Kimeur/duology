@@ -14,13 +14,15 @@ PATTERN is a regular expression, matched line by line, for the line that creates
    on every update. A static property or a file-scope declaration owns its state for
    the life of the app.
 2. A class or actor owner is fine if whoever creates that class passes the same test.
-3. A struct owner must be created in exactly one place.
+3. A struct owner must be created in exactly one place. A creation inside a static
+   factory (static func make() -> Model { Model() }) counts where the factory is called.
 4. A creation site in a @State, @StateObject or static property is stable for as long
    as the type that holds it lives: the check moves on to that type. Any other creation
    site must not sit in a type that switches layout with if/switch/guard on size class,
    width, height, orientation or idiom, ViewThatFits, or an .id() tied to layout. Then
    repeat for the type that creates it, up to the App.
 
+Test code is skipped: any folder whose name contains Tests, and files ending in Tests.swift.
 It is a heuristic for Swift sources, not a parser. It prints why it fails.
 Tests: python3 evals/lib/checks/test_single_owner.py
 Exit 0 = pass, 1 = fail, 2 = usage error.
@@ -55,7 +57,8 @@ def swift_files(root):
         for f in sorted(files):
             if f.endswith(".swift"):
                 path = os.path.join(d, f)
-                if "Tests" in os.path.relpath(path, root).split(os.sep)[0] or f.endswith("Tests.swift"):
+                folders = os.path.relpath(path, root).split(os.sep)[:-1]
+                if any("Tests" in x for x in folders) or f.endswith("Tests.swift"):
                     continue
                 yield path
 
@@ -121,18 +124,23 @@ def index(root):
             between = text[m.end():brace]
             if "\n\n" in between or ";" in between or "=" in between:
                 continue
-            depth, j = 0, brace
-            while j < len(text):
-                c = text[j]
-                if c == "{":
-                    depth += 1
-                elif c == "}":
-                    depth -= 1
-                    if depth == 0:
-                        break
-                j += 1
+            j = closing_brace(text, brace)
             spans.append(TypeSpan(m.group(1), m.group(2), path, brace, j, text[m.start():brace]))
     return files, spans
+
+
+def closing_brace(text, brace):
+    depth, j = 0, brace
+    while j < len(text):
+        c = text[j]
+        if c == "{":
+            depth += 1
+        elif c == "}":
+            depth -= 1
+            if depth == 0:
+                break
+        j += 1
+    return j
 
 
 def owner_at(spans, path, offset):
@@ -187,6 +195,8 @@ def creation_sites(files, spans, name):
                 continue
             if re.search(r"\b(let|var)\s+\w+\s*:\s*$", prefix):
                 continue  # a type annotation, not a call
+            if re.search(r"->\s*$", prefix):
+                continue  # a return type, not a call
             if in_preview(text, m.start()):
                 continue
             owner = owner_at(spans, path, m.start())
@@ -194,6 +204,29 @@ def creation_sites(files, spans, name):
                 continue  # recursion inside the type itself
             sites.append((path, m.start(), owner))
     return sites
+
+
+def static_factory(text, holder, offset):
+    """The name of the static func of HOLDER that contains OFFSET, if any."""
+    name = None
+    for m in re.finditer(r"\b(?:static|class)\s+func\s+(\w+)", text[:offset]):
+        if m.start() < holder.start:
+            continue
+        brace = text.find("{", m.end())
+        if 0 <= brace < offset and offset <= closing_brace(text, brace):
+            name = m.group(1)
+    return name
+
+
+def factory_calls(files, spans, holder, func):
+    """Where Holder.func( is called: those calls are the real creation sites."""
+    pat = re.compile(r"(?<![A-Za-z0-9_])" + re.escape(holder) + r"\." + re.escape(func) + r"\s*\(")
+    calls = []
+    for path, text in files.items():
+        for m in pat.finditer(text):
+            if not in_preview(text, m.start()):
+                calls.append((path, m.start(), owner_at(spans, path, m.start())))
+    return calls
 
 
 def line_no(text, offset):
@@ -225,6 +258,19 @@ def check_chain(files, spans, name, root, seen, depth=0):
     path, offset, holder = sites[0]
     if holder is None:
         return None
+    func = static_factory(files[path], holder, offset)
+    if func:
+        calls = factory_calls(files, spans, holder.name, func)
+        where = ", ".join("%s:%d" % (os.path.relpath(p, root), line_no(files[p], o)) for p, o, _ in calls)
+        if not calls:
+            return "%s is made by %s.%s(), which nothing calls, so its state can't be traced" % (
+                name, holder.name, func)
+        if len(calls) > 1:
+            return ("%s is made by %s.%s(), which is called in %d places (%s); each call makes a new copy, "
+                    "so a fold that swaps them resets it" % (name, holder.name, func, len(calls), where))
+        path, offset, holder = calls[0]
+        if holder is None:
+            return None
     site_line = line_at(files[path], offset)
     if STABLE_SITE.search(site_line):
         if re.search(r"\bstatic\s+(let|var)\b", site_line):

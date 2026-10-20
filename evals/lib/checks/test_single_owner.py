@@ -26,6 +26,7 @@ struct DemoApp: App {
 
 QUERY = r"\bvar +(query|searchText|searchQuery|searchTerm)\b"
 PLAYER = r"AVPlayer\(|AVQueuePlayer\("
+SELECTION = r"\bvar +selection\b"
 
 CASES = [
     # name, pattern, expected exit, Swift source
@@ -279,6 +280,92 @@ struct VideoPane: View {
     var body: some View { VideoPlayer(player: player) }
 }
 """),
+    ("model-from-static-factory", SELECTION, 0, """
+import SwiftUI
+import Observation
+""" + APP + """
+@Observable
+final class LedgerModel {
+    var selection: Int?
+}
+enum Launch {
+    static func makeModel() -> LedgerModel {
+        let model = LedgerModel()
+        model.selection = 1
+        return model
+    }
+}
+struct Screen: View {
+    @Environment(\\.horizontalSizeClass) private var sizeClass
+    @State private var model = Launch.makeModel()
+    var body: some View {
+        if sizeClass == .regular { Wide(model: model) } else { Narrow(model: model) }
+    }
+}
+struct Wide: View {
+    @Bindable var model: LedgerModel
+    var body: some View { Text("\\(model.selection ?? 0)") }
+}
+struct Narrow: View {
+    @Bindable var model: LedgerModel
+    var body: some View { Text("\\(model.selection ?? 0)").padding() }
+}
+"""),
+    ("factory-called-in-each-layout", SELECTION, 1, """
+import SwiftUI
+import Observation
+""" + APP + """
+@Observable
+final class LedgerModel {
+    var selection: Int?
+}
+enum Launch {
+    static func makeModel() -> LedgerModel { LedgerModel() }
+}
+struct Screen: View {
+    @Environment(\\.horizontalSizeClass) private var sizeClass
+    var body: some View {
+        if sizeClass == .regular { Wide() } else { Narrow() }
+    }
+}
+struct Wide: View {
+    @State private var model = Launch.makeModel()
+    var body: some View { Text("\\(model.selection ?? 0)") }
+}
+struct Narrow: View {
+    @State private var model = Launch.makeModel()
+    var body: some View { Text("\\(model.selection ?? 0)").padding() }
+}
+"""),
+    ("return-type-is-not-a-creation-site", SELECTION, 0, """
+import SwiftUI
+import Observation
+""" + APP + """
+@Observable
+final class LedgerModel {
+    var selection: Int?
+}
+struct Screen: View {
+    @State private var model = LedgerModel()
+    var body: some View { Text("\\(current().selection ?? 0)") }
+    func current() -> LedgerModel {
+        model
+    }
+}
+"""),
+    ("test-folders-are-skipped", SELECTION, 0, """
+import SwiftUI
+import Observation
+""" + APP + """
+@Observable
+final class LedgerModel {
+    var selection: Int?
+}
+struct Screen: View {
+    @State private var model = LedgerModel()
+    var body: some View { Text("\\(model.selection ?? 0)") }
+}
+""", {"Tools/ModelTests/main.swift": "var selection: Int? = nil\nprint(selection ?? 0)\n"}),
 ]
 
 
@@ -295,12 +382,17 @@ def main(argv):
     do_typecheck = "--typecheck" in argv
     failures = 0
     with tempfile.TemporaryDirectory() as tmp:
-        for name, pattern, expected, source in CASES:
+        for name, pattern, expected, source, *extra in CASES:
             case_dir = os.path.join(tmp, name)
             os.makedirs(case_dir)
             path = os.path.join(case_dir, "App.swift")
             with open(path, "w", encoding="utf-8") as f:
                 f.write(source.lstrip())
+            # Extra files (for example a test target) are written but not typechecked.
+            for rel, text in (extra[0] if extra else {}).items():
+                os.makedirs(os.path.dirname(os.path.join(case_dir, rel)), exist_ok=True)
+                with open(os.path.join(case_dir, rel), "w", encoding="utf-8") as f:
+                    f.write(text)
             if do_typecheck:
                 code, out = typecheck(path)
                 if code != 0:

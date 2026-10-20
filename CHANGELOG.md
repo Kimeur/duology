@@ -12,6 +12,7 @@ Each release says which Xcode and iOS versions it was checked on.
 - `duo-media` (`duology-features`): video and audio on both displays. A player owned above the layout switch so playback survives fold and unfold, the tabletop player (video above the fold, the same controls below), Picture in Picture, "up next" as an overlay arrangement, Now Playing and the iOS 27 audio session notifications.
 - `duo-intelligence` (`duology-features`): Foundation Models on both displays. An AI pane beside the content when open, a short summary when closed, streaming that survives fold and unfold, availability and fallbacks, and the Private Cloud Compute options.
 - `duo-app-intents` (`duology-features`): App Intents on both displays. Intents and entities that act on the right pane, opening a specific pane or window from Siri or Shortcuts, intents that work on the closed phone, and testing with AppIntentsTesting.
+- `duo-swiftui-27` (`duology-features`): the iOS 27 SwiftUI changes that matter on iPhone Duo: reordering, swipe actions on any view, the `@State` macro and its source-breaking cases (TN3211), prominent tabs, toolbar minimizing, visibility priority and overflow.
 
 ## [0.2.0] - 2026-10-19
 

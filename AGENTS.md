@@ -45,6 +45,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 | `duo-media` | [`plugins/duology-features/skills/duo-media/`](plugins/duology-features/skills/duo-media/) | The app plays video or audio and playback must survive fold and unfold, with a tabletop player and Picture in Picture. |
 | `duo-intelligence` | [`plugins/duology-features/skills/duo-intelligence/`](plugins/duology-features/skills/duo-intelligence/) | The app uses Foundation Models: an AI pane when open, a short summary when closed. |
 | `duo-app-intents` | [`plugins/duology-features/skills/duo-app-intents/`](plugins/duology-features/skills/duo-app-intents/) | The app exposes actions to Siri, Shortcuts or the Action button, and they must open the right pane or window. |
+| `duo-swiftui-27` | [`plugins/duology-features/skills/duo-swiftui-27/`](plugins/duology-features/skills/duo-swiftui-27/) | The app adopts the iOS 27 SwiftUI changes (reordering, swipe actions, the @State macro, new toolbar and tab APIs) and needs them to work on both displays. |
 
 ### Commands, without Claude Code
 

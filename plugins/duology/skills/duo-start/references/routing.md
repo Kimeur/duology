@@ -78,13 +78,14 @@ Say "coming" when one of these fits, and work from the Apple source in the last 
 |---|---|---|---|
 | `duo-intelligence` | v0.3 (out) | Foundation Models: a pane when open, a summary when closed | Load `duo-intelligence` (plugin `duology-features`) |
 | `duo-app-intents` | v0.3 (out) | Siri, app actions, onscreen awareness | Load `duo-app-intents` (plugin `duology-features`) |
+| `recipe-media-player` | v0.3 (out) | App recipe | Run `/duo-new recipe-media-player` |
 | `duo-camera` | v0.3 (out) | Each camera by the way it faces, the virtual front camera | Load `duo-camera` (plugin `duology-features`) |
 | `duo-media` | v0.3 (out) | Video and audio, Picture in Picture, "up next" | Load `duo-media` (plugin `duology-features`) |
 | `duo-reading` | v0.3 (out) | Books and documents, two pages | Load `duo-reading` (plugin `duology-features`) |
 | `duo-games` | v0.3 (out) | Fill the screen in every pose, touch controls off the fold | Load `duo-games` (plugin `duology-features`) |
 | `duo-swiftui-27` | v0.3 (out) | iOS 27 SwiftUI changes that matter on Duo | Load `duo-swiftui-27` (plugin `duology-features`) |
 | `duo-system-surfaces` | v0.3 (out) | Widgets, Live Activities, StandBy, Controls | Load `duo-system-surfaces` (plugin `duology-features`) |
-| `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop` | v0.3 | App recipes | `duo-patterns` |
+| `recipe-finance-dashboard`, `recipe-reader`, `recipe-shop` | v0.3 | App recipes | `duo-patterns` |
 | `duo-performance` | v1.0 | Smooth resizing at 120 Hz | Test on a device: the simulator reports a 60 fps maximum (*measured*, see [device facts](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md)) |
 | `duo-app-store` | v1.0 | Duo screenshots, metadata, review notes | [Screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications), [news of 5 Oct 2026](https://developer.apple.com/news/?id=kkphp5qo) |
 | `duo-migrate` | v1.0 | Moving an existing app across SDKs | [detect.md](detect.md), the [prepare page](https://developer.apple.com/iphone-duo/prepare/) |

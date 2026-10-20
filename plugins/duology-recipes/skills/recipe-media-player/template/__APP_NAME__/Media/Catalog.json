@@ -1,0 +1,78 @@
+{
+  "shows": [
+    {
+      "id": "small-repairs",
+      "title": "Small Repairs",
+      "host": "Noor Haddad",
+      "summary": "Short fixes for things you were about to throw away. One tool, one job, no special skills.",
+      "symbol": "wrench.and.screwdriver.fill",
+      "colors": ["E8743B", "7A2E12"],
+      "episodes": [
+        {
+          "id": "small-repairs-1",
+          "number": 1,
+          "title": "A wobbly chair leg",
+          "summary": "Fresh glue on an old joint won't hold. Take the leg out, scrape the old glue back to bare wood, then clamp it overnight with a thin, even coat.",
+          "duration": 12,
+          "media": "small-repairs-1.mp4",
+          "published": "2026-09-28"
+        },
+        {
+          "id": "small-repairs-2",
+          "number": 2,
+          "title": "The zip that won't close",
+          "summary": "When the teeth part behind the slider, the zip is usually fine and the slider is worn. How to tell, and how to fit a new slider with a pair of pliers.",
+          "duration": 12,
+          "media": "small-repairs-2.mp4",
+          "published": "2026-10-05"
+        },
+        {
+          "id": "small-repairs-3",
+          "number": 3,
+          "title": "Truing a bicycle wheel",
+          "summary": "A spoke key, a cable tie on the frame as a guide, and quarter turns. Tighten the spokes on the side away from the rub, and the wobble comes out.",
+          "duration": 12,
+          "media": "small-repairs-3.mp4",
+          "published": "2026-10-12"
+        }
+      ]
+    },
+    {
+      "id": "night-sky-notes",
+      "title": "Night Sky Notes",
+      "host": "Ines Calloway",
+      "summary": "Short walks around the night sky for anyone with a garden, a balcony or a dark car park. No telescope needed.",
+      "symbol": "moon.stars.fill",
+      "colors": ["5B6CFF", "1B1F4A"],
+      "episodes": [
+        {
+          "id": "night-sky-notes-1",
+          "number": 1,
+          "title": "Finding the Pole Star",
+          "summary": "Start at the Plough. Follow its two end stars upwards for about five times the gap between them, and you reach Polaris, the star that hardly moves all night.",
+          "duration": 12,
+          "media": "night-sky-notes-1.mp4",
+          "published": "2026-09-30"
+        },
+        {
+          "id": "night-sky-notes-2",
+          "number": 2,
+          "title": "One face of the Moon",
+          "summary": "The Moon turns once on its axis for every trip around Earth, so the same side always faces us. The far side gets just as much sunlight as the near one.",
+          "duration": 12,
+          "media": "night-sky-notes-2.mp4",
+          "published": "2026-10-07"
+        },
+        {
+          "id": "night-sky-notes-3",
+          "number": 3,
+          "title": "Watching a meteor shower",
+          "summary": "Pick a dark spot, lie back in a reclining chair and give your eyes twenty minutes to adjust. Watch a wide patch of sky, not the point the meteors come from.",
+          "duration": 12,
+          "media": "night-sky-notes-3.mp4",
+          "published": "2026-10-14"
+        }
+      ]
+    }
+  ]
+}

@@ -1,11 +1,13 @@
 ---
 name: duo-new
-description: "Create a new iPhone Duo app from a Duology recipe, build it with Xcode 27.1 and run it on the iPhone Duo simulator. In v0.1 the one recipe is recipe-two-player-game."
+description: "Create a new iPhone Duo app from a Duology recipe (a two-player game or a media player), build it with Xcode 27.1 and run it on the iPhone Duo simulator."
 argument-hint: "<recipe> <AppName> [bundle-id] [folder]"
 allowed-tools:
   - Bash(duo-doctor *)
   - Bash(${CLAUDE_PLUGIN_ROOT}/skills/recipe-two-player-game/scripts/new-project.sh *)
   - Bash("${CLAUDE_PLUGIN_ROOT}/skills/recipe-two-player-game/scripts/new-project.sh" *)
+  - Bash(${CLAUDE_PLUGIN_ROOT}/skills/recipe-media-player/scripts/new-project.sh *)
+  - Bash("${CLAUDE_PLUGIN_ROOT}/skills/recipe-media-player/scripts/new-project.sh" *)
   - Read
   - Glob
 ---
@@ -31,15 +33,20 @@ The app name becomes the Xcode target, the scheme and a Swift type. It must star
 
 ### Recipes
 
-| Recipe | Status | Script |
-|---|---|---|
-| `recipe-two-player-game` | Ready in v0.1 | `${CLAUDE_PLUGIN_ROOT}/skills/recipe-two-player-game/scripts/new-project.sh` |
-| `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop` | Planned for v0.3 | none yet |
-| `recipe-notes-ai`, `recipe-camera-studio`, `recipe-kids-learning` | Planned for v1.0 | none yet |
+Every recipe's script is `${CLAUDE_PLUGIN_ROOT}/skills/<recipe>/scripts/new-project.sh`, and every recipe has a skill of the same name in this plugin.
 
-Accept the short form without `recipe-`, such as `two-player-game`.
+| Recipe | What it makes |
+|---|---|
+| `recipe-two-player-game` | A two-player race on one phone. Each player gets half the screen in every pose. |
+| `recipe-finance-dashboard` | A personal finance dashboard. Closed: the balance and recent spending. Open: the balance, a spending chart and the transactions side by side, with a detail for each transaction. Coming in v0.3; no script yet. |
+| `recipe-media-player` | A video podcast player: a library, and a player that keeps playing through every fold, with the video above the fold and the controls below in tabletop, Picture in Picture and an up next card. |
+| `recipe-reader` | An e-book reader: one page closed, two facing pages open and in book pose, and the reader's place kept through every fold. Coming in v0.3; no script yet. |
+| `recipe-shop` | A shop for digital packs: the grid and a pack's page side by side when open, a basket, and StoreKit purchases and a subscription, tested with a local StoreKit configuration file. Coming in v0.3; no script yet. |
+| `recipe-notes-ai`, `recipe-camera-studio`, `recipe-kids-learning` | Planned for v1.0. No script yet. |
 
-For a planned recipe, say it isn't released yet and link https://github.com/Kimeur/duology/blob/main/ROADMAP.md. Offer two options: start from `recipe-two-player-game`, or build the app from scratch with the Duology skills (`duo-layout`, `duo-navigation`, `duo-continuity`, `duo-patterns`). Don't create anything until the user picks one.
+Accept the short form without `recipe-`, such as `media-player`. If the user describes an app instead of naming a recipe, propose the closest one and say why in one line. If none fits, say so.
+
+For a planned recipe, say it isn't released yet and link https://github.com/Kimeur/duology/blob/main/ROADMAP.md. Offer two options: start from the closest ready recipe, or build the app from scratch with the Duology skills (`duo-layout`, `duo-navigation`, `duo-continuity`, `duo-patterns`). Don't create anything until the user picks one.
 
 ## 2. Find Xcode 27.1 and a Duo simulator
 
@@ -65,23 +72,33 @@ Put `DEVELOPER_DIR=<DEV>` in front of every `xcrun` and `xcodebuild` call below.
 
 The folder must not exist yet, or must be empty. If it has files, stop and ask for another folder. Never delete or overwrite the user's files.
 
-For `recipe-two-player-game`:
+Run the recipe's script, with the recipe name from step 1:
 
 ```bash
-"${CLAUDE_PLUGIN_ROOT}/skills/recipe-two-player-game/scripts/new-project.sh" <AppName> <bundle-id> <folder>
+"${CLAUDE_PLUGIN_ROOT}/skills/<recipe>/scripts/new-project.sh" <AppName> <bundle-id> <folder>
 ```
 
-The script copies the template, renames it and checks that no placeholder is left. It prints `Created <AppName> ...` and the next steps. A non-zero exit means nothing usable was made: show its error and stop.
+For example, for a media player:
+
+```bash
+"${CLAUDE_PLUGIN_ROOT}/skills/recipe-media-player/scripts/new-project.sh" FieldCast com.example.fieldcast ~/Developer/FieldCast
+```
+
+Each script copies its template, renames it and checks that no placeholder is left. It prints `Created <AppName> ...`, then the next steps, then where to change things. Keep that output for steps 4 and 6. A non-zero exit means nothing usable was made: show its error and stop. Exit 65 means a bad or clashing app name or bundle ID, and exit 73 a folder that isn't empty; both refuse before anything is created.
 
 Use full paths from here on. `<folder>` is the absolute path of the new project.
 
-## 4. Test the game rules on the Mac
+## 4. Test the rules on the Mac
+
+Every recipe keeps its rules in plain Swift and has one script under `Tools/` that tests them on the Mac. `new-project.sh` names it under "Next steps", right after the `cd` line. Run it:
 
 ```bash
-DEVELOPER_DIR=<DEV> <folder>/Tools/run-engine-tests.sh
+DEVELOPER_DIR=<DEV> <folder>/Tools/<the test script>
 ```
 
-It compiles the engine with `swiftc` and runs its checks in seconds, without a simulator. If it fails, show the failures and stop: the template is broken, so report it as a Duology bug.
+That is `Tools/run-engine-tests.sh` for `recipe-two-player-game` and `Tools/run-model-tests.sh` for the other recipes. Don't run `Tools/run-ui-tests.sh` here: it needs the simulator (step 6 says how to offer it).
+
+The script compiles the rules with `swiftc` and runs their checks in seconds, without a simulator. Expect `0 failed`. If it fails, show the failures and stop: the template is broken, so report it as a Duology bug.
 
 ## 5. Build and run on the iPhone Duo simulator
 
@@ -111,6 +128,7 @@ DEVELOPER_DIR=<DEV> xcrun simctl launch --terminate-running-process <UDID> <bund
 
 - Use the UDID, never `booted`: several simulators may be booted.
 - Device Hub is Xcode 27.1's simulator window. It has the Closed, Partially Open and Open pose buttons.
+- Launch with no switches, so the app opens on its first screen. Some recipes have launch switches that open a deeper screen (see the recipe's skill); use them only when the user asks.
 
 Prove it runs. Save both displays and look at them with the Read tool:
 
@@ -119,19 +137,20 @@ DEVELOPER_DIR=<DEV> xcrun simctl io <UDID> screenshot --display=primary <folder>
 DEVELOPER_DIR=<DEV> xcrun simctl io <UDID> screenshot --display=primary-1 <folder>/build/duo-new-inner.png
 ```
 
-The display that is off comes out black. In our runs a freshly booted simulator started closed, so the app showed on the outer display. Pass when the display in use shows the app's start screen. If both are black, or one shows the iOS Home Screen instead of the app, launch again and take new screenshots before you report. `build/` is in the project's `.gitignore`.
+The display that is off comes out black. In our runs a freshly booted simulator started closed, so the app showed on the outer display. Pass when the display in use shows the app's first screen. If both are black, or one shows the iOS Home Screen instead of the app, launch again and take new screenshots before you report. `build/` is in the project's `.gitignore`.
 
 ## 6. Report
 
 Tell the user, in a few lines:
 
-- What you created: app name, bundle ID, full folder path.
-- That the engine tests passed and the app runs on the simulator, naming the simulator. Mention the screenshot of the display in use.
-- How to run it again: `open <AppName>.xcodeproj`, pick the iPhone Duo simulator, Run. Or `Tools/run-ui-tests.sh` for the UI tests. That script uses the simulator named `iPhone Duo`; set `DEVICE="<name>"` for another one.
-- How to check each pose: click Closed, Partially Open and Open in Device Hub. Both halves must show in every pose, with nothing on the fold.
-- Where to change things. For `recipe-two-player-game`: the rules in `<AppName>/Engine/Duel.swift`, the look in `<AppName>/Duel/`.
+- What you created: recipe, app name, bundle ID, full folder path.
+- That the Mac tests passed and the app runs on the simulator, naming the simulator. Mention the screenshot of the display in use.
+- How to run it again: `open <AppName>.xcodeproj`, pick the iPhone Duo simulator, Run. Or `Tools/run-ui-tests.sh` for the UI tests. That script uses the simulator named `iPhone Duo`; set `DEVICE="<name>"` or `DESTINATION="id=<UDID>"` for another one. A UI test run brings the app to the front of that simulator, so say so if other work shares it.
+- How to check each pose: click Closed, Partially Open and Open in Device Hub, and look for what the recipe's skill promises in each pose. Nothing interactive may sit on the fold.
+- Where to change things: repeat the last line the script printed in step 3. For example, for `recipe-two-player-game`, the rules in `<AppName>/Engine/Duel.swift` and the look in `<AppName>/Duel/`.
+- For `recipe-media-player`: Picture in Picture doesn't run on the iPhone Duo simulator (the recipe measured `isPictureInPictureSupported()` as `false`), so check it on a device.
 - If the bundle ID starts with `com.example.`, change it before shipping.
 
-If the user described the app in step 1, load the recipe's skill (for example `recipe-two-player-game` in this plugin) and offer to adapt the project to that description. Don't start the changes until the user agrees.
+If the user described the app in step 1, load the recipe's skill (the skill with the recipe's name, in this plugin) and offer to adapt the project to that description. Don't start the changes until the user agrees.
 
 Don't run `git init`, commit or push unless the user asks.

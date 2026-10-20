@@ -96,7 +96,7 @@ Add the other plugins when you need them:
 /plugin install duology-features@duology
 ```
 
-`duology-recipes` and `duology-ship` need `duology`, which gives them `/duo-doctor`. `duology-features` adds the iOS 27 features: Foundation Models, App Intents, the camera, media, reading, games, the iOS 27 SwiftUI changes, and widgets, Live Activities and Controls.
+`duology-recipes` and `duology-ship` need `duology`, which gives them `/duo-doctor`. `duology-design` and `duology-features` install on their own, but their skills point to `duology`'s skills (`duo-layout`, `duo-continuity`, `duo-scenes`), so install `duology` first. `duology-features` adds the iOS 27 features: Foundation Models, App Intents, the camera, media, reading, games, the iOS 27 SwiftUI changes, and widgets, Live Activities and Controls.
 
 Restart Claude Code, then check your setup:
 

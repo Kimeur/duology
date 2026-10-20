@@ -45,7 +45,7 @@ Use a different skill when:
      -derivedDataPath build/DerivedData build
    ```
 
-5. Run the UI tests: `DESTINATION="id=<UDID>" Tools/run-ui-tests.sh`. With no setting it uses the simulator named `iPhone Duo`. They open a StoreKit test session on `StoreKit/Shop.storekit`, and the simulator keeps it for this app afterwards, purchases included: after the subscribe test, the shop shows Plus as on. Run `-only-testing:SoundShopUITests/SoundShopUITests/testPricesComeFromTheStoreKitConfiguration` to leave a clean state.
+5. Run the UI tests: `DESTINATION="id=<UDID>" Tools/run-ui-tests.sh`. With no setting it uses the simulator named `iPhone Duo`. They open a StoreKit test session on `StoreKit/Shop.storekit`, and the simulator keeps it for this app afterwards, purchases included: after the subscribe test, the shop shows Plus as on. Run `-only-testing:<AppName>UITests/<AppName>UITests/testPricesComeFromTheStoreKitConfiguration` to leave a clean state.
 6. Launch on a pack and screenshot the display in use. Use the UDID, not `booted`. The tests installed the app.
 
    ```bash

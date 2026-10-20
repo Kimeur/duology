@@ -39,7 +39,7 @@ duo-lint on the untouched fixture: 10 findings, 3 errors and 7 warnings.
 
 ## Reel
 
-A video player with an "Up next" list. Used by the README task "Keep video playing through fold and unfold".
+A video player with an "Up next" list. Used by the README task "Keep video playing through fold and unfold" and by [`duo-media/picture-in-picture`](../tasks/duo-media/picture-in-picture.md).
 
 - iOS 17.0 target, Swift 5 mode. No test target.
 - `Media/clip.mp4`: a 60-second, 480 × 270 test pattern with a running counter (made with ffmpeg's `testsrc` source, 148 KB), so a restart is easy to see.
@@ -66,24 +66,24 @@ Planted mistake: the two halves are the two sides of an `ArrangementView` with `
 
 ## Starter
 
-An empty SwiftUI app ("Hello") for tasks that build something new inside an existing project.
+An empty SwiftUI app ("Hello") for tasks that build something new inside an existing project. Used by [`duo-shared-screen/face-to-face-quiz`](../tasks/duo-shared-screen/face-to-face-quiz.md), [`duo-reading/two-facing-pages`](../tasks/duo-reading/two-facing-pages.md) and [`duo-games/fill-every-pose`](../tasks/duo-games/fill-every-pose.md).
 
 - iOS 26.0 target, Swift 6, main-actor isolation by default, approachable concurrency.
 - A UI test target, `StarterUITests`, with one launch test. Oracle tests from [`../oracles`](../oracles) are copied into it after the agent's run.
 
 ## Fixtures added for v0.2
 
-Each of these is used by one or two v0.2 tasks. The planted problems are listed in the task's "Starting point" section, so they aren't repeated here. All seven build for the iPhone Duo simulator (`build-for-testing`, 18 and 19 October 2026), and every task that uses them fails on the untouched fixture (`run.sh --selftest --with-build`).
+Each of these is used by one or two v0.2 tasks, and four of them by v0.3 tasks too. The planted problems are listed in the task's "Starting point" section, so they aren't repeated here. All seven build for the iPhone Duo simulator (`build-for-testing`, 18 and 19 October 2026), and every task that uses them fails on the untouched fixture (`run.sh --selftest --with-build`).
 
 | Fixture | What it is | Target | Used by |
 |---|---|---|---|
-| `Steps` | A recipe step, a timer panel and Previous and Next buttons | iOS 17, Swift 5 | [`duo-postures/book-two-regions`](../tasks/duo-postures/book-two-regions.md) |
+| `Steps` | A recipe step, a timer panel and Previous and Next buttons | iOS 17, Swift 5 | [`duo-postures/book-two-regions`](../tasks/duo-postures/book-two-regions.md), [`duo-system-surfaces/timer-live-activity`](../tasks/duo-system-surfaces/timer-live-activity.md) |
 | `Album` | An album screen with a cover, a track list and a player bar | iOS 17, Swift 5 | [`duo-transitions/fold-without-reload`](../tasks/duo-transitions/fold-without-reload.md) |
 | `Trail` | A drawn map, a stats panel and three map buttons, with `TrailUITests` | iOS 17, Swift 5 | [`duo-ergonomics/thumb-reach`](../tasks/duo-ergonomics/thumb-reach.md) |
 | `Inbox` | A mail inbox: list and message side by side open, a push closed, with `InboxUITests` | iOS 17, Swift 5 | [`duo-accessibility/voiceover-two-panes`](../tasks/duo-accessibility/voiceover-two-panes.md), [`duo-accessibility/large-text-closed`](../tasks/duo-accessibility/large-text-closed.md) |
-| `Trips` | A grid of trip cards built literally from two design frames (`Design/frames.md`), with `TripsUITests` | iOS 17, Swift 5 | [`duo-design-system/tokens-from-two-frames`](../tasks/duo-design-system/tokens-from-two-frames.md) |
-| `Notes` | A notes list that pushes an editor, one window only | iOS 26, Swift 6, main-actor isolation by default | [`duo-scenes/open-in-new-window`](../tasks/duo-scenes/open-in-new-window.md) |
-| `Shoot` | A full-screen rear camera preview with a record button and a countdown | iOS 17, Swift 5 | [`duo-scenes/camera-subject-view`](../tasks/duo-scenes/camera-subject-view.md) |
+| `Trips` | A grid of trip cards built literally from two design frames (`Design/frames.md`), with `TripsUITests` | iOS 17, Swift 5 | [`duo-design-system/tokens-from-two-frames`](../tasks/duo-design-system/tokens-from-two-frames.md), [`duo-swiftui-27/reorder-and-swipe-grid`](../tasks/duo-swiftui-27/reorder-and-swipe-grid.md) |
+| `Notes` | A notes list that pushes an editor, one window only | iOS 26, Swift 6, main-actor isolation by default | [`duo-scenes/open-in-new-window`](../tasks/duo-scenes/open-in-new-window.md), [`duo-intelligence/ai-pane-through-fold`](../tasks/duo-intelligence/ai-pane-through-fold.md), [`duo-app-intents/open-note-from-siri`](../tasks/duo-app-intents/open-note-from-siri.md) |
+| `Shoot` | A full-screen rear camera preview with a record button and a countdown | iOS 17, Swift 5 | [`duo-scenes/camera-subject-view`](../tasks/duo-scenes/camera-subject-view.md), [`duo-camera/front-camera-switch`](../tasks/duo-camera/front-camera-switch.md) |
 
 ## review-shots
 
@@ -97,7 +97,7 @@ They show what the system did with the app's bars: the tab bar and the icon-only
 
 ## empty
 
-Not a folder. `fixture: empty` starts the agent in an empty folder.
+Not a folder. `fixture: empty` starts the agent in an empty folder. Used by `duo-setup/mac-check` and the five recipe tasks.
 
 ## Check that every fixture builds
 

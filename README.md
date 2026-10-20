@@ -36,7 +36,7 @@
 </div>
 
 > [!IMPORTANT]
-> **v0.2 is out** (19 October 2026): 18 skills, `/duo-doctor`, `/duo-new`, `/duo-audit`, `/duo-poses`, `/duo-review` and a design review agent, checked on Xcode 27.1 and the iPhone Duo simulator. Checks on a real iPhone Duo and published test results come next. Duology is built in the open: the full pack of 36 skills is planned for v1.0 in January 2027. Star or watch the repo to follow along. See the [roadmap](ROADMAP.md) and the [release notes](CHANGELOG.md).
+> **v0.2 is out** (19 October 2026): 18 skills, `/duo-doctor`, `/duo-new`, `/duo-audit`, `/duo-poses`, `/duo-review` and a design review agent, checked on Xcode 27.1 and the iPhone Duo simulator. The v0.3 content is on `main` now: eight iOS 27 feature skills in `duology-features` and four more recipes, 30 skills in all. Checks on a real iPhone Duo and published test results come next. Duology is built in the open: the full pack of 36 skills is planned for v1.0 in January 2027. Star or watch the repo to follow along. See the [roadmap](ROADMAP.md) and the [release notes](CHANGELOG.md).
 
 > [!NOTE]
 > Duology is a community project. It is not affiliated with, endorsed by or sponsored by Apple Inc.
@@ -66,9 +66,9 @@ Apple published the rules in six Tech Talks, a HIG page and the iOS 27.1 SDK. Du
 
 ### How Duology fixes it
 
-1. **It knows the device.** Size classes, reserved regions, `ArrangementView`, vertical bars and the hinge. Each fact is checked against the iOS 27.1 SDK. Scenes and windows have their own skill (v0.2); the cameras get one in v0.3.
+1. **It knows the device.** Size classes, reserved regions, `ArrangementView`, vertical bars and the hinge. Each fact is checked against the iOS 27.1 SDK. Scenes and windows have their own skill (v0.2), and so do the cameras (`duo-camera`, v0.3).
 2. **It designs, not just compiles.** Eight named layout patterns, state that survives fold and unfold, and two people on one screen, each with SwiftUI code. v0.2 adds design tokens, guidance for each pose, fold transitions, thumb reach and accessibility on both displays.
-3. **It builds whole apps.** A recipe creates a project that builds and runs on the iPhone Duo simulator. v0.1 has the first one, a two-player game. Seven more are planned.
+3. **It builds whole apps.** A recipe creates a project that builds and runs on the iPhone Duo simulator. Five are ready: a two-player game, a finance dashboard, a media player, a reader and a shop. Three more are planned.
 4. **It checks its own work.** `duo-lint` finds code Apple warns against. `/duo-audit` adds a 15-point design checklist on screenshots from the simulator. `/duo-poses` (v0.2) screenshots your app closed, open, in book pose and in tabletop, and `/duo-review` hands those frames to a design review agent.
 
 <div align="center">
@@ -96,7 +96,7 @@ Add the other plugins when you need them:
 /plugin install duology-features@duology
 ```
 
-`duology-recipes` and `duology-ship` need `duology`, which gives them `/duo-doctor`. A fifth plugin, `duology-features` (iOS 27 features), is arriving skill by skill in v0.3.
+`duology-recipes` and `duology-ship` need `duology`, which gives them `/duo-doctor`. `duology-features` adds the iOS 27 features: Foundation Models, App Intents, the camera, media, reading, games, the iOS 27 SwiftUI changes, and widgets, Live Activities and Controls.
 
 Restart Claude Code, then check your setup:
 
@@ -152,7 +152,7 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 
 ## What's inside
 
-**v0.2: 18 skills in 4 plugins, 5 commands and 1 review agent.** The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
+**30 skills in 5 plugins, 5 commands and 1 review agent.** v0.2 released 18 of the skills; the other 12 are the v0.3 skills and recipes. The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
 
 <details open>
 <summary><strong>duology</strong> · foundation: setup, layout, continuity, scenes</summary>
@@ -185,7 +185,7 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 </details>
 
 <details>
-<summary><strong>duology-features</strong> · iOS 27 features on two displays · arriving in v0.3</summary>
+<summary><strong>duology-features</strong> · iOS 27 features on two displays</summary>
 
 | Skill | Status | Use it when |
 |---|---|---|
@@ -330,9 +330,9 @@ v0.2 adds three screens, one for each of `duo-postures`, `duo-transitions` and `
 
 ## Proof, not promises
 
-Every skill has test tasks in [`evals/`](evals), 29 so far (28 ready to run). Each task runs with Claude Code twice, with and without Duology, in a fresh copy of the same sample project. A run passes when the app builds for the iPhone Duo simulator, `duo-lint` finds nothing, every check in the task passes and every checklist rule it covers passes.
+Every skill has test tasks in [`evals/`](evals), 41 so far (40 ready to run). Each task runs with Claude Code twice, with and without Duology, in a fresh copy of the same sample project. A run passes when the app builds for the iPhone Duo simulator, `duo-lint` finds nothing, every check in the task passes and every checklist rule it covers passes.
 
-No results yet. The first published runs are planned for the v0.2 release, and we'll publish them here whatever they show.
+No results yet. The first published runs are planned for the v0.3 release, and we'll publish them here whatever they show.
 
 | Task | Without Duology | With Duology |
 |---|---|---|
@@ -349,7 +349,7 @@ How the runs work and how to rerun them: [`evals/README.md`](evals/README.md).
 |---|---|
 | Xcode 27.1 (27A9275) | Checked |
 | iPhone Duo simulator, iOS 27.1 | Checked |
-| iPhone Duo device | Planned for v0.2 |
+| iPhone Duo device | Planned for v0.3 |
 | iOS 27.2 beta | Not tracked until release |
 
 Each `SKILL.md` repeats this in its front matter, so you can see how far every rule has been tested.
@@ -359,7 +359,7 @@ Each `SKILL.md` repeats this in its front matter, so you can see how far every r
 <details>
 <summary><strong>How is this different from other iPhone Duo skill repos?</strong></summary>
 
-Other repos explain the Duo APIs well, and [mirzaaghazadeh/iphone-duo-skills](https://github.com/mirzaaghazadeh/iphone-duo-skills) also covers Flutter, React Native and Capacitor. Duology aims to go from design to the App Store for native SwiftUI and UIKit apps. v0.1 has layout patterns, a recipe, a linter, an audit command and a test harness. v0.2 adds design skills, a scenes skill, the pose screenshots (`/duo-poses`) and a design review agent. The App Store skill and published test results come later.
+Other repos explain the Duo APIs well, and [mirzaaghazadeh/iphone-duo-skills](https://github.com/mirzaaghazadeh/iphone-duo-skills) also covers Flutter, React Native and Capacitor. Duology aims to go from design to the App Store for native SwiftUI and UIKit apps. v0.1 has layout patterns, a recipe, a linter, an audit command and a test harness. v0.2 adds design skills, a scenes skill, the pose screenshots (`/duo-poses`) and a design review agent. v0.3 adds eight iOS 27 feature skills and four more recipes. The App Store skill and published test results come later.
 
 </details>
 
@@ -380,7 +380,7 @@ No. Everything runs on the iPhone Duo simulator in Xcode 27.1. A few things only
 <details>
 <summary><strong>Does it work with UIKit?</strong></summary>
 
-Yes. `duo-layout`, `duo-navigation`, `duo-continuity` and `duo-shared-screen` give SwiftUI and UIKit versions, and so do the v0.2 skills (`duo-scenes`, `duo-design-system`, `duo-postures`, `duo-transitions`, `duo-ergonomics`, `duo-accessibility`). `duo-patterns` builds in SwiftUI and maps each pattern to its UIKit counterpart. The two-player recipe is SwiftUI.
+Yes. `duo-layout`, `duo-navigation`, `duo-continuity` and `duo-shared-screen` give SwiftUI and UIKit versions, and so do the v0.2 skills (`duo-scenes`, `duo-design-system`, `duo-postures`, `duo-transitions`, `duo-ergonomics`, `duo-accessibility`). `duo-patterns` builds in SwiftUI and maps each pattern to its UIKit counterpart. The recipes are SwiftUI apps.
 
 </details>
 

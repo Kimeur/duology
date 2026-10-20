@@ -1,7 +1,7 @@
 {
   "name": "duology-features",
   "version": "0.2.0",
-  "description": "iOS 27 features on iPhone Duo's two displays: Foundation Models, App Intents, the camera, media, reading, games, the iOS 27 SwiftUI changes, and widgets, Live Activities and Controls. Skills land one by one in v0.3.",
+  "description": "iOS 27 features on iPhone Duo's two displays: Foundation Models, App Intents, the camera, media, reading, games, the iOS 27 SwiftUI changes, and widgets, Live Activities and Controls.",
   "author": {
     "name": "Kimeur",
     "url": "https://github.com/Kimeur"
@@ -19,6 +19,9 @@
     "camera",
     "avfoundation",
     "media",
-    "widgets"
+    "reading",
+    "games",
+    "widgets",
+    "live-activities"
   ]
 }

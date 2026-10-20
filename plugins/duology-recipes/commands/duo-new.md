@@ -155,6 +155,7 @@ Tell the user, in a few lines:
 - How to check each pose: click Closed, Partially Open and Open in Device Hub, and look for what the recipe's skill promises in each pose. Nothing interactive may sit on the fold.
 - Where to change things: repeat the last line the script printed in step 3. For example, for `recipe-two-player-game`, the rules in `<AppName>/Engine/Duel.swift` and the look in `<AppName>/Duel/`.
 - For `recipe-media-player`: Picture in Picture doesn't run on the iPhone Duo simulator (the recipe measured `isPictureInPictureSupported()` as `false`), so check it on a device.
+- For `recipe-shop`: after the plain `simctl launch` in step 5, every price reads "–", because no StoreKit test session has run yet. Running the app from Xcode (the scheme names `StoreKit/Shop.storekit`) or running `Tools/run-ui-tests.sh` opens one, and after that the prices show. The recipe's skill explains it.
 - If the bundle ID starts with `com.example.`, change it before shipping.
 
 If the user described the app in step 1, load the recipe's skill (the skill with the recipe's name, in this plugin) and offer to adapt the project to that description. Don't start the changes until the user agrees.

@@ -27,7 +27,7 @@ Create a new iPhone Duo e-book reader in this folder: a small library and a read
 
 An empty folder (`fixture: empty`). With Duology, the `recipe-reader` skill and `/duo-new` can create the project from a template. Without it, the agent has to write the Xcode project itself.
 
-The run with Duology should also get the recipe's own `new-project.sh`, by its exact path in the plugin copy; that needs the script added to `PLUGIN_SCRIPTS` in [`lib/evalkit.py`](../../lib/evalkit.py).
+The run with Duology also gets the recipe's own `new-project.sh`, by its exact path in the plugin copy (`PLUGIN_SCRIPTS` in [`lib/evalkit.py`](../../lib/evalkit.py)).
 
 ## Pass checks
 

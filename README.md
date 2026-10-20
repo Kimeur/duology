@@ -14,9 +14,9 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/Kimeur/duology?style=flat-square&color=f4c430)](https://github.com/Kimeur/duology/stargazers)
 [![Release](https://img.shields.io/github/v/release/Kimeur/duology?style=flat-square&color=1d7a4b)](https://github.com/Kimeur/duology/releases)
-[![Skills](https://img.shields.io/badge/skills-26_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
+[![Skills](https://img.shields.io/badge/skills-27_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
 [![Commands and agents](https://img.shields.io/badge/commands_·_agents-5_·_1_built-2b55c7?style=flat-square)](#commands-and-agents)
-[![Recipes](https://img.shields.io/badge/app_recipes-1_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
+[![Recipes](https://img.shields.io/badge/app_recipes-2_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
 [![Built for Xcode 27.1](https://img.shields.io/badge/built_for-Xcode_27.1_·_iOS_27.1-1d7a4b?style=flat-square)](#verified-on)
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-d97757?style=flat-square)](#quick-start)
 <!-- skills.sh badge: add once the repo is listed
@@ -307,18 +307,21 @@ v0.2 adds three screens, one for each of `duo-postures`, `duo-transitions` and `
 
 ## App recipes
 
-`/duo-new <recipe> <AppName>` creates the project, tests its rules on the Mac, builds it and opens it on the iPhone Duo simulator. v0.1 has one recipe; the others are planned.
+`/duo-new <recipe> <AppName>` creates the project, tests its rules on the Mac, builds it and opens it on the iPhone Duo simulator. 2 recipes are ready; the others are planned.
 
 | Recipe | Status | What you get |
 |---|---|---|
 | `recipe-two-player-game` | v0.1 | Each player gets half the screen in every pose, with the game logic tested on the Mac. |
 | `recipe-finance-dashboard` | planned (v0.3) | Balance when closed; balance, charts and transactions when open. |
-| `recipe-media-player` | planned (v0.3) | Player that moves to tabletop on its own, with "up next" and Picture in Picture. |
+| `recipe-media-player` | v0.3 | Player that moves to tabletop on its own, with "up next" and Picture in Picture. |
 | `recipe-reader` | planned (v0.3) | Two pages in book pose, and it remembers where you were. |
 | `recipe-shop` | planned (v0.3) | Product shelf beside product details, with a two-pane paywall. |
 | `recipe-notes-ai` | planned (v1.0) | Notes list and editor, with an AI summary pane on the inner display. |
 | `recipe-camera-studio` | planned (v1.0) | The person you film sees themselves on the outer display. |
 | `recipe-kids-learning` | planned (v1.0) | A parent check, a privacy manifest, and nothing tracked. |
+
+<p align="center"><img src="docs/assets/recipes/recipe-media-player-closed.png" alt="The media player recipe, closed pose, on the iPhone Duo simulator" width="48%" /> <img src="docs/assets/recipes/recipe-media-player-tabletop.png" alt="The media player recipe, tabletop pose, on the iPhone Duo simulator" width="48%" /><br /><sub>The media player recipe on the iPhone Duo simulator</sub></p>
+
 
 ## Proof, not promises
 

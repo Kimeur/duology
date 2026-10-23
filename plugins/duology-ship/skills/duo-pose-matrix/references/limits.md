@@ -38,7 +38,7 @@ These checks find interference, but they can't prevent it. Run one pose sweep pe
 
 ## Permission is the user's decision
 
-macOS gives Accessibility access per app, in System Settings > Privacy & Security > Accessibility ([Apple](https://support.apple.com/guide/mac-help/mh43185/mac)). An app with that access can read and press anything on screen, in every app. That is a real grant of trust, and only the user should make it.
+macOS gives Accessibility access per app, in System Settings > Privacy & Security > Accessibility ([Apple](https://support.apple.com/guide/mac-help/allow-accessibility-apps-to-access-your-mac-mh43185/mac)). An app with that access can read and press anything on screen, in every app. That is a real grant of trust, and only the user should make it.
 
 - The tools check without a prompt and never open System Settings, call `tccutil` or change any setting. A test in `tests/` fails if the code ever does.
 - If the check fails, tell the user what the permission allows, how to grant it, and that the manual route works without it. Don't press for an answer.

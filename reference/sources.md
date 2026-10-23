@@ -2,7 +2,7 @@
 
 Duology's rules and device facts come from the pages on this list. We link to these pages and explain them in our own words. We never copy their text.
 
-- **Checked:** 16 October 2026, 19 October 2026 for the rows added with v0.2, and 20 October 2026 for the rows added with v0.3. On those days every URL below returned HTTP 200, unless the row says otherwise. Apple documentation and HIG pages were checked through their documentation JSON.
+- **Checked:** 16 October 2026, 19 October 2026 for the rows added with v0.2, 20 October 2026 for the rows added with v0.3, and 23 October 2026 for M1, whose URL changed. On those days every URL below returned HTTP 200, unless the row says otherwise. Apple documentation and HIG pages were checked through their documentation JSON.
 - **IDs:** each source has an ID (A1, D2, V3...). [`device-facts.md`](device-facts.md) and the skills cite sources by ID.
 - **API pages:** for every Duo API and its doc link, see [`api-index.md`](api-index.md).
 
@@ -155,9 +155,11 @@ Duology's rules and device facts come from the pages on this list. We link to th
 
 ## Apple: support pages
 
+From GitHub's runners, support.apple.com sometimes answers HTTP 404 with an empty body for a page that exists. `scripts/check-sources.py` reports that answer as blocked, not broken.
+
 | ID | Title | URL | What it covers | Checked |
 |---|---|---|---|---|
-| <a id="m1"></a>M1 | Allow accessibility apps to access your Mac (Mac User Guide) | https://support.apple.com/guide/mac-help/mh43185/mac | Where the user grants Accessibility permission: System Settings > Privacy & Security > Accessibility. `duo-pose-matrix` needs it to press Device Hub's pose buttons; only the user can grant it. | 19 Oct 2026 |
+| <a id="m1"></a>M1 | Allow accessibility apps to access your Mac (Mac User Guide) | https://support.apple.com/guide/mac-help/allow-accessibility-apps-to-access-your-mac-mh43185/mac | Where the user grants Accessibility permission: System Settings > Privacy & Security > Accessibility. `duo-pose-matrix` needs it to press Device Hub's pose buttons; only the user can grant it. | 23 Oct 2026 |
 
 ## Apple: forums (not opened)
 

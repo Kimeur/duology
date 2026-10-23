@@ -80,7 +80,7 @@ Ready: `duo-pose set <closed|open|book|tabletop>` can press Device Hub's buttons
 | 7 | The Swift helper could not be built | Check that Xcode 27.1 is installed. |
 | 8 | (matrix) The app isn't installed on the simulator | Build and install it (`/duo-audit` step 2 has the commands). |
 
-How the user allows Accessibility, in their words to them: System Settings > Privacy & Security > Accessibility, then turn on the app that runs Claude Code. If it still says not allowed, quit and reopen that app ([Apple: Allow accessibility apps to access your Mac](https://support.apple.com/guide/mac-help/mh43185/mac)).
+How the user allows Accessibility, in their words to them: System Settings > Privacy & Security > Accessibility, then turn on the app that runs Claude Code. If it still says not allowed, quit and reopen that app ([Apple: Allow accessibility apps to access your Mac](https://support.apple.com/guide/mac-help/allow-accessibility-apps-to-access-your-mac-mh43185/mac)).
 
 ### 2. Run the matrix
 

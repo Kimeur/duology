@@ -47,6 +47,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._reply(200)
         elif path == "/missing":
             self._reply(404)
+        elif path == "/empty-404":
+            self._reply(404, body=b"")
         elif path == "/forbidden":
             self._reply(403)
         elif path == "/moved":
@@ -156,11 +158,22 @@ class ServerTests(unittest.TestCase):
 
     def test_login_only_github_pages_are_blocked(self):
         fetcher = cs.Fetcher(timeout=5, retries=0, per_host=1)
-        fetcher._request = lambda url, method: (404, url, None)
+        fetcher._request = lambda url, method: (404, url, None, False)
         result = fetcher.check("https://github.com/Kimeur/duology/stargazers")
         self.assertEqual(result.kind, "blocked")
         self.assertIn("logged out", result.describe())
         self.assertEqual(fetcher.check("https://github.com/Kimeur/duology/nope").kind, "broken")
+
+    def test_empty_404_from_listed_host_is_blocked(self):
+        # Matched on the host, so the local server stands in for support.apple.com.
+        with mock.patch.object(cs, "EMPTY_404_HOSTS", {"127.0.0.1"}):
+            for method in ("head", "get"):
+                with self.subTest(method=method):
+                    result = self.check("/empty-404", method=method)
+                    self.assertEqual((result.kind, result.status), ("blocked", 404))
+                    self.assertIn("empty body", result.describe())
+                    self.assertEqual(self.check("/missing", method=method).kind, "broken")
+        self.assertEqual(self.check("/empty-404").kind, "broken")
 
     def test_connection_refused_is_broken(self):
         result = cs.Fetcher(timeout=2, retries=0, per_host=1).check("http://127.0.0.1:9/")

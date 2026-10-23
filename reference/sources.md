@@ -108,6 +108,8 @@ Duology's rules and device facts come from the pages on this list. We link to th
 | <a id="d75"></a>D75 | Testing in-app purchases with StoreKit transaction manager in Xcode | https://developer.apple.com/documentation/xcode/testing-in-app-purchases-with-storekit-transaction-manager-in-code | The transaction manager (Debug > StoreKit > Manage Transactions). | 20 Oct 2026 |
 | <a id="d76"></a>D76 | StoreKit (framework) | https://developer.apple.com/documentation/storekit | Products, purchases, transactions and subscriptions (StoreKit 2). | 20 Oct 2026 |
 | <a id="d77"></a>D77 | Swift Charts (framework) | https://developer.apple.com/documentation/charts | Marks, scales, axes and legends. Used by `recipe-finance-dashboard`. | 20 Oct 2026 |
+| <a id="d78"></a>D78 | Transitioning to the UIKit scene-based life cycle | https://developer.apple.com/documentation/uikit/transitioning-to-the-uikit-scene-based-life-cycle | From iOS 27, UIKit apps built with the latest SDK fail to launch without scenes; the signs, the manifest, moving the window and the life-cycle methods. Used by `duo-migrate`. | 23 Oct 2026 |
+| <a id="d79"></a>D79 | TN3192: Migrating your app from the deprecated UIRequiresFullScreen key | https://developer.apple.com/documentation/technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key | The key is deprecated in iOS 26; how to make the app resize instead. Used by `duo-migrate`. | 23 Oct 2026 |
 
 ## Apple: videos
 

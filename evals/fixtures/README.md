@@ -71,6 +71,34 @@ An empty SwiftUI app ("Hello") for tasks that build something new inside an exis
 - iOS 26.0 target, Swift 6, main-actor isolation by default, approachable concurrency.
 - A UI test target, `StarterUITests`, with one launch test. Oracle tests from [`../oracles`](../oracles) are copied into it after the agent's run.
 
+## Tally
+
+An expense list in UIKit, written the way apps were before iPhone Duo and still built with an older Xcode. Used by [`duo-migrate/ship-on-duo`](../tasks/duo-migrate/ship-on-duo.md).
+
+- iOS 16.0 target, Swift 5 mode, `TARGETED_DEVICE_FAMILY = 1,2`, one UI test target (`TallyUITests`) with one launch test.
+- A table of expenses under a total, swipe to delete, a + button that adds one through a "New Expense" alert, and a detail screen pushed in a `UINavigationController`. The list is saved to `Documents/expenses.json`; the first launch shows six sample expenses.
+- CI: `.xcode-version` and `.github/workflows/build.yml`, both pinned to Xcode 26.4.
+
+Planted mistakes:
+
+| Where | Mistake | Caught by |
+|---|---|---|
+| `App/AppDelegate.swift` | no scene life cycle: an `@main` app delegate makes its window with `UIWindow(frame: UIScreen.main.bounds)` in `didFinishLaunching` | the launch crash below, task checks `scene-life-cycle` and `launches`, DUO001 |
+| `Tally.xcodeproj` | `INFOPLIST_KEY_UIApplicationSceneManifest_Generation = NO` (Debug and Release), so the app has no scene manifest | the launch crash, `launches` |
+| `App/AppDelegate.swift` | the list is saved in `applicationDidEnterBackground`, which UIKit no longer calls once the app uses scenes | task check `still-saves-in-background` |
+| `List/ExpenseListViewController.swift` | header height from `UIScreen.main.bounds` | DUO001, R3 |
+| `List/ExpenseListViewController.swift` | header layout picked from `UIDevice.current.orientation` | DUO002, R3 |
+| `List/ExpenseCell.swift` | row icon size from `UIScreen.main.bounds` | DUO001, R3 |
+| `Detail/ExpenseDetailViewController.swift` | `userInterfaceIdiom == .pad` puts the icon beside the details | DUO004, R3 |
+| `Detail/ExpenseDetailViewController.swift` | `view.bounds.height <= 667` picks the icon size | DUO006, R3 |
+| `Tally.xcodeproj` | `INFOPLIST_KEY_UIRequiresFullScreen = YES` (Debug and Release) | DUO008, task check `full-screen-off`, R1 |
+| `Tally.xcodeproj` | `IPHONEOS_DEPLOYMENT_TARGET = 16.0`. Xcode 27.1 builds it without a warning (measured), but every iOS 27 API then needs `if #available` | the build gate, when an agent forgets the check |
+| `.xcode-version`, `.github/workflows/build.yml` | CI pinned to Xcode 26.4 (`26.4`, `DEVELOPER_DIR: /Applications/Xcode_26.4.app/Contents/Developer`) | task check `ci-on-xcode-27-1` |
+
+duo-lint on the untouched fixture: 8 findings, 3 errors and 5 warnings.
+
+Measured on 23 October 2026 with Xcode 27.1 (27A9275) on the iPhone Duo simulator (iOS 27.1): the fixture builds with the iOS 27.1 SDK and crashes at launch, every time. Three launches (`simctl launch`, `launch_ok` and a UI test) each left a crash report in `~/Library/Logs/DiagnosticReports`: `EXC_BREAKPOINT (SIGTRAP)`, "Trace/BPT trap: 5", on the main thread in UIKitCore `___UIApplicationEvaluateRuntimeIssueForNoSceneLifecycleAdoption_block_invoke`, called from `-[UIApplication workspace:didCreateScene:withTransitionContext:completion:]`, 1.7 to 7 seconds after the process started. A hand-fixed copy (a scene delegate connected through `configurationForConnecting`, a generated scene manifest, no `UIRequiresFullScreen`, CI on 27.1, the lint findings fixed) launches and passes every check of the task.
+
 ## Fixtures added for v0.2
 
 Each of these is used by one or two v0.2 tasks, and four of them by v0.3 tasks too. The planted problems are listed in the task's "Starting point" section, so they aren't repeated here. All seven build for the iPhone Duo simulator (`build-for-testing`, 18 and 19 October 2026), and every task that uses them fails on the untouched fixture (`run.sh --selftest --with-build`).
@@ -105,7 +133,7 @@ Not a folder. `fixture: empty` starts the agent in an empty folder. Used by `duo
 export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
 UDID=<an iPhone Duo simulator UDID>   # xcrun simctl list devices | grep "iPhone Duo"
 cd evals/fixtures
-for app in Places Reel Talk TapDuel Starter Steps Album Trail Inbox Trips Notes Shoot; do
+for app in Places Reel Talk TapDuel Starter Steps Album Trail Inbox Trips Notes Shoot Tally; do
   xcodebuild build-for-testing -project "$app/$app.xcodeproj" -scheme "$app" \
     -destination "platform=iOS Simulator,id=$UDID" \
     -derivedDataPath "/tmp/fixture-dd/$app" CODE_SIGNING_ALLOWED=NO -quiet && echo "$app ok"

@@ -12,6 +12,11 @@ Each release says which Xcode and iOS versions it was checked on.
 - `evals/`: the `Tally` fixture (a UIKit app without scenes, with an Xcode 26 pin in CI) and the task `duo-migrate/ship-on-duo`.
 - `reference/api-index.md`: a "Migrating an existing app" section; `reference/sources.md`: D78 (the scene life cycle guide) and D79 (TN3192).
 
+### Fixed
+
+- `reference/sources.md` M1 and the three places that cite it: the Mac User Guide page on Accessibility permission now uses Apple's canonical URL.
+- `scripts/check-sources.py`: when support.apple.com answers HTTP 404 with an empty body, the link is reported as blocked, not broken. The site answers some automated requests from GitHub's runners that way for pages that exist, which turned the weekly link check red; a page that is really missing still gets an error page and still fails.
+
 ## [0.3.0] - 2026-10-21
 
 Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not yet checked on a real iPhone Duo, and the first published test results are not in yet; both are planned before v1.0.

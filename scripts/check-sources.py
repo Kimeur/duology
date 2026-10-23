@@ -9,9 +9,9 @@ only GET requests. The scheduled CI run uses it.
 
 Each URL ends up in one of three groups:
 - ok: the page answered with a status below 400, after redirects;
-- blocked: the site asked for a login or a human check (401, 403, 429, or a
-  redirect to a human-verification page). Reported as a warning, because a
-  person can still open the page;
+- blocked: the site asked for a login or a human check (401, 403, 429, a
+  redirect to a human-verification page, or support.apple.com's empty 404).
+  Reported as a warning, because a person can still open the page;
 - broken: 404, 410, another 4xx or 5xx, a timeout, or a DNS or TLS failure.
   Also a redirect up to a parent page, or out of Apple's /videos/play/ pages:
   that is how a site answers a page that doesn't exist (an unknown WWDC or
@@ -36,6 +36,7 @@ import argparse
 import concurrent.futures
 import glob
 import html
+import http.client
 import os
 import re
 import socket
@@ -58,6 +59,14 @@ HUMAN_CHECK = re.compile(r"verify-human|captcha|/cdn-cgi/challenge|/challenge-pl
 # Pages that answer 404 to anyone who isn't logged in (checked 16 Oct 2026 on
 # several public repos). Treated as blocked, not broken.
 LOGIN_ONLY = re.compile(r"^https://github\.com/[^/]+/[^/]+/(?:stargazers|watchers)/?$", re.I)
+
+# Hosts that turn some automated requests away with HTTP 404 and an empty body,
+# for pages that exist. support.apple.com did this to Python's urllib from
+# GitHub's runners on 19 and 23 Oct 2026: one runner got the empty 404 on every
+# try, the next got the page, and curl on the same runner got the page. A page
+# that is really missing answers 404 with an HTML error page, so only the empty
+# answer counts as blocked. Matched on the final URL's host.
+EMPTY_404_HOSTS = {"support.apple.com"}
 
 # Detail pages whose missing IDs redirect to an index instead of answering 404.
 # developer.apple.com/videos/play/tech-talks/999999/ ends at /videos/tech-talks/
@@ -336,10 +345,12 @@ class Fetcher:
             return self._locks[host]
 
     def _request(self, url, method):
+        """Return (status, final URL, error, empty), where empty is True when a
+        GET got an error status with no body."""
         try:
             url = ascii_url(url)
         except (UnicodeError, ValueError) as exc:
-            return None, url, "can't encode this URL (%s)" % exc
+            return None, url, "can't encode this URL (%s)" % exc, False
         req = urllib.request.Request(url, method=method, headers={
             "User-Agent": USER_AGENT,
             "Accept": "text/html,application/xhtml+xml,application/json;q=0.9,*/*;q=0.8",
@@ -349,22 +360,28 @@ class Fetcher:
             with self.opener.open(req, timeout=self.timeout) as resp:
                 if method == "GET":
                     resp.read(2048)
-                return resp.status, resp.geturl(), None
+                return resp.status, resp.geturl(), None, False
         except urllib.error.HTTPError as exc:
-            return exc.code, exc.geturl() or url, None
+            empty = False
+            if method == "GET":
+                try:
+                    empty = not exc.read(1)
+                except (OSError, ValueError, http.client.HTTPException):
+                    pass
+            return exc.code, exc.geturl() or url, None, empty
         except urllib.error.URLError as exc:
             reason = exc.reason
             if isinstance(reason, ssl.SSLCertVerificationError):
-                return None, url, "TLS certificate check failed (%s)" % reason.verify_message
+                return None, url, "TLS certificate check failed (%s)" % reason.verify_message, False
             if isinstance(reason, socket.gaierror):
-                return None, url, "DNS lookup failed"
+                return None, url, "DNS lookup failed", False
             if isinstance(reason, (socket.timeout, TimeoutError)):
-                return None, url, "timed out after %gs" % self.timeout
-            return None, url, "network error (%s)" % reason
+                return None, url, "timed out after %gs" % self.timeout, False
+            return None, url, "network error (%s)" % reason, False
         except (socket.timeout, TimeoutError):
-            return None, url, "timed out after %gs" % self.timeout
+            return None, url, "timed out after %gs" % self.timeout, False
         except (ConnectionError, OSError, ValueError) as exc:
-            return None, url, "network error (%s)" % exc
+            return None, url, "network error (%s)" % exc, False
 
     def check(self, url):
         slot = self._host_slot(url)
@@ -372,15 +389,19 @@ class Fetcher:
             result = None
             for attempt in range(self.retries + 1):
                 if self.method == "get":
-                    status, final, error = self._request(url, "GET")
+                    status, final, error, empty = self._request(url, "GET")
                 else:
-                    status, final, error = self._request(url, "HEAD")
+                    status, final, error, empty = self._request(url, "HEAD")
                     if error is not None or status in HEAD_FALLBACK_STATUSES:
-                        status, final, error = self._request(url, "GET")
+                        status, final, error, empty = self._request(url, "GET")
                 result = Result(url, status, final, error)
                 if status == 404 and LOGIN_ONLY.match(url):
                     result.kind = "blocked"
                     result.error = "HTTP 404 when logged out; GitHub shows this page only after login"
+                elif status == 404 and empty and (urllib.parse.urlsplit(final).hostname or "").lower() in EMPTY_404_HOSTS:
+                    result.kind = "blocked"
+                    result.error = ("HTTP 404 with an empty body at %s; this site turns some automated requests "
+                                    "away like that, and a missing page gets an error page instead" % final)
                 retry = error is not None or status in RETRY_STATUSES
                 if not retry or attempt == self.retries:
                     break

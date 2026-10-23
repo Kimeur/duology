@@ -457,7 +457,7 @@ Used by `duo-accessibility`, the v0.2 eval oracles and the UI tests of the recip
 | `kAXTrustedCheckOptionPrompt` | ApplicationServices (macOS) | `let kAXTrustedCheckOptionPrompt: Unmanaged<CFString>` | macOS 10.9 | [doc](https://developer.apple.com/documentation/applicationservices/kaxtrustedcheckoptionprompt) |
 | `AXUIElementPerformAction(_:_:)` | ApplicationServices (macOS) | `func AXUIElementPerformAction(_ element: AXUIElement, _ action: CFString) -> AXError`; Device Hub's pose buttons take `kAXPressAction` | macOS 10.2 | [doc](https://developer.apple.com/documentation/applicationservices/1462091-axuielementperformaction) |
 
-- `duo-pose` passes `kAXTrustedCheckOptionPrompt: false`, so the check never shows the permission prompt. Only the user grants Accessibility, in System Settings > Privacy & Security > Accessibility ([Apple Support](https://support.apple.com/guide/mac-help/mh43185/mac)).
+- `duo-pose` passes `kAXTrustedCheckOptionPrompt: false`, so the check never shows the permission prompt. Only the user grants Accessibility, in System Settings > Privacy & Security > Accessibility ([Apple Support](https://support.apple.com/guide/mac-help/allow-accessibility-apps-to-access-your-mac-mh43185/mac)).
 - It also uses `AXUIElementCreateApplication`, `AXUIElementCopyAttributeValue` and `AXUIElementSetMessagingTimeout` from the same header (`AXUIElement.h`).
 
 ## Foundation Models

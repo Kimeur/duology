@@ -86,6 +86,7 @@ DENIED_TOOLS = [
 # to run, relative to the plugin folder. Only the run with Duology gets them.
 PLUGIN_SCRIPTS = [
     "duology-ship/skills/duo-lint/scripts/duo-lint",
+    "duology-ship/skills/duo-app-store/scripts/duo-shots",
     "duology-recipes/skills/recipe-two-player-game/scripts/new-project.sh",
     "duology-recipes/skills/recipe-finance-dashboard/scripts/new-project.sh",
     "duology-recipes/skills/recipe-media-player/scripts/new-project.sh",

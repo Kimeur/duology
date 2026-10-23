@@ -701,6 +701,19 @@ Used by `duo-migrate`. Checked on 23 Oct 2026 in the UIKit headers and the Swift
 - *Measured* in `duo-migrate`: a UIKit app with no scene life cycle, built with Xcode 27.1, crashed 3.8 s after launch on the iPhone Duo simulator (`EXC_BREAKPOINT` in UIKit's check for apps that haven't adopted scenes); with a scene delegate it ran.
 - *Measured* in `duo-migrate`: Xcode 27.1 reports `UIScreen.main` and `UIWindow(frame:)` as deprecated only when the deployment target is iOS 26 or later; with an iOS 16.0 target the same code typechecks without a warning.
 
+## App Store submission
+
+Used by `duo-app-store`. Not iOS APIs: the App Store Connect API, the Info.plist-style privacy manifest, and the simulator's screenshot command, checked on 23 Oct 2026.
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `ScreenshotDisplayType` `APP_IPHONE_DUO` | App Store Connect API | The `screenshotDisplayType` of an `appScreenshotSets` record | *Measured* (18 Oct 2026): accepted by the API; not in Apple's reference on 23 Oct 2026 | [doc](https://developer.apple.com/documentation/appstoreconnectapi/screenshotdisplaytype) |
+| `appScreenshotSets`, `appScreenshots` | App Store Connect API | `POST /v1/appScreenshotSets`, then reserve, upload and commit each `appScreenshots` asset | App Store Connect API | [doc](https://developer.apple.com/documentation/appstoreconnectapi/uploading-assets-to-app-store-connect) |
+| `PrivacyInfo.xcprivacy` | Privacy manifest | A property list with `NSPrivacyTracking`, `NSPrivacyTrackingDomains`, `NSPrivacyCollectedDataTypes`, `NSPrivacyAccessedAPITypes` | Xcode 15 or later | [doc](https://developer.apple.com/documentation/bundleresources/privacy-manifest-files) |
+| `simctl io <device> screenshot --display=<display>` | Xcode command-line tools | `--display=primary` (outer display), `--display=primary-1` (inner display) on the iPhone Duo simulator | Xcode 27.1 (*measured*) | `xcrun simctl io help` |
+
+- *Measured* in `duo-app-store`: both displays' simulator screenshots are PNGs with an alpha channel (App Store screenshots can't have one), and a display that is off saves as a full-size black frame.
+
 ## Not in the SDK
 
 Brief claims we could not find in the iOS 27.1 SDK:

@@ -110,6 +110,10 @@ Duology's rules and device facts come from the pages on this list. We link to th
 | <a id="d77"></a>D77 | Swift Charts (framework) | https://developer.apple.com/documentation/charts | Marks, scales, axes and legends. Used by `recipe-finance-dashboard`. | 20 Oct 2026 |
 | <a id="d78"></a>D78 | Transitioning to the UIKit scene-based life cycle | https://developer.apple.com/documentation/uikit/transitioning-to-the-uikit-scene-based-life-cycle | From iOS 27, UIKit apps built with the latest SDK fail to launch without scenes; the signs, the manifest, moving the window and the life-cycle methods. Used by `duo-migrate`. | 23 Oct 2026 |
 | <a id="d79"></a>D79 | TN3192: Migrating your app from the deprecated UIRequiresFullScreen key | https://developer.apple.com/documentation/technotes/tn3192-migrating-your-app-from-the-deprecated-uirequiresfullscreen-key | The key is deprecated in iOS 26; how to make the app resize instead. Used by `duo-migrate`. | 23 Oct 2026 |
+| <a id="d80"></a>D80 | Uploading assets to App Store Connect | https://developer.apple.com/documentation/appstoreconnectapi/uploading-assets-to-app-store-connect | Reserve, upload and commit an asset such as a screenshot. Used by `duo-app-store`. | 23 Oct 2026 |
+| <a id="d81"></a>D81 | ScreenshotDisplayType (App Store Connect API) | https://developer.apple.com/documentation/appstoreconnectapi/screenshotdisplaytype | The display types for screenshot sets. On 23 Oct 2026 it listed 33 values and none for iPhone Duo; the API itself accepted `APP_IPHONE_DUO`. | 23 Oct 2026 |
+| <a id="d82"></a>D82 | Privacy manifest files | https://developer.apple.com/documentation/bundleresources/privacy-manifest-files | What an app or SDK declares in `PrivacyInfo.xcprivacy`. Used by `duo-app-store`. | 23 Oct 2026 |
+| <a id="d83"></a>D83 | App Review | https://developer.apple.com/distribute/app-review/ | Submitting for review and what to tell App Review. Used by `duo-app-store`. | 23 Oct 2026 |
 
 ## Apple: videos
 

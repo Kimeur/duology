@@ -14,7 +14,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/Kimeur/duology?style=flat-square&color=f4c430)](https://github.com/Kimeur/duology/stargazers)
 [![Release](https://img.shields.io/github/v/release/Kimeur/duology?style=flat-square&color=1d7a4b)](https://github.com/Kimeur/duology/releases)
-[![Skills](https://img.shields.io/badge/skills-30_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
+[![Skills](https://img.shields.io/badge/skills-31_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
 [![Commands and agents](https://img.shields.io/badge/commands_·_agents-5_·_1_built-2b55c7?style=flat-square)](#commands-and-agents)
 [![Recipes](https://img.shields.io/badge/app_recipes-5_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
 [![Built for Xcode 27.1](https://img.shields.io/badge/built_for-Xcode_27.1_·_iOS_27.1-1d7a4b?style=flat-square)](#verified-on)
@@ -152,7 +152,7 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 
 ## What's inside
 
-**v0.3: 30 skills in 5 plugins, 5 commands and 1 review agent.** The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
+**31 skills in 5 plugins, 5 commands and 1 review agent.** v0.3 released 30 of them; `duo-migrate` is new on `main` since. The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
 
 <details open>
 <summary><strong>duology</strong> · foundation: setup, layout, continuity, scenes</summary>
@@ -215,9 +215,9 @@ See [App recipes](#app-recipes).
 | `duo-testing` | v0.1 | Writing tests that hold up on the Duo simulator: logic tested on the Mac, launch switches, UI tests that really reach SwiftUI gestures. |
 | `duo-pose-matrix` | v0.2 | Screenshots of your app closed, open, in book pose and in tabletop, by pressing Device Hub's pose buttons (with your Accessibility permission) or with poses you set by hand. |
 | `duo-lint` | v0.1 | Finding code Apple warns against before it ships. |
+| `duo-migrate` | v0.4 | Bringing an app that ships today over: what its SDK shows on Duo, the scene life cycle, the patterns to fix, in order. |
 | `duo-performance` | planned (v1.0) | Resizing smoothly at 120 Hz when the phone opens. |
 | `duo-app-store` | planned (v1.0) | Duo screenshots (required from April 2027), metadata, App Review notes, privacy manifest. |
-| `duo-migrate` | planned (v1.0) | Bringing an existing app over: which SDK you build with changes how it looks on Duo. |
 
 </details>
 
@@ -330,7 +330,7 @@ v0.2 adds three screens, one for each of `duo-postures`, `duo-transitions` and `
 
 ## Proof, not promises
 
-Every skill has test tasks in [`evals/`](evals), 41 so far (40 ready to run). Each task runs with Claude Code twice, with and without Duology, in a fresh copy of the same sample project. A run passes when the app builds for the iPhone Duo simulator, `duo-lint` finds nothing, every check in the task passes and every checklist rule it covers passes.
+Every skill has test tasks in [`evals/`](evals), 42 so far (41 ready to run). Each task runs with Claude Code twice, with and without Duology, in a fresh copy of the same sample project. A run passes when the app builds for the iPhone Duo simulator, `duo-lint` finds nothing, every check in the task passes and every checklist rule it covers passes.
 
 No results yet. The first published runs are planned before v1.0, and we'll publish them here whatever they show.
 

@@ -150,7 +150,7 @@ Commands: `/duo-doctor` (check the setup), `/duo-new <recipe>` (new app from a r
 
 If a skill isn't installed, tell the user the plugin to add, for example `/plugin install duology-design@duology`. On other agents: `npx skills add Kimeur/duology --skill <name>`.
 
-**Coming.** Say "coming" and use the Apple source listed in [references/routing.md](references/routing.md) until then: `duo-performance`, `duo-app-store`, `duo-migrate`, `/duo-ship` and the last three recipes, all planned for v1.0.
+**Coming.** Say "coming" and use the Apple source listed in [references/routing.md](references/routing.md) until then: `duo-performance`, `duo-app-store`, `/duo-ship` and the last three recipes, all planned for v1.0. For an app that ships today on an older SDK, load `duo-migrate` (`duology-ship`).
 
 ## Step 3: The five-minute first pass (existing app)
 

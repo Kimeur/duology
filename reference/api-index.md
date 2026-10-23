@@ -674,6 +674,33 @@ Used by `recipe-shop` (StoreKit) and `recipe-finance-dashboard` (Charts). Checke
 - `recipe-shop`'s scheme names its StoreKit file in a `StoreKitConfigurationFileReference` element inside `LaunchAction`. That is Xcode scheme XML, not an SDK API ([Setting up StoreKit Testing in Xcode](https://developer.apple.com/documentation/xcode/setting-up-storekit-testing-in-xcode)).
 - *Measured* in `recipe-shop`: launched with `simctl` before any StoreKit test session, the app got no products and every price read "–". After Xcode's Run or a UI test run opened a session, prices showed.
 
+## Migrating an existing app
+
+Used by `duo-migrate`. Checked on 23 Oct 2026 in the UIKit headers and the SwiftUI interfaces of the iOS 27.1 SDK; the deprecations are the SDK's own messages. Apple's rule that UIKit apps built with the latest SDK need the scene life cycle from iOS 27: [Transitioning to the UIKit scene-based life cycle](https://developer.apple.com/documentation/uikit/transitioning-to-the-uikit-scene-based-life-cycle).
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `UIWindow.init(windowScene:)` | UIKit | `init(windowScene: UIWindowScene)` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uiwindow/init(windowscene:)) |
+| `UIWindow.init(frame:)` | UIKit | `init(frame: CGRect)` | iOS 2.0, **deprecated in iOS 26.0** ("Use init(windowScene:) instead.") | [doc](https://developer.apple.com/documentation/uikit/uiwindow/init(frame:)) |
+| `UIApplicationDelegate.application(_:configurationForConnecting:options:)` | UIKit | `func application(_ application: UIApplication, configurationForConnecting connectingSceneSession: UISceneSession, options: UIScene.ConnectionOptions) -> UISceneConfiguration` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uiapplicationdelegate/application(_:configurationforconnecting:options:)) |
+| `UISceneDelegate.scene(_:willConnectTo:options:)` | UIKit | `func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions)` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uiscenedelegate/scene(_:willconnectto:options:)) |
+| `sceneDidBecomeActive(_:)`, `sceneWillResignActive(_:)`, `sceneWillEnterForeground(_:)`, `sceneDidEnterBackground(_:)` | UIKit (`UISceneDelegate`) | `func sceneDidBecomeActive(_ scene: UIScene)`, and the same shape for the others | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenedidbecomeactive(_:)) |
+| `UIApplication.willEnterForegroundNotification` | UIKit | `static let willEnterForegroundNotification: NSNotification.Name` | iOS 4.0 | [doc](https://developer.apple.com/documentation/uikit/uiapplication/willenterforegroundnotification) |
+| `UIWindowScene.screen` | UIKit | `var screen: UIScreen { get }` | iOS 13.0 | [doc](https://developer.apple.com/documentation/uikit/uiwindowscene/screen) |
+| `UITraitCollection.horizontalSizeClass` | UIKit | `var horizontalSizeClass: UIUserInterfaceSizeClass { get }` | iOS 8.0 | [doc](https://developer.apple.com/documentation/uikit/uitraitcollection/horizontalsizeclass) |
+| `registerForTraitChanges(_:handler:)`, `UITraitHorizontalSizeClass` | UIKit (`UITraitChangeObservable`) | `func registerForTraitChanges<Self>(_ traits: [UITrait], handler: @escaping (Self, UITraitCollection) -> Void) -> any UITraitChangeRegistration` | iOS 17.0 | [doc](https://developer.apple.com/documentation/uikit/uitraitchangeobservable) |
+| `traitCollectionDidChange(_:)` | UIKit | `func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?)` | iOS 8.0, **deprecated in iOS 17.0** (use the trait change registration APIs) | [doc](https://developer.apple.com/documentation/uikit/uitraitenvironment/traitcollectiondidchange(_:)) |
+| `UIViewController.viewWillLayoutSubviews()` | UIKit | `func viewWillLayoutSubviews()` | iOS 5.0 | [doc](https://developer.apple.com/documentation/uikit/uiviewcontroller/viewwilllayoutsubviews()) |
+| `UICollectionViewFlowLayout.itemSize` | UIKit | `var itemSize: CGSize` | iOS 6.0 | [doc](https://developer.apple.com/documentation/uikit/uicollectionviewflowlayout/itemsize) |
+| `UIView.ContentMode.scaleAspectFill`, `.scaleAspectFit` | UIKit | `case scaleAspectFill`, `case scaleAspectFit` | iOS 2.0 | [doc](https://developer.apple.com/documentation/uikit/uiview/contentmode-swift.enum) |
+| `GeometryReader` | SwiftUI | `struct GeometryReader<Content> where Content : View` | iOS 13.0 | [doc](https://developer.apple.com/documentation/swiftui/geometryreader) |
+| `View.aspectRatio(_:contentMode:)` | SwiftUI | `func aspectRatio(_ aspectRatio: CGFloat? = nil, contentMode: ContentMode) -> some View` | iOS 13.0 | [doc](https://developer.apple.com/documentation/swiftui/view/aspectratio(_:contentmode:)) |
+| `EnvironmentValues.horizontalSizeClass` | SwiftUI | `var horizontalSizeClass: UserInterfaceSizeClass?` | iOS 13.0 | [doc](https://developer.apple.com/documentation/swiftui/environmentvalues/horizontalsizeclass) |
+| `UIApplicationSceneManifest`, `UIApplicationSupportsMultipleScenes`, `UISceneConfigurations`, `UISceneDelegateClassName` | Info.plist keys | A dictionary in the Info.plist; `INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES` asks Xcode to generate it | iOS 13.0 | [doc](https://developer.apple.com/documentation/bundleresources/information-property-list/uiapplicationscenemanifest) |
+
+- *Measured* in `duo-migrate`: a UIKit app with no scene life cycle, built with Xcode 27.1, crashed 3.8 s after launch on the iPhone Duo simulator (`EXC_BREAKPOINT` in UIKit's check for apps that haven't adopted scenes); with a scene delegate it ran.
+- *Measured* in `duo-migrate`: Xcode 27.1 reports `UIScreen.main` and `UIWindow(frame:)` as deprecated only when the deployment target is iOS 26 or later; with an iOS 16.0 target the same code typechecks without a warning.
+
 ## Not in the SDK
 
 Brief claims we could not find in the iOS 27.1 SDK:

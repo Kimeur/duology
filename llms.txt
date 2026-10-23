@@ -45,6 +45,7 @@ Start with the duo-start skill: it detects the app's setup and says which skill 
 - [duo-lint](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/skills/duo-lint/SKILL.md): The fold linter. Finds main-screen sizing, orientation and idiom checks, hard-coded device sizes, fixed widths and UIRequiresFullScreen.
 - [duo-testing](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/skills/duo-testing/SKILL.md): Logic tests on the Mac and UI tests that work on the iPhone Duo simulator.
 - [duo-pose-matrix](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/skills/duo-pose-matrix/SKILL.md): Screenshots of an installed app closed, open, in book pose and in tabletop, by pressing Device Hub's pose buttons through the macOS Accessibility API with the user's permission, or poses set by hand.
+- [duo-migrate](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/skills/duo-migrate/SKILL.md): Moves an app that ships today to Xcode 27.1 and iPhone Duo: what its current SDK shows, the scene life cycle for UIKit apps, the patterns to fix in order.
 
 ## Recipes (plugin: duology-recipes)
 

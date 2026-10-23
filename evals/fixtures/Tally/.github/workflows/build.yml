@@ -1,0 +1,18 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: macos-26
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_26.4.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: |
+          xcodebuild build -project Tally.xcodeproj -scheme Tally \
+            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO

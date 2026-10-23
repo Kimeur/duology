@@ -30,12 +30,16 @@ Checked on Xcode 27.1 and the iPhone Duo simulator. The two items carried over f
 - [x] Recipes: `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop`
 - [x] Test tasks for every v0.3 skill and recipe in `evals/` (41 tasks in all; 40 are ready)
 
+## v0.4: existing apps (next)
+
+- [x] `duo-migrate`, moved up from v1.0: an app that ships today, moved to Xcode 27.1 and iPhone Duo step by step, with the `Tally` fixture and a test task
+
 ## v1.0: complete (by end of January 2027)
 
 - [ ] Carried over from v0.3: first checks on a real iPhone Duo (the hinge, 120 Hz transitions, the camera capture accessory, new windows on the outer display)
 - [ ] Carried over from v0.3: first published test results (the harness runs in a separate macOS user account or a VM)
 - All 36 skills and 8 recipes, including `recipe-notes-ai`, `recipe-camera-studio`, `recipe-kids-learning`
-- `duo-performance`, `duo-app-store`, `duo-migrate`, `/duo-ship`, `duo-pose-tester` agent
+- `duo-performance`, `duo-app-store`, `/duo-ship`, `duo-pose-tester` agent
 - Ready before Apple's April 2027 rule that App Store listings include iPhone Duo screenshots
 - Full test results published
 

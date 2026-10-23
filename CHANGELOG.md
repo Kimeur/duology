@@ -6,6 +6,12 @@ Each release says which Xcode and iOS versions it was checked on.
 
 ## [Unreleased]
 
+### Added
+
+- `duo-migrate` (`duology-ship`): moves an app that ships today to Xcode 27.1 and iPhone Duo, step by step. What people see with each SDK, the scene life cycle a UIKit app needs to launch, rebuilding locally and in CI, the patterns Apple warns against mapped to duo-lint rules, the fixes in UIKit and SwiftUI, what the new SDK changes on its own, and the April 2027 App Store rules. *Measured* on the iPhone Duo simulator: a UIKit app without scenes, built with Xcode 27.1, crashes at launch; and Xcode 27.1 shows the `UIScreen.main` and `UIWindow(frame:)` deprecations only for deployment targets of iOS 26 or later.
+- `evals/`: the `Tally` fixture (a UIKit app without scenes, with an Xcode 26 pin in CI) and the task `duo-migrate/ship-on-duo`.
+- `reference/api-index.md`: a "Migrating an existing app" section; `reference/sources.md`: D78 (the scene life cycle guide) and D79 (TN3192).
+
 ## [0.3.0] - 2026-10-21
 
 Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not yet checked on a real iPhone Duo, and the first published test results are not in yet; both are planned before v1.0.

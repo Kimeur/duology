@@ -159,7 +159,7 @@ Duology's rules and device facts come from the pages on this list. We link to th
 
 ## Apple: support pages
 
-From GitHub's runners, support.apple.com sometimes answers HTTP 404 with an empty body for a page that exists. `scripts/check-sources.py` reports that answer as blocked, not broken.
+From any network, CI included, support.apple.com sometimes answers HTTP 404 with an empty body for a page that exists. `scripts/check-sources.py` reports that answer as blocked, not broken.
 
 | ID | Title | URL | What it covers | Checked |
 |---|---|---|---|---|

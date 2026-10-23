@@ -78,6 +78,15 @@ class Handler(http.server.BaseHTTPRequestHandler):
             self._reply(301, "/docs/new/page")
         elif path == "/docs/new/page":
             self._reply(200)
+        elif path == "/guide/mac-help/gone/mac":
+            # How support.apple.com answers a help topic that no longer exists.
+            self._reply(301, "/guide/mac-help/welcome/mac")
+        elif path == "/en-us/guide/mac-help/gone/mac":
+            self._reply(301, "/guide/mac-help/gone/mac")
+        elif path == "/guide/mac-help/mh1/mac":
+            self._reply(301, "/guide/mac-help/renamed-topic-mh1/mac")
+        elif path in ("/guide/mac-help/welcome/mac", "/guide/mac-help/renamed-topic-mh1/mac"):
+            self._reply(200)
         else:
             self._reply(404)
 
@@ -135,6 +144,17 @@ class ServerTests(unittest.TestCase):
                 self.assertTrue(result.final_url.endswith("/videos/x/"))
                 self.assertIn("page is gone", result.describe())
 
+    def test_removed_help_topic_redirected_to_welcome_is_broken(self):
+        self.assertEqual(self.check("/guide/mac-help/welcome/mac").kind, "ok")
+        self.assertEqual(self.check("/guide/mac-help/mh1/mac").kind, "ok")
+        for path in ("/guide/mac-help/gone/mac", "/en-us/guide/mac-help/gone/mac"):
+            for method in ("head", "get"):
+                with self.subTest(path=path, method=method):
+                    result = self.check(path, method=method)
+                    self.assertEqual((result.kind, result.status), ("broken", 200))
+                    self.assertTrue(result.final_url.endswith("/guide/mac-help/welcome/mac"))
+                    self.assertIn("page is gone", result.describe())
+
     def test_redirect_up_to_parent_is_broken(self):
         self.assertEqual(self.check("/docs/a/gone").kind, "broken")
         self.assertEqual(self.check("/docs/old/page").kind, "ok")
@@ -155,6 +175,17 @@ class ServerTests(unittest.TestCase):
                               "https://learn.microsoft.com/en-us/dual-screen/intro"))
         self.assertFalse(away("https://apple.co/x", "https://www.apple.com/"))
         self.assertFalse(away(apple + "/x/y", None))
+        support = "https://support.apple.com"
+        self.assertTrue(away(support + "/guide/mac-help/mh99999999/mac", support + "/guide/mac-help/welcome/mac"))
+        self.assertTrue(away(support + "/en-us/guide/mac-help/mh99999999/mac",
+                             support + "/guide/mac-help/welcome/mac"))
+        self.assertTrue(away(support + "/guide/iphone/iph99999999/ios", support + "/en-euro/guide/iphone/welcome/ios"))
+        self.assertTrue(away(support + "/fr-fr/guide/mac-help/mh99999999/mac",
+                             support + "/fr-fr/guide/mac-help/welcome/mac"))
+        self.assertFalse(away(support + "/guide/mac-help/welcome/mac", support + "/en-us/guide/mac-help/welcome/mac"))
+        self.assertFalse(away(support + "/guide/mac-help/mh43185/mac",
+                              support + "/guide/mac-help/allow-accessibility-apps-to-access-your-mac-mh43185/mac"))
+        self.assertFalse(away(support + "/guide/mac-help/mh1/mac", "https://apple.com/guide/mac-help/welcome/mac"))
 
     def test_login_only_github_pages_are_blocked(self):
         fetcher = cs.Fetcher(timeout=5, retries=0, per_host=1)

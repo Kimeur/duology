@@ -18,6 +18,7 @@ Each release says which Xcode and iOS versions it was checked on.
 
 - `reference/sources.md` M1 and the three places that cite it: the Mac User Guide page on Accessibility permission now uses Apple's canonical URL.
 - `scripts/check-sources.py`: when support.apple.com answers HTTP 404 with an empty body, the link is reported as blocked, not broken. The site answers some automated requests from GitHub's runners that way for pages that exist, which turned the weekly link check red; a page that is really missing still gets an error page and still fails.
+- `scripts/check-sources.py`: a support.apple.com help topic that redirects to its guide's welcome page is now reported as broken. That is how the site answers a Mac Help topic that was removed (HTTP 301 to the welcome page, which answers 200), so the link used to pass.
 
 ## [0.3.0] - 2026-10-21
 

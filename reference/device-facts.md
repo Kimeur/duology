@@ -152,6 +152,7 @@ Apple's iPhone Duo pages and talks never say "tabletop", "posture", "book postur
 ## App Store screenshots
 
 - Duo sizes: 1398 × 2034 (outer) and 2007 × 2853 (inner), portrait or landscape [[S1]].
+- *Measured* (23 Oct 2026): `simctl io screenshot` saves both displays at exactly those sizes, as PNGs with an alpha channel, which App Store screenshots can't have; the display that is off saves as a black frame. The App Store Connect API takes Duo screenshots as display type `APP_IPHONE_DUO` (seen in a real upload on 18 Oct 2026; not yet in Apple's API reference). See `duo-app-store`.
 - Submitting Duo screenshots adds a badge to the product page saying the app is optimized for iPhone Duo [[A5]][[S1]][[A4]].
 - Apple states the April 2027 rule two ways:
   - the 5 Oct news says *every* app or game submitted from April 2027 needs iPhone Duo screenshots [[A5]];

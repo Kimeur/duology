@@ -1,6 +1,6 @@
 # Routing map
 
-Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 (released 19 October 2026) added seven skills, two commands and a review agent. v0.3 (released 21 October 2026) added eight iOS 27 feature skills in a fifth plugin, `duology-features`, and four recipes. `duo-migrate` arrived after v0.3, ahead of plan. The other five of the 36 are "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
+Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 (released 19 October 2026) added seven skills, two commands and a review agent. v0.3 (released 21 October 2026) added eight iOS 27 feature skills in a fifth plugin, `duology-features`, and four recipes. `duo-migrate` and `duo-app-store` arrived after v0.3, ahead of plan. The other four of the 36 are "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
 
 ## v0.1 skills
 
@@ -54,6 +54,7 @@ Install a missing plugin with `/plugin install <plugin>@duology`. On other agent
 | Skill | Plugin | Load it when | Not for |
 |---|---|---|---|
 | `duo-migrate` | `duology-ship` | An app that ships today moves to Xcode 27.1: what people see with its current SDK, the scene life cycle for UIKit apps, the patterns to fix in order, the Xcode pin in CI, the April 2027 App Store rules. | Building Duo layouts in an app already on the iOS 27.1 SDK (`duo-layout`, `duo-patterns`). |
+| `duo-app-store` | `duology-ship` | The App Store submission for iPhone Duo: screenshots of both displays at the exact sizes, without alpha, none black (`scripts/duo-shots`), previews, the App Store Connect API display type, the badge, App Review notes, the privacy manifest, the April 2027 rules. | Moving the build to Xcode 27.1 first (`duo-migrate`); screenshots for a design review only (`duo-pose-matrix`). |
 
 ## Commands and agent
 
@@ -73,6 +74,7 @@ The `duo-design-reviewer` agent (`duology-design`, v0.2) applies the 15-point `d
 |---|---|
 | Open phone shows a small centred window with empty space around it | `duo-start` (SDK row: the app ships with the iOS 26 SDK or earlier), then `duo-migrate` |
 | A UIKit app crashes at launch after the rebuild with Xcode 27.1 | `duo-migrate` (Step 2: the scene life cycle) |
+| App Store screenshots for iPhone Duo, or the April 2027 rules | `duo-app-store` |
 | App won't launch after the move to Xcode 27.1 (UIKit) | Scene life cycle blocker: Apple's App Resizability skill, see [detect.md](detect.md#swiftui-uikit-or-mixed) |
 | Buttons or text sit in the middle of a half-folded phone | `duo-layout` (reserved regions, `.division`) |
 | Content hides under the status bar or a camera | `duo-layout` (safe areas, `.occlusion`) |
@@ -109,8 +111,7 @@ Say "coming" when one of these fits, and work from the Apple source in the last 
 | Skill | Release | Covers | Until then |
 |---|---|---|---|
 | `duo-performance` | v1.0 | Smooth resizing at 120 Hz | Test on a device: the simulator reports a 60 fps maximum (*measured*, see [device facts](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md)) |
-| `duo-app-store` | v1.0 | Duo screenshots, metadata, review notes | [Screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications), [news of 5 Oct 2026](https://developer.apple.com/news/?id=kkphp5qo) |
-| `/duo-ship`, `duo-pose-tester` | v1.0 | App Store checklist; pose check agent | The `duo-app-store` sources above; [first-pass.md](first-pass.md) for poses |
+| `/duo-ship`, `duo-pose-tester` | v1.0 | App Store checklist; pose check agent | `duo-app-store` (`duology-ship`); [first-pass.md](first-pass.md) for poses |
 | `recipe-notes-ai`, `recipe-camera-studio`, `recipe-kids-learning` | v1.0 | App recipes | Start from the closest ready recipe, then load `duo-patterns`, plus `duo-intelligence` for notes with AI or `duo-camera` for a camera studio |
 
 ## Apple's skills in Xcode 27.1

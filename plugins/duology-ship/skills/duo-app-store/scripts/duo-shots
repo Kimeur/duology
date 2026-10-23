@@ -1,0 +1,56 @@
+#!/bin/bash
+# duo-shots.sh: save both iPhone Duo displays at App Store size, flattened to JPEG.
+#   duo-shots <out-dir> <name>     (UDID=<simulator> to pick one; default: the booted iPhone Duo)
+# Writes <name>-outer.jpg and <name>-inner.jpg (JPEG, no alpha) when that display shows something.
+# Skips a display that is off (a black frame), and fails on any size App Store Connect doesn't list.
+set -euo pipefail
+OUT=${1:?usage: duo-shots <out-dir> <name>}
+NAME=${2:?usage: duo-shots <out-dir> <name>}
+DEV=${DUO_XCODE:-/Applications/Xcode-27.1.app/Contents/Developer}
+if [ -z "${UDID:-}" ]; then
+  UDID=$(DEVELOPER_DIR=$DEV xcrun simctl list devices booted | sed -n 's/^ *iPhone Duo[^(]*(\([0-9A-F-]\{36\}\)) (Booted).*/\1/p' | head -1)
+  [ -n "$UDID" ] || { echo "no booted iPhone Duo simulator; boot it or set UDID"; exit 1; }
+fi
+mkdir -p "$OUT"
+TMP=$(mktemp -d)
+trap 'rm -rf "$TMP"' EXIT
+
+# Mean brightness 0-255 of an image: shrink it to one pixel, then read that pixel.
+mean() {
+  sips -s format png -z 1 1 "$1" --out "$TMP/px.png" >/dev/null
+  python3 -I - "$TMP/px.png" <<'PY'
+import struct, sys, zlib
+data = open(sys.argv[1], "rb").read()
+pos, idat, ctype = 8, b"", 2
+while pos < len(data):
+    n, kind = struct.unpack(">I4s", data[pos:pos + 8])
+    body = data[pos + 8:pos + 8 + n]
+    if kind == b"IHDR":
+        ctype = body[9]
+    elif kind == b"IDAT":
+        idat += body
+    pos += 12 + n
+row = zlib.decompress(idat)        # one row: a filter byte, then one pixel
+px = row[1:4] if ctype in (2, 6) else row[1:2] * 3
+print(sum(px) // 3)
+PY
+}
+
+for display in primary primary-1; do
+  shot="$TMP/$display.jpg"
+  # JPEG straight from simctl: the same size, and no alpha channel (simctl PNGs have one).
+  DEVELOPER_DIR=$DEV xcrun simctl io "$UDID" screenshot --type=jpeg --display="$display" "$shot" >/dev/null 2>&1
+  size=$(sips -g pixelWidth -g pixelHeight "$shot" | awk '/pixel/ {printf "%s ", $2}' | awk '{print $1 "x" $2}')
+  case $size in
+    1398x2034|2034x1398) label=outer ;;
+    2007x2853|2853x2007) label=inner ;;
+    *) echo "FAIL $display: $size is not an iPhone Duo screenshot size"; exit 1 ;;
+  esac
+  if [ "$(mean "$shot")" -lt 3 ]; then
+    echo "skip $label ($size): black, that display is off in this pose"
+    continue
+  fi
+  jpg="$OUT/$NAME-$label.jpg"
+  cp "$shot" "$jpg"
+  echo "ok   $label ($size): $jpg"
+done

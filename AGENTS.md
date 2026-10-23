@@ -49,6 +49,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 | `duo-pose-matrix` | [`plugins/duology-ship/skills/duo-pose-matrix/`](plugins/duology-ship/skills/duo-pose-matrix/) | Screenshots of the app closed, open, in book pose and in tabletop. |
 | `duo-lint` | [`plugins/duology-ship/skills/duo-lint/`](plugins/duology-ship/skills/duo-lint/) | Checking code before review, release or CI. |
 | `duo-migrate` | [`plugins/duology-ship/skills/duo-migrate/`](plugins/duology-ship/skills/duo-migrate/) | Moving an app that ships today to Xcode 27.1 and iPhone Duo. |
+| `duo-app-store` | [`plugins/duology-ship/skills/duo-app-store/`](plugins/duology-ship/skills/duo-app-store/) | App Store screenshots, review notes and submission checks for iPhone Duo. |
 | `recipe-two-player-game` | [`plugins/duology-recipes/skills/recipe-two-player-game/`](plugins/duology-recipes/skills/recipe-two-player-game/) | Starting a new two-player game. |
 | `recipe-finance-dashboard` | [`plugins/duology-recipes/skills/recipe-finance-dashboard/`](plugins/duology-recipes/skills/recipe-finance-dashboard/) | Starting a new personal finance or dashboard app. |
 | `recipe-media-player` | [`plugins/duology-recipes/skills/recipe-media-player/`](plugins/duology-recipes/skills/recipe-media-player/) | Starting a new video or podcast player. |

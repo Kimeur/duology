@@ -13,9 +13,11 @@ Each URL ends up in one of three groups:
   redirect to a human-verification page, or support.apple.com's empty 404).
   Reported as a warning, because a person can still open the page;
 - broken: 404, 410, another 4xx or 5xx, a timeout, or a DNS or TLS failure.
-  Also a redirect up to a parent page, or out of Apple's /videos/play/ pages:
-  that is how a site answers a page that doesn't exist (an unknown WWDC or
-  Tech Talk ID lands on the event index with HTTP 200). Reported as an error.
+  Also a redirect up to a parent page, out of Apple's /videos/play/ pages, or
+  from a /guide/ help topic to its book's welcome page: that is how a site
+  answers a page that doesn't exist (an unknown WWDC or Tech Talk ID lands on
+  the event index, a removed Mac Help topic on the guide's welcome page, both
+  with HTTP 200). Reported as an error.
 
 Placeholder URLs (example.com, localhost, anything with <...> or {...}) are skipped.
 Links into this repo on GitHub (github.com/Kimeur/duology/blob/main/...) are
@@ -61,11 +63,13 @@ HUMAN_CHECK = re.compile(r"verify-human|captcha|/cdn-cgi/challenge|/challenge-pl
 LOGIN_ONLY = re.compile(r"^https://github\.com/[^/]+/[^/]+/(?:stargazers|watchers)/?$", re.I)
 
 # Hosts that turn some automated requests away with HTTP 404 and an empty body,
-# for pages that exist. support.apple.com did this to Python's urllib from
-# GitHub's runners on 19 and 23 Oct 2026: one runner got the empty 404 on every
-# try, the next got the page, and curl on the same runner got the page. A page
-# that is really missing answers 404 with an HTML error page, so only the empty
-# answer counts as blocked. Matched on the final URL's host.
+# for pages that exist. It can happen from any network, CI included:
+# support.apple.com did this to Python's urllib from GitHub's runners on 19 and
+# 23 Oct 2026 (one runner got the empty 404 on every try, the next got the page,
+# and curl on the same runner got the page), and once from a Mac in France after
+# a redirect to /en-euro/. A page that is really missing answers 404 with an
+# HTML error page, so only the empty answer counts as blocked. Matched on the
+# final URL's host.
 EMPTY_404_HOSTS = {"support.apple.com"}
 
 # Detail pages whose missing IDs redirect to an index instead of answering 404.
@@ -73,6 +77,14 @@ EMPTY_404_HOSTS = {"support.apple.com"}
 # with HTTP 200 (checked 17 Oct 2026). Matched on the path, so tests can use a
 # local server.
 DETAIL_PREFIXES = ("/videos/play/",)
+
+# support.apple.com redirects a help topic that no longer exists to its book's
+# welcome page instead of answering 404: /guide/mac-help/mh99999999/mac ends at
+# /guide/mac-help/welcome/mac with HTTP 200 (checked 24 Oct 2026, also with
+# /en-us/, /en-euro/ and /fr-fr/ in front). Either path may start with such a
+# region. Group 1 is the book, group 2 the topic. Matched on the path, so tests
+# can use a local server.
+HELP_TOPIC = re.compile(r"^(?:/[a-z]{2}(?:-[a-z0-9]+)?)?/guide/([^/]+)/([^/]+)", re.I)
 
 PLACEHOLDER_HOSTS = re.compile(
     r"(^|\.)(example\.(com|org|net)|localhost|invalid|test|local)$|^127\.0\.0\.1$|^0\.0\.0\.0$|^\[::1\]$", re.I)
@@ -297,9 +309,10 @@ def _host_and_segments(url):
 def redirected_away(url, final_url):
     """True when a redirect left the cited page for a page above it.
 
-    Two shapes count: the final path is a parent of the original on the same
-    host (/a/b/c -> /a/b/ or /), and a detail page such as /videos/play/<event>/<id>/
-    that ends outside /videos/play/. Moves to a sibling or a new path, a
+    Three shapes count: the final path is a parent of the original on the same
+    host (/a/b/c -> /a/b/ or /), a detail page such as /videos/play/<event>/<id>/
+    that ends outside /videos/play/, and a help topic such as /guide/<book>/<topic>/
+    that ends at /guide/<book>/welcome/. Moves to a sibling or a new path, a
     trailing slash, and http -> https don't count."""
     if not url or not final_url or final_url == url:
         return False
@@ -313,6 +326,10 @@ def redirected_away(url, final_url):
     for prefix in DETAIL_PREFIXES:
         if path.startswith(prefix) and not final_path.startswith(prefix):
             return True
+    topic, final_topic = HELP_TOPIC.match(path), HELP_TOPIC.match(final_path)
+    if (topic and final_topic and topic.group(1).lower() == final_topic.group(1).lower()
+            and topic.group(2).lower() != "welcome" and final_topic.group(2).lower() == "welcome"):
+        return True
     return len(final_segments) < len(segments) and segments[:len(final_segments)] == final_segments
 
 

@@ -82,9 +82,13 @@ DETAIL_PREFIXES = ("/videos/play/",)
 # welcome page instead of answering 404: /guide/mac-help/mh99999999/mac ends at
 # /guide/mac-help/welcome/mac with HTTP 200 (checked 24 Oct 2026, also with
 # /en-us/, /en-euro/ and /fr-fr/ in front). Either path may start with such a
-# region. Group 1 is the book, group 2 the topic. Matched on the path, so tests
-# can use a local server.
-HELP_TOPIC = re.compile(r"^(?:/[a-z]{2}(?:-[a-z0-9]+)?)?/guide/([^/]+)/([^/]+)", re.I)
+# region. A topic is followed by its platform, after an optional version
+# (/guide/mac-help/mh35835/14.0/mac/14.0). A book's root page, such as
+# /guide/iphone/ios or /guide/iphone/ios/18.0, also ends at the welcome page
+# (checked 24 Oct 2026); only a version can follow its platform, so the
+# platform isn't read as a topic. Group 1 is the book, group 2 the topic.
+# Matched on the path, so tests can use a local server.
+HELP_TOPIC = re.compile(r"^(?:/[a-z]{2}(?:-[a-z0-9]+)?)?/guide/([^/]+)/([^/]+)/(?:[0-9.]+/)?[a-z]", re.I)
 
 PLACEHOLDER_HOSTS = re.compile(
     r"(^|\.)(example\.(com|org|net)|localhost|invalid|test|local)$|^127\.0\.0\.1$|^0\.0\.0\.0$|^\[::1\]$", re.I)
@@ -311,8 +315,8 @@ def redirected_away(url, final_url):
 
     Three shapes count: the final path is a parent of the original on the same
     host (/a/b/c -> /a/b/ or /), a detail page such as /videos/play/<event>/<id>/
-    that ends outside /videos/play/, and a help topic such as /guide/<book>/<topic>/
-    that ends at /guide/<book>/welcome/. Moves to a sibling or a new path, a
+    that ends outside /videos/play/, and a help topic such as /guide/<book>/<topic>/<os>
+    that ends at /guide/<book>/welcome/<os>. Moves to a sibling or a new path, a
     trailing slash, and http -> https don't count."""
     if not url or not final_url or final_url == url:
         return False

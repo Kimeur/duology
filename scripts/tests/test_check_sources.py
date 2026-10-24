@@ -184,9 +184,13 @@ class ServerTests(unittest.TestCase):
                              support + "/fr-fr/guide/mac-help/welcome/mac"))
         self.assertTrue(away(support + "/guide/mac-help/mh99999999/14.0/mac/14.0",
                              support + "/guide/mac-help/welcome/mac"))
+        self.assertTrue(away(support + "/guide/mac-help/mh99999999", support + "/guide/mac-help/welcome/mac"))
+        self.assertTrue(away(support + "/en-us/guide/iphone/iph99999999/", support + "/guide/iphone/welcome/ios"))
         self.assertFalse(away(support + "/guide/mac-help/welcome/mac", support + "/en-us/guide/mac-help/welcome/mac"))
         self.assertFalse(away(support + "/guide/iphone/ios", support + "/guide/iphone/welcome/ios"))
         self.assertFalse(away(support + "/guide/iphone/ios/18.0", support + "/guide/iphone/welcome/ios"))
+        self.assertFalse(away(support + "/guide/iphone/ios/18.0", support + "/guide/iphone/welcome/18.0/ios/18.0"))
+        self.assertFalse(away(support + "/guide/ipad/ipados", support + "/guide/ipad/welcome/ipados"))
         self.assertFalse(away(support + "/guide/mac-help/mh1/mac", support + "/guide/iphone/welcome/ios"))
         self.assertFalse(away(support + "/guide/mac-help/mh43185/mac",
                               support + "/guide/mac-help/allow-accessibility-apps-to-access-your-mac-mh43185/mac"))

@@ -65,7 +65,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 |---|---|
 | `/duo-doctor` | Run `plugins/duology/bin/duo-doctor --skip-claude`. It only reads, and it explains each failure. |
 | `/duo-audit` | Run `python3 plugins/duology-ship/skills/duo-lint/scripts/duo-lint.py <app-folder>`, then follow the checklist in `duo-design-review`. |
-| `/duo-new` | Follow the recipe's own `SKILL.md`, for example `recipe-shop/SKILL.md`. Each recipe runs `scripts/new-project.sh <AppName> <bundle-id> <folder>` from its skill folder. The five recipes are `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader` and `recipe-shop`. |
+| `/duo-new` | Follow the recipe's own `SKILL.md`, for example `recipe-shop/SKILL.md`. Each recipe runs `scripts/new-project.sh <AppName> <bundle-id> <folder>` from its skill folder. The six recipes are `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop` and `recipe-kids-learning`. |
 | `/duo-poses` | Run `plugins/duology-ship/skills/duo-pose-matrix/scripts/duo-pose status`, then `duo-pose-matrix <bundle-id>` from the same folder. Read `duo-pose-matrix/SKILL.md` first: it changes the pose of the whole simulator and needs the user's Accessibility permission. |
 | `/duo-review` | Read the frames yourself and follow `duo-design-review/SKILL.md`, with the `duo-postures`, `duo-patterns`, `duo-ergonomics` and `duo-accessibility` rules. The `duo-design-reviewer` agent in `plugins/duology-design/agents/` describes the output. Don't edit files. |
 

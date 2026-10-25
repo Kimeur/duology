@@ -92,18 +92,18 @@ Architecture, state ownership, the gate and test details: [references/architectu
 |---|---|---|---|---|
 | Closed (outer display) | 382 × 562 pt (*measured*) | top half, 382 × 273 pt | below it: three answers in one row, 106 × 220 pt each; Next 350 × 88 pt (*measured*) | welcome above, three cards of 350 × 104 pt (*measured*) |
 | Closed, held sideways | wider than tall | left half | right half | the same split |
-| Open, flat, held wide | 867 × 553 pt, fold's frame at x 455.5 to 495.5 | left page, 455.5 pt wide | right page, 371.5 pt: three answers in one column, 339 × 163 pt | welcome left, cards right |
-| Book | the same pages; only the fold turns active | the same | the same | the same |
-| Tabletop | 669 × 835 pt, fold's frame at y 373.5 to 413.5 | above the fold, 373.5 pt high | below it, 421.5 pt: three answers in a row, 201 × 220 pt | welcome above, cards below |
+| Open, flat, held wide | 867 × 553 pt, fold's frame at x 455.5 to 495.5 (*measured*) | left page, 455.5 pt wide | right page, 371.5 pt: three answers in one column, 339 × 163 pt (*measured*) | welcome left, cards right (*measured*) |
+| Book | the same pages; only the fold turns active (*measured*) | the same | the same | the same |
+| Tabletop | 669 × 835 pt, fold's frame at y 373.5 to 413.5 (*measured*) | above the fold, 373.5 pt high | below it, 421.5 pt: three answers in a row, 201 × 220 pt (*measured*) | welcome above, cards below (*measured*) |
 | Open, held tall, flat | as tabletop; the fold is inactive | the same | the same | the same |
 
-*Measured* closed, on 25 October 2026: all nine UI tests, the frames above, and the largest accessibility text size. Open, book, tabletop and sideways are *unverified* for this app: Device Hub's window was not on the Mac's current desktop during our run, so `duo-pose` could not press the pose buttons. Their rows come from the Mac tests, which run `LessonLayout` and `AnswerGrid` at the screen sizes and fold frames `recipe-reader` measured for its reader in the same kind of navigation stack. Before you rely on them, set each pose in Device Hub and run `testLessonLayoutInThisPose` and `testHomeAndGateInThisPose`: they fail if a button lands on the fold or under 88 pt, and they attach the real frames.
+*Measured* on 25 October 2026. Closed: all nine UI tests, the frames above, and the largest accessibility text size. Open (flat, held wide), book and tabletop: each pose set with `duo-pose`, then `testLessonLayoutInThisPose` and `testHomeAndGateInThisPose`, which fail if a button lands on the fold or under 88 pt and attach the real frames; both passed in each pose, every frame matched the table, and every answer sat wholly on one side of the fold. The read-aloud button measured 88 × 88 pt and the gate's keys 125 × 64 pt in every pose. The closed phone held sideways and the open phone held tall are *unverified*: their rows come from the Mac tests (`LessonLayout`, `AnswerGrid`).
 
 ## 4. Where each Duo technique lives
 
 | Technique | Where | Why |
 |---|---|---|
-| Progress survives every fold | `Progress` in `LearningStore`, `@State` in `RootView` | State above a layout switch survives it (`duo-continuity`). Saved to UserDefaults on every change, so it survives quitting too. *Measured* here: a relaunch. A real fold: *unverified* for this app (section 3). |
+| Progress survives every fold | `Progress` in `LearningStore`, `@State` in `RootView` | State above a layout switch survives it (`duo-continuity`). Saved to UserDefaults on every change, so it survives quitting too. *Measured* here: a relaunch. Progress through a real fold: *unverified* for this app (the pose tests set each pose from a fresh launch). |
 | One layout in every pose | `PaneSplit` placing `LessonLayout`'s two rectangles | No `if` on the pose around the panes, so neither is rebuilt ([`Layout`](https://developer.apple.com/documentation/swiftui/layout)). |
 | The pages meet at the fold, not the middle | `LessonLayout`, fed by `onFoldChange` | [`reservedRegions(kind:options:layoutDirectionBehavior:)`](https://developer.apple.com/documentation/swiftui/geometryproxy/reservedregions(kind:options:layoutdirectionbehavior:)) with `.division` and `.includeInactive`, read on the `PaneSplit` itself. Flat and folded give the same panes, so folding moves nothing. |
 | Tabletop: look above, touch below | `LessonLayout` mode `foldTopBottom` | Apple's optional per-pose layout: what people watch in the top region, what they touch in the stable bottom one, with the same controls ([talk 111466](https://developer.apple.com/videos/play/tech-talks/111466/?time=276)). For a small child, the bottom half resting on the table doesn't wobble under a tap. |

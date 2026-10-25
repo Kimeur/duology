@@ -328,7 +328,7 @@ v0.2 adds three screens, one for each of `duo-postures`, `duo-transitions` and `
 
 <p align="center"><img src="docs/assets/recipes/recipe-shop-closed.png" alt="The shop recipe, closed pose, on the iPhone Duo simulator" width="48%" /> <img src="docs/assets/recipes/recipe-shop-open.png" alt="The shop recipe, open pose, on the iPhone Duo simulator" width="48%" /><br /><sub>The shop recipe on the iPhone Duo simulator</sub></p>
 
-<p align="center"><img src="docs/assets/recipes/recipe-kids-learning-closed.png" alt="The kids learning recipe, closed pose, on the iPhone Duo simulator" width="32%" /><br /><sub>The kids learning recipe on the iPhone Duo simulator</sub></p>
+<p align="center"><img src="docs/assets/recipes/recipe-kids-learning-closed.png" alt="The kids learning recipe, closed pose, on the iPhone Duo simulator" width="32%" /> <img src="docs/assets/recipes/recipe-kids-learning-tabletop.png" alt="The kids learning recipe, tabletop pose, on the iPhone Duo simulator" width="32%" /><br /><sub>The kids learning recipe on the iPhone Duo simulator</sub></p>
 
 ## Proof, not promises
 

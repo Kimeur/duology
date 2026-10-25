@@ -137,12 +137,12 @@ See [the pose table in SKILL.md](../SKILL.md#3-how-it-behaves-in-each-pose) for 
 | The nine UI tests, closed | all passed (about 160 s), after the fixes described above |
 | `performAccessibilityAudit`, closed: lesson, home, gate | no clipped text and no missing labels after the fixes; still reported: the answer numbers' fixed font size (they are pictures scaled to fill their tile) and contrast and Dynamic Type on the gate's Close, a system toolbar button |
 | Largest accessibility size (`-UIPreferredContentSizeCategoryName UICTContentSizeCategoryAccessibilityXXXL`, this app only), closed | looked at: the question pane scrolls with the question first; cards and the gate header stack; nothing cut off. Before the fix the question read "Whic…" |
-| Open, book, tabletop | not run: Device Hub's window was not on the current desktop, so the poses could not be set |
+| Open (flat, held wide), book and tabletop, each set with `duo-pose` | `testLessonLayoutInThisPose` and `testHomeAndGateInThisPose` passed in each pose (2 of 2, 45 to 55 s), with the frames in SKILL.md section 3 |
 | `new-project.sh` refusals | `Tools`, `tools`, `1abc`, `Swift-UI`, `AVFoundation` and `bad_bundle` exit 65; a non-empty folder and a file exit 73; two arguments exit 64; nothing created |
 
 ## Not yet verified
 
-- Open (wide and tall), book and tabletop on the simulator: the panes, the button sizes and the fold checks. The Mac tests cover them at `recipe-reader`'s measured sizes only.
+- The open phone held tall. The Mac tests cover it at `recipe-reader`'s measured sizes only.
 - Progress through a real fold. The store above the stack is the pattern `duo-continuity` and `recipe-reader` measured through Device Hub's poses; this app's own runs measured relaunch, not a fold.
 - The closed phone held sideways.
 - Speech on a device: the Ring/Silent switch, the effect on other apps' audio, voice quality.

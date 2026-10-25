@@ -14,9 +14,9 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/Kimeur/duology?style=flat-square&color=f4c430)](https://github.com/Kimeur/duology/stargazers)
 [![Release](https://img.shields.io/github/v/release/Kimeur/duology?style=flat-square&color=1d7a4b)](https://github.com/Kimeur/duology/releases)
-[![Skills](https://img.shields.io/badge/skills-32_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
+[![Skills](https://img.shields.io/badge/skills-33_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
 [![Commands and agents](https://img.shields.io/badge/commands_·_agents-5_·_1_built-2b55c7?style=flat-square)](#commands-and-agents)
-[![Recipes](https://img.shields.io/badge/app_recipes-5_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
+[![Recipes](https://img.shields.io/badge/app_recipes-6_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
 [![Built for Xcode 27.1](https://img.shields.io/badge/built_for-Xcode_27.1_·_iOS_27.1-1d7a4b?style=flat-square)](#verified-on)
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-d97757?style=flat-square)](#quick-start)
 <!-- skills.sh badge: add once the repo is listed
@@ -152,7 +152,7 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 
 ## What's inside
 
-**32 skills in 5 plugins, 5 commands and 1 review agent.** v0.3 released 30 of them; `duo-migrate` and `duo-app-store` are new on `main` since. The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
+**33 skills in 5 plugins, 5 commands and 1 review agent.** v0.3 released 30 of them; `duo-migrate`, `duo-app-store` and `recipe-kids-learning` are new on `main` since. The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
 
 <details open>
 <summary><strong>duology</strong> · foundation: setup, layout, continuity, scenes</summary>
@@ -307,7 +307,7 @@ v0.2 adds three screens, one for each of `duo-postures`, `duo-transitions` and `
 
 ## App recipes
 
-`/duo-new <recipe> <AppName>` creates the project, tests its rules on the Mac, builds it and opens it on the iPhone Duo simulator. 5 recipes are ready; the others are planned.
+`/duo-new <recipe> <AppName>` creates the project, tests its rules on the Mac, builds it and opens it on the iPhone Duo simulator. 6 recipes are ready; the others are planned.
 
 | Recipe | Status | What you get |
 |---|---|---|
@@ -318,7 +318,7 @@ v0.2 adds three screens, one for each of `duo-postures`, `duo-transitions` and `
 | `recipe-shop` | v0.3 | Product shelf beside product details, with a two-pane paywall. |
 | `recipe-notes-ai` | planned (v1.0) | Notes list and editor, with an AI summary pane on the inner display. |
 | `recipe-camera-studio` | planned (v1.0) | The person you film sees themselves on the outer display. |
-| `recipe-kids-learning` | planned (v1.0) | A parent check, a privacy manifest, and nothing tracked. |
+| `recipe-kids-learning` | v0.4 | Counting and first letters read aloud, big answers below the fold in tabletop, a parental gate, a privacy manifest and nothing tracked. |
 
 <p align="center"><img src="docs/assets/recipes/recipe-finance-dashboard-closed.png" alt="The finance dashboard recipe, closed pose, on the iPhone Duo simulator" width="48%" /> <img src="docs/assets/recipes/recipe-finance-dashboard-open.png" alt="The finance dashboard recipe, open pose, on the iPhone Duo simulator" width="48%" /><br /><sub>The finance dashboard recipe on the iPhone Duo simulator</sub></p>
 
@@ -328,9 +328,11 @@ v0.2 adds three screens, one for each of `duo-postures`, `duo-transitions` and `
 
 <p align="center"><img src="docs/assets/recipes/recipe-shop-closed.png" alt="The shop recipe, closed pose, on the iPhone Duo simulator" width="48%" /> <img src="docs/assets/recipes/recipe-shop-open.png" alt="The shop recipe, open pose, on the iPhone Duo simulator" width="48%" /><br /><sub>The shop recipe on the iPhone Duo simulator</sub></p>
 
+<p align="center"><img src="docs/assets/recipes/recipe-kids-learning-closed.png" alt="The kids learning recipe, closed pose, on the iPhone Duo simulator" width="32%" /><br /><sub>The kids learning recipe on the iPhone Duo simulator</sub></p>
+
 ## Proof, not promises
 
-Every skill has test tasks in [`evals/`](evals), 43 so far (42 ready to run). Each task runs with Claude Code twice, with and without Duology, in a fresh copy of the same sample project. A run passes when the app builds for the iPhone Duo simulator, `duo-lint` finds nothing, every check in the task passes and every checklist rule it covers passes.
+Every skill has test tasks in [`evals/`](evals), 44 so far (43 ready to run). Each task runs with Claude Code twice, with and without Duology, in a fresh copy of the same sample project. A run passes when the app builds for the iPhone Duo simulator, `duo-lint` finds nothing, every check in the task passes and every checklist rule it covers passes.
 
 No results yet. The first published runs are planned before v1.0, and we'll publish them here whatever they show.
 

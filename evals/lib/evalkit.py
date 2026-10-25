@@ -92,6 +92,7 @@ PLUGIN_SCRIPTS = [
     "duology-recipes/skills/recipe-media-player/scripts/new-project.sh",
     "duology-recipes/skills/recipe-reader/scripts/new-project.sh",
     "duology-recipes/skills/recipe-shop/scripts/new-project.sh",
+    "duology-recipes/skills/recipe-kids-learning/scripts/new-project.sh",
     "duology/bin/duo-doctor",
 ]
 PLUGIN_PYTHON = ["duology-ship/skills/duo-lint/scripts/duo-lint.py"]

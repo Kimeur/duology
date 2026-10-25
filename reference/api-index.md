@@ -714,6 +714,24 @@ Used by `duo-app-store`. Not iOS APIs: the App Store Connect API, the Info.plist
 
 - *Measured* in `duo-app-store`: both displays' simulator screenshots are PNGs with an alpha channel (App Store screenshots can't have one), and a display that is off saves as a full-size black frame.
 
+## Learning app for children
+
+Used by `recipe-kids-learning`. Declarations and availability checked in the iOS 27.1 simulator SDK on 25 Oct 2026.
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `AVSpeechSynthesizer`, `AVSpeechUtterance`, `AVSpeechSynthesisVoice` | AVFAudio | `func speak(_ utterance: AVSpeechUtterance)`; `init(string: String)`; `init?(language: String?)` | iOS 7.0 | [doc](https://developer.apple.com/documentation/avfaudio/avspeechsynthesizer) |
+| `AVSpeechUtteranceDefaultSpeechRate` | AVFAudio | `let AVSpeechUtteranceDefaultSpeechRate: Float` | iOS 7.0 | [doc](https://developer.apple.com/documentation/avfaudio/avspeechutterancedefaultspeechrate) |
+| `AVAudioSession.Mode.spokenAudio` | AVFAudio | `static let spokenAudio: AVAudioSession.Mode` | iOS 9.0 | [doc](https://developer.apple.com/documentation/avfaudio/avaudiosession/mode-swift.struct/spokenaudio) |
+| `AVAudioSession.CategoryOptions.interruptSpokenAudioAndMixWithOthers` | AVFAudio | `static var interruptSpokenAudioAndMixWithOthers: AVAudioSession.CategoryOptions` | iOS 9.0 | [doc](https://developer.apple.com/documentation/avfaudio/avaudiosession/categoryoptions-swift.struct/interruptspokenaudioandmixwithothers) |
+| `AccessibilityNotification.Announcement` | Accessibility | `init(_ announcement: String)`, then `.post()` | iOS 17.0 | [doc](https://developer.apple.com/documentation/accessibility/accessibilitynotification/announcement) |
+| `View.task(id:name:priority:file:line:_:)` | SwiftUI | `func task<T>(id value: T, name: String? = nil, priority: TaskPriority = .userInitiated, file: String = #fileID, line: Int = #line, _ action: @escaping @Sendable () async -> Void) -> some View where T : Equatable`, the iOS 27.1 SDK's spelling of `task(id:priority:_:)` | iOS 15.0 | [doc](https://developer.apple.com/documentation/swiftui/view/task(id:name:priority:file:line:_:)) |
+| `AppStorage` | SwiftUI | `@propertyWrapper struct AppStorage<Value>` | iOS 14.0 | [doc](https://developer.apple.com/documentation/swiftui/appstorage) |
+| `UserDefaults` | Foundation | `class UserDefaults` | iOS 2.0 | [doc](https://developer.apple.com/documentation/foundation/userdefaults) |
+| `XCUIElement.coordinate(withNormalizedOffset:)` | XCTest | `func coordinate(withNormalizedOffset normalizedOffset: CGVector) -> XCUICoordinate` | iOS 9.0 | [doc](https://developer.apple.com/documentation/xcuiautomation/xcuielement/coordinate(withnormalizedoffset:)) |
+| `NWConnection`, `SFSpeechRecognizer`, `UIDevice.identifierForVendor` | Network, Speech, UIKit | Named only as APIs the recipe's privacy scan rejects | iOS 12.0, 10.0, 6.0 | [doc](https://developer.apple.com/documentation/network/nwconnection) |
+| `NSPrivacyAccessedAPICategoryUserDefaults`, reason `CA92.1` | Privacy manifest | An `NSPrivacyAccessedAPITypes` entry: the app reads and writes its own settings | Xcode 15 or later | [doc](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitype) |
+
 ## Not in the SDK
 
 Brief claims we could not find in the iOS 27.1 SDK:

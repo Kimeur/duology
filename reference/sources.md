@@ -155,7 +155,11 @@ Duology's rules and device facts come from the pages on this list. We link to th
 | <a id="s2"></a>S2 | App preview specifications | https://developer.apple.com/help/app-store-connect/reference/app-information/app-preview-specifications | Duo preview resolutions. Its "19.5:9" label for Duo doesn't match its own pixel numbers. | 16 Oct 2026 |
 | <a id="s3"></a>S3 | App Store asset best practices and resources | https://developer.apple.com/app-store/asset-best-practices/ | Templates and guidance for screenshots, previews and the new product page assets. | 16 Oct 2026 |
 | <a id="s4"></a>S4 | Submitting | https://developer.apple.com/app-store/submitting/ | From April 2027: iOS 27 SDK or later and a deployment target of iOS 15 or later. | 16 Oct 2026 |
-| <a id="s5"></a>S5 | App Review Guidelines | https://developer.apple.com/app-store/review/guidelines/ | In-app purchase (3.1.1), what to tell people before they subscribe (3.1.2(c)) and goods or services used outside the app (3.1.3(e)). Used by `recipe-shop`. | 20 Oct 2026 |
+| <a id="s5"></a>S5 | App Review Guidelines | https://developer.apple.com/app-store/review/guidelines/ | In-app purchase (3.1.1), what to tell people before they subscribe (3.1.2(c)) and goods or services used outside the app (3.1.3(e)), used by `recipe-shop`; the Kids Category (1.3) and kids' data (5.1.4), used by `recipe-kids-learning`. | 20 Oct 2026 |
+| <a id="s6"></a>S6 | Design safe and age-appropriate experiences (kids apps) | https://developer.apple.com/app-store/kids-apps/ | Parental gates as adult-level tasks before purchases and links out, the age bands (5 and under, 6-8, 9-11), privacy for kids. Used by `recipe-kids-learning`. | 25 Oct 2026 |
+| <a id="s7"></a>S7 | App privacy details on the App Store | https://developer.apple.com/app-store/app-privacy-details/ | What the privacy answers in App Store Connect cover, including "Data Not Collected". | 25 Oct 2026 |
+| <a id="s8"></a>S8 | Set an app age rating | https://developer.apple.com/help/app-store-connect/manage-app-information/set-an-app-age-rating/ | The age rating and the Made for Kids setting in App Store Connect. | 25 Oct 2026 |
+| <a id="s9"></a>S9 | Manage app privacy | https://developer.apple.com/help/app-store-connect/manage-app-information/manage-app-privacy/ | Answering the privacy questions and the privacy policy URL in App Store Connect. | 25 Oct 2026 |
 
 ## Apple: support pages
 

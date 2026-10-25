@@ -55,6 +55,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 | `recipe-media-player` | [`plugins/duology-recipes/skills/recipe-media-player/`](plugins/duology-recipes/skills/recipe-media-player/) | Starting a new video or podcast player. |
 | `recipe-reader` | [`plugins/duology-recipes/skills/recipe-reader/`](plugins/duology-recipes/skills/recipe-reader/) | Starting a new e-book or document reader. |
 | `recipe-shop` | [`plugins/duology-recipes/skills/recipe-shop/`](plugins/duology-recipes/skills/recipe-shop/) | Starting a new shop with in-app purchases. |
+| `recipe-kids-learning` | [`plugins/duology-recipes/skills/recipe-kids-learning/`](plugins/duology-recipes/skills/recipe-kids-learning/) | Creating a learning app for young children, with a parental gate and nothing tracked. |
 
 ### Commands, without Claude Code
 

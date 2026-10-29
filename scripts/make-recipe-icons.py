@@ -141,11 +141,13 @@ def read_png(path):
     while pos < len(data):
         n, kind = struct.unpack(">I4s", data[pos:pos + 8])
         body = data[pos + 8:pos + 8 + n]
-        if kind == b"IHDR":
+        if kind == b"IHDR" and len(body) == 13:
             header = struct.unpack(">IIBBBBB", body)
         elif kind == b"IDAT":
             idat += body
         pos += 12 + n
+    if header is None or not idat:
+        raise ValueError("no IHDR or IDAT chunk")
     width, height, depth, ctype = header[0], header[1], header[2], header[3]
     raw = zlib.decompress(idat)
     stride = 1 + width * (3 if ctype == 2 else 4)
@@ -153,7 +155,8 @@ def read_png(path):
     for y in range(height):
         line = raw[y * stride:(y + 1) * stride]
         if line[0] != 0:
-            raise ValueError("row %d uses PNG filter %d; only unfiltered rows are compared" % (y, line[0]))
+            raise ValueError("row %d uses PNG filter %d, so it wasn't written by this script; run it to rewrite"
+                             % (y, line[0]))
         rows.append(line[1:])
     return width, height, depth, ctype, rows
 
@@ -170,7 +173,7 @@ def main(argv=None):
         if args.check:
             try:
                 width, height, depth, ctype, found = read_png(path)
-            except (OSError, ValueError, zlib.error) as exc:
+            except (OSError, ValueError, zlib.error, struct.error) as exc:
                 print("%s: can't read it (%s)" % (rel, exc))
                 failed = True
                 continue

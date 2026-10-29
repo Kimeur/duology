@@ -1,6 +1,6 @@
 ---
 name: duo-new
-description: "Create a new iPhone Duo app from a Duology recipe (a two-player game, a finance dashboard, a media player, a reader, a shop or a learning app for young children), build it with Xcode 27.1 and run it on the iPhone Duo simulator."
+description: "Create a new iPhone Duo app from a Duology recipe (a two-player game, a finance dashboard, a media player, a reader, a shop, a learning app for young children or notes with on-device AI summaries), build it with Xcode 27.1 and run it on the iPhone Duo simulator."
 argument-hint: "<recipe> <AppName> [bundle-id] [folder]"
 allowed-tools:
   - Bash(duo-doctor *)
@@ -16,6 +16,8 @@ allowed-tools:
   - Bash("${CLAUDE_PLUGIN_ROOT}/skills/recipe-shop/scripts/new-project.sh" *)
   - Bash(${CLAUDE_PLUGIN_ROOT}/skills/recipe-kids-learning/scripts/new-project.sh *)
   - Bash("${CLAUDE_PLUGIN_ROOT}/skills/recipe-kids-learning/scripts/new-project.sh" *)
+  - Bash(${CLAUDE_PLUGIN_ROOT}/skills/recipe-notes-ai/scripts/new-project.sh *)
+  - Bash("${CLAUDE_PLUGIN_ROOT}/skills/recipe-notes-ai/scripts/new-project.sh" *)
   - Read
   - Glob
 ---
@@ -51,7 +53,8 @@ Every recipe's script is `${CLAUDE_PLUGIN_ROOT}/skills/<recipe>/scripts/new-proj
 | `recipe-reader` | An e-book reader: one page closed, two facing pages open and in book pose, and the reader's place kept through every fold. |
 | `recipe-shop` | A shop for digital packs: the grid and a pack's page side by side when open, a basket, and StoreKit purchases and a subscription, tested with a local StoreKit configuration file. |
 | `recipe-kids-learning` | A learning app for young children: counting, first letters and shapes, a question read aloud and big answer buttons, the answers below the fold in tabletop, a parental gate before the grown-ups area, a privacy manifest and nothing tracked. |
-| `recipe-notes-ai`, `recipe-camera-studio` | Planned for v1.0. No script yet. |
+| `recipe-notes-ai` | A notes app with summaries from Apple's on-device model: a headline, key points and to-dos, one line closed and a pane beside the note open, streamed so a fold never restarts it, and a summary without AI when the model can't run (always, on the simulator). The notes never leave the device. |
+| `recipe-camera-studio` | Planned for v1.0. No script yet. |
 
 Accept the short form without `recipe-`, such as `media-player`. If the user describes an app instead of naming a recipe, propose the closest one and say why in one line. If none fits, say so.
 

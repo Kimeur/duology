@@ -14,7 +14,7 @@
 
 [![GitHub stars](https://img.shields.io/github/stars/Kimeur/duology?style=flat-square&color=f4c430)](https://github.com/Kimeur/duology/stargazers)
 [![Release](https://img.shields.io/github/v/release/Kimeur/duology?style=flat-square&color=1d7a4b)](https://github.com/Kimeur/duology/releases)
-[![Skills](https://img.shields.io/badge/skills-33_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
+[![Skills](https://img.shields.io/badge/skills-34_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
 [![Commands and agents](https://img.shields.io/badge/commands_·_agents-6_·_2_built-2b55c7?style=flat-square)](#commands-and-agents)
 [![Recipes](https://img.shields.io/badge/app_recipes-6_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
 [![Built for Xcode 27.1](https://img.shields.io/badge/built_for-Xcode_27.1_·_iOS_27.1-1d7a4b?style=flat-square)](#verified-on)
@@ -68,7 +68,7 @@ Apple published the rules in six Tech Talks, a HIG page and the iOS 27.1 SDK. Du
 
 1. **It knows the device.** Size classes, reserved regions, `ArrangementView`, vertical bars and the hinge. Each fact is checked against the iOS 27.1 SDK. Scenes and windows have their own skill (v0.2), and so do the cameras (`duo-camera`, v0.3).
 2. **It designs, not just compiles.** Eight named layout patterns, state that survives fold and unfold, and two people on one screen, each with SwiftUI code. v0.2 adds design tokens, guidance for each pose, fold transitions, thumb reach and accessibility on both displays.
-3. **It builds whole apps.** A recipe creates a project that builds and runs on the iPhone Duo simulator. Six are ready: a two-player game, a finance dashboard, a media player, a reader, a shop and a learning app for young children. Two more are planned.
+3. **It builds whole apps.** A recipe creates a project that builds and runs on the iPhone Duo simulator. Seven are ready: a two-player game, a finance dashboard, a media player, a reader, a shop, a learning app for young children and notes with on-device AI summaries. One more is planned.
 4. **It checks its own work.** `duo-lint` finds code Apple warns against. `/duo-audit` adds a 15-point design checklist on screenshots from the simulator. `/duo-poses` (v0.2) screenshots your app closed, open, in book pose and in tabletop, and `/duo-review` hands those frames to a design review agent. `/duo-ship` checks the App Store rules for Duo before you submit, with a pose test agent and screenshots of both displays.
 
 <div align="center">
@@ -152,7 +152,7 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 
 ## What's inside
 
-**33 skills in 5 plugins, 6 commands and 2 agents.** v0.4 added `duo-migrate`, `duo-app-store`, `recipe-kids-learning`, `/duo-ship` and the `duo-pose-tester` agent. The full pack plans 36 skills in 5 plugins, 6 commands and 2 agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
+**34 skills in 5 plugins, 6 commands and 2 agents.** v0.4 added `duo-migrate`, `duo-app-store`, `recipe-kids-learning`, `/duo-ship` and the `duo-pose-tester` agent; `recipe-notes-ai` is new on `main` since. The full pack plans 36 skills in 5 plugins, 6 commands and 2 agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
 
 <details open>
 <summary><strong>duology</strong> · foundation: setup, layout, continuity, scenes</summary>
@@ -307,7 +307,7 @@ v0.2 adds three screens, one for each of `duo-postures`, `duo-transitions` and `
 
 ## App recipes
 
-`/duo-new <recipe> <AppName>` creates the project, tests its rules on the Mac, builds it and opens it on the iPhone Duo simulator. 6 recipes are ready; the others are planned.
+`/duo-new <recipe> <AppName>` creates the project, tests its rules on the Mac, builds it and opens it on the iPhone Duo simulator. 7 recipes are ready; the last one is planned.
 
 | Recipe | Status | What you get |
 |---|---|---|
@@ -316,7 +316,7 @@ v0.2 adds three screens, one for each of `duo-postures`, `duo-transitions` and `
 | `recipe-media-player` | v0.3 | Player that moves to tabletop on its own, with "up next" and Picture in Picture. |
 | `recipe-reader` | v0.3 | Two pages in book pose, and it remembers where you were. |
 | `recipe-shop` | v0.3 | Product shelf beside product details, with a two-pane paywall. |
-| `recipe-notes-ai` | planned (v1.0) | Notes list and editor, with an AI summary pane on the inner display. |
+| `recipe-notes-ai` | next (on `main`) | Notes with on-device AI summaries: one line closed, a pane beside the note open, below the fold in tabletop, and a summary without AI when the model can't run. |
 | `recipe-camera-studio` | planned (v1.0) | The person you film sees themselves on the outer display. |
 | `recipe-kids-learning` | v0.4 | Counting and first letters read aloud, big answers below the fold in tabletop, a parental gate, a privacy manifest and nothing tracked. |
 
@@ -330,9 +330,11 @@ v0.2 adds three screens, one for each of `duo-postures`, `duo-transitions` and `
 
 <p align="center"><img src="docs/assets/recipes/recipe-kids-learning-closed.png" alt="The kids learning recipe, closed pose, on the iPhone Duo simulator" width="32%" /> <img src="docs/assets/recipes/recipe-kids-learning-tabletop.png" alt="The kids learning recipe, tabletop pose, on the iPhone Duo simulator" width="32%" /><br /><sub>The kids learning recipe on the iPhone Duo simulator</sub></p>
 
+<p align="center"><img src="docs/assets/recipes/recipe-notes-ai-closed.png" alt="The notes recipe, closed pose, on the iPhone Duo simulator: the note with a one-line summary bar" width="27%" /> <img src="docs/assets/recipes/recipe-notes-ai-book.png" alt="The notes recipe, book pose, on the iPhone Duo simulator: the note on the left page, the summary on the right" width="55%" /><br /><sub>The notes recipe on the iPhone Duo simulator (a summary without AI: the model doesn't run on the simulator)</sub></p>
+
 ## Proof, not promises
 
-Every skill has test tasks in [`evals/`](evals), 44 so far (43 ready to run). Each task runs with Claude Code twice, with and without Duology, in a fresh copy of the same sample project. A run passes when the app builds for the iPhone Duo simulator, `duo-lint` finds nothing, every check in the task passes and every checklist rule it covers passes.
+Every skill has test tasks in [`evals/`](evals), 45 so far (44 ready to run). Each task runs with Claude Code twice, with and without Duology, in a fresh copy of the same sample project. A run passes when the app builds for the iPhone Duo simulator, `duo-lint` finds nothing, every check in the task passes and every checklist rule it covers passes.
 
 No results yet. The first published runs are planned before v1.0, and we'll publish them here whatever they show.
 

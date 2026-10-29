@@ -56,6 +56,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 | `recipe-reader` | [`plugins/duology-recipes/skills/recipe-reader/`](plugins/duology-recipes/skills/recipe-reader/) | Starting a new e-book or document reader. |
 | `recipe-shop` | [`plugins/duology-recipes/skills/recipe-shop/`](plugins/duology-recipes/skills/recipe-shop/) | Starting a new shop with in-app purchases. |
 | `recipe-kids-learning` | [`plugins/duology-recipes/skills/recipe-kids-learning/`](plugins/duology-recipes/skills/recipe-kids-learning/) | Creating a learning app for young children, with a parental gate and nothing tracked. |
+| `recipe-notes-ai` | [`plugins/duology-recipes/skills/recipe-notes-ai/`](plugins/duology-recipes/skills/recipe-notes-ai/) | Creating a notes app with on-device AI summaries that keep going through a fold, and a summary without AI when the model can't run. |
 
 ### Commands, without Claude Code
 
@@ -65,7 +66,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 |---|---|
 | `/duo-doctor` | Run `plugins/duology/bin/duo-doctor --skip-claude`. It only reads, and it explains each failure. |
 | `/duo-audit` | Run `python3 plugins/duology-ship/skills/duo-lint/scripts/duo-lint.py <app-folder>`, then follow the checklist in `duo-design-review`. |
-| `/duo-new` | Follow the recipe's own `SKILL.md`, for example `recipe-shop/SKILL.md`. Each recipe runs `scripts/new-project.sh <AppName> <bundle-id> <folder>` from its skill folder. The six recipes are `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop` and `recipe-kids-learning`. |
+| `/duo-new` | Follow the recipe's own `SKILL.md`, for example `recipe-shop/SKILL.md`. Each recipe runs `scripts/new-project.sh <AppName> <bundle-id> <folder>` from its skill folder. The seven recipes are `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop`, `recipe-kids-learning` and `recipe-notes-ai`. |
 | `/duo-poses` | Run `plugins/duology-ship/skills/duo-pose-matrix/scripts/duo-pose status`, then `duo-pose-matrix <bundle-id>` from the same folder. Read `duo-pose-matrix/SKILL.md` first: it changes the pose of the whole simulator and needs the user's Accessibility permission. |
 | `/duo-review` | Read the frames yourself and follow `duo-design-review/SKILL.md`, with the `duo-postures`, `duo-patterns`, `duo-ergonomics` and `duo-accessibility` rules. The `duo-design-reviewer` agent in `plugins/duology-design/agents/` describes the output. Don't edit files. |
 | `/duo-ship` | Follow `plugins/duology-ship/commands/duo-ship.md` step by step with the scripts it names: the build rules from `duo-migrate`, `duo-lint`, the privacy manifest, a build on the iPhone Duo simulator, two `duo-pose-matrix` runs read as `plugins/duology-ship/agents/duo-pose-tester.md` describes, then `duo-app-store`'s `duo-shots`. Never upload or submit. |

@@ -6,6 +6,10 @@ Each release says which Xcode and iOS versions it was checked on.
 
 ## [Unreleased]
 
+### Added
+
+- `recipe-notes-ai` (`duology-recipes`), moved up from v1.0: a notes app whose summaries (a headline, key points and to-dos) come from Apple's on-device model through Foundation Models. Closed, the summary is one line under the note with Details; open and in book pose it's a pane on the right page; in tabletop it sits below the fold. The request lives in a service above the navigation stack, so a stream keeps going through every fold: measured from closed to open, book and closed again without a restart. When the model can't run or fails, a summary without AI is made from the note's own sentences and says so. On the simulator the model fails every request; the log says "Simulator is not supported". The notes never leave the device: no network, no Private Cloud Compute, and Mac checks that fail if either appears. 115 Mac checks, 11 UI tests, pose tests in open, book and tabletop, a test task (`recipe-notes-ai/new-notes-app`) and a seventh placeholder icon.
+
 ### Fixed
 
 - Recipe templates: every recipe now ships a placeholder app icon (one 1024 × 1024 PNG without alpha, a white shape on a colour per recipe), so an app made from a recipe builds with an icon. Before, the `AppIcon` set was empty and the built app had no icon (no `CFBundleIcons`). `scripts/make-recipe-icons.py` draws them, and `--check` fails when a committed icon differs. Each template's README says to replace it before shipping. `/duo-ship` found the empty set on an app made from `recipe-kids-learning`.

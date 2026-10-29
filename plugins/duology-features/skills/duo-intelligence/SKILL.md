@@ -10,7 +10,7 @@ metadata:
 
 The Foundation Models framework gives an app Apple's on-device language model and, from iOS 27, the larger Private Cloud Compute model, through the same Swift API ([Foundation Models](https://developer.apple.com/documentation/foundationmodels)). On iPhone Duo the question is where the result goes and what happens when the phone folds mid-answer. This skill answers both.
 
-Load neighbours when the task needs them: `duo-continuity` (state that survives a fold), `duo-layout` (size classes, the fold, `ArrangementView`), `duo-postures` (book and tabletop layouts), `duo-app-intents` (let Siri and Shortcuts run the same feature).
+Load neighbours when the task needs them: `duo-continuity` (state that survives a fold), `duo-layout` (size classes, the fold, `ArrangementView`), `duo-postures` (book and tabletop layouts), `duo-app-intents` (let Siri and Shortcuts run the same feature). To start a new notes app with all of this in place, use `recipe-notes-ai`.
 
 Labels: *measured* means we ran it on the iPhone Duo simulator (iOS 27.1) on 20 October 2026; see [references/evidence.md](references/evidence.md). *Unverified* means we could not confirm it. Everything else comes from Apple's pages, linked inline. Full source list: [reference/sources.md](https://github.com/Kimeur/duology/blob/main/reference/sources.md).
 
@@ -226,7 +226,7 @@ Apple lets the open phone add one level of hierarchy, as Mail adds the message b
 2. Start a summary on the closed phone, then press Open in Device Hub while it streams, and Closed again. The text must keep growing, with no restart and no second request.
 3. Check book and tabletop (`duo-pose set book`, `duo-pose set tabletop` from `duo-pose-matrix`, or Device Hub's buttons): no button of the pane in the fold, and the bar sits in the bottom region in tabletop.
 4. Profile token use with the Foundation Models instrument (Product > Profile) ([Managing the context window](https://developer.apple.com/documentation/foundationmodels/managing-the-context-window)).
-5. Judge output quality on a device with Apple Intelligence. *Measured:* on our Mac the simulator's model failed every request, and `contextSize` read 0.
+5. Judge output quality on a device with Apple Intelligence. *Measured:* on our Mac the simulator's model failed every request, and `contextSize` read 0; the log says the simulator isn't supported ([evidence](references/evidence.md)).
 
 ## Checklist
 

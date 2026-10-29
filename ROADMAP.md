@@ -41,11 +41,15 @@ Checked on Xcode 27.1 and the iPhone Duo simulator. The two items carried over f
 - [x] `duo-pose-tester` agent, moved up from v1.0: reads the pose runs (every pose, and while the app keeps running through a fold) and reports each failure with its screenshot
 - [x] Test tasks for every v0.4 skill and recipe in `evals/` (44 tasks in all; 43 are ready)
 
+## Next release (on `main`)
+
+- [x] `recipe-notes-ai`, moved up from v1.0: notes with summaries from the on-device model, a stream that survives every fold, a summary without AI when the model can't run, and notes that never leave the device, with a test task (45 tasks in all; 44 are ready)
+
 ## v1.0: complete (by end of January 2027)
 
 - [ ] Carried over from v0.3: first checks on a real iPhone Duo (the hinge, 120 Hz transitions, the camera capture accessory, new windows on the outer display)
 - [ ] Carried over from v0.3: first published test results (the harness runs in a separate macOS user account or a VM)
-- All 36 skills and 8 recipes, including `recipe-notes-ai` and `recipe-camera-studio`
+- All 36 skills and 8 recipes, including `recipe-camera-studio`
 - `duo-performance`
 - Ready before Apple's April 2027 rule that App Store listings include iPhone Duo screenshots
 - Full test results published

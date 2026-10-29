@@ -24,6 +24,7 @@ You need Xcode 27.1 or later. The scripts use `/Applications/Xcode-27.1.app` unl
 | `__APP_NAME__/Books/` | `Library.json` and one plain-text file per chapter. |
 | `__APP_NAME__/App/` | The app entry, the root view, the store and the launch switches for tests. |
 | `__APP_NAME__UITests/` | UI tests that drive the real app. |
+| `__APP_NAME__/Assets.xcassets/` | The accent colour and a placeholder app icon: one 1024 × 1024 image, from which Xcode makes the other sizes. Replace the icon with your own before you ship. |
 | `Tools/` | The model test program and both test scripts. |
 
 ## Your own books

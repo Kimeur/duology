@@ -123,4 +123,6 @@ python3 -m unittest discover -s scripts/tests
 python3 scripts/check-sources.py
 ```
 
+`scripts/tests` also compares the recipe templates' placeholder app icons with what `scripts/make-recipe-icons.py` draws. After you change a design there, run that script to rewrite them.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how pull requests are reviewed.

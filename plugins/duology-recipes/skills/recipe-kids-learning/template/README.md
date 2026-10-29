@@ -25,12 +25,14 @@ You need Xcode 27.1 or later. The scripts use `/Applications/Xcode-27.1.app` unl
 | `__APP_NAME__/App/` | The app entry, the root view, the store and the launch switches for tests. |
 | `__APP_NAME__/PrivacyInfo.xcprivacy` | No tracking, no data collected, UserDefaults with reason CA92.1. |
 | `__APP_NAME__UITests/` | UI tests that drive the real app. |
+| `__APP_NAME__/Assets.xcassets/` | The accent colour and a placeholder app icon: one 1024 × 1024 image, from which Xcode makes the other sizes. Replace the icon with your own before you ship. |
 | `Tools/` | The model test program and both test scripts. |
 
 ## Before you ship
 
 - Replace the sample questions in `Model/SampleActivities.swift`. Keep question IDs stable once children have stars for them. `Tools/run-model-tests.sh` checks the content.
 - Replace the privacy policy address in `Model/AppFacts.swift` with your own page. Use the same address in App Store Connect.
+- Replace the placeholder app icon in `Assets.xcassets/AppIcon.appiconset` with your own 1024 × 1024 image, without transparency.
 - Keep the text in the grown-ups area true. If you add anything that saves or sends data, update that text, the privacy manifest and your App Store Connect privacy answers together.
 - In App Store Connect, the Kids Category, the age band and the privacy answers are yours to set.
 - `Tools/run-model-tests.sh` fails if networking, tracking or purchase APIs appear in the app's sources, or if a link out appears anywhere but the grown-ups area.

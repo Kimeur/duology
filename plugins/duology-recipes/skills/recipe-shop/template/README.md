@@ -25,6 +25,7 @@ Before you ship:
 1. Create the same products in App Store Connect, with the same IDs.
 2. Replace the sample in `__APP_NAME__/Model/SampleCatalog.swift` and in `StoreKit/Shop.storekit` together. `Tools/run-model-tests.sh` fails when they disagree.
 3. Replace the Privacy Policy link in `__APP_NAME__/Plus/PlusScreen.swift`.
+4. Replace the placeholder app icon in `__APP_NAME__/Assets.xcassets/AppIcon.appiconset` with your own 1024 × 1024 image, without transparency.
 
 StoreKit sells digital goods that people use in the app. For physical goods, use Apple Pay or your payment provider; the layouts stay the same.
 
@@ -42,6 +43,7 @@ StoreKit sells digital goods that people use in the app. For physical goods, use
 | `__APP_NAME__/App/` | The app entry, the model the views share, the root view and the launch switches for tests. |
 | `StoreKit/` | The local StoreKit configuration. |
 | `__APP_NAME__UITests/` | UI tests that drive the real app. |
+| `__APP_NAME__/Assets.xcassets/` | The accent colour and a placeholder app icon: one 1024 × 1024 image, from which Xcode makes the other sizes. Replace the icon with your own before you ship. |
 | `Tools/` | The model test program and both test scripts. |
 
 ## Launch switches

@@ -6,6 +6,10 @@ Each release says which Xcode and iOS versions it was checked on.
 
 ## [Unreleased]
 
+### Fixed
+
+- Recipe templates: every recipe now ships a placeholder app icon (one 1024 × 1024 PNG without alpha, a white shape on a colour per recipe), so an app made from a recipe builds with an icon. Before, the `AppIcon` set was empty and the built app had no icon (no `CFBundleIcons`). `scripts/make-recipe-icons.py` draws them, and `--check` fails when a committed icon differs. Each template's README says to replace it before shipping. `/duo-ship` found the empty set on an app made from `recipe-kids-learning`.
+
 ## [0.4.0] - 2026-10-29
 
 Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not yet checked on a real iPhone Duo, and the first published test results are not in yet; both are planned before v1.0.

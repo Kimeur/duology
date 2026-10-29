@@ -59,6 +59,7 @@ Note the launch arguments the caller gave (`-- -uiTesting ...`) and the cases (`
 `OUT` is a new folder from `mktemp -d "${TMPDIR:-/tmp}/duo-pose-tester.XXXXXX"`. Give the Bash call a 10-minute timeout. Each case starts fresh in each pose, so this run shows what people see when they open the app in that pose.
 
 - Exit 0 or 1: go on. Exit 1 means at least one shot failed or the run stopped early; that is a result.
+- A blank shot while the app was running is often a slow first launch. Retake that case and pose once into a new folder with `--poses <pose> --wait 8` before you call it a failure, and report both files.
 - Exit 8: the app isn't installed. Stop and say so; the caller builds and installs it.
 - Exit 3 or 4 mid-run: Device Hub's window went away. Report what was captured and the manual route.
 - "Stopped early: UI tests started": report what was captured and the pose the simulator was left in. Don't rerun.

@@ -56,6 +56,7 @@ Read these, and keep each one with its file and line for the report:
 | Deployment target | `IPHONEOS_DEPLOYMENT_TARGET` in `project.pbxproj` | iOS 15 or later |
 | Life cycle | A SwiftUI `App`; or `UIApplicationSceneManifest` in the Info.plist (or `INFOPLIST_KEY_UIApplicationSceneManifest_Generation`) plus a scene delegate | Scenes. A UIKit app without them stops at launch when built with the iOS 27.1 SDK (`duo-migrate`, Step 2) |
 | Bundle identifier, version, build | `PRODUCT_BUNDLE_IDENTIFIER`, `MARKETING_VERSION`, `CURRENT_PROJECT_VERSION` | Found |
+| App icon | The `AppIcon` set in the asset catalog | A 1024 × 1024 image in it ([Configuring your app icon](https://developer.apple.com/documentation/xcode/configuring-your-app-icon)). An empty slot is a **Fix** |
 
 From April 2027, uploads must be built with the iOS 27 SDK or later and target iOS 15 or later, and need iPhone Duo screenshots ([Submitting](https://developer.apple.com/app-store/submitting/), `duo-app-store`). A CI that archives with an older Xcode is a **Fix** even when the local build passes. Xcode Cloud picks its Xcode in the workflow settings, not in the repo: mark it Check.
 
@@ -100,9 +101,11 @@ DEVELOPER_DIR=<DEV> xcrun simctl launch --terminate-running-process <UDID> <bund
 
 ## 5. Every pose
 
+First settle the store shots. Without `--shot`, the three default shots all show the screen the app opens on. Grep the app for the launch arguments it reads (`ProcessInfo.processInfo.arguments`, `UserDefaults` launch keys, `duo-testing`'s launch switches) and give each default shot the switch for a screen that shows what that pose does, such as the two-pane screen for `open`. Say which switches you picked. If the app has none, keep the defaults and say in the report that the frames all show the first screen.
+
 Tell the user in one line that the next two steps change the simulator's pose for everything on it, and bring Device Hub forward when its window isn't on the current desktop.
 
-Launch the `duology-ship:duo-pose-tester` agent with the Agent tool. Give it the bundle identifier, the app folder, the launch arguments, and `--case` entries built from the `--shot` arguments, so it tests the screens you will put on the store. Wait for its report and keep it whole for step 8. Don't run step 6 while it runs: both move the same simulator.
+Launch the `duology-ship:duo-pose-tester` agent with the Agent tool. Give it the bundle identifier, the app folder, the launch arguments, the pose `duo-pose status` reported, and one `--case NAME=ARGS` per distinct screen in the `--shot` list, so it tests the screens you will put on the store. `ARGS` is the shot's launch arguments only; the pose is never a launch argument. Wait for its report and keep it whole for step 8; it takes 10 to 25 minutes. Don't run step 6 while it runs: both move the same simulator.
 
 - Every failure it reports is a **Fix**: a crash in a pose blocks the submission, and the rest is what App Review and buyers see.
 - If it stopped on `duo-pose status` exit 3 or 4, keep the manual route it returned and use it in step 6.
@@ -144,6 +147,7 @@ Write two drafts into `OUT`, from what steps 5 and 6 showed, never from what the
 | CI and archive use Xcode 27.1 | Fix | .github/workflows/ci.yml:14 pins Xcode 26.4 |
 | Deployment target iOS 15 or later | Ready | 16.0 (project.pbxproj:312) |
 | Scene life cycle | Ready | SwiftUI App |
+| App icon | Fix | AppIcon has no 1024 × 1024 image (Contents.json:3) |
 | duo-lint | Fix | 1 error, 2 warnings in 2 files |
 | Privacy manifest | Fix | UserDefaults used (Settings.swift:8), not declared |
 | Third-party SDK manifests | Check | Organizer privacy report on the archive |

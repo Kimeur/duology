@@ -59,7 +59,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 
 ### Commands, without Claude Code
 
-`/duo-doctor`, `/duo-audit`, `/duo-new`, `/duo-poses` and `/duo-review` are Claude Code commands. Any agent can do the same work with the scripts or skills they use. Paths are relative to this repo.
+`/duo-doctor`, `/duo-audit`, `/duo-new`, `/duo-poses`, `/duo-review` and `/duo-ship` are Claude Code commands. Any agent can do the same work with the scripts or skills they use. Paths are relative to this repo.
 
 | Claude Code | Any agent |
 |---|---|
@@ -68,6 +68,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 | `/duo-new` | Follow the recipe's own `SKILL.md`, for example `recipe-shop/SKILL.md`. Each recipe runs `scripts/new-project.sh <AppName> <bundle-id> <folder>` from its skill folder. The six recipes are `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop` and `recipe-kids-learning`. |
 | `/duo-poses` | Run `plugins/duology-ship/skills/duo-pose-matrix/scripts/duo-pose status`, then `duo-pose-matrix <bundle-id>` from the same folder. Read `duo-pose-matrix/SKILL.md` first: it changes the pose of the whole simulator and needs the user's Accessibility permission. |
 | `/duo-review` | Read the frames yourself and follow `duo-design-review/SKILL.md`, with the `duo-postures`, `duo-patterns`, `duo-ergonomics` and `duo-accessibility` rules. The `duo-design-reviewer` agent in `plugins/duology-design/agents/` describes the output. Don't edit files. |
+| `/duo-ship` | Follow `plugins/duology-ship/commands/duo-ship.md` step by step with the scripts it names: the build rules from `duo-migrate`, `duo-lint`, the privacy manifest, a build on the iPhone Duo simulator, two `duo-pose-matrix` runs read as `plugins/duology-ship/agents/duo-pose-tester.md` describes, then `duo-app-store`'s `duo-shots`. Never upload or submit. |
 
 ### Rules that apply everywhere
 
@@ -86,7 +87,7 @@ Read [`plugins/duology/skills/duo-start/SKILL.md`](plugins/duology/skills/duo-st
 |---|---|
 | `plugins/<plugin>/skills/<skill>/` | One skill: `SKILL.md`, `references/`, sometimes `scripts/` and `template/` |
 | `plugins/<plugin>/commands/` | Claude Code commands |
-| `plugins/<plugin>/agents/` | Claude Code agents (`duo-design-reviewer`) |
+| `plugins/<plugin>/agents/` | Claude Code agents (`duo-design-reviewer`, `duo-pose-tester`) |
 | `plugins/<plugin>/.claude-plugin/plugin.json` | Plugin manifest |
 | `.claude-plugin/marketplace.json` | The marketplace that lists the plugins |
 | `reference/` | API index, device facts and sources, shared by every skill |

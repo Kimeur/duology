@@ -1,7 +1,7 @@
 {
   "name": "duology-ship",
   "version": "0.3.0",
-  "description": "Test and ship for iPhone Duo: duo-migrate (moving an app that ships today to Xcode 27.1 and the scene life cycle), duo-app-store (Duo App Store screenshots, review notes and the April 2027 rules), duo-lint (the fold linter), an opt-in lint hook, tests on the Duo simulator, screenshots closed, open, in book pose and in tabletop (duo-pose-matrix), /duo-audit and /duo-poses.",
+  "description": "Test and ship for iPhone Duo: duo-migrate (moving an app that ships today to Xcode 27.1 and the scene life cycle), duo-app-store (Duo App Store screenshots, review notes and the April 2027 rules), duo-lint (the fold linter), an opt-in lint hook, tests on the Duo simulator, screenshots closed, open, in book pose and in tabletop (duo-pose-matrix), /duo-audit, /duo-poses, /duo-ship (the App Store checklist) and the duo-pose-tester agent (reads pose runs, reports each failure).",
   "author": {
     "name": "Kimeur",
     "url": "https://github.com/Kimeur"

@@ -15,7 +15,7 @@
 [![GitHub stars](https://img.shields.io/github/stars/Kimeur/duology?style=flat-square&color=f4c430)](https://github.com/Kimeur/duology/stargazers)
 [![Release](https://img.shields.io/github/v/release/Kimeur/duology?style=flat-square&color=1d7a4b)](https://github.com/Kimeur/duology/releases)
 [![Skills](https://img.shields.io/badge/skills-33_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
-[![Commands and agents](https://img.shields.io/badge/commands_·_agents-5_·_1_built-2b55c7?style=flat-square)](#commands-and-agents)
+[![Commands and agents](https://img.shields.io/badge/commands_·_agents-6_·_2_built-2b55c7?style=flat-square)](#commands-and-agents)
 [![Recipes](https://img.shields.io/badge/app_recipes-6_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
 [![Built for Xcode 27.1](https://img.shields.io/badge/built_for-Xcode_27.1_·_iOS_27.1-1d7a4b?style=flat-square)](#verified-on)
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-d97757?style=flat-square)](#quick-start)
@@ -68,11 +68,11 @@ Apple published the rules in six Tech Talks, a HIG page and the iOS 27.1 SDK. Du
 
 1. **It knows the device.** Size classes, reserved regions, `ArrangementView`, vertical bars and the hinge. Each fact is checked against the iOS 27.1 SDK. Scenes and windows have their own skill (v0.2), and so do the cameras (`duo-camera`, v0.3).
 2. **It designs, not just compiles.** Eight named layout patterns, state that survives fold and unfold, and two people on one screen, each with SwiftUI code. v0.2 adds design tokens, guidance for each pose, fold transitions, thumb reach and accessibility on both displays.
-3. **It builds whole apps.** A recipe creates a project that builds and runs on the iPhone Duo simulator. Five are ready: a two-player game, a finance dashboard, a media player, a reader and a shop. Three more are planned.
-4. **It checks its own work.** `duo-lint` finds code Apple warns against. `/duo-audit` adds a 15-point design checklist on screenshots from the simulator. `/duo-poses` (v0.2) screenshots your app closed, open, in book pose and in tabletop, and `/duo-review` hands those frames to a design review agent.
+3. **It builds whole apps.** A recipe creates a project that builds and runs on the iPhone Duo simulator. Six are ready: a two-player game, a finance dashboard, a media player, a reader, a shop and a learning app for young children. Two more are planned.
+4. **It checks its own work.** `duo-lint` finds code Apple warns against. `/duo-audit` adds a 15-point design checklist on screenshots from the simulator. `/duo-poses` (v0.2) screenshots your app closed, open, in book pose and in tabletop, and `/duo-review` hands those frames to a design review agent. `/duo-ship` checks the App Store rules for Duo before you submit, with a pose test agent and screenshots of both displays.
 
 <div align="center">
-<img src="docs/assets/how-it-works.svg" alt="You ask Claude Code, Duology guides the code, Xcode 27.1 builds it for the iPhone Duo simulator, duo-lint, the 15-point design review and screenshots of four poses (v0.2) check it, then you ship. An App Store checklist (v1.0) is planned" width="100%" />
+<img src="docs/assets/how-it-works.svg" alt="You ask Claude Code, Duology guides the code, Xcode 27.1 builds it for the iPhone Duo simulator, duo-lint, the 15-point design review and screenshots of four poses (v0.2) check it, and `/duo-ship` (v0.4) runs the App Store checklist before you ship" width="100%" />
 </div>
 
 ## Quick start
@@ -152,7 +152,7 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 
 ## What's inside
 
-**33 skills in 5 plugins, 5 commands and 1 review agent.** v0.3 released 30 of them; `duo-migrate`, `duo-app-store` and `recipe-kids-learning` are new on `main` since. The full pack plans 36 skills in 5 plugins, 6 commands and 2 review agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
+**33 skills in 5 plugins, 6 commands and 2 agents.** v0.3 released 30 of the skills; `duo-migrate`, `duo-app-store`, `recipe-kids-learning`, `/duo-ship` and the `duo-pose-tester` agent are new on `main` since. The full pack plans 36 skills in 5 plugins, 6 commands and 2 agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
 
 <details open>
 <summary><strong>duology</strong> · foundation: setup, layout, continuity, scenes</summary>
@@ -230,12 +230,12 @@ See [App recipes](#app-recipes).
 | `/duo-audit` | v0.1 | Runs `duo-lint` and the 15-point checklist on your app and lists what to fix, most serious first. |
 | `/duo-poses` | v0.2 | Runs your app closed, open, in book pose and in tabletop, saves a screenshot of each, and puts the simulator back. |
 | `/duo-review` | v0.2 | Design critique of screenshots or Figma frames by the `duo-design-reviewer` agent. Reads only. |
-| `/duo-ship` | planned (v1.0) | App Store checklist for Duo: screenshots, metadata, review notes. |
+| `/duo-ship` | v0.4 | App Store checklist for Duo: the April 2027 build rules, duo-lint, every pose, screenshots of both displays, the privacy manifest and App Review notes. Never uploads. |
 
 | Agent | Status | What it does |
 |---|---|---|
 | `duo-design-reviewer` | v0.2 | Reviews a screen the way a Duo design lead would, with the rule behind each comment. |
-| `duo-pose-tester` | planned (v1.0) | Runs the pose check and reports each failure with its screenshot. |
+| `duo-pose-tester` | v0.4 | Reads a pose run (the app launched in every pose, and kept running while it folds) and reports each failure with its screenshot. Reads only. |
 
 <details>
 <summary><strong>duo-lint</strong> · example report</summary>

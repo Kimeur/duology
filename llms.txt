@@ -57,8 +57,10 @@ Start with the duo-start skill: it detects the app's setup and says which skill 
 - [recipe-shop](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/skills/recipe-shop/SKILL.md): Creates a shop for digital packs with a basket, StoreKit 2 purchases and a subscription, tested with a local StoreKit configuration file.
 - [recipe-kids-learning](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/skills/recipe-kids-learning/SKILL.md): Creates a learning app for young children: questions read aloud, big answers below the fold in tabletop, a parental gate, a privacy manifest and nothing tracked.
 
-## Commands and agent (Claude Code)
+## Commands and agents (Claude Code)
 
+- [/duo-ship](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/commands/duo-ship.md): App Store checklist for iPhone Duo: the April 2027 build rules, duo-lint, every pose, screenshots of both displays, the privacy manifest and App Review notes. Never uploads.
+- [duo-pose-tester agent](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/agents/duo-pose-tester.md): Runs an installed app in every pose and while it folds, and reports each failure with its screenshot.
 - [duo-design-reviewer agent](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-design/agents/duo-design-reviewer.md): Reviews screenshots or Figma exports with the 15-point checklist and the pose, reach and accessibility rules. Reads only.
 - [/duo-review](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-design/commands/duo-review.md): Hands a folder of frames (default: the newest /duo-poses run) to the reviewer agent.
 - [/duo-poses](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-ship/commands/duo-poses.md): Runs duo-pose-matrix on an installed app and puts the simulator back.

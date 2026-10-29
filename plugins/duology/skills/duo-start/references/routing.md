@@ -1,6 +1,6 @@
 # Routing map
 
-Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 (released 19 October 2026) added seven skills, two commands and a review agent. v0.3 (released 21 October 2026) added eight iOS 27 feature skills in a fifth plugin, `duology-features`, and four recipes. `duo-migrate`, `duo-app-store` and `recipe-kids-learning` arrived after v0.3, ahead of plan. The other three of the 36 are "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
+Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 (released 19 October 2026) added seven skills, two commands and a review agent. v0.3 (released 21 October 2026) added eight iOS 27 feature skills in a fifth plugin, `duology-features`, and four recipes. `duo-migrate`, `duo-app-store`, `recipe-kids-learning`, the `/duo-ship` command and the `duo-pose-tester` agent arrived after v0.3, ahead of plan. The other three of the 36 are "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
 
 ## v0.1 skills
 
@@ -57,17 +57,20 @@ Install a missing plugin with `/plugin install <plugin>@duology`. On other agent
 | `duo-app-store` | `duology-ship` | The App Store submission for iPhone Duo: screenshots of both displays at the exact sizes, without alpha, none black (`scripts/duo-shots`), previews, the App Store Connect API display type, the badge, App Review notes, the privacy manifest, the April 2027 rules. | Moving the build to Xcode 27.1 first (`duo-migrate`); screenshots for a design review only (`duo-pose-matrix`). |
 | `recipe-kids-learning` | `duology-recipes` | A new learning app for young children: one question at a time read aloud, big answer buttons below the fold in tabletop, progress that stays on the device, a parental gate, a privacy manifest and nothing tracked. Run `/duo-new recipe-kids-learning`. | An existing app made for kids (`duo-app-store` for the submission, `duo-accessibility`, `duo-postures`). |
 
-## Commands and agent
+## Commands and agents
 
 | Command | Use it for |
 |---|---|
 | `/duo-doctor` | Check Xcode 27.1, the Duo simulator and Xcode's agent connection. Run it first when anything in the build step fails. |
-| `/duo-new <recipe>` | Create a new app from a recipe and run it on the Duo simulator. Recipes: `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop`. |
+| `/duo-new <recipe>` | Create a new app from a recipe and run it on the Duo simulator. Recipes: `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop`, `recipe-kids-learning`. |
 | `/duo-audit` | Run `duo-lint` and the checklist and list what to fix, most serious first. Use it after the first pass. |
 | `/duo-poses <bundle-id>` | Screenshot the installed app closed, open, in book pose and in tabletop with `duo-pose-matrix`, and put the simulator back. (v0.2) |
 | `/duo-review [folder]` | Hand screenshots or Figma exports (default: the newest `/duo-poses` run) to the `duo-design-reviewer` agent for a design critique, most serious first. It reads only. (v0.2) |
+| `/duo-ship [app-folder]` | Before a submission: the April 2027 build rules, `duo-lint`, every pose with the `duo-pose-tester` agent, App Store screenshots of both displays, the privacy manifest and draft App Review notes. Ready, Fix or Check for each. Never uploads. |
 
 The `duo-design-reviewer` agent (`duology-design`, v0.2) applies the 15-point `duo-design-review` checklist plus the `duo-postures`, `duo-patterns`, `duo-ergonomics` and `duo-accessibility` rules to pictures. It never edits files.
+
+The `duo-pose-tester` agent (`duology-ship`) runs an installed app through every pose with `duo-pose-matrix`, then again while it folds, and reports each failure with its screenshot: a crash, letterboxing, cut-off content, a control on the fold, tabletop upside down, state lost. It changes the pose and puts it back; it never edits the app.
 
 ## Symptom to skill
 
@@ -92,6 +95,8 @@ The `duo-design-reviewer` agent (`duology-design`, v0.2) applies the 15-point `d
 | Spacing, fonts or corners differ between screens; an odd number of columns open | `duo-design-system` |
 | VoiceOver reads two panes row by row, or text truncates at large sizes closed | `duo-accessibility` |
 | "Show me every pose" | `duo-pose-matrix` (`/duo-poses`), then `/duo-review` |
+| "Does it survive folding?", "does it crash in tabletop?" | The `duo-pose-tester` agent |
+| "Is it ready for the App Store?" | `/duo-ship`, with `duo-app-store` behind it |
 | "Review these designs for Duo" | `duo-design-review`, or `/duo-review` for the agent |
 | UI tests pass on iPhone and fail on the Duo simulator | `duo-testing` |
 | An AI summary or chat should sit beside the content when open | `duo-intelligence` |
@@ -112,7 +117,6 @@ Say "coming" when one of these fits, and work from the Apple source in the last 
 | Skill | Release | Covers | Until then |
 |---|---|---|---|
 | `duo-performance` | v1.0 | Smooth resizing at 120 Hz | Test on a device: the simulator reports a 60 fps maximum (*measured*, see [device facts](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md)) |
-| `/duo-ship`, `duo-pose-tester` | v1.0 | App Store checklist; pose check agent | `duo-app-store` (`duology-ship`); [first-pass.md](first-pass.md) for poses |
 | `recipe-notes-ai`, `recipe-camera-studio` | v1.0 | App recipes | Start from the closest ready recipe, then load `duo-patterns`, plus `duo-intelligence` for notes with AI or `duo-camera` for a camera studio |
 
 ## Apple's skills in Xcode 27.1

@@ -49,7 +49,7 @@ Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugin
 
 Install a missing plugin with `/plugin install <plugin>@duology`. On other agents, `npx skills add Kimeur/duology --skill <name>` adds one skill.
 
-## After v0.3
+## v0.4 skills
 
 | Skill | Plugin | Load it when | Not for |
 |---|---|---|---|

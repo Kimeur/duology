@@ -18,7 +18,7 @@
 
 set -u
 
-VERSION="0.3.0"
+VERSION="0.4.0"
 MIN_MACOS="26.6"     # Xcode 27.1 needs macOS Tahoe 26.6 or later (Xcode 27.1 release notes)
 MIN_XCODE="27.1"
 MIN_IOS="27.1"

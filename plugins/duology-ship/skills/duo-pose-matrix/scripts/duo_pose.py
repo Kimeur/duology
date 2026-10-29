@@ -38,7 +38,7 @@ import sys
 import tempfile
 import time
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 HERE = os.path.dirname(os.path.realpath(__file__))
 HELPER_SOURCE = os.path.join(HERE, "duo-pose-ax.swift")
 DEFAULT_DEVELOPER_DIR = "/Applications/Xcode-27.1.app/Contents/Developer"

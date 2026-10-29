@@ -36,7 +36,7 @@
 </div>
 
 > [!IMPORTANT]
-> **v0.3 is out** (21 October 2026): 30 skills in 5 plugins, with a new plugin of iOS 27 features (`duology-features`) and five app recipes, plus `/duo-doctor`, `/duo-new`, `/duo-audit`, `/duo-poses`, `/duo-review` and a design review agent, checked on Xcode 27.1 and the iPhone Duo simulator. Checks on a real iPhone Duo and published test results come next. Duology is built in the open: the full pack of 36 skills is planned for v1.0 in January 2027. Star or watch the repo to follow along. See the [roadmap](ROADMAP.md) and the [release notes](CHANGELOG.md).
+> **v0.4 is out** (29 October 2026): for apps that already ship. `duo-migrate` moves an app to Xcode 27.1 and the scene life cycle step by step, `duo-app-store` makes the App Store screenshots of both displays, and `/duo-ship` checks the April 2027 App Store rules before you submit: it runs your app in every pose, and the `duo-pose-tester` agent reports each failure with its screenshot. Plus a sixth recipe, `recipe-kids-learning`. 33 skills in 5 plugins, 6 commands and 2 agents, checked on Xcode 27.1 and the iPhone Duo simulator. Checks on a real iPhone Duo and published test results come next. Duology is built in the open: the full pack of 36 skills is planned for v1.0 in January 2027. Star or watch the repo to follow along. See the [roadmap](ROADMAP.md) and the [release notes](CHANGELOG.md).
 
 > [!NOTE]
 > Duology is a community project. It is not affiliated with, endorsed by or sponsored by Apple Inc.
@@ -152,7 +152,7 @@ Review these Figma frames for iPhone Duo and tell me what breaks when the phone 
 
 ## What's inside
 
-**33 skills in 5 plugins, 6 commands and 2 agents.** v0.3 released 30 of the skills; `duo-migrate`, `duo-app-store`, `recipe-kids-learning`, `/duo-ship` and the `duo-pose-tester` agent are new on `main` since. The full pack plans 36 skills in 5 plugins, 6 commands and 2 agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
+**33 skills in 5 plugins, 6 commands and 2 agents.** v0.4 added `duo-migrate`, `duo-app-store`, `recipe-kids-learning`, `/duo-ship` and the `duo-pose-tester` agent. The full pack plans 36 skills in 5 plugins, 6 commands and 2 agents. Rows marked *planned* aren't built yet; the [roadmap](ROADMAP.md) says when they land. Claude loads a skill only when the task needs it, so the pack costs almost nothing while it sits unused.
 
 <details open>
 <summary><strong>duology</strong> · foundation: setup, layout, continuity, scenes</summary>

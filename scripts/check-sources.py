@@ -50,7 +50,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-VERSION = "0.3.0"
+VERSION = "0.4.0"
 USER_AGENT = "duology-check-sources/%s (+https://github.com/Kimeur/duology)" % VERSION
 
 BLOCKED_STATUSES = {401, 403, 429, 999}

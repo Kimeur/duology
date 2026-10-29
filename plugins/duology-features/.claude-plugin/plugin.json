@@ -1,6 +1,6 @@
 {
   "name": "duology-features",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "iOS 27 features on iPhone Duo's two displays: Foundation Models, App Intents, the camera, media, reading, games, the iOS 27 SwiftUI changes, and widgets, Live Activities and Controls.",
   "author": {
     "name": "Kimeur",

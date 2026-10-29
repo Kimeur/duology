@@ -6,6 +6,10 @@ Each release says which Xcode and iOS versions it was checked on.
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-29
+
+Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not yet checked on a real iPhone Duo, and the first published test results are not in yet; both are planned before v1.0.
+
 ### Added
 
 - `/duo-ship` (`duology-ship`): the App Store checklist for iPhone Duo before a submission. It reads the build rules that start in April 2027 (iOS 27 SDK or later, iOS 15 or later, the scene life cycle, the Xcode the CI archives with) and the app icon, runs `duo-lint`, checks the privacy manifest against the APIs that need a declared reason, builds and launches the app on the iPhone Duo simulator, runs it through every pose twice with `duo-pose-matrix` (started fresh in each pose, then kept running while the phone folds) and has `duo-pose-tester` report each failure, captures App Store screenshots of both displays with `duo-shots`, and drafts the App Review notes and promotional text. Ready, Fix or Check for each item, with its evidence. It never uploads or submits. Tried on a new `recipe-kids-learning` app on the iPhone Duo simulator in about 20 minutes: two pose runs (16 screenshots) with no failure, three store screenshots at the exact sizes without alpha, each opened on a screen picked from the app's own launch switches, and two Fix items (no app icon, a placeholder privacy policy address).
@@ -137,7 +141,8 @@ Checked on Xcode 27.1 (27A9275) and the iPhone Duo simulator on iOS 27.1. Not ye
 - `AGENTS.md` for Codex, Cursor, GitHub Copilot, Gemini CLI and other agents, and `llms.txt`.
 - `SECURITY.md`, `CODE_OF_CONDUCT.md` and this changelog.
 
-[Unreleased]: https://github.com/Kimeur/duology/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/Kimeur/duology/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/Kimeur/duology/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/Kimeur/duology/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/Kimeur/duology/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/Kimeur/duology/releases/tag/v0.1.0

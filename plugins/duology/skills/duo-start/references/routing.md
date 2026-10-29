@@ -70,7 +70,7 @@ Install a missing plugin with `/plugin install <plugin>@duology`. On other agent
 
 The `duo-design-reviewer` agent (`duology-design`, v0.2) applies the 15-point `duo-design-review` checklist plus the `duo-postures`, `duo-patterns`, `duo-ergonomics` and `duo-accessibility` rules to pictures. It never edits files.
 
-The `duo-pose-tester` agent (`duology-ship`) runs an installed app through every pose with `duo-pose-matrix`, then again while it folds, and reports each failure with its screenshot: a crash, letterboxing, cut-off content, a control on the fold, tabletop upside down, state lost. It changes the pose and puts it back; it never edits the app.
+The `duo-pose-tester` agent (`duology-ship`) reads `duo-pose-matrix` runs (the app launched in every pose, and kept running while it folds) and reports each failure with its screenshot: a crash, letterboxing, cut-off content, a control on the fold, tabletop upside down, state lost. It reads only; `/duo-ship` and `/duo-poses` make the runs.
 
 ## Symptom to skill
 
@@ -95,7 +95,7 @@ The `duo-pose-tester` agent (`duology-ship`) runs an installed app through every
 | Spacing, fonts or corners differ between screens; an odd number of columns open | `duo-design-system` |
 | VoiceOver reads two panes row by row, or text truncates at large sizes closed | `duo-accessibility` |
 | "Show me every pose" | `duo-pose-matrix` (`/duo-poses`), then `/duo-review` |
-| "Does it survive folding?", "does it crash in tabletop?" | The `duo-pose-tester` agent |
+| "Does it survive folding?", "does it crash in tabletop?" | `/duo-poses` and `/duo-poses --no-relaunch`, then the `duo-pose-tester` agent on both runs |
 | "Is it ready for the App Store?" | `/duo-ship`, with `duo-app-store` behind it |
 | "Review these designs for Duo" | `duo-design-review`, or `/duo-review` for the agent |
 | UI tests pass on iPhone and fail on the Duo simulator | `duo-testing` |

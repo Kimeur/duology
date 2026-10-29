@@ -1,6 +1,6 @@
 ---
 name: duo-ship
-description: "App Store checklist for iPhone Duo before a submission: checks the build rules that start in April 2027 (iOS 27 SDK or later, iOS 15 or later, the scene life cycle), runs duo-lint, builds and launches the app on the iPhone Duo simulator, tests every pose with the duo-pose-tester agent, captures App Store screenshots of both displays at the listed sizes without alpha, checks the privacy manifest against the code, and drafts the App Review notes. Reports Ready, Fix or Check for each item, with the evidence. Never uploads or submits anything."
+description: "App Store checklist for iPhone Duo before a submission: checks the build rules that start in April 2027 (iOS 27 SDK or later, iOS 15 or later, the scene life cycle), runs duo-lint, builds and launches the app on the iPhone Duo simulator, runs it in every pose with duo-pose-matrix and has the duo-pose-tester agent report each failure, captures App Store screenshots of both displays at the listed sizes without alpha, checks the privacy manifest against the code, and drafts the App Review notes. Reports Ready, Fix or Check for each item, with the evidence. Never uploads or submits anything."
 argument-hint: "[app-folder] [--shot NAME=POSE[:ARGS] ...] [--no-poses] [--no-shots] [--static] [-- launch args]"
 allowed-tools:
   - Bash(duo-doctor *)
@@ -11,9 +11,15 @@ allowed-tools:
   - Bash(python3 "${CLAUDE_PLUGIN_ROOT}/skills/duo-lint/scripts/duo-lint.py" *)
   - Bash(${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo-pose *)
   - Bash("${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo-pose" *)
+  - Bash(${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo-pose-matrix *)
+  - Bash("${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo-pose-matrix" *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo_pose.py *)
+  - Bash(python3 ${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo_pose_matrix.py *)
   - Bash(${CLAUDE_PLUGIN_ROOT}/skills/duo-app-store/scripts/duo-shots *)
   - Bash("${CLAUDE_PLUGIN_ROOT}/skills/duo-app-store/scripts/duo-shots" *)
   - Bash(plutil -p *)
+  - Bash(mktemp -d *)
+  - Bash(printenv HOME)
   - Read
   - Glob
   - Grep
@@ -35,7 +41,7 @@ Arguments as typed: `$ARGUMENTS`
 | `--static` | Read and lint only: no build, no simulator (skips steps 4 to 6) | Off |
 | `-- args` | Launch arguments for every launch, for example `-- -screenshots` | None |
 
-Load these skills from this plugin for the detail behind each step: `duo-app-store` (sizes, screenshots, metadata, review notes, privacy), `duo-migrate` (SDK, scenes, deployment target), `duo-lint`, `duo-pose-matrix`. `SCRIPTS` below means `${CLAUDE_PLUGIN_ROOT}/skills`; write the path out in full in every command.
+Load these skills from this plugin for the detail behind each step: `duo-app-store` (sizes, screenshots, metadata, review notes, privacy), `duo-migrate` (SDK, scenes, deployment target), `duo-lint`, `duo-pose-matrix`. Write `${CLAUDE_PLUGIN_ROOT}` paths out in full in every command. If a duo-pose-matrix script can't be executed, run it with `python3`: `duo_pose.py` for `duo-pose`, `duo_pose_matrix.py` for `duo-pose-matrix`.
 
 Rules:
 
@@ -52,7 +58,7 @@ Read these, and keep each one with its file and line for the report:
 
 | Item | Where to look | Ready when |
 |---|---|---|
-| Xcode the app ships with | The CI pin first (`.xcode-version`, a workflow's `xcode-version` or `DEVELOPER_DIR`, fastlane), then the default Xcode | Xcode 27 or later; 27.1 for the Duo layout |
+| Xcode the app ships with | The CI pin first (`.xcode-version`, a workflow's `xcode-version` or `DEVELOPER_DIR`, fastlane), then the default Xcode | Xcode 27.1. Xcode 27.0 meets the April 2027 rule, but the app stays clear of the inner display's right edge (`duo-migrate`): **Fix** |
 | Deployment target | `IPHONEOS_DEPLOYMENT_TARGET` in `project.pbxproj` | iOS 15 or later |
 | Life cycle | A SwiftUI `App`; or `UIApplicationSceneManifest` in the Info.plist (or `INFOPLIST_KEY_UIApplicationSceneManifest_Generation`) plus a scene delegate | Scenes. A UIKit app without them stops at launch when built with the iOS 27.1 SDK (`duo-migrate`, Step 2) |
 | Bundle identifier, version, build | `PRODUCT_BUNDLE_IDENTIFIER`, `MARKETING_VERSION`, `CURRENT_PROJECT_VERSION` | Found |
@@ -103,27 +109,45 @@ DEVELOPER_DIR=<DEV> xcrun simctl launch --terminate-running-process <UDID> <bund
 
 First settle the store shots. Without `--shot`, the three default shots all show the screen the app opens on. Grep the app for the launch arguments it reads (`ProcessInfo.processInfo.arguments`, `UserDefaults` launch keys, `duo-testing`'s launch switches) and give each default shot the switch for a screen that shows what that pose does, such as the two-pane screen for `open`. Say which switches you picked. If the app has none, keep the defaults and say in the report that the frames all show the first screen.
 
-Tell the user in one line that the next two steps change the simulator's pose for everything on it, and bring Device Hub forward when its window isn't on the current desktop.
+Tell the user in one line that steps 5 and 6 change the simulator's pose for everything on it, and bring Device Hub forward when its window isn't on the current desktop.
 
-Launch the `duology-ship:duo-pose-tester` agent with the Agent tool. Give it the bundle identifier, the app folder, the launch arguments, the pose `duo-pose status` reported, and one `--case NAME=ARGS` per distinct screen in the `--shot` list, so it tests the screens you will put on the store. `ARGS` is the shot's launch arguments only; the pose is never a launch argument. Wait for its report and keep it whole for step 8; it takes 10 to 25 minutes. Don't run step 6 while it runs: both move the same simulator.
+Check that the poses can be set:
+
+```bash
+"${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo-pose" status --udid <UDID>
+```
+
+Note its "Pose now" line. Exit 0: go on. Exit 3 (Accessibility) or 4 (no Device Hub window): skip the runs below, mark "Every pose" **Check**, tell the user how `/duo-poses` captures the poses by hand, and use the manual route in step 6. Exit 5, 6 or 7: show the output and skip steps 5 and 6. Never pass `--force`.
+
+Then run the app in every pose twice, one run after the other, each Bash call with a 10-minute timeout:
+
+```bash
+"${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo-pose-matrix" <bundle-id> --udid <UDID> --out <OUT>/Poses/launch <cases> -- <launch args>
+"${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo-pose-matrix" <bundle-id> --udid <UDID> --out <OUT>/Poses/folding --no-relaunch <cases> -- <launch args>
+```
+
+- `<cases>` is one `--case NAME=ARGS` per distinct screen in the `--shot` list, so the poses are tested on the screens you will put on the store. `ARGS` is the shot's launch arguments only; the pose is never a launch argument.
+- The first run starts the app fresh in each pose. The second keeps it running while the phone folds, which shows a quit during a fold and state lost (R2).
+- Exit 0 or 1 is a result: go on. "Stopped early: UI tests started": don't rerun; say which poses are missing.
+
+Run `printenv HOME`, then launch the `duology-ship:duo-pose-tester` agent with the Agent tool. Give it the bundle identifier, the two folders, and the crash report folder `<HOME>/Library/Logs/DiagnosticReports`. It reads the runs and opens every screenshot; it runs nothing. Keep its report whole for step 8. Step 5 takes about 10 to 20 minutes in all.
 
 - Every failure it reports is a **Fix**: a crash in a pose blocks the submission, and the rest is what App Review and buyers see.
-- If it stopped on `duo-pose status` exit 3 or 4, keep the manual route it returned and use it in step 6.
-- If the agent isn't available, follow `/duo-poses` yourself (`${CLAUDE_PLUGIN_ROOT}/commands/duo-poses.md`) and report what it shows.
+- If the agent isn't available, read each run's `summary.md` and every screenshot yourself, as `/duo-poses` step 4 does (`${CLAUDE_PLUGIN_ROOT}/commands/duo-poses.md`), and report what they show.
 
 ## 6. Store screenshots
 
 Follow `duo-app-store`, Steps 1 to 3. For each `--shot`, in order:
 
-1. Set the pose: `"${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo-pose" set <pose>`. When it exits 3 or 4, ask the user to press it in Device Hub (Closed; Open; Partially Open for book; Partially Open, then Rotate Right for tabletop) and wait for their answer.
+1. Set the pose: `"${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo-pose" set <pose> --udid <UDID>`. When it exits 3 or 4, ask the user to press it in Device Hub (Closed; Open; Partially Open for book; Partially Open, then Rotate Right for tabletop) and wait for their answer.
 2. Launch the screen: `simctl launch --terminate-running-process` with the shared and the shot's launch arguments, then wait 4 seconds for the first screen.
 3. Capture: `UDID=<UDID> "${CLAUDE_PLUGIN_ROOT}/skills/duo-app-store/scripts/duo-shots" <OUT>/Store <NAME>`.
 
-Before the first shot, note the "Pose now" line of `duo-pose status`, and clean the status bar with `simctl status_bar <UDID> override` as `duo-app-store` Step 3 shows. After the last one, run `simctl status_bar <UDID> clear` and put the simulator back in that pose with `duo-pose set`.
+Before the first shot, clean the status bar with `simctl status_bar <UDID> override` as `duo-app-store` Step 3 shows. After the last one, run `simctl status_bar <UDID> clear` and put the simulator back in the pose `duo-pose status` reported in step 5, with `duo-pose set`.
 
 Then read every JPEG in `<OUT>/Store` with the Read tool and look at it:
 
-- **Ready**: at least one outer-display frame (1398 × 2034) and one inner-display frame (2853 × 2007 or 2007 × 2853), the app's real screen, sample data only, nothing cut off.
+- **Ready**: at least one outer-display frame (1398 × 2034 or 2034 × 1398) and one inner-display frame (2853 × 2007 or 2007 × 2853), the app's real screen, sample data only, nothing cut off.
 - **Fix**: a display has no frame, a frame shows a real person's data, a debug overlay, an error, or the problem the pose test found.
 - `duo-shots` writes JPEGs without alpha and fails on a size App Store Connect doesn't list. Say which display a shot skipped as black: that display was off in that pose.
 
@@ -152,7 +176,7 @@ Write two drafts into `OUT`, from what steps 5 and 6 showed, never from what the
 | Privacy manifest | Fix | UserDefaults used (Settings.swift:8), not declared |
 | Third-party SDK manifests | Check | Organizer privacy report on the archive |
 | Builds and launches on the iPhone Duo simulator | Ready | |
-| Every pose (duo-pose-tester) | Fix | Quits in tabletop: <OUT>/... |
+| Every pose (duo-pose-tester) | Fix | Quits in tabletop: <OUT>/Poses/launch/app-tabletop.png |
 | Screenshots, outer display | Ready | 02-closed-outer.jpg, 1398 × 2034 |
 | Screenshots, inner display | Ready | 01-open-inner.jpg, 2853 × 2007 |
 | App Review notes | Draft | <OUT>/review-notes.txt |

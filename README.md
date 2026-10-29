@@ -68,11 +68,11 @@ Apple published the rules in six Tech Talks, a HIG page and the iOS 27.1 SDK. Du
 
 1. **It knows the device.** Size classes, reserved regions, `ArrangementView`, vertical bars and the hinge. Each fact is checked against the iOS 27.1 SDK. Scenes and windows have their own skill (v0.2), and so do the cameras (`duo-camera`, v0.3).
 2. **It designs, not just compiles.** Eight named layout patterns, state that survives fold and unfold, and two people on one screen, each with SwiftUI code. v0.2 adds design tokens, guidance for each pose, fold transitions, thumb reach and accessibility on both displays.
-3. **It builds whole apps.** A recipe creates a project that builds and runs on the iPhone Duo simulator. Five are ready: a two-player game, a finance dashboard, a media player, a reader and a shop. Three more are planned.
+3. **It builds whole apps.** A recipe creates a project that builds and runs on the iPhone Duo simulator. Six are ready: a two-player game, a finance dashboard, a media player, a reader, a shop and a learning app for young children. Two more are planned.
 4. **It checks its own work.** `duo-lint` finds code Apple warns against. `/duo-audit` adds a 15-point design checklist on screenshots from the simulator. `/duo-poses` (v0.2) screenshots your app closed, open, in book pose and in tabletop, and `/duo-review` hands those frames to a design review agent. `/duo-ship` checks the App Store rules for Duo before you submit, with a pose test agent and screenshots of both displays.
 
 <div align="center">
-<img src="docs/assets/how-it-works.svg" alt="You ask Claude Code, Duology guides the code, Xcode 27.1 builds it for the iPhone Duo simulator, duo-lint, the 15-point design review and screenshots of four poses (v0.2) check it, then you ship. An App Store checklist (v1.0) is planned" width="100%" />
+<img src="docs/assets/how-it-works.svg" alt="You ask Claude Code, Duology guides the code, Xcode 27.1 builds it for the iPhone Duo simulator, duo-lint, the 15-point design review and screenshots of four poses (v0.2) check it, and `/duo-ship` (v0.4) runs the App Store checklist before you ship" width="100%" />
 </div>
 
 ## Quick start
@@ -235,7 +235,7 @@ See [App recipes](#app-recipes).
 | Agent | Status | What it does |
 |---|---|---|
 | `duo-design-reviewer` | v0.2 | Reviews a screen the way a Duo design lead would, with the rule behind each comment. |
-| `duo-pose-tester` | v0.4 | Runs the app in every pose and while it folds, and reports each failure with its screenshot. |
+| `duo-pose-tester` | v0.4 | Reads a pose run (the app launched in every pose, and kept running while it folds) and reports each failure with its screenshot. Reads only. |
 
 <details>
 <summary><strong>duo-lint</strong> · example report</summary>

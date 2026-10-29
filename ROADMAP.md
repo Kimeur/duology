@@ -36,7 +36,7 @@ Checked on Xcode 27.1 and the iPhone Duo simulator. The two items carried over f
 - [x] `duo-app-store`, moved up from v1.0: App Store screenshots of both displays at the exact Duo sizes (`duo-shots`), App Review notes, the privacy manifest and the April 2027 rules, with a test task
 - [x] `recipe-kids-learning`, moved up from v1.0: a learning app for young children with a parental gate, a privacy manifest and nothing tracked, with a test task
 - [x] `/duo-ship`, moved up from v1.0: the App Store checklist for Duo, from the build rules to screenshots of both displays and draft App Review notes
-- [x] `duo-pose-tester` agent, moved up from v1.0: runs the app in every pose and while it folds, and reports each failure with its screenshot
+- [x] `duo-pose-tester` agent, moved up from v1.0: reads the pose runs (every pose, and while the app keeps running through a fold) and reports each failure with its screenshot
 
 ## v1.0: complete (by end of January 2027)
 

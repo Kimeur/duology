@@ -30,7 +30,7 @@ What this means for the skill:
 - Availability said yes and every request still failed. So the skill asks for a fallback on every request, not only when availability says no.
 - The failure was an `NSError`, not a `LanguageModelError` value, so `catch let error as LanguageModelError` didn't match it. The skill ends every request with a plain `catch`.
 - A request can hang. The skill keeps Stop on screen.
-- *Unverified:* whether the failures come from the simulator itself or from this Mac's setup. Judge output, speed and refusals on a device with Apple Intelligence on.
+- The simulator itself refuses the requests (*measured* on 29 October 2026, with `recipe-notes-ai`'s app): the error's underlying cause, in the app's log, reads "InferenceError::operationNotAllowed::Simulator is not supported", from the guardrail's text sanitizer (`com.apple.SensitiveContentAnalysisML` error 15). Judge output, speed and refusals on a device with Apple Intelligence on.
 
 ## A stream through fold and unfold
 

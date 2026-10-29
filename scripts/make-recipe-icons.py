@@ -14,7 +14,7 @@ any machine. --check compares the pixels of the committed icons with what this
 script draws, so a hand-edited or missing icon fails.
 
 Usage:
-  python3 scripts/make-recipe-icons.py           # write the six icons
+  python3 scripts/make-recipe-icons.py           # write every recipe's icon
   python3 scripts/make-recipe-icons.py --check   # exit 1 if any differs
 
 Exit codes: 0 ok, 1 an icon is missing or differs (--check).
@@ -75,6 +75,11 @@ DESIGNS = {
                                      ([rect(312, 400, 712, 760)], WHITE)]),
     # A star.
     "recipe-kids-learning": ((217, 119, 6), [([star(512, 530, 300, 125)], WHITE)]),
+    # A page with three lines of text, and a four-point spark beside it.
+    "recipe-notes-ai": ((13, 128, 128), [([rect(262, 300, 622, 780)], WHITE),
+                                         ([rect(322, 420, 562, 450), rect(322, 510, 562, 540),
+                                           rect(322, 600, 482, 630)], (13, 128, 128)),
+                                         ([star(742, 330, 130, 34, points=4)], WHITE)]),
 }
 
 

@@ -732,6 +732,21 @@ Used by `recipe-kids-learning`. Declarations and availability checked in the iOS
 | `NWConnection`, `SFSpeechRecognizer`, `UIDevice.identifierForVendor` | Network, Speech, UIKit | Named only as APIs the recipe's privacy scan rejects | iOS 12.0, 10.0, 6.0 | [doc](https://developer.apple.com/documentation/network/nwconnection) |
 | `NSPrivacyAccessedAPICategoryUserDefaults`, reason `CA92.1` | Privacy manifest | An `NSPrivacyAccessedAPITypes` entry: the app reads and writes its own settings | Xcode 15 or later | [doc](https://developer.apple.com/documentation/bundleresources/app-privacy-configuration/nsprivacyaccessedapitypes/nsprivacyaccessedapitype) |
 
+## Notes with on-device AI
+
+Used by `recipe-notes-ai`, with the Foundation Models rows above. Declarations and availability checked in the iOS 27.1 simulator SDK on 29 Oct 2026.
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `GenerationGuide.count(_:)` (a range), `maximumCount(_:)` | FoundationModels | `static func count<Element>(_ range: ClosedRange<Int>) -> GenerationGuide<[Element]> where Value == [Element]`; `static func maximumCount<Element>(_ count: Int) -> GenerationGuide<[Element]> where Value == [Element]` | iOS 26.0 | [doc](https://developer.apple.com/documentation/foundationmodels/generationguide/maximumcount(_:)) |
+| `GenerationOptions(samplingMode:temperature:maximumResponseTokens:)` | FoundationModels | `init(samplingMode: GenerationOptions.SamplingMode? = nil, temperature: Double? = nil, maximumResponseTokens: Int? = nil)`, back-deployed before iOS 27.0 | iOS 26.0 | [doc](https://developer.apple.com/documentation/foundationmodels/generationoptions/init(samplingmode:temperature:maximumresponsetokens:)) |
+| `LanguageModelSession.ResponseStream.Snapshot` | FoundationModels | `struct Snapshot` with `var content: Content.PartiallyGenerated`, `var rawContent: GeneratedContent` | iOS 26.0 | [doc](https://developer.apple.com/documentation/foundationmodels/languagemodelsession/responsestream/snapshot) |
+| `FileManager.urls(for:in:)`, `.applicationSupportDirectory` | Foundation | `func urls(for directory: FileManager.SearchPathDirectory, in domainMask: FileManager.SearchPathDomainMask) -> [URL]` | iOS 4.0 | [doc](https://developer.apple.com/documentation/foundation/filemanager/urls(for:in:)) |
+| `Data.write(to:options:)`, `.atomic` | Foundation | `func write(to url: URL, options: Data.WritingOptions = []) throws` | iOS 8.0 | [doc](https://developer.apple.com/documentation/foundation/data/write(to:options:)) |
+| `Logger`, `privacy: .public` | os | `struct Logger : Sendable` with `init(subsystem: String, category: String)`; interpolated values are private unless marked `.public` | iOS 14.0 | [doc](https://developer.apple.com/documentation/os/logger) |
+| `View.ignoresSafeArea(_:edges:)`, `SafeAreaRegions.keyboard` | SwiftUI | `func ignoresSafeArea(_ regions: SafeAreaRegions = .all, edges: Edge.Set = .all) -> some View`; `static let keyboard: SafeAreaRegions` | iOS 14.0 | [doc](https://developer.apple.com/documentation/swiftui/view/ignoressafearea(_:edges:)) |
+| `PrivateCloudComputeLanguageModel`, `URLSession`, `NSUbiquitousKeyValueStore` | FoundationModels, Foundation | Named only as APIs the recipe's privacy scan rejects: each would send notes off the device | iOS 27.0, 7.0, 5.0 | [doc](https://developer.apple.com/documentation/foundationmodels/privatecloudcomputelanguagemodel) |
+
 ## Not in the SDK
 
 Brief claims we could not find in the iOS 27.1 SDK:

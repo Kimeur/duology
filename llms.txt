@@ -56,6 +56,7 @@ Start with the duo-start skill: it detects the app's setup and says which skill 
 - [recipe-reader](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/skills/recipe-reader/SKILL.md): Creates an e-book reader: one page closed, two facing pages open and in book pose, the reader's place kept through every fold.
 - [recipe-shop](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/skills/recipe-shop/SKILL.md): Creates a shop for digital packs with a basket, StoreKit 2 purchases and a subscription, tested with a local StoreKit configuration file.
 - [recipe-kids-learning](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/skills/recipe-kids-learning/SKILL.md): Creates a learning app for young children: questions read aloud, big answers below the fold in tabletop, a parental gate, a privacy manifest and nothing tracked.
+- [recipe-notes-ai](https://raw.githubusercontent.com/Kimeur/duology/main/plugins/duology-recipes/skills/recipe-notes-ai/SKILL.md): Creates a notes app with on-device AI summaries: one line closed, a pane beside the note open, a stream that survives every fold, and a summary without AI when the model can't run.
 
 ## Commands and agents (Claude Code)
 

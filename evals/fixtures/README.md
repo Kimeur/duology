@@ -125,7 +125,7 @@ They show what the system did with the app's bars: the tab bar and the icon-only
 
 ## empty
 
-Not a folder. `fixture: empty` starts the agent in an empty folder. Used by `duo-setup/mac-check` and the six recipe tasks.
+Not a folder. `fixture: empty` starts the agent in an empty folder. Used by `duo-setup/mac-check` and the seven recipe tasks.
 
 ## Check that every fixture builds
 

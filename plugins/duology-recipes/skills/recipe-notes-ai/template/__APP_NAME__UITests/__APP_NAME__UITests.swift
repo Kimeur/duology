@@ -79,7 +79,7 @@ final class __APP_NAME__UITests: XCTestCase {
         XCTAssertTrue(tap("summary.stop", in: app, until: { has(app, "note.state", "phase=idle") }), "Stop ends it")
         XCTAssertTrue(has(app, "note.state", "digest=none"), "and keeps nothing half-written")
         XCTAssertTrue(tap("summary.summarize", in: app, until: { has(app, "note.state", "phase=working") }))
-        XCTAssertTrue(waitFor(app, "note.state", "digest=onDeviceAI", timeout: 30), "a full run ends with a summary")
+        XCTAssertTrue(waitFor(app, "note.state", "digest=simple", timeout: 30), "a full run ends with a summary")
         XCTAssertEqual(state(app, "note.state")["headline"], "The third loaf finally rose.")
     }
 
@@ -111,7 +111,7 @@ final class __APP_NAME__UITests: XCTestCase {
             RunLoop.current.run(until: Date().addingTimeInterval(0.5))
         }
         let end = state(app, "note.state")
-        XCTAssertEqual(end["digest"], "onDeviceAI", "the stream finished with a summary")
+        XCTAssertEqual(end["digest"], "simple", "the stream finished with a summary (the stand-in's is saved as simple)")
         XCTAssertEqual(end["headline"], "We meet in Lyon on 12 March for two days.", "the whole headline")
         XCTAssertEqual(end["points"], "3")
         let text = XCTAttachment(string: (["layouts=\(modes.joined(separator: ">"))"] + report).joined(separator: "\n"))

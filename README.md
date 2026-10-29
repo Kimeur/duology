@@ -16,7 +16,7 @@
 [![Release](https://img.shields.io/github/v/release/Kimeur/duology?style=flat-square&color=1d7a4b)](https://github.com/Kimeur/duology/releases)
 [![Skills](https://img.shields.io/badge/skills-34_built_·_36_planned-2b55c7?style=flat-square)](#whats-inside)
 [![Commands and agents](https://img.shields.io/badge/commands_·_agents-6_·_2_built-2b55c7?style=flat-square)](#commands-and-agents)
-[![Recipes](https://img.shields.io/badge/app_recipes-6_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
+[![Recipes](https://img.shields.io/badge/app_recipes-7_built_·_8_planned-2b55c7?style=flat-square)](#app-recipes)
 [![Built for Xcode 27.1](https://img.shields.io/badge/built_for-Xcode_27.1_·_iOS_27.1-1d7a4b?style=flat-square)](#verified-on)
 [![Claude Code plugin](https://img.shields.io/badge/Claude_Code-plugin-d97757?style=flat-square)](#quick-start)
 <!-- skills.sh badge: add once the repo is listed

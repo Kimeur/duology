@@ -111,6 +111,14 @@ let sourdough = SimpleSummary.digest(of: samples[1])
 check(sourdough?.headline == "The third loaf finally rose." && sourdough?.points.count == Digest.maximumPoints && sourdough?.todos == [],
       "a note without bullets: the first sentence, then the next ones as points")
 check(SimpleSummary.digest(of: Note()) == nil, "an empty note has no summary")
+let chores = Note(body: "- [ ] Call the plumber about the kitchen sink leak\n- [ ] Pay the electricity bill before Friday")
+check(chores.canBeSummarized && SimpleSummary.digest(of: chores)?.headline == "Call the plumber about the kitchen sink leak"
+      && SimpleSummary.digest(of: chores)?.todos.count == 2,
+      "a note of only to-dos still gets a summary: its first to-do heads it")
+let done = Note(body: "- [x] Called the plumber about the kitchen sink leak\n- [x] Paid the electricity bill on Friday")
+check(SimpleSummary.digest(of: done)?.headline.isEmpty == false, "so does a note of only ticked to-dos")
+check(samples.filter(\.canBeSummarized).allSatisfy { SimpleSummary.digest(of: $0) != nil },
+      "every note that can be summarized gets a simple summary, so the fallback never ends empty")
 check(SimpleSummary.sentences(in: "Weigh 3.5 kg. Then rest! Done? Yes\nNew line") == ["Weigh 3.5 kg.", "Then rest!", "Done?", "Yes", "New line"],
       "sentences end at . ! ? before a space, and at line ends; 3.5 stays whole")
 check(SimpleSummary.todo("TODO: call Sam") == "call Sam" && SimpleSummary.todo("☐ Water") == "Water"
@@ -245,6 +253,9 @@ for (token, why) in forbidden {
     let hits = sources.filter { $0.code.contains(token) }.map(\.file)
     check(hits.isEmpty, "no \(token) (\(why))\(hits.isEmpty ? "" : " in \(hits)")")
 }
+
+let urlLiterals = sources.filter { $0.code.contains("http://") || $0.code.contains("https://") }.map(\.file)
+check(urlLiterals.isEmpty, "no web address in the app's code, so nothing can be fetched or sent from a URL\(urlLiterals.isEmpty ? "" : " in \(urlLiterals)")")
 
 // Only the constant reaches the model's instructions; the note goes in the prompt.
 let instructionsPattern = try NSRegularExpression(pattern: #"instructions:\s*([^)\n]*)"#)

@@ -28,9 +28,16 @@ final class NotesStore {
     init(fileURL: URL?, summaries: SummaryService, firstNotes: [Note]) {
         self.fileURL = fileURL
         self.summaries = summaries
-        if let fileURL, let data = try? Data(contentsOf: fileURL),
-           let saved = try? Notebook.decode(data) {
-            notebook = saved
+        if let fileURL, let data = try? Data(contentsOf: fileURL) {
+            if let saved = try? Notebook.decode(data) {
+                notebook = saved
+            } else {
+                // A file this version can't read: keep it beside the new one instead of saving
+                // the samples over it, so nobody's notes are lost.
+                let aside = fileURL.deletingPathExtension().appendingPathExtension("unreadable-\(Int(Date().timeIntervalSince1970)).json")
+                try? FileManager.default.moveItem(at: fileURL, to: aside)
+                notebook = Notebook(notes: firstNotes)
+            }
         } else {
             notebook = Notebook(notes: firstNotes)
         }

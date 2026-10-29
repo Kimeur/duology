@@ -226,7 +226,7 @@ Apple lets the open phone add one level of hierarchy, as Mail adds the message b
 2. Start a summary on the closed phone, then press Open in Device Hub while it streams, and Closed again. The text must keep growing, with no restart and no second request.
 3. Check book and tabletop (`duo-pose set book`, `duo-pose set tabletop` from `duo-pose-matrix`, or Device Hub's buttons): no button of the pane in the fold, and the bar sits in the bottom region in tabletop.
 4. Profile token use with the Foundation Models instrument (Product > Profile) ([Managing the context window](https://developer.apple.com/documentation/foundationmodels/managing-the-context-window)).
-5. Judge output quality on a device with Apple Intelligence. *Measured:* on our Mac the simulator's model failed every request, and `contextSize` read 0; the log says the simulator isn't supported ([evidence](references/evidence.md)).
+5. Judge output quality on a device with Apple Intelligence. *Measured:* on our Mac the simulator's model failed every request, and `contextSize` read 0. On 29 October the log showed why: the simulator isn't supported ([evidence](references/evidence.md)).
 
 ## Checklist
 

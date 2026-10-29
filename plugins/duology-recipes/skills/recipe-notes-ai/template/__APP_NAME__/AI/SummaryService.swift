@@ -62,7 +62,8 @@ final class SummaryService {
                         try await Task.sleep(for: self?.standInPace ?? .zero)
                         self?.draft = step
                     }
-                    digest = self?.draft?.finished(origin: .onDeviceAI, source: source, coversWholeNote: budget.isWhole)
+                    // Not the model's words, so saved as a simple summary.
+                    digest = self?.draft?.finished(origin: .simple, source: source, coversWholeNote: budget.isWhole)
                 case .failing:
                     try await Task.sleep(for: .seconds(1))
                     throw CocoaError(.featureUnsupported)
@@ -71,9 +72,11 @@ final class SummaryService {
                 return
             } catch {
                 // Any other failure, typed or not (the simulator's arrives as a plain NSError):
-                // keep the feature working without AI. The log has the error, never the note.
+                // keep the feature working without AI. The error's domain and code are public in
+                // the log; its description stays private, in case it ever quotes the note.
                 if Task.isCancelled { return }
-                Self.log.error("Summary failed, using a simple one: \(String(describing: error), privacy: .public)")
+                let failure = error as NSError
+                Self.log.error("Summary failed (\(failure.domain, privacy: .public) \(failure.code, privacy: .public)), using a simple one: \(String(describing: error), privacy: .private)")
                 digest = nil
             }
             guard !Task.isCancelled, let self else { return }

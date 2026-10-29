@@ -54,4 +54,4 @@ Debug builds only. Add them in the scheme (Product > Scheme > Edit Scheme > Argu
 
 - Poses change only in Device Hub (Closed, Partially Open, Open). Check each by hand: closed, the note with the bar below; open and held wide, the note left of the fold and the summary right of it; folded like a book, the same; Partially Open then Rotate Right (tabletop), the note above the fold and the summary below it.
 - Start a summary with `-summarizer standin -standInPace 1`, then close, open and fold the phone while it streams: the words keep coming, with no restart.
-- The model's failures are in the log, without the note's text: `xcrun simctl spawn <UDID> log show --last 5m --predicate 'subsystem == "__BUNDLE_ID__"'` (the simulator's UDID from `xcrun simctl list devices`).
+- The model's failures are in the log, with the error's domain and code (its description stays private): `xcrun simctl spawn <UDID> log show --last 5m --predicate 'subsystem == "__BUNDLE_ID__"'` (the simulator's UDID from `xcrun simctl list devices`).

@@ -12,6 +12,7 @@ nonisolated enum SummaryEngine: String, CaseIterable, Sendable {
     case simple
     /// A stand-in for the model: `SimpleSummary`'s result, streamed one word at a time at a
     /// steady pace, so tests can fold the phone or press Stop mid-stream on any simulator.
+    /// Saved as a simple summary: it isn't the model's.
     case standIn = "standin"
     /// A stand-in that fails after a moment, like the model on our simulator, to test the fallback.
     case failing

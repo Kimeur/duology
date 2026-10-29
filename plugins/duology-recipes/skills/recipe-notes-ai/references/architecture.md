@@ -15,7 +15,7 @@ How the app made by `recipe-notes-ai` is put together, who owns what, and what w
 
 | State | Owner | Survives |
 |---|---|---|
-| The notes and their summaries | `Notebook` in `NotesStore`, saved to `Application Support/Notes.json` after every change | folds, quitting, relaunch |
+| The notes and their summaries | `Notebook` in `NotesStore`, saved to `Application Support/Notes.json` after every change; a file the app can't read is moved aside (`Notes.unreadable-<time>.json`), never saved over | folds, quitting, relaunch |
 | The summary in progress (`phase`, `draft`, the task) | `SummaryService` in `NotesStore` | folds, leaving the note's screen |
 | The note on screen | `NotesStore.path` | folds |
 | The summary sheet | `NotesStore.showsSummarySheet`, presented by `RootView` | folds; `NoteScreen` closes it when the pane fits beside |
@@ -30,7 +30,7 @@ How the app made by `recipe-notes-ai` is put together, who owns what, and what w
 3. The engine decides what runs. `.automatic` asks the model when `OnDeviceSummarizer.unavailableReason` is nil, otherwise makes the simple summary with that reason. `.onDeviceAI` always asks the model. `.standIn`, `.failing` and `.simple` are for tests.
 4. `OnDeviceSummarizer.summarize` opens a new `LanguageModelSession` with the constant instructions and streams `GeneratedDigest`. Each snapshot's partial content becomes a `DigestDraft`; the views show it as it grows.
 5. The last draft is tidied into a `Digest` (`DigestDraft.finished`): list markers and quotes removed, blank and repeated lines dropped, the headline cut to 10 words, at most 4 points and 5 to-dos.
-6. Any error other than cancellation is logged (the error, never the note) and replaced by `SimpleSummary.digest(of:fallbackReason:)`.
+6. Any error other than cancellation is logged (domain and code public, the description private) and replaced by `SimpleSummary.digest(of:fallbackReason:)`.
 7. `finish` saves the digest with the note. The note's date doesn't change: a summary isn't an edit. If the note changed meanwhile, the digest's fingerprint no longer matches and the pane says "The note changed after this summary".
 8. Stop cancels the task: no digest is saved and the note keeps the one it had.
 
@@ -81,7 +81,7 @@ The headline and the points never shrank, so nothing restarted; the test fails i
 
 | Run | Result |
 |---|---|
-| `Tools/run-model-tests.sh`, template and a generated project | 115 checks, 0 failed |
+| `Tools/run-model-tests.sh`, template and a generated project | 119 checks, 0 failed |
 | `xcodebuild build`, generated project, iPhone Duo simulator | succeeded, no warnings from the app's code |
 | `Tools/run-ui-tests.sh`, closed | all 11 passed, about 210 s, in a freshly generated project |
 | `testNoteLayoutInThisPose`, `testListInThisPose`, `testSummaryGoesOutOfDateAndSurvivesARelaunch` in open, book, tabletop and closed (poses set with `duo-pose`) | all passed; frames in SKILL.md section 3 |

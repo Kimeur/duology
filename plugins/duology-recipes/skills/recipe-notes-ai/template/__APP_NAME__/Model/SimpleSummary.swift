@@ -17,8 +17,11 @@ nonisolated enum SimpleSummary {
         let prose = lines.filter { todo($0) == nil && !isBullet($0) && !isDone($0) }.joined(separator: "\n")
         let sentences = sentences(in: prose)
 
+        // A note can be all to-dos, even ticked ones: then the title, the first to-do or the
+        // first line heads it, so any note with words gets a summary.
         let title = note.title.trimmingCharacters(in: .whitespacesAndNewlines)
-        let headline = sentences.first ?? bullets.first ?? (title.isEmpty ? nil : title)
+        let headline = sentences.first ?? bullets.first ?? (title.isEmpty ? nil : title) ?? todos.first
+            ?? lines.first { !$0.isEmpty }
         let points = bullets.count >= 2 ? bullets : Array(sentences.dropFirst())
         return DigestDraft(headline: headline, points: points.filter { $0 != headline }, todos: todos)
     }

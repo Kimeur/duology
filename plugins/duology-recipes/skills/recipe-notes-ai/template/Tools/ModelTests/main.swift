@@ -116,7 +116,7 @@ check(chores.canBeSummarized && SimpleSummary.digest(of: chores)?.headline == "C
       && SimpleSummary.digest(of: chores)?.todos.count == 2,
       "a note of only to-dos still gets a summary: its first to-do heads it")
 let done = Note(body: "- [x] Called the plumber about the kitchen sink leak\n- [x] Paid the electricity bill on Friday")
-check(SimpleSummary.digest(of: done)?.headline.isEmpty == false, "so does a note of only ticked to-dos")
+check(SimpleSummary.digest(of: done)?.headline == "Called the plumber about the kitchen sink leak", "so does a note of only ticked to-dos, without its checkbox")
 check(samples.filter(\.canBeSummarized).allSatisfy { SimpleSummary.digest(of: $0) != nil },
       "every note that can be summarized gets a simple summary, so the fallback never ends empty")
 check(SimpleSummary.sentences(in: "Weigh 3.5 kg. Then rest! Done? Yes\nNew line") == ["Weigh 3.5 kg.", "Then rest!", "Done?", "Yes", "New line"],

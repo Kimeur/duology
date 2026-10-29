@@ -26,11 +26,11 @@ nonisolated struct Digest: Codable, Equatable, Sendable {
     static let maximumTodos = 5
     static let maximumPointWords = 30
 
-    /// Cleans one line from the model or the note: no list marker ("- ", "• ", "1. ", "[ ] "),
+    /// Cleans one line from the model or the note: no list marker ("- ", "• ", "1. ", "[ ] ", "[x] "),
     /// no wrapping quotes, no spaces at the ends.
     static func tidy(_ line: String) -> String {
         var text = line.trimmingCharacters(in: .whitespacesAndNewlines)
-        let markers = ["- [ ] ", "* [ ] ", "[ ] ", "☐ ", "- ", "* ", "• ", "– ", "— "]
+        let markers = ["- [ ] ", "* [ ] ", "[ ] ", "- [x] ", "* [x] ", "[x] ", "- [X] ", "[X] ", "☐ ", "☑ ", "- ", "* ", "• ", "– ", "— "]
         var changed = true
         while changed {
             changed = false

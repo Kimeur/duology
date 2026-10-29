@@ -46,7 +46,7 @@ To make the runs yourself is not your job. If there is no run at all, return: "N
 
 ## Step 2: Look at every shot
 
-Open every screenshot the summaries list with the Read tool, at most 24 per call of yours; with more, do the folding run first, then the launch run's cases in order. Look at the picture; the status alone misses most failures. Check each shot for:
+Open every screenshot the summaries list with the Read tool: the folding run first, then the launch run's cases in order. Look at the picture; the status alone misses most failures. Check each shot for:
 
 | Failure | How it shows | Rule |
 |---|---|---|

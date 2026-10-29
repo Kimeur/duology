@@ -117,7 +117,7 @@ Check that the poses can be set:
 "${CLAUDE_PLUGIN_ROOT}/skills/duo-pose-matrix/scripts/duo-pose" status --udid <UDID>
 ```
 
-Note its "Pose now" line. Exit 0: go on. Exit 3 (Accessibility) or 4 (no Device Hub window): skip the runs below, mark "Every pose" **Check**, tell the user how `/duo-poses` captures the poses by hand, and use the manual route in step 6. Exit 5, 6 or 7: show the output and skip steps 5 and 6. Never pass `--force`.
+Note its "Pose now" line. Exit 0: go on. Exit 4 (no Device Hub window on this desktop): go on; the matrix brings Device Hub forward itself, and exits 4 again if it still can't see the window. Exit 3 (Accessibility), or 4 again from the matrix: skip the runs below, mark "Every pose" **Check**, tell the user how `/duo-poses` captures the poses by hand, and use the manual route in step 6. Exit 5, 6 or 7: show the output and skip steps 5 and 6. Never pass `--force`.
 
 Then run the app in every pose twice, one run after the other, each Bash call with a 10-minute timeout:
 
@@ -128,7 +128,7 @@ Then run the app in every pose twice, one run after the other, each Bash call wi
 
 - `<cases>` is one `--case NAME=ARGS` per distinct screen in the `--shot` list, so the poses are tested on the screens you will put on the store. `ARGS` is the shot's launch arguments only; the pose is never a launch argument.
 - The first run starts the app fresh in each pose. The second keeps it running while the phone folds, which shows a quit during a fold and state lost (R2).
-- Exit 0 or 1 is a result: go on. "Stopped early: UI tests started": don't rerun; say which poses are missing.
+- Exit 0 or 1 is a result: go on. "Stopped early: UI tests started": don't rerun; say which poses are missing. Exit 3 or 4 mid-run: Device Hub's window went away; keep what was captured and treat it as exit 3 above. Exit 8: the app isn't installed; go back to step 4.
 
 Run `printenv HOME`, then launch the `duology-ship:duo-pose-tester` agent with the Agent tool. Give it the bundle identifier, the two folders, and the crash report folder `<HOME>/Library/Logs/DiagnosticReports`. It reads the runs and opens every screenshot; it runs nothing. Keep its report whole for step 8. Step 5 takes about 10 to 20 minutes in all.
 
@@ -143,7 +143,7 @@ Follow `duo-app-store`, Steps 1 to 3. For each `--shot`, in order:
 2. Launch the screen: `simctl launch --terminate-running-process` with the shared and the shot's launch arguments, then wait 4 seconds for the first screen.
 3. Capture: `UDID=<UDID> "${CLAUDE_PLUGIN_ROOT}/skills/duo-app-store/scripts/duo-shots" <OUT>/Store <NAME>`.
 
-Before the first shot, clean the status bar with `simctl status_bar <UDID> override` as `duo-app-store` Step 3 shows. After the last one, run `simctl status_bar <UDID> clear` and put the simulator back in the pose `duo-pose status` reported in step 5, with `duo-pose set`.
+Before the first shot, clean the status bar with `simctl status_bar <UDID> override` as `duo-app-store` Step 3 shows. After the last one, run `simctl status_bar <UDID> clear` and put the simulator back in the pose `duo-pose status` reported in step 5 (with `--no-poses`, run `duo-pose status --udid <UDID>` before the first shot and note it), with `duo-pose set`.
 
 Then read every JPEG in `<OUT>/Store` with the Read tool and look at it:
 

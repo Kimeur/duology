@@ -10,7 +10,7 @@ metadata:
 
 iPhone Duo has a front camera above each display, rear cameras, and a hinge that turns them around. Which way a camera points depends on the display your app is on. This skill tells you which camera to use, how to follow it through a fold, and how to lay out capture for each pose.
 
-Load neighbours when the task needs them: `duo-scenes` (the camera capture accessory's lifecycle and UIKit registration), `duo-postures` (tabletop and flipped layouts), `duo-layout` (reserved regions, including the inner camera's occlusion), `duo-continuity` (state through a fold).
+Load neighbours when the task needs them: `duo-scenes` (the camera capture accessory's lifecycle and UIKit registration), `duo-postures` (tabletop and flipped layouts), `duo-layout` (reserved regions, including the inner camera's occlusion), `duo-continuity` (state through a fold). To start a new camera app with all of this in place, use `recipe-camera-studio`.
 
 > **No camera in the simulator.** The iPhone Duo simulator has no camera. *Measured* (20 Oct 2026): every discovery session returned no device, and a direction coordinator kept an empty map and never called its handler (we watched for up to 2 minutes). So every capture behaviour in this skill comes from Apple's pages and is unverified on a device. All Swift code here typechecks against the iOS 27.1 SDK; none of it has run with a real camera.
 
@@ -174,7 +174,7 @@ Fully open, with the rear camera running and your app full screen on the inner d
 
 - Show what the subject needs: a countdown, how much of them the camera sees, a script. Never a control the photographer needs.
 - A live preview there is a second `AVCaptureVideoPreviewLayer` on the same session. Give its view its own direction coordinator: from the outer display the rear camera faces forward, so mirror that preview, and leave the photographer's preview unmirrored (talk 111465). *Unverified:* a second preview layer on one session on a device; the AVFoundation header for `deferredStartEnabled` (iOS 26) talks about apps with several preview layers.
-- Apple's conditions say fully open. Closed, it goes away (`duo-scenes` measured this). Partly folded is unclear: in the simulator, with no capture session, it was available in book at 128° (*measured*; [references/testing.md](references/testing.md#the-accessory-in-each-pose)). On a device, unverified. Put the countdown in the main UI as well, so it never depends on the accessory.
+- Apple's conditions say fully open. Closed, it goes away (`duo-scenes` measured this). Partly folded is unclear: in the simulator, with no capture session, it was available in book at 128° and, on 2 November, in tabletop (*measured*; [references/testing.md](references/testing.md#the-accessory-in-each-pose)). On a device, unverified. Put the countdown in the main UI as well, so it never depends on the accessory.
 
 Code: [references/outer-display-and-tabletop.md](references/outer-display-and-tabletop.md#subject-preview-on-the-outer-display).
 

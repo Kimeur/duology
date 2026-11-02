@@ -1,6 +1,6 @@
 # Routing map
 
-Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 (released 19 October 2026) added seven skills, two commands and a review agent. v0.3 (released 21 October 2026) added eight iOS 27 feature skills in a fifth plugin, `duology-features`, and four recipes. v0.4 (released 29 October 2026) added `duo-migrate`, `duo-app-store`, `recipe-kids-learning`, the `/duo-ship` command and the `duo-pose-tester` agent, ahead of plan. `recipe-notes-ai` is on `main` since, also ahead of plan. The other two of the 36 are "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
+Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 (released 19 October 2026) added seven skills, two commands and a review agent. v0.3 (released 21 October 2026) added eight iOS 27 feature skills in a fifth plugin, `duology-features`, and four recipes. v0.4 (released 29 October 2026) added `duo-migrate`, `duo-app-store`, `recipe-kids-learning`, the `/duo-ship` command and the `duo-pose-tester` agent, ahead of plan. `recipe-notes-ai` and `recipe-camera-studio` are on `main` since, also ahead of plan. The last of the 36, `duo-performance`, is "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
 
 ## v0.1 skills
 
@@ -57,13 +57,14 @@ Install a missing plugin with `/plugin install <plugin>@duology`. On other agent
 | `duo-app-store` | `duology-ship` | The App Store submission for iPhone Duo: screenshots of both displays at the exact sizes, without alpha, none black (`scripts/duo-shots`), previews, the App Store Connect API display type, the badge, App Review notes, the privacy manifest, the April 2027 rules. | Moving the build to Xcode 27.1 first (`duo-migrate`); screenshots for a design review only (`duo-pose-matrix`). |
 | `recipe-kids-learning` | `duology-recipes` | A new learning app for young children: one question at a time read aloud, big answer buttons below the fold in tabletop, progress that stays on the device, a parental gate, a privacy manifest and nothing tracked. Run `/duo-new recipe-kids-learning`. | An existing app made for kids (`duo-app-store` for the submission, `duo-accessibility`, `duo-postures`). |
 | `recipe-notes-ai` | `duology-recipes` | A new notes app with summaries from the on-device model: a headline, key points and to-dos streamed into a pane beside the note when open and one line when closed, a summary without AI when the model can't run, notes that never leave the device. Run `/duo-new recipe-notes-ai`. | Adding an AI pane to an existing app, or Private Cloud Compute (`duo-intelligence`). |
+| `recipe-camera-studio` | `duology-recipes` | A new camera app: photos and videos with a self-timer, the subject's mirrored picture and the countdown on the outer display, the controls beside the fold in book and below it in tabletop, a stand-in camera for the simulator. Run `/duo-new recipe-camera-studio`. | The camera in an existing app: which camera faces whom, mirroring, rotation, front cameras (`duo-camera`); other outer-display views (`duo-scenes`). |
 
 ## Commands and agents
 
 | Command | Use it for |
 |---|---|
 | `/duo-doctor` | Check Xcode 27.1, the Duo simulator and Xcode's agent connection. Run it first when anything in the build step fails. |
-| `/duo-new <recipe>` | Create a new app from a recipe and run it on the Duo simulator. Recipes: `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop`, `recipe-kids-learning`, `recipe-notes-ai`. |
+| `/duo-new <recipe>` | Create a new app from a recipe and run it on the Duo simulator. Recipes: `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop`, `recipe-kids-learning`, `recipe-notes-ai`, `recipe-camera-studio`. |
 | `/duo-audit` | Run `duo-lint` and the checklist and list what to fix, most serious first. Use it after the first pass. |
 | `/duo-poses <bundle-id>` | Screenshot the installed app closed, open, in book pose and in tabletop with `duo-pose-matrix`, and put the simulator back. (v0.2) |
 | `/duo-review [folder]` | Hand screenshots or Figma exports (default: the newest `/duo-poses` run) to the `duo-design-reviewer` agent for a design critique, most serious first. It reads only. (v0.2) |
@@ -118,7 +119,6 @@ Say "coming" when one of these fits, and work from the Apple source in the last 
 | Skill | Release | Covers | Until then |
 |---|---|---|---|
 | `duo-performance` | v1.0 | Smooth resizing at 120 Hz | Test on a device: the simulator reports a 60 fps maximum (*measured*, see [device facts](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md)) |
-| `recipe-camera-studio` | v1.0 | App recipe | Start from the closest ready recipe, then load `duo-patterns` and `duo-camera` |
 
 ## Apple's skills in Xcode 27.1
 

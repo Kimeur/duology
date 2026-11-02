@@ -147,12 +147,13 @@ Duology skills. Load the one that matches the task. Full map with symptoms: [ref
 | `recipe-shop` | duology-recipes | You start a shop with in-app purchases. |
 | `recipe-kids-learning` | duology-recipes | You start a learning app for young children, with a parental gate and nothing tracked. |
 | `recipe-notes-ai` | duology-recipes | You start a notes or writing app with on-device AI summaries. |
+| `recipe-camera-studio` | duology-recipes | You start a camera, photo booth or filming app whose subject sees themselves on the outer display. |
 
 Commands: `/duo-doctor` (check the setup), `/duo-new <recipe>` (new app from a recipe), `/duo-audit` (lint plus checklist, most serious first), `/duo-poses` (screenshot every pose), `/duo-review` (design review of screenshots by the `duo-design-reviewer` agent), `/duo-ship` (App Store checklist, with the `duo-pose-tester` agent for every pose).
 
 If a skill isn't installed, tell the user the plugin to add, for example `/plugin install duology-design@duology`. On other agents: `npx skills add Kimeur/duology --skill <name>`.
 
-**Coming.** Say "coming" and use the Apple source listed in [references/routing.md](references/routing.md) until then: `duo-performance` and `recipe-camera-studio`, both planned for v1.0. For an app that ships today on an older SDK, load `duo-migrate`; for Duo screenshots and the submission, `duo-app-store` or `/duo-ship` (all `duology-ship`).
+**Coming.** Say "coming" and use the Apple source listed in [references/routing.md](references/routing.md) until then: `duo-performance`, planned for v1.0. For an app that ships today on an older SDK, load `duo-migrate`; for Duo screenshots and the submission, `duo-app-store` or `/duo-ship` (all `duology-ship`).
 
 ## Step 3: The five-minute first pass (existing app)
 
@@ -217,7 +218,7 @@ Apple says the skill finds most issues, not all. Run `duo-lint` after it to catc
 ## New app
 
 1. Run `/duo-doctor`, or load `duo-setup`, so Xcode 27.1 and the Duo simulator are ready.
-2. A two-player game, a finance dashboard, a media player, a reader, a shop, a learning app for young children or notes with AI summaries: run `/duo-new <recipe>` with `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop`, `recipe-kids-learning` or `recipe-notes-ai`.
+2. A two-player game, a finance dashboard, a media player, a reader, a shop, a learning app for young children, notes with AI summaries or a camera studio: run `/duo-new <recipe>` with `recipe-two-player-game`, `recipe-finance-dashboard`, `recipe-media-player`, `recipe-reader`, `recipe-shop`, `recipe-kids-learning`, `recipe-notes-ai` or `recipe-camera-studio`.
 3. Anything else: ask the user to create a SwiftUI app in Xcode 27.1 (File > New > Project > iOS App). Then load `duo-patterns` to pick a layout, `duo-layout` and `duo-navigation` to build it, `duo-continuity` to keep state, and `duo-testing` to test it.
 4. Ask the user which deployment target they want. iOS 27.1 removes every availability check but drops older iPhones. A lower target keeps them and needs the gate from Step 1. From April 2027 the App Store floor is iOS 15 ([Submitting](https://developer.apple.com/app-store/submitting/)).
 

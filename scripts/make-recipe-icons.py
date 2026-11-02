@@ -80,6 +80,10 @@ DESIGNS = {
                                          ([rect(322, 420, 562, 450), rect(322, 510, 562, 540),
                                            rect(322, 600, 482, 630)], (13, 128, 128)),
                                          ([star(742, 330, 130, 34, points=4)], WHITE)]),
+    # A camera: the body with a lens cut out of it, and the viewfinder bump on top.
+    "recipe-camera-studio": ((190, 24, 93), [([rect(392, 300, 632, 380)], WHITE),
+                                             ([rect(232, 370, 792, 740), circle(512, 555, 135)], WHITE),
+                                             ([circle(512, 555, 85)], WHITE)]),
 }
 
 

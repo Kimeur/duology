@@ -153,7 +153,7 @@ What makes it right on Duo:
 - **No essential control.** The system can withdraw it at any time. A tap to focus is the most Apple suggests (guide).
 - **New views each time.** `duo-scenes` measured that closing and reopening the phone builds a new accessory scene and new views. Keep everything in `CameraModel`, as here.
 - *Unverified:* a second `AVCaptureVideoPreviewLayer` on one session, on a device. The `deferredStartEnabled` documentation in `AVCaptureVideoPreviewLayer.h` (iOS 26) talks about apps with several preview layers, which suggests it works. If it doesn't, show a framing guide or the countdown alone.
-- *Measured, no capture session* (the simulator shows accessories without one): available closed-then-opened and in book at 128°; tabletop not measured. Details in [testing.md](testing.md#the-accessory-in-each-pose).
+- *Measured, no capture session* (the simulator shows accessories without one): available closed-then-opened, in book at 128°, and in tabletop (measured on 2 November 2026 with `recipe-camera-studio`). Details in [testing.md](testing.md#the-accessory-in-each-pose).
 
 ## Flipped: a selfie with the rear camera
 
@@ -184,7 +184,7 @@ Where the cameras are when the phone sits on a table:
 
 - *Derived from the simulator:* after Partially Open and Rotate Right in Device Hub, the inner camera's region sat on the right edge of the bottom region. Set on a table, that half lies flat, so the inner camera would point up. Turned the other way, it would sit in the upright half. Ask the coordinator what faces forward; never assume which half is which. *Unverified* on a device.
 - The rear cameras sit on the back of one half (the [accessory guide's](https://developer.apple.com/documentation/avfoundation/registering-a-camera-capture-accessory-on-iphone-duo) drawing shows the rear cameras on one panel and the outer display on the other). If the upright half carries them, they point away from the person, like a camera on a tripod. *Unverified:* which half that is in each tabletop orientation.
-- Apple's conditions for the camera capture accessory say fully open, so plan for it to be gone in tabletop. The simulator offered it in book (*measured*, no capture session); tabletop is unmeasured. Show the countdown in the main UI, as `TimerBadge` does.
+- Apple's conditions for the camera capture accessory say fully open, so plan for it to be gone in tabletop. The simulator offered it in book and in tabletop (*measured*, no capture session), which may not hold on a device. Show the countdown in the main UI, as `TimerBadge` does.
 
 Test the layout in Device Hub with the camera replaced by a placeholder ([testing.md](testing.md#a-placeholder-for-the-preview)). Test the cameras on a device.
 

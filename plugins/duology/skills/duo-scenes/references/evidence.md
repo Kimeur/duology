@@ -167,14 +167,14 @@ PROBE 20.9 didUpdateEffectiveGeometry from 466x678 to scene EE5849 ... state=0 s
 | Pose at the time | Availability | Content |
 |---|---|---|
 | Partially Open at 128°, held wide (book), at launch | `true` | appeared at once on the outer display |
-| Tabletop | not measured | |
+| Tabletop (Partially Open, then Rotate Right), measured on 2 November 2026 with `recipe-camera-studio`'s app | `true` | its subject view appeared on the outer display |
 
 Apple's conditions say fully open. The simulator already shows the accessory with no capture session, so it may skip this condition too. Unverified on a device: don't depend on the accessory partly open.
 
 ## Not verified yet
 
 - Split View: window sizes and size classes, two windows of one app side by side, and which window survives a close from Split View.
-- Partially Open, apart from the camera capture accessory in book (above). Tabletop with the accessory.
+- Partially Open, apart from the camera capture accessory in book and in tabletop (above).
 - What a real iPhone Duo returns for a new-window request on the outer display (Apple says it fails).
 - Camera capture accessory availability with a running capture session.
 - `UISceneActivationConditions` routing on iPhone Duo.

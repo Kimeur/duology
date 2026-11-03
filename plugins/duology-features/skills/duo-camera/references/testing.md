@@ -29,10 +29,10 @@ So in the simulator:
 | Closed, at launch | `false` | none |
 | Closed, then Open | `true` as the window moved to the inner display, 0.1 s before the hinge reported 180° | appeared on the outer display |
 | Partially Open at 128°, held wide (book), at launch | `true` | appeared at once |
-| Tabletop | not measured | |
+| Tabletop (Partially Open, then Rotate Right), measured on 2 November 2026 with `recipe-camera-studio` | `true` | its subject view appeared on the outer display |
 
 - Book is the surprise: Apple's conditions say fully open, yet the simulator offered the accessory partly open. With no capture session the simulator already ignores one condition, so this may not hold on a device (unverified).
-- Tabletop wasn't measured: the shared simulator was busy with other UI tests.
+- Tabletop was measured later, with `recipe-camera-studio`'s app and still no capture session: the accessory showed there too.
 - So don't depend on the accessory in any pose. Show the countdown in the main UI too, as `TimerBadge` on the preview does.
 
 ## A placeholder for the preview

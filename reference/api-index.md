@@ -747,6 +747,24 @@ Used by `recipe-notes-ai`, with the Foundation Models rows above. Declarations a
 | `View.ignoresSafeArea(_:edges:)`, `SafeAreaRegions.keyboard` | SwiftUI | `func ignoresSafeArea(_ regions: SafeAreaRegions = .all, edges: Edge.Set = .all) -> some View`; `static let keyboard: SafeAreaRegions` | iOS 14.0 | [doc](https://developer.apple.com/documentation/swiftui/view/ignoressafearea(_:edges:)) |
 | `PrivateCloudComputeLanguageModel`, `URLSession`, `NSUbiquitousKeyValueStore` | FoundationModels, Foundation | Named only as APIs the recipe's privacy scan rejects: each would send notes off the device | iOS 27.0, 7.0, 5.0 | [doc](https://developer.apple.com/documentation/foundationmodels/privatecloudcomputelanguagemodel) |
 
+## Camera studio
+
+Used by `recipe-camera-studio`, with the camera rows in the v0.3 sections above (`RotationCoordinator`, `CameraCaptureAccessory`). Doc links and first iOS versions checked in Apple's documentation JSON on 2 Nov 2026; the template using them builds against the iOS 27.1 simulator SDK with no warnings.
+
+| API | Framework | Declaration | Availability | Apple doc |
+|---|---|---|---|---|
+| `AVCapturePhotoOutput.capturePhoto(with:delegate:)`, `AVCapturePhotoSettings(format:)` | AVFoundation | `func capturePhoto(with settings: AVCapturePhotoSettings, delegate: any AVCapturePhotoCaptureDelegate)`; `convenience init(format: [String : Any]?)` with `AVVideoCodecKey: AVVideoCodecType.jpeg` | iOS 10.0 | [doc](https://developer.apple.com/documentation/avfoundation/avcapturephotooutput/capturephoto(with:delegate:)) |
+| `AVCaptureMovieFileOutput`, `startRecording(to:recordingDelegate:)` | AVFoundation | `class AVCaptureMovieFileOutput : AVCaptureFileOutput`; `func startRecording(to outputFileURL: URL, recordingDelegate delegate: any AVCaptureFileOutputRecordingDelegate)` | iOS 4.0 | [doc](https://developer.apple.com/documentation/avfoundation/avcapturefileoutput/startrecording(to:recordingdelegate:)) |
+| `AVCaptureFileOutputRecordingDelegate`, `AVErrorRecordingSuccessfullyFinishedKey` | AVFoundation | `func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: (any Error)?)`; the key says whether a recording that reported an error is still complete | iOS 4.0 | [doc](https://developer.apple.com/documentation/avfoundation/averrorrecordingsuccessfullyfinishedkey) |
+| `AVCaptureDevice.requestAccess(for:)`, `authorizationStatus(for:)` | AVFoundation | `class func requestAccess(for mediaType: AVMediaType) async -> Bool`; `class func authorizationStatus(for mediaType: AVMediaType) -> AVAuthorizationStatus` | iOS 7.0 | [doc](https://developer.apple.com/documentation/avfoundation/avcapturedevice/requestaccess(for:completionhandler:)) |
+| `AVAssetWriter`, `AVAssetWriterInputPixelBufferAdaptor` | AVFoundation | `init(outputURL: URL, fileType: AVFileType) throws`; `func append(_ pixelBuffer: CVPixelBuffer, withPresentationTime presentationTime: CMTime) -> Bool` | iOS 4.1 | [doc](https://developer.apple.com/documentation/avfoundation/avassetwriterinputpixelbufferadaptor) |
+| `AVAssetImageGenerator.image(at:)` | AVFoundation | `func image(at time: CMTime) async throws -> (image: CGImage, actualTime: CMTime)` | iOS 16.0 | [doc](https://developer.apple.com/documentation/avfoundation/avassetimagegenerator/image(at:)) |
+| `CGImageDestination` | ImageIO | `CGImageDestinationCreateWithData(_:_:_:_:)`, `CGImageDestinationAddImage(_:_:_:)`, `CGImageDestinationFinalize(_:)` | iOS 4.0 | [doc](https://developer.apple.com/documentation/imageio/cgimagedestination) |
+| `ShareLink` | SwiftUI | `struct ShareLink<Data, PreviewImage, PreviewIcon, Label> : View` with `init(item: URL, ...)` | iOS 16.0 | [doc](https://developer.apple.com/documentation/swiftui/sharelink) |
+| `VideoPlayer` | AVKit | `struct VideoPlayer<VideoOverlay> : View` with `init(player: AVPlayer?)` | iOS 14.0 | [doc](https://developer.apple.com/documentation/avkit/videoplayer) |
+| `UIApplication.openSettingsURLString` | UIKit | `class let openSettingsURLString: String` | iOS 8.0 | [doc](https://developer.apple.com/documentation/uikit/uiapplication/opensettingsurlstring) |
+| `NSCameraUsageDescription`, `NSMicrophoneUsageDescription`, `NSPhotoLibraryAddUsageDescription` | Info.plist | Strings shown in the permission prompts; the app crashes when it asks without one | iOS 7.0, 7.0, 11.0 | [doc](https://developer.apple.com/documentation/bundleresources/information-property-list/nscamerausagedescription) |
+
 ## Not in the SDK
 
 Brief claims we could not find in the iOS 27.1 SDK:

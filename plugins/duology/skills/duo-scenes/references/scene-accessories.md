@@ -27,7 +27,7 @@ The system decides. From Apple's guide and the talk, all of these must hold:
 
 It goes away when capture stops, when the app leaves the foreground, when someone closes the phone, or when people turn it off. It is on by default.
 
-The simulator skips two of these conditions: with no capture session it showed the accessory, fully open and in book at 128° (*measured*, [evidence.md](evidence.md#results-the-camera-capture-accessory-partly-open)). A device may not. Test the accessory on a device, and never make it the only place something shows.
+The simulator skips two of these conditions: with no capture session it showed the accessory, fully open, in book at 128° and in tabletop (*measured*, [evidence.md](evidence.md#results-the-camera-capture-accessory-partly-open)). A device may not. Test the accessory on a device, and never make it the only place something shows.
 
 Design for that:
 

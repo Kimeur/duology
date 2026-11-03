@@ -18,6 +18,8 @@ nonisolated enum CameraSide: String, Sendable {
 
 nonisolated enum CaptureError: Error {
     case noCamera, notConfigured, noPhotoData, alreadyRecording, notRecording
+    /// The movie didn't report back in time. It may still be being written.
+    case timedOut
 }
 
 /// Owns the capture session. Every AVFoundation call that configures or runs capture happens
@@ -87,7 +89,12 @@ actor CaptureService {
 
         if let videoInput { session.removeInput(videoInput) }
         guard session.canAddInput(input) else {
-            if let videoInput { session.addInput(videoInput) }
+            // Put the old camera back, with its rotation and the subject's mirroring.
+            if let videoInput {
+                session.addInput(videoInput)
+                trackRotation(of: videoInput.device)
+                applySubjectMirroring()
+            }
             return false
         }
         session.addInput(input)
@@ -299,7 +306,7 @@ nonisolated private final class MovieDelegate: NSObject, AVCaptureFileOutputReco
     func finished(timeout: Duration) async throws -> URL {
         let seconds = Double(timeout.components.seconds)
         DispatchQueue.global().asyncAfter(deadline: .now() + seconds) { [self] in
-            deliver(.failure(CaptureError.notRecording))
+            deliver(.failure(CaptureError.timedOut))
         }
         return try await withCheckedThrowingContinuation { continuation in
             lock.lock()

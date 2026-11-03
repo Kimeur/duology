@@ -198,6 +198,11 @@ final class StudioStore {
             let poster = await Poster.jpeg(fromMovieAt: url(for: item))
             try poster?.write(to: posterURL(for: item), options: .atomic)
             add(item)
+        } catch CaptureError.timedOut {
+            // AVFoundation may still be writing it: keep the file and list it, never delete it.
+            item.duration = Date().timeIntervalSince(started)
+            add(item)
+            lastError = "The video took a while to save. Check it in the gallery."
         } catch {
             try? FileManager.default.removeItem(at: url(for: item))
             lastError = "The video couldn't be saved."

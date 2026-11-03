@@ -27,14 +27,14 @@ How the app made by `recipe-camera-studio` is put together, who owns what, and w
 
 1. The shutter calls `StudioStore.shutter()`. With the timer on, it starts a `Countdown` and a task that ticks once a second; the countdown shows on the preview and on the outer display. A second tap cancels it.
 2. At zero, or at once with the timer off, `takePhoto()` asks `CaptureService.capturePhoto()` (real camera) or renders `StandInFrame` (stand-in) for JPEG data.
-3. `capturePhoto()` makes `AVCapturePhotoSettings` with JPEG when the output offers it, keeps a `PhotoDelegate` until the photo arrives (the output holds its delegate weakly), and returns `fileDataRepresentation()` through a continuation.
+3. `capturePhoto()` makes `AVCapturePhotoSettings` with JPEG when the output offers it, keeps a `PhotoDelegate` until the photo arrives (the output holds its delegate weakly), and returns `fileDataRepresentation()` through a continuation. If no photo comes, the capture's last callback (`didFinishCaptureFor:`) answers with an error, so the task never waits forever.
 4. The store writes the file to `Documents/Captures/<id>.jpg`, adds a `Capture` to the index with the app's own date, and saves the index.
 
 ## One video, start to finish
 
 1. In video mode the shutter starts recording (after the timer, if set). `CaptureService.configure` has added the movie output and, when the person allowed it, the microphone; `startRecording(to:)` hands the output a `MovieDelegate`.
 2. The stand-in instead starts `StandInRecorder`, which appends a rendered frame 15 times a second through an `AVAssetWriterInputPixelBufferAdaptor`.
-3. The second tap stops. `stopRecording()` waits for the delegate: a recording can end on its own (a full disk, an interruption), so the delegate keeps the result until someone asks. A movie that stopped with `AVErrorRecordingSuccessfullyFinishedKey` set is kept.
+3. The second tap stops. `stopRecording()` always asks the output to stop (`isRecording` turns true only once samples are written, so a Stop right after Start would otherwise leave it running), then waits for the delegate. A recording can end on its own (a full disk, an interruption), so the delegate keeps the first outcome until someone asks, and gives up after 10 seconds without one, so the shutter never stays stuck. A movie that stopped with `AVErrorRecordingSuccessfullyFinishedKey` set is kept. While a recording starts the shutter is busy, so a second tap can't start a second one.
 4. `Poster.jpeg(fromMovieAt:)` grabs the first frame with `AVAssetImageGenerator` for the grid, and the store adds the capture with its length.
 
 ## The layout in each pose
@@ -65,7 +65,7 @@ It holds no state, so the new scene the system builds each time the phone opens 
 ## Mirroring and rotation
 
 - The photographer's preview on the inner display uses the connection's automatic mirroring: rear not mirrored, front mirrored.
-- The subject's preview is mirrored for the rear camera. From the outer display the rear camera faces the subject, and Apple's direction guide says a camera facing the viewer should look like a mirror (`duo-camera`). This is *derived*: the app doesn't run an `AVCaptureDeviceDirectionCoordinator` for it. If a device shows otherwise, use `duo-camera`'s `PreviewMirror` on the subject's view.
+- The subject's preview is mirrored for the rear camera, and set again after every configuration: a new input (a mode or camera switch) makes a new preview connection, which starts with automatic mirroring. From the outer display the rear camera faces the subject, and Apple's direction guide says a camera facing the viewer should look like a mirror (`duo-camera`). This is *derived*: the app doesn't run an `AVCaptureDeviceDirectionCoordinator` for it. If a device shows otherwise, use `duo-camera`'s `PreviewMirror` on the subject's view.
 - `trackRotation(of:)` makes one `AVCaptureDevice.RotationCoordinator` per preview layer and applies the capture angle to the photo and movie connections. It runs after each configuration and each time a preview layer connects.
 
 ## The UI tests
@@ -84,7 +84,7 @@ What the first runs found, now fixed:
 |---|---|
 | `Tools/run-model-tests.sh`, template and a generated project | 82 checks, 0 failed |
 | `xcodebuild build`, generated project, iPhone Duo simulator | succeeded, no warnings from the app's code, the capture actor included |
-| `Tools/run-ui-tests.sh`, closed | all 8 passed, about 270 s, in a freshly generated project |
+| `Tools/run-ui-tests.sh`, closed | all 8 passed in a freshly generated project, in two runs (113 s and about 270 s) |
 | `testStudioLayoutInThisPose` in open, book, tabletop and closed (poses set with `duo-pose`) | passed in each; frames in SKILL.md section 3; the subject view showed on the outer display open, in book and in tabletop |
 | A stand-in recording, read back with AVFoundation on the Mac | one H.264 track, 640 × 480, 15 frames a second, 6.47 s, the same length as the index; poster 640 × 480, upright |
 | `duo-lint --strict` on a generated project | 0 findings (23 files) |

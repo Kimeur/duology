@@ -82,11 +82,14 @@ struct CaptureDetail: View {
     let store: StudioStore
     @Environment(\.dismiss) private var dismiss
     @State private var confirmsDelete = false
+    /// Made once, not on every pass of `body`.
+    @State private var player: AVPlayer?
 
     var body: some View {
         Group {
             if capture.kind == .video {
-                VideoPlayer(player: AVPlayer(url: store.url(for: capture)))
+                VideoPlayer(player: player)
+                    .onAppear { if player == nil { player = AVPlayer(url: store.url(for: capture)) } }
             } else if let image = UIImage(contentsOfFile: store.url(for: capture).path) {
                 Image(uiImage: image)
                     .resizable()

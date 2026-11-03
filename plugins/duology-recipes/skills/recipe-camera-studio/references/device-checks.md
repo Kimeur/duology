@@ -12,9 +12,11 @@ The studio's capture code typechecks against the iOS 27.1 SDK and builds with no
 | Open, rear camera running | The subject view on the outer display: the subject's live picture, mirrored, with "Look here" |
 | Subject view during a countdown and a recording | The countdown, then the recording time, large |
 | Subject View button off, then on | The outer display goes dark, then comes back |
+| Tap Mode (photo to video and back) with the phone open and the subject view showing | The subject's picture stays mirrored: the app sets it again after each new input |
+| Tap Stop right after Start | A short movie, or an error after at most 10 s; the shutter works again either way |
 | Book, then tabletop, with the subject view showing | Note whether the system keeps it. Apple's conditions say fully open; the simulator kept it in both. |
 | Rotate the open phone in each pose, then take a photo | Both previews upright; the photo upright |
-| Switch Camera to the front camera, open and closed | The virtual front camera follows the app between displays; the preview is mirrored; the subject view shows only the countdown |
+| Switch Camera to the front camera, open and closed | The virtual front camera follows the app between displays; the preview is mirrored; the subject view shows no picture, only the thirds, "Look here" and the countdown |
 | Split View with another app on the inner display | The session is interrupted (`.videoDeviceNotAvailableWithMultipleForegroundApps`); capture comes back at full screen. The app shows no message for this yet: add `duo-camera`'s `CaptureStatus` if you need one. |
 | Close the phone while the subject view shows | It goes away; the photographer's preview keeps running on the outer display |
 | Share a photo, then Save Image | The add-only photo library prompt, with the usage string |

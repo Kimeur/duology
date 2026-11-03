@@ -30,7 +30,7 @@ You need Xcode 27.1 or later. The scripts use `/Applications/Xcode-27.1.app` unl
 
 ## Before you ship
 
-- Try every capture path on a real iPhone Duo: none of it has run with a camera yet. The list is in the recipe's SKILL.md.
+- Try every capture path on a real iPhone Duo: none of it has run with a camera yet. The list is in the recipe's `references/device-checks.md`.
 - Replace the placeholder app icon in `Assets.xcassets/AppIcon.appiconset` with your own 1024 × 1024 image, without transparency.
 - Read the camera, microphone and photo library usage strings in the target's Info settings, and make them yours.
 - Keep "They stay on this device" true. If you add uploads or sync, change the usage strings, the privacy manifest and your App Store Connect privacy answers together. `Tools/run-model-tests.sh` fails if networking appears in the app's sources.

@@ -2,7 +2,7 @@
 # Runs the UI tests on the iPhone Duo simulator, on the simulator named in $DEVICE,
 # or on any xcodebuild destination in $DESTINATION.
 #   Tools/run-ui-tests.sh
-#   DEVICE="My Duo" Tools/run-ui-tests.sh -only-testing:__APP_NAME__UITests/__APP_NAME__UITests/testLessonLayoutInThisPose
+#   DEVICE="My Duo" Tools/run-ui-tests.sh -only-testing:__APP_NAME__UITests/__APP_NAME__UITests/testNoteLayoutInThisPose
 #   DESTINATION="id=<simulator UDID>" Tools/run-ui-tests.sh    # needed for an older iOS runtime
 set -euo pipefail
 cd "$(dirname "$0")/.."

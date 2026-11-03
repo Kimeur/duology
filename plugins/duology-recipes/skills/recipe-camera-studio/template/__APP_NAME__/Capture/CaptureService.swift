@@ -36,8 +36,11 @@ actor CaptureService {
     private var rotationObservations: [NSKeyValueObservation] = []
     private var photoDelegates: [Int64: PhotoDelegate] = [:]
     private var movieDelegate: MovieDelegate?
-    /// The preview layer on the outer display, mirrored for the rear camera.
+    /// The preview layer on the outer display, and whether its picture is mirrored. Set again
+    /// after every configuration: a new input makes a new preview connection, which starts with
+    /// automatic mirroring (`duo-camera`).
     private var subjectLayerID: ObjectIdentifier?
+    private var subjectMirrored = false
 
     init() {
         let session = AVCaptureSession()
@@ -110,6 +113,7 @@ actor CaptureService {
             }
         }
         trackRotation(of: camera)
+        applySubjectMirroring()
         return true
     }
 
@@ -160,12 +164,14 @@ actor CaptureService {
         movieOutput.startRecording(to: url, recordingDelegate: delegate)
     }
 
-    /// Stops recording and returns the finished movie's address once it is written.
+    /// Stops recording and returns the finished movie's address once it is written. Always asks
+    /// the output to stop: `isRecording` turns true only once samples are written, so a Stop right
+    /// after Start would otherwise leave it running. Gives up after 10 seconds without an answer.
     func stopRecording() async throws -> URL {
         guard let delegate = movieDelegate else { throw CaptureError.notRecording }
         movieDelegate = nil
-        if movieOutput.isRecording { movieOutput.stopRecording() }
-        return try await delegate.finished()
+        movieOutput.stopRecording()
+        return try await delegate.finished(timeout: .seconds(10))
     }
 
     // MARK: Rotation and the subject's preview
@@ -180,10 +186,16 @@ actor CaptureService {
     /// guide; `duo-camera`). Derived; not checked on a device.
     func attachSubjectPreview(_ layerID: ObjectIdentifier, mirrored: Bool) {
         subjectLayerID = layerID
+        subjectMirrored = mirrored
         if let camera = videoInput?.device { trackRotation(of: camera) }
-        guard let connection = connection(for: layerID), connection.isVideoMirroringSupported else { return }
+        applySubjectMirroring()
+    }
+
+    private func applySubjectMirroring() {
+        guard let subjectLayerID, let connection = connection(for: subjectLayerID),
+              connection.isVideoMirroringSupported else { return }
         connection.automaticallyAdjustsVideoMirroring = false   // first, or the next line throws
-        connection.isVideoMirrored = mirrored
+        connection.isVideoMirrored = subjectMirrored
     }
 
     /// Keeps every preview and the captured photos and videos upright. On iPhone Duo the angles
@@ -248,6 +260,12 @@ nonisolated private final class PhotoDelegate: NSObject, AVCapturePhotoCaptureDe
         }
         continuation = nil
     }
+
+    /// Always the last call for a capture. If no photo came, the waiting task still gets an answer.
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishCaptureFor resolvedSettings: AVCaptureResolvedPhotoSettings, error: (any Error)?) {
+        continuation?.resume(throwing: error ?? CaptureError.noPhotoData)
+        continuation = nil
+    }
 }
 
 /// Waits for a movie to finish writing. The recording can end before anyone waits (a full disk,
@@ -261,20 +279,29 @@ nonisolated private final class MovieDelegate: NSObject, AVCaptureFileOutputReco
                     from connections: [AVCaptureConnection], error: (any Error)?) {
         // A movie that stopped for a reason such as a full disk can still be complete.
         let finished = (error as NSError?)?.userInfo[AVErrorRecordingSuccessfullyFinishedKey] as? Bool
-        let outcome: Result<URL, any Error> = error == nil || finished == true ? .success(outputFileURL) : .failure(error!)
-        lock.lock()
-        if let waiting {
-            self.waiting = nil
-            lock.unlock()
-            waiting.resume(with: outcome)
-        } else {
-            result = outcome
-            lock.unlock()
-        }
+        deliver(error == nil || finished == true ? .success(outputFileURL) : .failure(error!))
     }
 
-    func finished() async throws -> URL {
-        try await withCheckedThrowingContinuation { continuation in
+    /// The first outcome wins; later ones (a late callback after a time-out) are dropped.
+    private func deliver(_ outcome: Result<URL, any Error>) {
+        lock.lock()
+        guard result == nil else {
+            lock.unlock()
+            return
+        }
+        result = outcome
+        let waiting = self.waiting
+        self.waiting = nil
+        lock.unlock()
+        waiting?.resume(with: outcome)
+    }
+
+    func finished(timeout: Duration) async throws -> URL {
+        let seconds = Double(timeout.components.seconds)
+        DispatchQueue.global().asyncAfter(deadline: .now() + seconds) { [self] in
+            deliver(.failure(CaptureError.notRecording))
+        }
+        return try await withCheckedThrowingContinuation { continuation in
             lock.lock()
             if let result {
                 lock.unlock()

@@ -11,6 +11,7 @@ actor StandInRecorder {
     private var frames: Int64 = 0
 
     func start(to url: URL) throws {
+        guard writer == nil else { throw CaptureError.alreadyRecording }
         let size = AppFacts.standInVideoSize
         let writer = try AVAssetWriter(outputURL: url, fileType: .mov)
         let input = AVAssetWriterInput(mediaType: .video, outputSettings: [

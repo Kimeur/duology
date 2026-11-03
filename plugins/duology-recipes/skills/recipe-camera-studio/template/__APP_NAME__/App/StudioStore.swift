@@ -164,6 +164,9 @@ final class StudioStore {
     }
 
     private func startRecording() async {
+        // Busy while starting, so a second tap can't start a second recording.
+        isSaving = true
+        defer { isSaving = false }
         let item = Capture(kind: .video, isStandIn: usesStandIn)
         do {
             if let capture {

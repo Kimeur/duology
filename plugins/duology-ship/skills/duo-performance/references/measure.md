@@ -12,7 +12,7 @@
 6. Stops the recording as Ctrl-C would and puts the phone back in the pose it found, also when something failed on the way or you pressed Ctrl-C. Then writes `<trace>.poses.json` (which pose change started when).
 7. Exports three tables with `xctrace export` and reads them.
 
-A run of 3 cycles of open and closed records for about a minute (*measured*): each `duo-pose set` took about 10 s.
+A run of 3 cycles of open and closed records for about a minute (*measured*): each pose change, with its 2 s wait, took about 11 s.
 
 ## Options
 

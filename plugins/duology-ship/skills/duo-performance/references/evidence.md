@@ -15,14 +15,14 @@ FoldProbe's width events while opening (fast mode, one fold): 466 pt at +0 ms, 9
 
 `duo-fold-cost run com.duology.foldprobe`, 3 cycles of open and closed, medians:
 
-| Run | closed → open: longest / busy | open → closed: longest / busy | Stalls (open) | Hangs |
+| Run | closed → open: longest / busy | open → closed: longest / busy | Stalls (open) | Hangs, each fold |
 |---|---|---|---|---|
-| Fast, first run | 29 ms / 71 ms | 14 ms / 45 ms | 1 | 0 |
-| Fast, second run, `--compare` the first | 30 ms / 72 ms | 12 ms / 40 ms | 1 | 0 |
-| `-slow`, `--compare` the first | 486 ms / 517 ms | 137 ms / 154 ms | 2 | 4 open, 3 closed |
+| Fast, first run | 29 ms / 71 ms | 14 ms / 45 ms | 1 | 0 in every fold |
+| Fast, second run, `--compare` the first | 30 ms / 72 ms | 12 ms / 40 ms | 1 | 0 in every fold |
+| `-slow`, `--compare` the first | 486 ms / 517 ms | 137 ms / 154 ms | 2 | open 2, 1, 1; close 1, 1, 1 |
 
 - The second fast run was not flagged; the slow run was, on all four numbers, and exited 1.
-- Timing: in the first fast run the six folds started at 3.8, 14.5, 25.3, 36.0, 46.6 and 57.5 s into the recording, so each `duo-pose set` plus the 2 s wait took about 10.7 s, and the folds took about a minute of recording.
+- Timing: in the first fast run the six folds started at 3.8, 14.5, 25.3, 36.0, 46.6 and 57.5 s into the recording, so each pose change with its 2 s wait took about 10.7 s, and the folds took about a minute of recording.
 - Each open, fast: 71, 17 and 29 ms longest in the first run, 43, 15 and 30 ms in the second. The first fold after launch was the most expensive in both.
 - Before the script existed, the same probe recorded by hand (Hangs, os_signpost, Time Profiler) showed, in slow mode, three main-thread hangs of 359, 259 and 178 ms while opening, one per resize step, and one of 145 ms while closing. In fast mode, the open's longest stretches were 68 and 80 ms with stalled update cycles of 65 and 39 ms; that was the first fold after launch.
 
@@ -41,10 +41,10 @@ FoldProbe's width events while opening (fast mode, one fold): 466 pt at +0 ms, 9
 
 `duo-fold-cost run com.example.ledger`, 3 cycles, Release:
 
-| Build | closed → open: longest / busy | open → closed: longest / busy | Hangs |
+| Build | closed → open: longest / busy | open → closed: longest / busy | Hangs, each fold |
 |---|---|---|---|
-| Fixture, untouched | 2,913 ms / 4,370 ms | 1,645 ms / 1,683 ms | 6 open, 3 closed |
-| Fixed by hand | 86 ms / 115 ms | 15 ms / 45 ms | 1 open (the first fold) |
+| Fixture, untouched | 2,913 ms / 4,370 ms | 1,645 ms / 1,683 ms | open 2, 2, 2; close 1, 1, 1 |
+| Fixed by hand | 86 ms / 115 ms | 15 ms / 45 ms | open 1, 0, 0; close 0, 0, 0 |
 
 The fix: a `@Observable` model that sorts, formats and adds up once; the width read once with `onGeometryChange` as a Boolean; `AnyLayout` with one `EntryList`; `LazyVStack`; rows with no `GeometryReader` or formatter; no `.id`. Each open after the fix: 269, 86 and 14 ms longest. `--compare` against the untouched run listed all four numbers as faster. The fixed copy passes every check of the eval task, and duo-lint finds nothing.
 
@@ -79,4 +79,4 @@ Every Swift block in [fixes.md](fixes.md) and [field.md](field.md) typechecks ag
 
 ## The script
 
-`tests/test_duo_fold_cost.py`: 32 unit tests with exports written the way `xctrace export` writes them (values once with an id and then by reference, tables that reuse the schema before them, frames and binaries by reference in Time Profiler backtraces), and a fake Mac for `run`. `duo-fold-cost read` gave the same numbers as the hand analysis for the first recordings.
+`tests/test_duo_fold_cost.py`: 37 unit tests with exports written the way `xctrace export` writes them (values once with an id and then by reference, tables that reuse the schema before them, frames and binaries by reference in Time Profiler backtraces), and a fake Mac for `run`. `duo-fold-cost read` gave the same numbers as the hand analysis for the first recordings.

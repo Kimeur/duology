@@ -56,8 +56,8 @@ scripts/duo-fold-cost run com.example.myapp --save before.json
 
 ```text
 Fold (median)           longest     busy   >8.3ms  stalls  hangs
-closed -> open           2913 ms  4370 ms        3       3      6   (3 runs)
-open -> closed           1645 ms  1683 ms        3       3      3   (3 runs)
+closed -> open           2913 ms  4370 ms        3       3      2   (3 runs)
+open -> closed           1645 ms  1683 ms        3       3      1   (3 runs)
 ```
 
 | Column | What it is |

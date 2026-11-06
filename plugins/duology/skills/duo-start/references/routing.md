@@ -1,6 +1,6 @@
 # Routing map
 
-Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 (released 19 October 2026) added seven skills, two commands and a review agent. v0.3 (released 21 October 2026) added eight iOS 27 feature skills in a fifth plugin, `duology-features`, and four recipes. v0.4 (released 29 October 2026) added `duo-migrate`, `duo-app-store`, `recipe-kids-learning`, the `/duo-ship` command and the `duo-pose-tester` agent, ahead of plan. `recipe-notes-ai` and `recipe-camera-studio` are on `main` since, also ahead of plan. The last of the 36, `duo-performance`, is "coming"; for each one, this page names the Apple source to use until it lands. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
+Which skill to load for which job. Duology v0.1 shipped 11 skills in four plugins, plus three commands. v0.2 (released 19 October 2026) added seven skills, two commands and a review agent. v0.3 (released 21 October 2026) added eight iOS 27 feature skills in a fifth plugin, `duology-features`, and four recipes. v0.4 (released 29 October 2026) added `duo-migrate`, `duo-app-store`, `recipe-kids-learning`, the `/duo-ship` command and the `duo-pose-tester` agent, ahead of plan. `recipe-notes-ai`, `recipe-camera-studio` and `duo-performance`, the last of the 36, are on `main` since, also ahead of plan. Dates come from the [roadmap](https://github.com/Kimeur/duology/blob/main/ROADMAP.md) and are targets.
 
 ## v0.1 skills
 
@@ -57,6 +57,7 @@ Install a missing plugin with `/plugin install <plugin>@duology`. On other agent
 | `duo-app-store` | `duology-ship` | The App Store submission for iPhone Duo: screenshots of both displays at the exact sizes, without alpha, none black (`scripts/duo-shots`), previews, the App Store Connect API display type, the badge, App Review notes, the privacy manifest, the April 2027 rules. | Moving the build to Xcode 27.1 first (`duo-migrate`); screenshots for a design review only (`duo-pose-matrix`). |
 | `recipe-kids-learning` | `duology-recipes` | A new learning app for young children: one question at a time read aloud, big answer buttons below the fold in tabletop, progress that stays on the device, a parental gate, a privacy manifest and nothing tracked. Run `/duo-new recipe-kids-learning`. | An existing app made for kids (`duo-app-store` for the submission, `duo-accessibility`, `duo-postures`). |
 | `recipe-notes-ai` | `duology-recipes` | A new notes app with summaries from the on-device model: a headline, key points and to-dos streamed into a pane beside the note when open and one line when closed, a summary without AI when the model can't run, notes that never leave the device. Run `/duo-new recipe-notes-ai`. | Adding an AI pane to an existing app, or Private Cloud Compute (`duo-intelligence`). |
+| `duo-performance` | `duology-ship` | Opening or closing the phone freezes, stutters or drops frames: what each fold costs the main thread on the simulator (`scripts/duo-fold-cost`), the code in the longest stretch, the causes and fixes, a saved run to compare against, hitch and hang time per pose from real users (iOS 27 MetricKit and StateReporting). | The fold animation and the hinge stream (`duo-transitions`); state lost in a fold (`duo-continuity`). |
 | `recipe-camera-studio` | `duology-recipes` | A new camera app: photos and videos with a self-timer, the subject's mirrored picture and the countdown on the outer display, the controls beside the fold in book and below it in tabletop, a stand-in camera for the simulator. Run `/duo-new recipe-camera-studio`. | The camera in an existing app: which camera faces whom, mirroring, rotation, front cameras (`duo-camera`); other outer-display views (`duo-scenes`). |
 
 ## Commands and agents
@@ -111,14 +112,7 @@ The `duo-pose-tester` agent (`duology-ship`) reads `duo-pose-matrix` runs (the a
 | A widget, Live Activity or control looks wrong on one display | `duo-system-surfaces` |
 | `UIScreen.main`, `userInterfaceIdiom`, orientation checks in the code | `duo-lint` to list them with the fix for each rule; Apple's App Resizability skill for the generic fixes |
 | The agent can't reach Xcode, or the wrong Xcode builds | `duo-setup` |
-
-## Coming skills and what to use until then
-
-Say "coming" when one of these fits, and work from the Apple source in the last column.
-
-| Skill | Release | Covers | Until then |
-|---|---|---|---|
-| `duo-performance` | v1.0 | Smooth resizing at 120 Hz | Test on a device: the simulator reports a 60 fps maximum (*measured*, see [device facts](https://github.com/Kimeur/duology/blob/main/reference/device-facts.md)) |
+| Opening or closing the phone freezes, stutters or resets the list | `duo-performance`, then `duo-continuity` if state is lost |
 
 ## Apple's skills in Xcode 27.1
 

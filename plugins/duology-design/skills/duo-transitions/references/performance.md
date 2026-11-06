@@ -129,6 +129,7 @@ final class FrameDriver {
 ## Test it
 
 1. **Simulator, for layout:** Device Hub > Device > Slow Animations, then press Closed, Open and Partially Open ([Device Hub](https://developer.apple.com/documentation/xcode/interacting-with-your-app-in-device-hub)). Slow motion shows a pop, a jump or a control that leaves and comes back. It says nothing about frame rate.
+   To measure what each fold costs your main thread on the simulator, before and after a change, use `duo-fold-cost` (the `duo-performance` skill, `duology-ship`).
 2. **Device, for smoothness:** profile open and close with the Hitches instrument in Instruments. In the field, Xcode Organizer's Hitches metric reports a hitch rate in ms of pause per second; Apple calls 10 ms/s or less good, up to 25 ms/s a warning, and more than that critical ([Understanding hitches](https://developer.apple.com/documentation/xcode/understanding-hitches-in-your-app)).
 3. **Device, under stress:** repeat with Low Power Mode on. The rate drops, and pacing by `targetTimestamp` keeps custom motion at the right speed.
 

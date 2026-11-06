@@ -45,13 +45,13 @@ Checked on Xcode 27.1 and the iPhone Duo simulator. The two items carried over f
 
 - [x] `recipe-notes-ai`, moved up from v1.0: notes with summaries from the on-device model, a stream that survives every fold, a summary without AI when the model can't run, and notes that never leave the device, with a test task (45 tasks in all; 44 are ready)
 - [x] `recipe-camera-studio`, moved up from v1.0: photos and videos with a self-timer, the subject's mirrored picture and the countdown on the outer display, the controls beside the fold in book and below it in tabletop, and a stand-in camera so it all runs in the simulator, with a test task (46 tasks in all; 45 are ready). Capture with a real camera waits for a device.
+- [x] `duo-performance`, moved up from v1.0, the 36th and last skill: what each fold costs the app's main thread on the iPhone Duo simulator (`duo-fold-cost`, with Instruments and `duo-pose`), the causes and their fixes, a saved run to compare against, and hitch and hang time per pose from real users with iOS 27 MetricKit and StateReporting, with a test task and the `Ledger` fixture (47 tasks in all; 46 are ready). Smoothness at 120 Hz waits for a device.
 
 ## v1.0: complete (by end of January 2027)
 
 - [ ] Carried over from v0.3: first checks on a real iPhone Duo (the hinge, 120 Hz transitions, the camera capture accessory, new windows on the outer display)
 - [ ] Carried over from v0.3: first published test results (the harness runs in a separate macOS user account or a VM)
-- All 36 skills and 8 recipes
-- `duo-performance`
+- All 36 skills and 8 recipes (all built on `main`)
 - Ready before Apple's April 2027 rule that App Store listings include iPhone Duo screenshots
 - Full test results published
 

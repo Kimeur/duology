@@ -113,6 +113,12 @@ Each of these is used by one or two v0.2 tasks, and four of them by v0.3 tasks t
 | `Notes` | A notes list that pushes an editor, one window only | iOS 26, Swift 6, main-actor isolation by default | [`duo-scenes/open-in-new-window`](../tasks/duo-scenes/open-in-new-window.md), [`duo-intelligence/ai-pane-through-fold`](../tasks/duo-intelligence/ai-pane-through-fold.md), [`duo-app-intents/open-note-from-siri`](../tasks/duo-app-intents/open-note-from-siri.md) |
 | `Shoot` | A full-screen rear camera preview with a record button and a countdown | iOS 17, Swift 5 | [`duo-scenes/camera-subject-view`](../tasks/duo-scenes/camera-subject-view.md), [`duo-camera/front-camera-switch`](../tasks/duo-camera/front-camera-switch.md) |
 
+## Ledger
+
+Added with `duo-performance` (6 November 2026): a ledger of 2,000 entries with a total, the list newest first and, on the open phone, totals by category. iOS 17, Swift 5. Used by [`duo-performance/cheap-fold`](../tasks/duo-performance/cheap-fold.md), whose "Starting point" lists what a fold redoes. It builds for the iPhone Duo simulator and duo-lint finds nothing.
+
+*Measured* with `duo-fold-cost` (Release, 3 cycles): opening takes a median longest main-thread stretch of 2,913 ms, closing 1,645 ms. A hand-fixed copy takes 86 ms and 15 ms, and passes every check of the task (`run.sh --score-dir`). `run.sh --selftest --with-build` fails the task on the untouched fixture: four of its six checks fail.
+
 ## review-shots
 
 Two real screenshots of `Places`, taken on the iPhone Duo simulator (Xcode 27.1, iOS 27.1) with the phone closed and upright: the list and a detail screen (1398 × 2034 px, the outer display). `frames.md` says what each shows. Used by `duo-design-review/screenshot-review`.
@@ -133,7 +139,7 @@ Not a folder. `fixture: empty` starts the agent in an empty folder. Used by `duo
 export DEVELOPER_DIR=/Applications/Xcode-27.1.app/Contents/Developer
 UDID=<an iPhone Duo simulator UDID>   # xcrun simctl list devices | grep "iPhone Duo"
 cd evals/fixtures
-for app in Places Reel Talk TapDuel Starter Steps Album Trail Inbox Trips Notes Shoot Tally; do
+for app in Places Reel Talk TapDuel Starter Steps Album Trail Inbox Trips Notes Shoot Tally Ledger; do
   xcodebuild build-for-testing -project "$app/$app.xcodeproj" -scheme "$app" \
     -destination "platform=iOS Simulator,id=$UDID" \
     -derivedDataPath "/tmp/fixture-dd/$app" CODE_SIGNING_ALLOWED=NO -quiet && echo "$app ok"

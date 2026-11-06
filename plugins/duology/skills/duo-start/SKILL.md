@@ -140,6 +140,7 @@ Duology skills. Load the one that matches the task. Full map with symptoms: [ref
 | `duo-testing` | duology-ship | You write unit or UI tests that must hold up on the Duo simulator. |
 | `duo-pose-matrix` | duology-ship | You need screenshots of the app closed, open, in book pose and in tabletop. |
 | `duo-lint` | duology-ship | You need to find code Apple warns against before it ships. |
+| `duo-performance` | duology-ship | Opening or closing the phone freezes or stutters; you want to measure what each fold costs, before and after a change. |
 | `recipe-two-player-game` | duology-recipes | You build a two-player game on one phone from scratch. |
 | `recipe-finance-dashboard` | duology-recipes | You start a personal finance or dashboard app. |
 | `recipe-media-player` | duology-recipes | You start a video or podcast player. |
@@ -153,7 +154,7 @@ Commands: `/duo-doctor` (check the setup), `/duo-new <recipe>` (new app from a r
 
 If a skill isn't installed, tell the user the plugin to add, for example `/plugin install duology-design@duology`. On other agents: `npx skills add Kimeur/duology --skill <name>`.
 
-**Coming.** Say "coming" and use the Apple source listed in [references/routing.md](references/routing.md) until then: `duo-performance`, planned for v1.0. For an app that ships today on an older SDK, load `duo-migrate`; for Duo screenshots and the submission, `duo-app-store` or `/duo-ship` (all `duology-ship`).
+For an app that ships today on an older SDK, load `duo-migrate`; for Duo screenshots and the submission, `duo-app-store` or `/duo-ship`; for a fold that freezes or stutters, `duo-performance` (all `duology-ship`).
 
 ## Step 3: The five-minute first pass (existing app)
 
@@ -233,4 +234,4 @@ Apple says the skill finds most issues, not all. Run `duo-lint` after it to catc
 - [ ] `duo-lint` (or the rough grep) run; top findings kept.
 - [ ] App checked open and closed in Device Hub, with screenshots of both displays.
 - [ ] App Resizability skill offered for the generic fixes.
-- [ ] Report written; each problem mapped to one skill; coming skills marked "coming".
+- [ ] Report written; each problem mapped to one skill.

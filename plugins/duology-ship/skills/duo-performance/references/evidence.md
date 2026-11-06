@@ -22,6 +22,7 @@ FoldProbe's width events while opening (fast mode, one fold): 466 pt at +0 ms, 9
 | `-slow`, `--compare` the first | 486 ms / 517 ms | 137 ms / 154 ms | 2 | 4 open, 3 closed |
 
 - The second fast run was not flagged; the slow run was, on all four numbers, and exited 1.
+- Timing: in the first fast run the six folds started at 3.8, 14.5, 25.3, 36.0, 46.6 and 57.5 s into the recording, so each `duo-pose set` plus the 2 s wait took about 10.7 s, and the folds took about a minute of recording.
 - Each open, fast: 71, 17 and 29 ms longest in the first run, 43, 15 and 30 ms in the second. The first fold after launch was the most expensive in both.
 - Before the script existed, the same probe recorded by hand (Hangs, os_signpost, Time Profiler) showed, in slow mode, three main-thread hangs of 359, 259 and 178 ms while opening, one per resize step, and one of 145 ms while closing. In fast mode, the open's longest stretches were 68 and 80 ms with stalled update cycles of 65 and 39 ms; that was the first fold after launch.
 
@@ -64,7 +65,7 @@ During `duo-pose set`, the app process answered Accessibility calls (`com.apple.
 
 ## StateReporting and MetricKit
 
-FoldProbe with the code in [field.md](field.md), copied from the page into the app, recorded with Points of Interest and os_signpost while `duo-pose` set open, book, tabletop and closed:
+FoldProbe with the first three code blocks of [field.md](field.md) copied into the app (`PoseState`, `onPoseChange`, `FoldMetrics`), hooked to its root view, recorded with Points of Interest and os_signpost while `duo-pose` set open, book, tabletop and closed:
 
 - The trace had a `StateReportingIntervals` table: `open` (12.5 s), `book` (16.9 s), `tabletop` (7.9 s), then `book`, `tabletop` and `book` for 1.8, 1.9 and 2.2 s while the simulator turned back, then `closed`. Domain `com.duology.foldprobe.pose`. An earlier version of the same code, reading the fold through the recipes' `FoldGeometry`, gave the same sequence.
 - The `com.apple.StateReporting.Transition` and `Heartbeat` signposts were in the os_signpost table; the `Fold` intervals from `MetricManager.logHandle(category:)` were not.

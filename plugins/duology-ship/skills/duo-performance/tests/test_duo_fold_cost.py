@@ -259,7 +259,7 @@ class Folds(unittest.TestCase):
             {"longest_ms": 20.0, "busy_ms": 70.0, "stalls": 1, "hangs": 0},
             {"longest_ms": 30.0, "busy_ms": 72.0, "stalls": 1, "hangs": 1})]
         (s,) = fc.summarize(folds)
-        self.assertEqual((s["count"], s["longest_ms"], s["busy_ms"], s["stalls"], s["hangs"]), (3, 30.0, 72.0, 1, 1))
+        self.assertEqual((s["count"], s["longest_ms"], s["busy_ms"], s["stalls"], s["hangs"]), (3, 30.0, 72.0, 1, 0))
 
 
 class TimeProfiler(unittest.TestCase):
@@ -316,12 +316,14 @@ class Compare(unittest.TestCase):
 class FakeRunner:
     """Answers the commands duo-fold-cost runs; records them."""
 
-    def __init__(self, exports, pose_now="closed", installed=True, booted=True, pose_fails=None):
+    def __init__(self, exports, pose_now="closed", installed=True, booted=True, pose_fails=None,
+                 launch_fails=False):
         self.exports = exports
         self.pose_now = pose_now
         self.installed = installed
         self.booted = booted
         self.pose_fails = pose_fails
+        self.launch_fails = launch_fails
         self.calls = []
         self.clock = START + 1.0
         self.stopped = False
@@ -341,7 +343,7 @@ class FakeRunner:
         if argv[:3] == ["xcrun", "simctl", "get_app_container"]:
             return (0, self.app_dir + "\n", "") if self.installed else (2, "", "No such app")
         if argv[:3] == ["xcrun", "simctl", "launch"]:
-            return 0, "com.example: 4242\n", ""
+            return (1, "", "launch failed") if self.launch_fails else (0, "com.example: 4242\n", "")
         if argv[0] == fc.DUO_POSE and argv[1] == "status":
             return 0, json.dumps({"state": {"pose": self.pose_now}}), ""
         if argv[0] == fc.DUO_POSE and argv[1] == "set":
@@ -423,6 +425,43 @@ class Run(unittest.TestCase):
         self.assertEqual(code, fc.EXIT_OK, err)
         sets = [c[2] for c in runner.calls if c[0] == fc.DUO_POSE and c[1] == "set"]
         self.assertEqual(sets[-1], "open")
+
+    def sets(self, runner):
+        return [c[2] for c in runner.calls if c[0] == fc.DUO_POSE and c[1] == "set"]
+
+    def test_a_failed_pose_change_still_puts_the_phone_back(self):
+        runner = FakeRunner(two_folds(), pose_now="closed", pose_fails="open")
+        code, _, _ = self.main(["run", "com.example.app", "--out", self.out_dir], runner)
+        self.assertEqual(code, fc.EXIT_POSE)
+        self.assertEqual(self.sets(runner), ["closed", "open", "closed"])   # tried open, then back
+
+    def test_a_failed_launch_puts_the_phone_back(self):
+        runner = FakeRunner(two_folds(), pose_now="open or book", launch_fails=True)
+        code, _, _ = self.main(["run", "com.example.app", "--out", self.out_dir], runner)
+        self.assertEqual(code, fc.EXIT_NO_APP)
+        self.assertEqual(self.sets(runner), ["closed", "open"])
+        self.assertFalse(runner.stopped)   # nothing was recording yet
+
+    def test_tabletop_is_put_back_as_tabletop(self):
+        runner = FakeRunner(two_folds(), pose_now="tabletop (or open, held tall)")
+        self.main(["run", "com.example.app", "--cycles", "1", "--out", self.out_dir], runner)
+        self.assertEqual(self.sets(runner)[-1], "tabletop")
+
+    def test_a_broken_pose_log_is_a_usage_error(self):
+        trace = os.path.join(self.out_dir, "y.trace")
+        os.makedirs(trace)
+        with open(trace + ".poses.json", "w") as fh:
+            fh.write("{not json")
+        code, _, err = self.main(["read", trace, "--process", APP], FakeRunner(two_folds()))
+        self.assertEqual(code, fc.EXIT_USAGE)
+        self.assertIn("pose log", err)
+
+    def test_an_export_that_is_not_xml_is_a_trace_error(self):
+        trace = os.path.join(self.out_dir, "z.trace")
+        os.makedirs(trace)
+        exports = dict(two_folds(), runloop="<trace-query-result><node>")
+        code, _, _ = self.main(["read", trace, "--process", APP], FakeRunner(exports))
+        self.assertEqual(code, fc.EXIT_TRACE)
 
     def test_compare_exits_1_when_slower(self):
         saved = os.path.join(self.out_dir, "before.json")

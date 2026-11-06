@@ -9,7 +9,7 @@
 3. Notes the pose the phone is in, sets the cycle's last pose (closed for the default `open,closed`), and launches the app with your arguments.
 4. Starts `xctrace record` with the Hangs and os_signpost instruments (and Time Profiler with `--time-profiler`), attached to the app.
 5. For each cycle, sets each pose with `duo-pose set`, then waits `--settle` seconds (default 2).
-6. Stops the recording as Ctrl-C would, puts the phone back in the pose it found, and writes `<trace>.poses.json` (which pose change started when).
+6. Stops the recording as Ctrl-C would and puts the phone back in the pose it found, also when something failed on the way or you pressed Ctrl-C. Then writes `<trace>.poses.json` (which pose change started when).
 7. Exports three tables with `xctrace export` and reads them.
 
 A run of 3 cycles of open and closed records for about a minute (*measured*): each `duo-pose set` took about 10 s.
@@ -45,7 +45,7 @@ Inside the window:
 | stalls | UIKit's `UpdateCycle.Stalls / UpdateSequence` signposts: update cycles UIKit itself marked as stalled, and the longest. |
 | hangs | The Hangs instrument's `potential-hangs` table on the main thread (its threshold is 100 ms): "Microhang", "Brief Unresponsiveness". |
 
-The summary is the median per pose change (`closed -> open`), so the first fold after launch, the most expensive one (*measured*), doesn't decide it alone. Each fold is listed too.
+The summary is the median of each column per pose change (`closed -> open`), so the first fold after launch, the most expensive one (*measured*), doesn't decide it alone. Each fold is listed too.
 
 ### The code in the longest stretch
 
@@ -85,7 +85,7 @@ The numbers depend on the Mac. Compare runs made on the same Mac, the same simul
 | 4 | `duo-pose` failed (run `duo-pose status`: Device Hub must show the phone, and the app that runs it needs the Accessibility permission) |
 | 5 | No booted iPhone Duo simulator |
 | 6 | No fold in the trace: the app wasn't in front, or the trace has no os_signpost data |
-| 8 | The app isn't installed on the simulator |
+| 8 | The app isn't installed on the simulator, or didn't launch |
 
 ## Recording by hand
 

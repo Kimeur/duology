@@ -16,7 +16,7 @@ status: ready
 
 # Make opening and closing the phone cheap
 
-Opening iPhone Duo resizes the app in several steps: `duo-transitions` measured 382 → 466 → 951 → 867 pt on the simulator, and every view that reads the size runs its `body` again at each step. At 120 Hz a frame lasts 8.3 ms ([Understanding hitches](https://developer.apple.com/documentation/xcode/understanding-hitches-in-your-app)), so whatever a `body` does, a fold does several times while the person watches.
+Opening iPhone Duo changes the app's layout size in several steps: `duo-transitions` measured a full-width view going 382 → 466 → 951 → 867 pt on the simulator, and every view that reads the size runs its `body` again at each step. At 120 Hz a frame lasts 8.3 ms ([Understanding hitches](https://developer.apple.com/documentation/xcode/understanding-hitches-in-your-app)), so whatever a `body` does, a fold does several times while the person watches.
 
 ## Prompt
 
@@ -49,7 +49,7 @@ done
 ```sh check body-stays-cheap
 # Nothing a fold would redo at each resize step: no formatter made, nothing sorted,
 # grouped or summed over the entries inside a body.
-pycheck body_work.py 'DateFormatter\(' 'NumberFormatter\(' '\.sorted\b' 'Dictionary\(grouping' '\.reduce\('
+pycheck body_work.py 'DateFormatter\(' 'NumberFormatter\(' '\.sorted *[({]' 'Dictionary\(grouping' '\.reduce\('
 ```
 
 ```sh check rows-are-lazy
@@ -59,7 +59,7 @@ has_src 'LazyVStack|LazyVGrid|\bList *[({]'
 
 ```sh check identity-kept
 # No new identity at each size, and the size is read in one place at most.
-no_src '\.id\([^)]*(width|height|size|proxy)'
+no_src '\.id\([^)]*(width|height|size|proxy|[Ww]ide|[Nn]arrow|columns|[Ss]izeClass)'
 geo="$(count_src 'GeometryReader')"
 if [ "$geo" -gt 1 ]; then
   echo "GeometryReader in $geo places: read the size once, high up"
@@ -71,10 +71,10 @@ fi
 ```sh check list-built-once
 # The entry list is built in one place, so the fold keeps it (and its scroll position).
 # Renamed: the check says so and passes, and R2 decides.
-n="$(count_src '(^|[^A-Za-z0-9_.])EntryList *\(')"
+# Previews, comments and strings don't count.
+n="$(pycheck body_work.py --count '(^|[^A-Za-z0-9_.])EntryList *\(')"
 if [ "$n" -gt 1 ]; then
   echo "EntryList is built in $n places"
-  src_grep '(^|[^A-Za-z0-9_.])EntryList *\('
   exit 1
 fi
 [ "$n" -eq 1 ] || echo "note: EntryList was renamed or replaced, so the checklist decides"

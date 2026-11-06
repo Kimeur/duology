@@ -2,7 +2,7 @@
 
 iOS 27 MetricKit can split its daily report by a state your app reports through the StateReporting framework. Report the pose, and the report gives hitch time, hang time and your signpost intervals for each pose, from people's phones. Sources: [MetricManager](https://developer.apple.com/documentation/metrickit/metricmanager), [init(enabledStateReportingDomains:)](https://developer.apple.com/documentation/metrickit/metricmanager/init(enabledstatereportingdomains:)), [MetricReport](https://developer.apple.com/documentation/metrickit/metricreport), [StateReporting](https://developer.apple.com/documentation/statereporting), [StateReporter](https://developer.apple.com/documentation/statereporting/statereporter) (all iOS 27.0).
 
-The code typechecks against the iOS 27.1 simulator SDK in Swift 5 mode, Swift 6 mode, and Swift 6 with `MainActor` as the default isolation, and builds and runs in an app with an iOS 26.0 deployment target (6 November 2026).
+The code typechecks against the iOS 27.1 simulator SDK in Swift 5 mode, Swift 6 mode, and Swift 6 with `MainActor` as the default isolation (6 November 2026). The first three blocks also built and ran in an app with an iOS 26.0 deployment target.
 
 ## What Apple's documentation says
 
@@ -22,7 +22,7 @@ import CoreGraphics
 nonisolated enum PoseState: String, Sendable {
     case closed, open, book, tabletop
 
-    /// fold: the fold's frame in the window when one splits it, and whether the phone is partly folded.
+    /// fold: the fold's frame in the view when one splits it, and whether the phone is partly folded.
     init(fold: CGRect?, isActive: Bool) {
         guard let fold else {
             self = .closed
@@ -37,7 +37,7 @@ nonisolated enum PoseState: String, Sendable {
 }
 ```
 
-Read the fold from the window's `.division` reserved regions, including inactive ones, so a flat inner display still has its fold (see `duo-postures`; the recipes' `FoldGeometry` does the same):
+Read the fold from the root view's `.division` reserved regions, including inactive ones, so a flat inner display still has its fold (see `duo-postures`; the recipes' `FoldGeometry` does the same):
 
 ```swift
 import SwiftUI
@@ -57,7 +57,7 @@ private struct PoseReader: ViewModifier {
             content.onGeometryChange(for: PoseState.self) { proxy in
                 let size = proxy.size
                 let regions = proxy.reservedRegions(kind: .division, options: .includeInactive)
-                // Only a fold that splits the window in two counts.
+                // Only a fold that splits the view in two counts.
                 let fold = regions.first { region in
                     let f = region.frame
                     return f.height > f.width ? (f.minX > 0 && f.maxX < size.width)
@@ -141,7 +141,7 @@ private final class MetricKitSink {
                 for entry in report.stateEntries where entry.state.domain == domain {
                     for case .hitchTime(let hitches) in entry.values {
                         Logger(subsystem: "com.example.myapp", category: "Metrics")
-                            .info("\(entry.state.label, privacy: .public): \(hitches.ratio.value) ms/s")
+                            .info("\(entry.state.label, privacy: .public): \(hitches.ratio.description, privacy: .public)")
                     }
                 }
             }
@@ -154,17 +154,20 @@ private final class MetricKitSink {
 }
 ```
 
-Hook it to the root view, once:
+Create it once, in the App, and hook it to the root view. Apple asks for one `MetricManager` per app, and a `@State` value in a view is created again each time that view is initialized:
 
 ```swift
 import SwiftUI
 
-struct RootView: View {
+@main
+struct MyApp: App {
     @State private var metrics = FoldMetrics(domain: "com.example.myapp.pose")
 
-    var body: some View {
-        Text("Content")
-            .onPoseChange { metrics.poseChanged(to: $0) }
+    var body: some Scene {
+        WindowGroup {
+            Text("Content")
+                .onPoseChange { metrics.poseChanged(to: $0) }
+        }
     }
 }
 ```
@@ -173,7 +176,7 @@ Send the parts of the report you need to your own analytics, or log them, and co
 
 ## What we measured on the simulator
 
-On 6 November 2026, with the code above in a test app, recorded with Instruments' Points of Interest and os_signpost instruments while `duo-pose` set open, book, tabletop and closed:
+On 6 November 2026, with the first three blocks above in a test app, recorded with Instruments' Points of Interest and os_signpost instruments while `duo-pose` set open, book, tabletop and closed:
 
 - The State Reporting track showed one interval per pose, labelled `open`, `book` and `tabletop` in turn. On the way from tabletop to closed, the simulator passed through `book` and `tabletop` again for about 2 s each before `closed`; those were real poses for longer than the half-second wait, so they were reported.
 - The `Fold` intervals from `MetricManager.logHandle(category:)` didn't appear in the trace, while the app's own `OSSignposter` events did. Check them on a device.

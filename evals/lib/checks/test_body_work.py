@@ -110,12 +110,47 @@ struct Fake: View {
 """})
         self.assertEqual(code, 0)
 
+    def test_count_leaves_out_previews_comments_and_strings(self):
+        root = tempfile.mkdtemp()
+        with open(os.path.join(root, "A.swift"), "w") as fh:
+            fh.write("""
+struct Screen: View {
+    var body: some View {
+        EntryList(rows: rows)   // not EntryList( again
+        Text("EntryList(")
+    }
+}
+#Preview { EntryList(rows: []) }
+""")
+        out = io.StringIO()
+        with redirect_stdout(out):
+            code = body_work.main(["--root", root, "--count", r"(^|[^A-Za-z0-9_.])EntryList *\("])
+        self.assertEqual((code, out.getvalue().strip()), (0, "1"))
+
+    def test_a_sorted_property_is_not_a_sort(self):
+        code, out = run({"A.swift": """
+struct Screen: View {
+    let model: Model
+    var body: some View {
+        List(model.sorted) { Text($0.title) }
+    }
+}
+"""})
+        self.assertEqual(code, 1)   # \.sorted\b still matches a property read
+        root = tempfile.mkdtemp()
+        with open(os.path.join(root, "A.swift"), "w") as fh:
+            fh.write("struct S: View {\n  var body: some View { List(model.sorted) { Text($0) } }\n}\n")
+        out = io.StringIO()
+        with redirect_stdout(out):
+            self.assertEqual(body_work.main(["--root", root, r"\.sorted *[({]"]), 0)
+
     def test_usage(self):
         out = io.StringIO()
         with redirect_stdout(out):
             self.assertEqual(body_work.main([]), 2)
             self.assertEqual(body_work.main(["--root"]), 2)
             self.assertEqual(body_work.main(["("]), 2)
+            self.assertEqual(body_work.main(["--count"]), 2)
 
 
 if __name__ == "__main__":

@@ -2,6 +2,7 @@
 """Checks that SwiftUI `body` properties do no heavy work: nothing a fold must redo.
 
 usage: body_work.py [--root ROOT] PATTERN...
+       body_work.py [--root ROOT] --count PATTERN
 
 A fold reruns `body` for every view that reads the size, once per resize step.
 This check fails when a PATTERN (a regular expression, for example
@@ -13,6 +14,13 @@ an initializer or a task, passes. So does the same call outside any body.
 Comments and string literals are blanked first, and so are #Preview blocks and
 PreviewProvider types. Test code is skipped: any folder whose name contains
 Tests, and files ending in Tests.swift.
+
+Work moved into a computed property or a helper that body calls passes: the
+check reads only the body block itself, and the checklist decides the rest.
+
+--count prints how many times PATTERN matches anywhere in the app's code (not only
+in bodies), with the same blanking, and exits 0. PATTERN is matched with ^ and $
+at line starts and ends.
 
 It is a heuristic for Swift sources, not a parser. It prints each match.
 Tests: python3 evals/lib/checks/test_body_work.py
@@ -120,6 +128,21 @@ def main(argv):
     if not args:
         print("usage: body_work.py [--root ROOT] PATTERN...")
         return 2
+    if args[0] == "--count":
+        if len(args) != 2:
+            print("usage: body_work.py [--root ROOT] --count PATTERN")
+            return 2
+        try:
+            pattern = re.compile(args[1], re.MULTILINE)
+        except re.error as exc:
+            print("bad pattern: %s" % exc)
+            return 2
+        total = 0
+        for path in swift_files(root):
+            with open(path, encoding="utf-8", errors="replace") as fh:
+                total += len(pattern.findall(without_previews(mask(fh.read()))))
+        print(total)
+        return 0
     try:
         patterns = [re.compile(p) and p for p in args]
     except re.error as exc:

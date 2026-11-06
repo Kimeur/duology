@@ -33,7 +33,7 @@ the pose it found.
 Exit codes: 0 done; 1 a fold is slower than the saved run (--compare); 2 bad
 arguments; 3 Instruments failed (xctrace); 4 duo-pose failed; 5 no booted
 iPhone Duo simulator; 6 no fold found in the trace; 8 the app is not installed
-on the simulator.
+on the simulator, or didn't launch.
 
 Part of Duology (MIT license). https://github.com/Kimeur/duology
 """
@@ -369,7 +369,7 @@ def summarize(folds):
             "longest_ms": round(statistics.median(f["longest_ms"] for f in items), 1),
             "busy_ms": round(statistics.median(f["busy_ms"] for f in items), 1),
             "stalls": round(statistics.median(f["stalls"] for f in items), 1),
-            "hangs": sum(f["hangs"] for f in items),
+            "hangs": round(statistics.median(f["hangs"] for f in items), 1),
         })
     return summary
 
@@ -561,8 +561,10 @@ def duo_pose_now(runner, udid):
         return None
     if pose in POSES:
         return pose
-    # "open or book": Device Hub can't tell them apart; flat is the safe way back.
-    return "open" if "open" in pose else None
+    # duo-pose's guesses: "tabletop (or open, held tall)", "open or book". Take the
+    # first pose named; for "open or book", flat is the safe way back.
+    first = re.match(r"(closed|open|book|tabletop)\b", pose)
+    return first.group(1) if first else None
 
 
 def export(runner, trace, xpath=None):
@@ -596,6 +598,13 @@ def read_trace(runner, trace):
 
 
 
+def analyze_trace(runner, trace, process, commands):
+    try:
+        return analyze(read_trace(runner, trace), process, commands)
+    except ET.ParseError as exc:
+        raise CostError(EXIT_TRACE, "could not read what xctrace exported from %s: %s" % (trace, exc))
+
+
 def record(runner, sim, bundle_id, process, args):
     """Launch, record while folding, stop. Returns (trace path, pose commands)."""
     udid = sim["udid"]
@@ -609,14 +618,13 @@ def record(runner, sim, bundle_id, process, args):
     poses = args.poses
     start_pose = poses[-1]
     found_pose = duo_pose_now(runner, udid)
+    # The pose the phone is in now; None after a pose change failed, when nobody knows.
+    state = {"pose": found_pose}
 
-    runner.note("Putting the phone in %s before launching." % start_pose)
-    duo_pose(runner, udid, start_pose, args.force)
-    code, out, err = runner.run(["xcrun", "simctl", "launch", "--terminate-running-process", udid, bundle_id]
-                                + list(args.launch_args))
-    if code != 0:
-        raise CostError(EXIT_NO_APP, "the app did not launch", (err or out).strip()[-300:])
-    runner.sleep(args.settle)
+    def set_pose(pose):
+        state["pose"] = None
+        duo_pose(runner, udid, pose, args.force)
+        state["pose"] = pose
 
     instruments = list(INSTRUMENTS) + (["Time Profiler"] if args.time_profiler else [])
     limit = int(args.cycles * len(poses) * 60 + 60)
@@ -624,10 +632,20 @@ def record(runner, sim, bundle_id, process, args):
             "--time-limit", "%ds" % limit, "--no-prompt"]
     for name in instruments:
         argv += ["--instrument", name]
-    runner.note("Recording %s with %s." % (process, ", ".join(instruments)))
-    handle = runner.start(argv, trace + ".log")
+    handle = None
+    code = None
     commands = []
     try:
+        runner.note("Putting the phone in %s before launching." % start_pose)
+        set_pose(start_pose)
+        code, out, err = runner.run(["xcrun", "simctl", "launch", "--terminate-running-process", udid,
+                                     bundle_id] + list(args.launch_args))
+        if code != 0:
+            raise CostError(EXIT_NO_APP, "the app did not launch", (err or out).strip()[-300:])
+        runner.sleep(args.settle)
+
+        runner.note("Recording %s with %s." % (process, ", ".join(instruments)))
+        handle = runner.start(argv, trace + ".log")
         if not runner.wait_for_text(handle, "Starting recording", 60):
             raise CostError(EXIT_TRACE, "Instruments did not start recording",
                             runner.read_log(handle).strip()[-400:])
@@ -637,12 +655,14 @@ def record(runner, sim, bundle_id, process, args):
             for pose in poses:
                 runner.note("Cycle %d of %d: %s -> %s" % (cycle, args.cycles, current, pose))
                 commands.append({"pose": pose, "from": current, "cycle": cycle, "started": runner.now()})
-                duo_pose(runner, udid, pose, args.force)
+                set_pose(pose)
                 current = pose
                 runner.sleep(args.settle)
     finally:
-        code = runner.stop(handle, timeout=300)
-        if found_pose and found_pose != poses[-1]:
+        # Runs on errors and Ctrl-C too: stop the recording, then put the phone back.
+        if handle is not None:
+            code = runner.stop(handle, timeout=300)
+        if found_pose and state["pose"] != found_pose:
             try:
                 duo_pose(runner, udid, found_pose, args.force)
             except CostError as exc:
@@ -677,7 +697,7 @@ def print_report(report, out):
         folds = [f for i, f in enumerate(report["folds"], 1)
                  if (fold_name(f) if f["to"] != "unknown" else "fold %d" % i) == s["fold"]]
         over = statistics.median(f["over_frame"] for f in folds) if folds else 0
-        out.write("%-22s %6.0f ms %5.0f ms %8g %7g %6d   (%d run%s)\n" % (
+        out.write("%-22s %6.0f ms %5.0f ms %8g %7g %6g   (%d run%s)\n" % (
             s["fold"], s["longest_ms"], s["busy_ms"], over, s["stalls"], s["hangs"],
             s["count"], "" if s["count"] == 1 else "s"))
     out.write("\nEach fold:\n")
@@ -799,7 +819,7 @@ def main(argv=None, runner=None, out=None, err=None):
             sim = find_simulator(runner, args.udid)
             process = app_process(runner, sim["udid"], args.bundle_id)
             trace, commands = record(runner, sim, args.bundle_id, process, args)
-            report = analyze(read_trace(runner, trace), process, commands)
+            report = analyze_trace(runner, trace, process, commands)
             report["simulator"] = "%s (%s)" % (sim.get("name", "?"), sim["udid"])
         else:
             if not os.path.isdir(args.trace):
@@ -808,24 +828,30 @@ def main(argv=None, runner=None, out=None, err=None):
             log = args.poses_log or trace + ".poses.json"
             commands = []
             if os.path.exists(log):
-                with open(log, encoding="utf-8") as fh:
-                    commands = json.load(fh)
-            report = analyze(read_trace(runner, trace), args.process, commands)
+                try:
+                    with open(log, encoding="utf-8") as fh:
+                        commands = json.load(fh)
+                except (OSError, ValueError) as exc:
+                    raise CostError(EXIT_USAGE, "could not read the pose log %s: %s" % (log, exc))
+            report = analyze_trace(runner, trace, args.process, commands)
         report["trace"] = trace
         if not report["folds"]:
             raise CostError(EXIT_NO_FOLD, "no fold in the trace: UIKit never resized %s's scene" % report["process"],
                             "Check that the app was in front while the phone folded, and that the "
                             "trace has the os_signpost instrument.")
+        slower = compare(report["summary"], saved) if saved else []
+        faster = compare(report["summary"], saved, faster=True) if saved else []
+        report["slower"] = [{"fold": f, "column": c, "before": a, "now": b} for f, c, a, b in slower]
+        report["faster"] = [{"fold": f, "column": c, "before": a, "now": b} for f, c, a, b in faster]
+        if args.save:
+            try:
+                with open(args.save, "w", encoding="utf-8") as fh:
+                    json.dump(report, fh, indent=1, sort_keys=True)
+            except OSError as exc:
+                raise CostError(EXIT_USAGE, "could not write %s: %s" % (args.save, exc))
     except CostError as exc:
         return emit_error(exc, args.json, out, err)
 
-    slower = compare(report["summary"], saved) if saved else []
-    faster = compare(report["summary"], saved, faster=True) if saved else []
-    report["slower"] = [{"fold": f, "column": c, "before": a, "now": b} for f, c, a, b in slower]
-    report["faster"] = [{"fold": f, "column": c, "before": a, "now": b} for f, c, a, b in faster]
-    if args.save:
-        with open(args.save, "w", encoding="utf-8") as fh:
-            json.dump(report, fh, indent=1, sort_keys=True)
     if args.json:
         out.write(json.dumps(dict(report, ok=True), sort_keys=True) + "\n")
     else:
